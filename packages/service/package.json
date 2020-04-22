@@ -1,0 +1,70 @@
+{
+  "name": "service.gittrends.app",
+  "version": "1.0.0",
+  "description": "GitTrends.app service worker to collect information on OSS projects",
+  "homepage": "http://gittrends.app",
+  "main": "index.js",
+  "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
+  "scripts": {
+    "test": "echo 'Not implemented yet :('",
+    "proxy": "npx --node-args='-r dotenv/config -r pretty-error/start' github-proxy-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hsborges/gittrends-service.git"
+  },
+  "type": "commonjs",
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "dependencies": {
+    "@hsborges/github-proxy-server": "^1.1.3",
+    "axios": "^0.19.1",
+    "bluebird": "^3.7.2",
+    "bull": "^3.12.1",
+    "commander": "^5.0.0",
+    "debug": "^4.0.1",
+    "dotenv": "^8.2.0",
+    "js-yaml": "^3.13.1",
+    "lodash": "^4.17.11",
+    "moment": "^2.22.2",
+    "mongodb": "^3.5.6",
+    "pretty-error": "^2.1.1",
+    "promise-retry": "^1.1.1",
+    "user-agents": "^1.0.559"
+  },
+  "devDependencies": {
+    "bull-board": "^0.7.0",
+    "commitizen": "^4.0.4",
+    "core-util-is": "^1.0.2",
+    "cz-conventional-changelog": "3.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-import": "^2.20.0",
+    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "express": "^4.17.1",
+    "migrate": "^1.6.2",
+    "pm2": "^4.2.1",
+    "prettier": "^2.0.2"
+  },
+  "private": true,
+  "license": "MIT",
+  "config": {
+    "resources": [
+      "repos",
+      "stargazers",
+      "watchers",
+      "tags",
+      "releases",
+      "issues",
+      "pulls",
+      "dependencies",
+      "users"
+    ],
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
