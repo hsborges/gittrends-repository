@@ -51,13 +51,6 @@ apps:
     exec_mode: cluster
     instance_var: INSTANCE_ID
 
-  - name: gittrends-reactions
-    script: updater.js
-    args: reactions --workers 1
-    instances: 1,
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
   - name: gittrends-tags
     script: updater.js
     args: tags --workers 1
