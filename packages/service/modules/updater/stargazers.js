@@ -35,20 +35,16 @@ module.exports = async function (repositoryId) {
       }).then(async ({ stargazers, users, endCursor, hasNextPage }) => {
         if (stargazers && stargazers.length) {
           await Promise.all([
-            db.stargazers
-              .bulkWrite(
-                stargazers.map((s) => ({
-                  insertOne: {
-                    document: {
-                      repository: repositoryId,
-                      user: s.user,
-                      starred_at: s.starred_at
-                    }
-                  }
-                })),
-                { ordered: false }
-              )
-              .catch((err) => (err.code === 11000 ? null : Promise.reject(err))),
+            db.stargazers.bulkWrite(
+              stargazers.map((s) => ({
+                replaceOne: {
+                  filter: { repository: repositoryId, user: s.user },
+                  replacement: { repository: repositoryId, user: s.user, starred_at: s.starred_at },
+                  upsert: true
+                }
+              })),
+              { ordered: false }
+            ),
             save.users(users)
           ]);
         }
