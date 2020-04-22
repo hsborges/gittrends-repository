@@ -1,13 +1,4 @@
-var fields = [
-  'stargazers',
-  'watchers',
-  'tags',
-  'releases',
-  'issues',
-  'pulls',
-  'reactions',
-  'dependencies'
-];
+var fields = ['stargazers', 'watchers', 'tags', 'releases', 'issues', 'pulls', 'dependencies'];
 
 var pipe1 = fields.reduce(
   (acc, f) =>
