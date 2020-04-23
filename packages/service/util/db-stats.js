@@ -8,9 +8,7 @@ require('pretty-error').start();
 
 const numeral = require('numeral');
 const chalk = require('chalk');
-
 const { table } = require('table');
-const { sortBy } = require('lodash');
 
 const connection = require('../modules/connection.js');
 
