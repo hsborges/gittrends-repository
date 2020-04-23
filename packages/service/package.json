@@ -18,7 +18,7 @@
     "node": ">=12.0.0"
   },
   "dependencies": {
-    "@hsborges/github-proxy-server": "^1.1.3",
+    "@hsborges/github-proxy-server": "^1.1.4",
     "axios": "^0.19.1",
     "bluebird": "^3.7.2",
     "bull": "^3.12.1",
@@ -40,14 +40,14 @@
     "cz-conventional-changelog": "3.1.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-config-prettier": "^6.10.1",
+    "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.20.0",
     "eslint-plugin-node": "^11.0.0",
     "eslint-plugin-prettier": "^3.1.2",
     "express": "^4.17.1",
     "migrate": "^1.6.2",
-    "pm2": "^4.2.1",
-    "prettier": "^2.0.2"
+    "pm2": "^4.3.1",
+    "prettier": "^2.0.5"
   },
   "private": true,
   "license": "MIT",
