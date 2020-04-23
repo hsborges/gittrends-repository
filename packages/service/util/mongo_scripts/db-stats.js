@@ -18,6 +18,7 @@ db.getCollectionNames()
   .map((stats) => ({
     name: stats.ns,
     records: numberFormatter(stats.count),
-    size: diskFormatter(stats.size)
+    storageSize: diskFormatter(stats.storageSize),
+    indexSize: diskFormatter(stats.totalIndexSize)
   }))
-  .forEach((r) => printjson(r));
+  .forEach((r) => printjsononeline(r));
