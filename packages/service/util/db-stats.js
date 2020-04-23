@@ -8,7 +8,10 @@ require('pretty-error').start();
 
 const numeral = require('numeral');
 const chalk = require('chalk');
+
 const { table } = require('table');
+const { sortBy } = require('lodash');
+
 const connection = require('../modules/connection.js');
 
 Promise.resolve()
@@ -36,7 +39,7 @@ Promise.resolve()
       ['Collection', 'Documents', 'Storage Size', 'Num. Indexes', 'Indexes Size'].map((c) =>
         chalk.bold(c)
       )
-    ].concat(data)
+    ].concat(data.sort())
   )
   .then((data) =>
     table(data, { columnDefault: { alignment: 'right' }, columns: { 0: { alignment: 'left' } } })
