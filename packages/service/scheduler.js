@@ -105,6 +105,9 @@ const repositoriesScheduler = async (res, wait, limit = 10000) => {
 const usersScheduler = async (wait, limit = 100000) => {
   // get queue connection
   const queue = new Bull('updates:users', bullOptions);
+  // throws an error when there is more than 1k jobs waiting
+  if ((await queue.getWaitingCount()) > 1000)
+    throw new Error('There are already more than 1k users batch jobs scheduled!');
   // get jobs on queue
   const waiting = await queue
     .getWaiting(0, Number.MAX_SAFE_INTEGER)
