@@ -164,6 +164,8 @@ module.exports = async function _get(repositoryId, resource = 'issues') {
           return { issues: _issues, pulls: _pulls, ...other };
         })
         .then(async ({ users, issues, pulls, endCursor, hasNextPage }) => {
+          metadata.last_cursor = endCursor || metadata.last_cursor;
+
           if (issues && issues.length) {
             const operations = issues.map((issue) => {
               const filter = { _id: issue.id };
@@ -184,10 +186,7 @@ module.exports = async function _get(repositoryId, resource = 'issues') {
 
           if (users && users.length) await save.users(users);
 
-          await db.repositories.updateOne(
-            { _id: repo._id },
-            { $set: { [`${path}.last_cursor`]: endCursor || metadata.last_cursor } }
-          );
+          await db.repositories.updateOne({ _id: repo._id }, { $set: { [path]: metadata } });
 
           return hasNextPage;
         });
