@@ -44,7 +44,7 @@ const updateDetails = async function (repo, type = 'issue') {
       { $match: { repository: repo._id, '_meta.updated_at': { $exists: false } } },
       { $project: { _id: 1, _meta: 1 } }
     ],
-    { batchSize: 1, allowDiskUse: true }
+    { batchSize: 10, allowDiskUse: true }
   );
 
   for (let i = await cursor.next(); i !== null; i = await cursor.next()) {
