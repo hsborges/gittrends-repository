@@ -149,12 +149,12 @@ module.exports = async function _get(repositoryId, resource = 'issues') {
       })
         .then(async ({ issues, pulls, ...other }) => {
           const [_issues, _pulls] = await Promise.all([
-            Promise.mapSeries(issues || [], async (issue) =>
+            Promise.map(issues || [], async (issue) =>
               db.issues
                 .findOne({ _id: issue.id }, { projection: { _meta: 1 } })
                 .then((d) => (d ? { ...issue, _meta: omit(d._meta, 'updated_at') } : issue))
             ),
-            Promise.mapSeries(pulls || [], async (pull) =>
+            Promise.map(pulls || [], async (pull) =>
               db.pulls
                 .findOne({ _id: pull.id }, { projection: { _meta: 1 } })
                 .then((d) => (d ? { ...pull, _meta: omit(d._meta, 'updated_at') } : pull))
