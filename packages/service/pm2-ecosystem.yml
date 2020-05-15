@@ -1,8 +1,9 @@
 apps:
   - name: github-proxy-server
-    script: node_modules/@hsborges/github-proxy-server/index.js
-    interpreter_args: -r dotenv/config -r pretty-error/start
-    args: --port 3000 --request-interval 100 --tokens tokens.txt
+    interpreter: npx
+    interpreter_args: --node-arg="-r dotenv/config -r pretty-error/start"
+    script: github-proxy-server
+    args: --port 3000 --request-interval 50 --tokens tokens.txt
     cron_restart: "0 * * * *"
     error_file: /dev/null
     env:
