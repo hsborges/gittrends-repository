@@ -14,25 +14,23 @@ const getReactions = require('../github/graphql/repositories/reactions.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
-const saveReactions = (reactions, users, { repository, issue, pull, event }) => {
-  return Promise.all([
-    reactions.length
-      ? db.reactions.bulkWrite(
-          reactions.map((r) => ({
-            replaceOne: {
-              filter: { _id: r.id },
-              replacement: {
-                ...compact({ repository, issue, pull, event }),
-                ...omit(r, 'id')
-              },
-              upsert: true
-            }
-          })),
-          { ordered: true }
-        )
-      : Promise.resolve(),
-    save.users(users)
-  ]);
+const saveReactions = async (reactions, users, { repository, issue, pull, event }) => {
+  if (reactions && reactions.length) {
+    await db.reactions.bulkWrite(
+      reactions.map((r) => ({
+        replaceOne: {
+          filter: { _id: r.id },
+          replacement: {
+            ...compact({ repository, issue, pull, event }),
+            ...omit(r, 'id')
+          },
+          upsert: true
+        }
+      })),
+      { ordered: true }
+    );
+  }
+  return save.users(users);
 };
 
 const updateDetails = async function (repo, type = 'issue') {
@@ -65,9 +63,8 @@ const updateDetails = async function (repo, type = 'issue') {
           )
         );
 
-        const timelinePromise =
-          timeline.length &&
-          db.timeline.bulkWrite(
+        if (timeline && timeline.length) {
+          await db.timeline.bulkWrite(
             timeline.map((event) => ({
               replaceOne: {
                 filter: { _id: event.id },
@@ -81,10 +78,10 @@ const updateDetails = async function (repo, type = 'issue') {
             })),
             { ordered: false }
           );
+        }
 
-        const commitsPromise =
-          commits.length &&
-          db.commits.bulkWrite(
+        if (commits && commits.length) {
+          await db.commits.bulkWrite(
             commits.map((commit) => {
               const filter = { _id: commit.id };
               const replacement = { repository: repo._id, ...omit(commit, 'id') };
@@ -92,13 +89,11 @@ const updateDetails = async function (repo, type = 'issue') {
             }),
             { ordered: false }
           );
+        }
 
-        return Promise.all([
-          reactionsPromise,
-          timelinePromise,
-          commitsPromise,
-          users && users.length ? save.users(users) : Promise.resolve()
-        ]).then(() =>
+        if (users && users.length) await save.users(users);
+
+        return reactionsPromise.then(() =>
           collection.replaceOne(
             { _id: i._id },
             {
