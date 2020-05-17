@@ -15,22 +15,24 @@ module.exports.up = async function () {
       { key: { '_meta.updated_at': 1 }, sparse: true },
       { key: { '_meta.removed': 1 }, sparse: true }
     ]),
-    connection.stargazers.createIndexes([
-      { key: { repository: 1, user: 1, starred_at: 1 }, unique: true },
-      { key: { removed_at: 1 }, sparse: true }
-    ]),
+    connection.stargazers.createIndexes([{ key: { repository: 1, user: 1 }, unique: true }]),
     connection.watchers.createIndexes([{ key: { repository: 1, user: 1 }, unique: true }]),
     connection.tags.createIndexes([{ key: { repository: 1 } }]),
     connection.commits.createIndexes([{ key: { repository: 1 } }]),
     connection.releases.createIndexes([{ key: { repository: 1 } }]),
     connection.dependencies.createIndexes([{ key: { repository: 1 } }]),
-    connection.issues.createIndexes([{ key: { repository: 1 } }]),
-    connection.pulls.createIndexes([{ key: { repository: 1 } }]),
+    connection.issues.createIndexes([{ key: { repository: 1, '_meta.updated_at': 1 } }]),
+    connection.pulls.createIndexes([{ key: { repository: 1, '_meta.updated_at': 1 } }]),
     connection.timeline.createIndexes([
-      { key: { repository: 1, issue: 1 } },
-      { key: { repository: 1, pull: 1 } }
+      { key: { repository: 1 } },
+      { key: { issue: 1 }, sparse: true },
+      { key: { pull: 1 }, sparse: true }
     ]),
-    connection.reactions.createIndexes([{ key: { repository: 1 } }])
+    connection.reactions.createIndexes([
+      { key: { repository: 1 } },
+      { key: { issue: 1 }, sparse: true },
+      { key: { pull: 1 }, sparse: true }
+    ])
   ]).then(() => connection.disconnect());
 };
 
