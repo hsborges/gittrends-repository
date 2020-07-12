@@ -12,6 +12,7 @@ module.exports = `fragment actor on Actor {
     email
     location
     name
+    twitterUsername
     updatedAt
     websiteUrl
   }
@@ -23,6 +24,7 @@ module.exports = `fragment actor on Actor {
     isVerified
     location
     name
+    twitterUsername
     updatedAt
     websiteUrl
   }

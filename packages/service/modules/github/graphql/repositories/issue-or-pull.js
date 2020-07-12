@@ -101,46 +101,64 @@ module.exports = async function (id, type, { lastCursor } = {}) {
           pageInfo { hasNextPage endCursor }
           nodes { name }
         }
-        timeline(first: $total, after: $at) {
+        timeline:timelineItems(first: $total, after: $at) {
           pageInfo { hasNextPage endCursor }
           edges {
             cursor
             node {
               type:__typename
               ... on Node { id }
+              ... on AddedToProjectEvent { ...addedToProjectEvent }
               ... on AssignedEvent { ...assignedEvent }
               ... on ClosedEvent { ...closedEvent }
-              ... on Commit { ...commit }
+              ... on CommentDeletedEvent { ...commentDeletedEvent }
+              ... on ConnectedEvent { ...connectedEvent }
+              ... on ConvertedNoteToIssueEvent { ...convertedNoteToIssueEvent }
               ... on CrossReferencedEvent { ...crossReferencedEvent }
               ... on DemilestonedEvent { ...demilestonedEvent }
+              ... on DisconnectedEvent { ...disconnectedEvent }
               ... on IssueComment { ...issueComment }
               ... on LabeledEvent { ...labeledEvent }
               ... on LockedEvent { ...lockedEvent }
+              ... on MarkedAsDuplicateEvent { ...markedAsDuplicateEvent }
+              ... on MentionedEvent { ...mentionedEvent }
               ... on MilestonedEvent { ...milestonedEvent }
+              ... on MovedColumnsInProjectEvent { ...movedColumnsInProjectEvent }
+              ... on PinnedEvent { ...pinnedEvent }
               ... on ReferencedEvent { ...referencedEvent }
+              ... on RemovedFromProjectEvent { ...removedFromProjectEvent }
               ... on RenamedTitleEvent { ...renamedTitleEvent }
               ... on ReopenedEvent { ...reopenedEvent }
               ... on SubscribedEvent { ...subscribedEvent }
+              ... on TransferredEvent { ...transferredEvent }
               ... on UnassignedEvent { ...unassignedEvent }
               ... on UnlabeledEvent { ...unlabeledEvent }
               ... on UnlockedEvent { ...unlockedEvent }
+              ... on UnmarkedAsDuplicateEvent { ...unmarkedAsDuplicateEvent }
+              ... on UnpinnedEvent { ...unpinnedEvent }
               ... on UnsubscribedEvent { ...unsubscribedEvent }
               ... on UserBlockedEvent { ...userBlockedEvent }
               ${
                 type === 'issue'
-                  ? '... on TransferredEvent { ...transferredEvent }'
+                  ? ''
                   : `
+                ... on AutomaticBaseChangeFailedEvent { ...automaticBaseChangeFailedEvent }
+                ... on AutomaticBaseChangeSucceededEvent { ...automaticBaseChangeSucceededEvent }
+                ... on BaseRefChangedEvent { ...baseRefChangedEvent }
                 ... on BaseRefForcePushedEvent { ...baseRefForcePushedEvent }
-                ... on CommitCommentThread { ...commitCommentThread }
+                ... on ConvertToDraftEvent { ...convertToDraftEvent }
                 ... on DeployedEvent { ...deployedEvent }
                 ... on DeploymentEnvironmentChangedEvent { ...deploymentEnvChangedEvent }
                 ... on HeadRefDeletedEvent { ...headRefDeletedEvent }
                 ... on HeadRefForcePushedEvent { ...headRefForcePushedEvent }
                 ... on HeadRefRestoredEvent { ...headRefRestoredEvent }
-                ... on MergedEvent { ...mergeEvent }
+                ... on MergedEvent { ...mergedEvent }
+                ... on PullRequestCommit { ...pullRequestCommit }
+                ... on PullRequestCommitCommentThread { ...pullRequestCommitCommentThread }
                 ... on PullRequestReview { ...pullRequestReview }
-                ... on PullRequestReviewComment { ...pullRequestReviewComment }
                 ... on PullRequestReviewThread { ...pullRequestReviewThread }
+                ... on PullRequestRevisionMarker { ...pullRequestRevisionMarker }
+                ... on ReadyForReviewEvent { ...readyForReviewEvent }
                 ... on ReviewDismissedEvent { ...reviewDismissedEvent }
                 ... on ReviewRequestRemovedEvent { ...reviewRequestRemovedEvent }
                 ... on ReviewRequestedEvent { ...reviewRequestedEvent }
@@ -156,20 +174,33 @@ module.exports = async function (id, type, { lastCursor } = {}) {
   fragment repo on Repository { id }
 
   # OTHERS
+  ${require('../fragments/events/added-to-project')}
   ${require('../fragments/events/assigned')}
   ${require('../fragments/events/closed')}
+  ${require('../fragments/events/comment-deleted')}
+  ${require('../fragments/events/connected')}
+  ${require('../fragments/events/convertedNoteToIssue')}
   ${require('../fragments/events/cross-referenced')}
   ${require('../fragments/events/demilestoned')}
+  ${require('../fragments/events/disconnected')}
   ${require('../fragments/events/labeled')}
   ${require('../fragments/events/locked')}
+  ${require('../fragments/events/markedAsDuplicate')}
+  ${require('../fragments/events/mentioned')}
   ${require('../fragments/events/milestoned')}
+  ${require('../fragments/events/moved-columns-in-project')}
+  ${require('../fragments/events/pinned')}
   ${require('../fragments/events/referenced')}
+  ${require('../fragments/events/removed-from-project')}
   ${require('../fragments/events/renamed-title')}
   ${require('../fragments/events/reopened')}
   ${require('../fragments/events/subscribed')}
+  ${require('../fragments/events/transferred')}
   ${require('../fragments/events/unassigned')}
   ${require('../fragments/events/unlabeled')}
   ${require('../fragments/events/unlocked')}
+  ${require('../fragments/events/unmarkedAsDuplicate')}
+  ${require('../fragments/events/unpinned')}
   ${require('../fragments/events/unsubscribed')}
   ${require('../fragments/events/user-blocked')}
   ${require('../fragments/reactable')}
@@ -180,25 +211,39 @@ module.exports = async function (id, type, { lastCursor } = {}) {
   ${require('../fragments/issue-comment')}
   ${
     type === 'issue'
-      ? `
-        ${require('../fragments/events/transferred')}
-        `
+      ? ''
       : `
-        ${require('../fragments/commit-comment')}
-        ${require('../fragments/commit-comment-thread')}
-        ${require('../fragments/deployment')}
-        ${require('../fragments/deployment-status')}
-        ${require('../fragments/pull-request-review-comment')}
+        ${require('../fragments/events/automatic-base-change-failed')}
+        ${require('../fragments/events/automatic-base-change-succeeded')}
+        ${require('../fragments/events/base-ref-changed')}
         ${require('../fragments/events/base-ref-force-pushed')}
+        ${require('../fragments/events/convertToDraft')}
         ${require('../fragments/events/deployed')}
         ${require('../fragments/events/deployment-environment-changed')}
         ${require('../fragments/events/head-ref-deleted')}
         ${require('../fragments/events/head-ref-force-pushed')}
         ${require('../fragments/events/head-ref-restored')}
-        ${require('../fragments/events/merge')}
+        ${require('../fragments/events/merged')}
+        ${require('../fragments/events/ready-for-review')}
         ${require('../fragments/events/review-dismissed')}
         ${require('../fragments/events/review-request-removed')}
         ${require('../fragments/events/review-requested')}
+
+        ${require('../fragments/commit-comment')}
+        ${require('../fragments/deployment')}
+        ${require('../fragments/deployment-status')}
+        ${require('../fragments/pull-request-review-comment')}
+
+        fragment pullRequestCommit on PullRequestCommit {
+          commit { ...commit }
+        }
+
+        fragment pullRequestCommitCommentThread on PullRequestCommitCommentThread {
+          comments(first: 100) { nodes { ...commitComment } }
+          commit { ...commit }
+          path
+          position
+        }
 
         fragment pullRequestReview on PullRequestReview {
           type:__typename
@@ -224,6 +269,11 @@ module.exports = async function (id, type, { lastCursor } = {}) {
           isResolved
           resolvedBy { ...actor }
           comments(first: 100) { nodes { ...pullRequestReviewComment } }
+        }
+
+        fragment pullRequestRevisionMarker on PullRequestRevisionMarker {
+          createdAt
+          lastSeenCommit { ...commit }
         }
         `
   }

@@ -9,6 +9,8 @@ const parser = require('../parser.js');
 const compact = require('../../../compact.js');
 
 module.exports = async function (repositoryIdOrName, name) {
+  if (!repositoryIdOrName) throw new TypeError('Repository ID or full name are required!');
+
   const selector = name
     ? `repository(owner: "${repositoryIdOrName}", name: "${name}")`
     : `node(id: "${repositoryIdOrName}")`;

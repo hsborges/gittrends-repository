@@ -155,8 +155,8 @@ program
   .description('Schedule jobs on queue to further processing')
   .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
   .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
-  .action(async (resource, other) => {
-    return db
+  .action(async (resource, other) =>
+    db
       .connect()
       .then(() =>
         Promise.mapSeries(resourcesParser([resource, ...other]), async (res) => {
@@ -171,6 +171,6 @@ program
       )
       .catch((err) => console.error(err))
       .finally(() => db.disconnect())
-      .finally(() => process.exit(0));
-  })
+      .finally(() => process.exit(0))
+  )
   .parse(process.argv);

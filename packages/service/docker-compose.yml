@@ -3,27 +3,53 @@ version: '3.7'
 services:
   mongo:
     image: mongo:latest
+    container_name: gittrends-db
     restart: always
+    ports:
+      - ${GITTRENDS_MONGO_PORT}:27017
     volumes:
       - 'db:/data/db'
 
   redis:
     image: redis:alpine
+    container_name: gittrends-cache
     restart: always
-    command: --maxmemory 250mb --maxmemory-policy volatile-lfu
+    ports:
+      - ${GITTRENDS_REDIS_PORT}:6379
+    command: --maxmemory 50mb --maxmemory-policy volatile-lfu
 
-  gittrends:
-    build: .
+  github-proxy-server:
+    image: node:alpine
+    container_name: github-proxy-server
     restart: always
+    ports:
+      - ${GITTRENDS_PROXY_PORT}:${GITTRENDS_PROXY_PORT}
     volumes:
-      - './config:/usr/src/app/config'
-    env_file:
-      - ./.env
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    command: npx github-proxy-server --port ${GITTRENDS_PROXY_PORT} --request-interval 50 --tokens ${GITHUB_TOKENS_FILE}
     environment:
-      GITTRENDS_REDIS_HOST: redis
-      GITTRENDS_REDIS_PORT: 6379
-      GITTRENDS_MONGO_HOST: mongo
-      GITTRENDS_MONGO_PORT: 27017
+      DEBUG: 'github-proxy'
+      DEBUG_HIDE_DATE: 'true'
+
+  gittrends-service:
+    image: node:latest
+    container_name: gittrends-service
+    restart: always
+    depends_on:
+      - mongo
+      - redis
+      - proxy
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    command: /bin/bash -c "npx pm2 start pm2-ecosystem.yml && npx pm2 logs"
+    env_file:
+      - .env
+    environment:
+      GITTRENDS_MONGO_HOST: gittrends-db
+      GITTRENDS_REDIS_HOST: gittrends-cache
+      GITTRENDS_PROXY_HOST: github-proxy-server
 
 volumes:
   db:

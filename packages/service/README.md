@@ -49,12 +49,13 @@ GITTRENDS_PROXY_PROTOCOL=http
 GITTRENDS_PROXY_HOST=localhost
 GITTRENDS_PROXY_PORT=3000
 GITTRENDS_PROXY_TIMEOUT=20000
-GITTRENDS_PROXY_USER_AGENT=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:71.0) Gecko/20100101 Firefox/71.0
+GITTRENDS_PROXY_USER_AGENT="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:71.0) Gecko/20100101 Firefox/71.0"
 GITTRENDS_PROXY_RETRIES=5
 
 # other
 GITTRENDS_QUEUE_ATTEMPS=3
 GITTRENDS_BATCH_SIZE=1000
+GITHUB_TOKENS_FILE=tokens.txt
 ```
 
 4. Run database migrations
@@ -92,7 +93,7 @@ node scheduler.js <resource|all>
 4. Start collecting information
 
 ```sh
-node update.js <resource|all> --workers <workers>
+node update.js <resource> --workers <workers>
 ```
 
 ### PM2
@@ -110,23 +111,13 @@ npx pm2 start pm2-ecosystem.yml
 You can also use docker containers:
 
 ```sh
-# build docker container
-docker build -t hsborges/gittrends-service .
 # create a volume to store github data
 docker volume create gittrends.app-database
 # run containers
-docker run -d -p 6379:6379 --name redis --restart always redis --maxmemory 250mb --maxmemory-policy volatile-lfu
-docker run -d -p 27017:27017 --name mongo --restart always --memory 1g -v gittrends.app-database:/data/db mongo
-docker run -d --restart always --network host --memory 1g --env-file $(pwd)/.env -v $(pwd)/tokens.txt:/usr/src/app/tokens.txt --name gittrends-service hsborges/gittrends-service
+docker-compose up -d gittrends-service
 # add/update repositories on dataset
-docker exec gittrends-service node add-repositories.js --limit <number> --language <language>
-docker exec gittrends-service  node scheduler.js all
-```
-
-or simply
-
-```sh
-docker-compose up -d
+docker-compose exec gittrends-service node add-repositories.js --limit <number> --language <language>
+docker-compose exec gittrends-service node scheduler.js all
 ```
 
 <!-- ROADMAP -->

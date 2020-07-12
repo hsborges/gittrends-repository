@@ -56,6 +56,7 @@ const requestClient = axios.create({
   headers: {
     'user-agent': USER_AGENT,
     accept: [
+      'application/vnd.github.starfox-preview+json',
       'application/vnd.github.hawkgirl-preview+json',
       'application/vnd.github.merge-info-preview+json'
     ].join(', ')

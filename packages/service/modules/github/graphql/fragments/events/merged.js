@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-module.exports = `fragment mergeEvent on MergedEvent {
+module.exports = `fragment mergedEvent on MergedEvent {
   actor { ...actor }
   commit { ...commit }
   createdAt
