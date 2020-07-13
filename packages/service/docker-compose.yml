@@ -18,7 +18,7 @@ services:
       - ${GITTRENDS_REDIS_PORT}:6379
     command: --maxmemory 50mb --maxmemory-policy volatile-lfu
 
-  github-proxy-server:
+  proxy:
     image: node:alpine
     container_name: github-proxy-server
     restart: always
@@ -27,12 +27,9 @@ services:
     volumes:
       - .:/usr/src/app
     working_dir: /usr/src/app
-    command: npx github-proxy-server --port ${GITTRENDS_PROXY_PORT} --request-interval 50 --tokens ${GITHUB_TOKENS_FILE}
-    environment:
-      DEBUG: 'github-proxy'
-      DEBUG_HIDE_DATE: 'true'
+    command: npx github-proxy-server --port ${GITTRENDS_PROXY_PORT} --request-interval 50 --tokens ${GITHUB_TOKENS_FILE} --verbose
 
-  gittrends-service:
+  service:
     image: node:latest
     container_name: gittrends-service
     restart: always
