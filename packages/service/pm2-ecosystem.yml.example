@@ -1,4 +1,7 @@
 apps:
+  - name: bull-board
+    script: util/bull-board.js
+
   - name: gittrends-scheduler
     script: scheduler.js
     args: all
