@@ -56,6 +56,7 @@ GITTRENDS_PROXY_RETRIES=5
 GITTRENDS_QUEUE_ATTEMPS=3
 GITTRENDS_BATCH_SIZE=1000
 GITHUB_TOKENS_FILE=tokens.txt
+BULL_BOARD_PORT=8081
 ```
 
 4. Run database migrations
@@ -114,10 +115,12 @@ You can also use docker containers:
 # create a volume to store github data
 docker volume create gittrends.app-database
 # run containers
-docker-compose up -d gittrends-service
+docker-compose up -d
 # add/update repositories on dataset
-docker-compose exec gittrends-service node add-repositories.js --limit <number> --language <language>
-docker-compose exec gittrends-service node scheduler.js all
+docker-compose exec service node add-repositories.js --limit <number> --language <language>
+docker-compose exec service node scheduler.js all
+# to backup dataset
+docker-compose exec -T mongo mongodump --archive --gzip --db "$(echo $GITTRENDS_MONGO_DB)" > ./dump-`date -u +%s000`.gz
 ```
 
 <!-- ROADMAP -->
