@@ -24,4 +24,6 @@ setQueues(resources.map((_resource) => new Bull(`updates:${_resource}`, { redis 
 
 /* execute */
 app.use('/', UI);
-app.listen(8082, () => console.log(`Bull Dashboard running on http://localhost:${8082}`));
+app.listen(process.env.BULL_BOARD_PORT || 8081, () =>
+  console.log(`Bull Dashboard running on http://localhost:${process.env.BULL_BOARD_PORT || 8081}`)
+);
