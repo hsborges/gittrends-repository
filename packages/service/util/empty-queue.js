@@ -29,10 +29,13 @@ program
   .description('Remove all jobs from the processing queues')
   .action((queue, otherQueues) =>
     Promise.all(
-      [queue]
-        .concat(otherQueues || [])
-        .map(resourceParser)
-        .map(async (name) => new Bull(`updates:${name}`, { redis }).empty())
+      (queue.toLowerCase() === 'all'
+        ? DEFAULT_RESOURCES
+        : [queue, ...(otherQueues || [])].map(resourceParser)
+      ).map(async (name) => {
+        const bq = new Bull(`updates:${name}`, { redis });
+        return Promise.all([bq.empty(), bq.clean(0)]);
+      })
     ).then(() => process.exit(0))
   )
   .parse(process.argv);
