@@ -26,9 +26,7 @@ const bullOptions = {
     db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
   },
   defaultJobOptions: {
-    attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10),
-    removeOnComplete: true,
-    removeOnFail: true
+    attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10)
   },
   settings: {
     stalledInterval: 60000,
@@ -91,6 +89,11 @@ const repositoriesScheduler = async (res, wait, limit = 10000) => {
     name: r.name_with_owner,
     updated_at: _.get(r, `${prefix}.updated_at`)
   }));
+  // clean completed and failed queues
+  await Promise.all([
+    queue.clean(wait * 60 * 60 * 1000, 'completed'),
+    queue.clean(wait * 60 * 60 * 1000, 'failed')
+  ]);
   // add to queue
   return Promise.mapSeries(jobsMetadata, (meta) =>
     queue.add(`${res}@${meta.name}`, null, {
@@ -142,7 +145,15 @@ const usersScheduler = async (wait, limit = 100000) => {
   ).map((r) => r._id);
   // add to queue
   return Promise.map(_.chunk(usersIds, 50), (ids) =>
-    queue.add(`users-bucket@${ids[0]}+`, { ids }, { jobId: ids[0] })
+    queue.add(
+      `users-bucket@${ids[0]}+`,
+      { ids },
+      {
+        jobId: ids[0],
+        removeOnComplete: true,
+        removeOnFail: true
+      }
+    )
   )
     .then(() => console.log(`Number of users scheduled: ${usersIds.length}`))
     .finally(() => queue.close());
