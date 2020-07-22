@@ -55,6 +55,7 @@ const requestClient = axios.create({
   timeout: TIMEOUT,
   headers: {
     'user-agent': USER_AGENT,
+    'accept-encoding': 'gzip',
     accept: [
       'application/vnd.github.starfox-preview+json',
       'application/vnd.github.hawkgirl-preview+json',
