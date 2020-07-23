@@ -1,0 +1,35 @@
+{
+  "name": "gittrends-exporter",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "bottleneck": "^2.19.5",
+    "commander": "^6.0.0",
+    "consola": "^2.14.0",
+    "dotenv": "^8.2.0",
+    "knex": "^0.21.2",
+    "lodash": "^4.17.19",
+    "moment": "^2.27.0",
+    "mongodb": "^3.5.9",
+    "pg": "^8.3.0",
+    "sqlite3": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/knex": "^0.16.1",
+    "commitizen": "^4.1.2",
+    "cz-conventional-changelog": "3.2.0",
+    "eslint": "^7.5.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.0.5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
