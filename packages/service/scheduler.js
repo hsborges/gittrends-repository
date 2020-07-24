@@ -10,8 +10,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const Bull = require('bull');
 const { program } = require('commander');
-
-const db = require('./modules/connection');
+const { mongo } = require('@monorepo/database-config');
 
 const {
   config: { resources: defaultResources },
@@ -57,7 +56,7 @@ const repositoriesScheduler = async (res, wait, limit = 10000) => {
   const before = moment().subtract(wait, 'hours').toDate();
   // get metadata
   const jobsMetadata = (
-    await db.repositories
+    await mongo.repositories
       .aggregate(
         [
           { $match: { _id: { $nin: [...waiting, ...active] } } },
@@ -122,7 +121,7 @@ const usersScheduler = async (wait, limit = 100000) => {
   const before = moment().subtract(wait, 'hours').toDate();
   // get metadata
   const usersIds = (
-    await db.users
+    await mongo.users
       .aggregate(
         [
           { $match: { _id: { $nin: [...waiting, ...active] } } },
@@ -167,7 +166,7 @@ program
   .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
   .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
   .action(async (resource, other) =>
-    db
+    mongo
       .connect()
       .then(() =>
         Promise.mapSeries(resourcesParser([resource, ...other]), async (res) => {
@@ -181,7 +180,7 @@ program
         })
       )
       .catch((err) => console.error(err))
-      .finally(() => db.disconnect())
+      .finally(() => mongo.disconnect())
       .finally(() => process.exit(0))
   )
   .parse(process.argv);

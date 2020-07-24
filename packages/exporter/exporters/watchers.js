@@ -2,14 +2,19 @@
  *  Author: Hudson S. Borges
  */
 const { omit } = require('lodash');
-const exporter = require('./index');
+const consola = require('consola');
+// const exporter = require('./index');
 
 module.exports = async ({ repository, knex, mongo }) => {
-  const cursor = mongo.watchers.find({ repository });
+  consola.debug(`[id=${repository}] getting watchers ...`);
+  const watchers = await mongo.watchers.find({ repository }).toArray();
 
-  while (await cursor.hasNext()) {
-    const watcher = await cursor.next();
-    await exporter.user({ id: watcher.user, knex, mongo });
-    await knex('watchers').insert(omit({ id: watcher._id, ...watcher }, '_id'));
-  }
+  // consola.debug(`[id=${repository}] inserting ${watchers.length} users ...`);
+  // await exporter.user({ id: watchers.map((s) => s.user), knex, mongo });
+
+  consola.debug(`[id=${repository}] inserting ${watchers.length} watchers ...`);
+  await knex.batchInsert(
+    'watchers',
+    watchers.map((watcher) => omit({ id: watcher._id, ...watcher }, '_id'))
+  );
 };

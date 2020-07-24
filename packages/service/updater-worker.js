@@ -15,7 +15,7 @@ module.exports = async ({ id, name, data: { ids } }) => {
 
   return Promise.resolve()
     .then(() => {
-      const base = './modules/updater';
+      const base = './updater';
       switch (resource) {
         case 'users':
           return require(`${base}/user`)(id);

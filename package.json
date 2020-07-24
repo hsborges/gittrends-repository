@@ -1,0 +1,33 @@
+{
+  "name": "gittrends-repository",
+  "description": "GitTrends.app service worker to collect information on OSS projects",
+  "homepage": "http://gittrends.app",
+  "version": "0.1.0",
+  "main": "index.js",
+  "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hsborges/gittrends-repository.git"
+  },
+  "type": "commonjs",
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "devDependencies": {
+    "@monorepo/eslint-config": "*",
+    "commitizen": "^4.1.2",
+    "cz-conventional-changelog": "3.2.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}

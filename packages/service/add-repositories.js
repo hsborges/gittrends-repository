@@ -3,15 +3,15 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config();
-require('pretty-error').start();
+require('dotenv').config({ path: '../../.env' });
 
+const consola = require('consola');
 const { chain, mergeWith, isArray, omit } = require('lodash');
+const { mongo } = require('@monorepo/database-config');
 const { program } = require('commander');
 const { version } = require('./package.json');
 
-const db = require('./modules/connection');
-const search = require('./modules/github/graphql/repositories/search');
+const search = require('./github/graphql/repositories/search');
 
 /* Script entry point */
 program
@@ -20,7 +20,7 @@ program
   .option('--language [string]', 'Major programming language')
   .parse(process.argv);
 
-console.log('Searching for the top-%s repositories with more stars on GitHub ...', program.limit);
+consola.info('Searching for the top-%s repositories with more stars on GitHub ...', program.limit);
 
 Promise.map(new Array(3), () => search(program.limit, { language: program.language }))
   .then((results) => {
@@ -43,7 +43,7 @@ Promise.map(new Array(3), () => search(program.limit, { language: program.langua
     return [repositories, users];
   })
   .spread(async (repos, users) => {
-    console.log('Adding repositories to database ...');
+    consola.info('Adding repositories to database ...');
 
     const insert = (docs, collection) => {
       if (!docs || !docs.length) return Promise.resolve();
@@ -57,10 +57,10 @@ Promise.map(new Array(3), () => search(program.limit, { language: program.langua
         .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)));
     };
 
-    return Promise.resolve(db.connect())
-      .then(() => insert(users, db.users))
-      .then(() => insert(repos, db.repositories))
-      .finally(() => db.disconnect());
+    return Promise.resolve(mongo.connect())
+      .then(() => insert(users, mongo.users))
+      .then(() => insert(repos, mongo.repositories))
+      .finally(() => mongo.disconnect());
   })
-  .then(() => console.log('Repositories successfully added!'))
-  .catch((err) => console.error(err));
+  .then(() => consola.success('Repositories successfully added!'))
+  .catch((err) => consola.error(err));

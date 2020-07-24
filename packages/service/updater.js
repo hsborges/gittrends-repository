@@ -8,9 +8,9 @@ require('pretty-error').start();
 
 const Bull = require('bull');
 const program = require('commander');
+const { mongo } = require('@monorepo/database-config');
 
 const worker = require('./updater-worker.js');
-const connection = require('./modules/connection.js');
 
 const {
   config: { resources },
@@ -29,7 +29,7 @@ program
 
     console.log(`Processing ${resource.toLowerCase()} job using ${program.workers} workers`);
 
-    return connection.connect().then(() => {
+    return mongo.connect().then(() => {
       const queue = new Bull(`updates:${resource}`, {
         redis: {
           host: process.env.GITTRENDS_REDIS_HOST || 'localhost',

@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: gittrends-db
+    restart: always
+    ports:
+      - ${GITTRENDS_MONGO_PORT}:27017
+    volumes:
+      - 'db:/data/db'
+
+  postgres:
+    image: postgres:alpine
+    container_name: gittrends-website-db
+    restart: always
+    ports:
+      - ${GITTRENDS_POSTGRES_PORT}:5432
+    volumes:
+      - 'website-db:/var/lib/postgresql/data'
+    environment:
+      POSTGRES_USER: ${GITTRENDS_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${GITTRENDS_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${GITTRENDS_POSTGRES_DB}
+
+  redis:
+    image: redis:alpine
+    container_name: gittrends-cache
+    restart: always
+    ports:
+      - ${GITTRENDS_REDIS_PORT}:6379
+    command: --maxmemory 50mb --maxmemory-policy volatile-lfu
+
+volumes:
+  db:
+    external: true
+    name: gittrends.app-database
+  website-db:
+    external: true
+    name: gittrends.app-website-database

@@ -2,14 +2,19 @@
  *  Author: Hudson S. Borges
  */
 const { omit } = require('lodash');
-const exporter = require('./index');
+const consola = require('consola');
+// const exporter = require('./index');
 
 module.exports = async ({ repository, knex, mongo }) => {
-  const cursor = mongo.stargazers.find({ repository });
+  consola.debug(`[id=${repository}] getting stargazers ...`);
+  const stargazers = await mongo.stargazers.find({ repository }).toArray();
 
-  while (await cursor.hasNext()) {
-    const stargazer = await cursor.next();
-    await exporter.user({ id: stargazer.user, knex, mongo });
-    await knex('stargazers').insert(omit({ id: stargazer._id, ...stargazer }, '_id'));
-  }
+  // consola.debug(`[id=${repository}] inserting ${stargazers.length} users ...`);
+  // await exporter.user({ id: stargazers.map((s) => s.user), knex, mongo });
+
+  consola.debug(`[id=${repository}] inserting ${stargazers.length} stars ...`);
+  await knex.batchInsert(
+    'stargazers',
+    stargazers.map((stargazer) => omit({ id: stargazer._id, ...stargazer }, '_id'))
+  );
 };

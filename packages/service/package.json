@@ -1,31 +1,23 @@
 {
-  "name": "service.gittrends.app",
+  "name": "@monorepo/service",
   "version": "1.1.0",
-  "description": "GitTrends.app service worker to collect information on OSS projects",
-  "homepage": "http://gittrends.app",
-  "main": "index.js",
+  "private": true,
+  "license": "MIT",
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "scripts": {
     "test": "jest",
-    "proxy-server": "github-proxy-server --tokens tokens.txt --request-interval 50",
-    "update": "pm2 start pm2-ecosystem.yml"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/hsborges/gittrends-service.git"
-  },
-  "type": "commonjs",
-  "engines": {
-    "node": ">=12.0.0"
+    "github-proxy-server": "github-proxy-server --tokens ../../tokens.txt"
   },
   "dependencies": {
     "@hsborges/github-proxy-server": "^1.3.0",
+    "@monorepo/database-config": "*",
     "axios": "^0.19.1",
     "bluebird": "^3.7.2",
     "bull": "^3.16.0",
     "bull-board": "^0.9.0",
     "chalk": "^4.1.0",
     "commander": "^6.0.0",
+    "consola": "^2.14.0",
     "debug": "^4.0.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
@@ -33,7 +25,6 @@
     "js-yaml": "^3.14.0",
     "lodash": "^4.17.19",
     "moment": "^2.27.0",
-    "mongodb": "^3.5.9",
     "numeral": "^2.0.6",
     "pretty-error": "^2.1.1",
     "promise-retry": "^2.0.1",
@@ -41,21 +32,9 @@
     "user-agents": "^1.0.559"
   },
   "devDependencies": {
-    "commitizen": "^4.1.2",
     "core-util-is": "^1.0.2",
-    "cz-conventional-changelog": "3.2.0",
-    "eslint": "^7.5.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-import": "^2.22.0",
-    "eslint-plugin-node": "^11.0.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "migrate": "^1.7.0",
-    "pm2": "^4.4.0",
-    "prettier": "^2.0.5"
+    "pm2": "^4.4.0"
   },
-  "private": true,
-  "license": "MIT",
   "config": {
     "resources": [
       "repos",
@@ -67,9 +46,6 @@
       "pulls",
       "dependencies",
       "users"
-    ],
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
+    ]
   }
 }

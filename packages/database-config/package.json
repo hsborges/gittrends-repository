@@ -1,0 +1,22 @@
+{
+  "name": "@monorepo/database-config",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "knex:migrate": "knex migrate:latest",
+    "knex:rollback": "knex migrate:rollback",
+    "mongo:migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "knex": "^0.21.2",
+    "mongodb": "^3.5.9",
+    "pg": "^8.3.0"
+  },
+  "devDependencies": {
+    "migrate": "^1.7.0",
+    "sqlite3": "^5.0.0"
+  }
+}

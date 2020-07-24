@@ -51,7 +51,7 @@ module.exports = async ({ id, knex, mongo }) => {
     await knex('repositories').where({ id }).delete();
 
     // insert user
-    await exporter.user({ id: repo.owner, knex, mongo });
+    // await exporter.user({ id: repo.owner, knex, mongo });
 
     // insert repository
     await knex('repositories').insert(
