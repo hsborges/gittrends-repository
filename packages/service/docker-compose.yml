@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+  proxy:
+    image: node:alpine
+    container_name: github-proxy-server
+    restart: always
+    expose:
+      - 80
+    volumes:
+      - ../../:/usr/src/app
+    working_dir: /usr/src/app/packages/service
+    command: npx github-proxy-server --port 80 --request-interval 50 --tokens ../../tokens.txt --verbose
+    networks:
+      - gittrends
+    logging:
+      driver: json-file
+      options:
+        max-size: 200k
+        max-file: '5'
+
+  service:
+    image: node:latest
+    container_name: gittrends-service
+    restart: always
+    ports:
+      - 8080
+    depends_on:
+      - proxy
+    volumes:
+      - ../..:/usr/src/app
+    working_dir: /usr/src/app/packages/service
+    command: /bin/bash -c "npx pm2 start pm2-ecosystem.yml && npx pm2 logs"
+    environment:
+      GITTRENDS_MONGO_HOST: gittrends-db
+      GITTRENDS_REDIS_HOST: gittrends-cache
+      GITTRENDS_PROXY_HOST: github-proxy-server
+      GITTRENDS_PROXY_PORT: 80
+      BULL_BOARD_PORT: 8080
+    networks:
+      - gittrends
+    logging:
+      driver: json-file
+      options:
+        max-size: 200k
+        max-file: '5'
+
+networks:
+  gittrends:
+    external: true

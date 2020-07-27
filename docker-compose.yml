@@ -9,6 +9,8 @@ services:
       - ${GITTRENDS_MONGO_PORT}:27017
     volumes:
       - 'db:/data/db'
+    networks:
+      - gittrends
 
   postgres:
     image: postgres:alpine
@@ -22,6 +24,8 @@ services:
       POSTGRES_USER: ${GITTRENDS_POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${GITTRENDS_POSTGRES_PASSWORD}
       POSTGRES_DB: ${GITTRENDS_POSTGRES_DB}
+    networks:
+      - gittrends
 
   redis:
     image: redis:alpine
@@ -30,6 +34,8 @@ services:
     ports:
       - ${GITTRENDS_REDIS_PORT}:6379
     command: --maxmemory 50mb --maxmemory-policy volatile-lfu
+    networks:
+      - gittrends
 
   traefik:
     image: 'traefik:v2.2'
@@ -44,6 +50,8 @@ services:
       - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - gittrends
 
   api:
     image: node:latest
@@ -66,6 +74,8 @@ services:
       - 'traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api'
     environment:
       GITTRENDS_POSTGRES_HOST: postgres
+    networks:
+      - gittrends
 
   website:
     image: nginx:alpine
@@ -82,6 +92,8 @@ services:
       - 'traefik.enable=true'
       - 'traefik.http.routers.website.rule=Host(`localhost`)'
       - 'traefik.http.routers.website.entrypoints=web'
+    networks:
+      - gittrends
 
 volumes:
   db:
@@ -90,3 +102,7 @@ volumes:
   website-db:
     external: true
     name: gittrends.app-website-database
+
+networks:
+  gittrends:
+    external: true
