@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 const { isArray, get: getValue } = require('lodash');
-const { mongo } = require('@monorepo/database-config');
+const { mongo } = require('@gittrends/database-config');
 
 const save = require('./_save.js');
 const get = require('../github/graphql/users/get.js');

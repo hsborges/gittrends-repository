@@ -6,7 +6,7 @@ global.Promise = require('bluebird');
 const consola = require('consola');
 const Bottleneck = require('bottleneck');
 const { program } = require('commander');
-const { knex, mongo } = require('@monorepo/database-config');
+const { knex, mongo } = require('@gittrends/database-config');
 
 const { version } = require('./package.json');
 const exporter = require('./exporters/index');

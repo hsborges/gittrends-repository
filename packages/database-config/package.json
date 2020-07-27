@@ -1,12 +1,12 @@
 {
-  "name": "@monorepo/database-config",
+  "name": "@gittrends/database-config",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "knex:migrate": "knex migrate:latest",
-    "knex:rollback": "knex migrate:rollback",
+    "postgres:migrate": "knex migrate:latest",
+    "postgres:rollback": "knex migrate:rollback",
     "mongo:migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate"
   },
   "dependencies": {

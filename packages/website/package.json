@@ -1,0 +1,42 @@
+{
+  "name": "@gittrends/website",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt --dotenv ../../.env --port 8080",
+    "build": "nuxt build --dotenv ../../.env",
+    "start": "nuxt start --dotenv ../../.env --port 8080",
+    "generate": "nuxt generate --dotenv ../../.env",
+    "lint:js": "eslint --ext .js,.vue --ignore-path .gitignore ."
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.11.0",
+    "@nuxtjs/proxy": "^2.0.1",
+    "chart.js": "^2.9.3",
+    "chartjs-plugin-colorschemes": "^0.4.0",
+    "cookie-universal-nuxt": "^2.1.4",
+    "lodash": "^4.17.19",
+    "moment": "^2.27.0",
+    "numeral": "^2.0.6",
+    "nuxt": "^2.13.0"
+  },
+  "devDependencies": {
+    "@nuxtjs/eslint-config": "^3.0.0",
+    "@nuxtjs/eslint-module": "^2.0.0",
+    "@nuxtjs/tailwindcss": "^2.0.0",
+    "@vue/test-utils": "^1.0.3",
+    "babel-core": "7.0.0-bridge.0",
+    "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.0.1",
+    "dotenv": "^8.2.0",
+    "eslint": "^7.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-nuxt": "^1.0.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "jest": "^26.0.1",
+    "prettier": "^2.0.5",
+    "stylus": "^0.54.8",
+    "stylus-loader": "^3.0.2",
+    "vue-jest": "^3.0.4"
+  }
+}

@@ -7,6 +7,7 @@ exports.up = async (knex) => {
     table.string('code_of_conduct');
     table.string('default_branch');
     table.text('description');
+    table.string('homepage_url');
     table.string('license_info');
     table.string('name');
     table.string('name_with_owner');
@@ -21,9 +22,9 @@ exports.up = async (knex) => {
     table.integer('stargazers_count').unsigned();
     table.integer('vulnerability_alerts_count').unsigned();
     table.integer('watchers_count').unsigned();
-    table.timestamp('created_at');
-    table.timestamp('updated_at');
-    table.timestamp('pushed_at');
+    table.timestamp('created_at', { useTz: true });
+    table.timestamp('updated_at', { useTz: true });
+    table.timestamp('pushed_at', { useTz: true });
 
     table.foreign('owner').references('id').inTable('users');
   });

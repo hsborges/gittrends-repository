@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 const _ = require('lodash');
-const { mongo } = require('@monorepo/database-config');
+const { mongo } = require('@gittrends/database-config');
 
 const save = require('./_save.js');
 const getWatchers = require('../github/graphql/repositories/watchers.js');

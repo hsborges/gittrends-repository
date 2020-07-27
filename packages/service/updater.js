@@ -3,12 +3,12 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config();
+require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
 const Bull = require('bull');
 const program = require('commander');
-const { mongo } = require('@monorepo/database-config');
+const { mongo } = require('@gittrends/database-config');
 
 const worker = require('./updater-worker.js');
 

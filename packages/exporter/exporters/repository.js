@@ -22,6 +22,7 @@ module.exports = async ({ id, knex, mongo }) => {
         code_of_conduct: 1,
         default_branch: 1,
         description: 1,
+        homepage_url: 1,
         license_info: 1,
         name: 1,
         name_with_owner: 1,

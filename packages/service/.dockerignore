@@ -1,6 +1,0 @@
-# node files
-node_modules
-# config files
-.env
-tokens.txt
-tokens.prod.txt

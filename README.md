@@ -41,7 +41,7 @@ cp .env.example .env
 4. Run database migrations
 
 ```sh
-yarn workspace @monorepo/database-config run mongo:migrate
+yarn workspace @gittrends/database-config run mongo:migrate
 ```
 
 5. Create a text file (e.g., `tokens.txt`) and put your Github access tokens

@@ -10,7 +10,8 @@ module.exports = {
     port: process.env.GITTRENDS_POSTGRES_PORT,
     database: process.env.GITTRENDS_POSTGRES_DB,
     user: process.env.GITTRENDS_POSTGRES_USERNAME,
-    password: process.env.GITTRENDS_POSTGRES_PASSWORD
+    password: process.env.GITTRENDS_POSTGRES_PASSWORD,
+    timezone: 'utc'
   },
   pool: {
     min: 2,

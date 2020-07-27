@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 const { get, isEqual } = require('lodash');
-const { mongo } = require('@monorepo/database-config');
+const { mongo } = require('@gittrends/database-config');
 
 const getDependencies = require('../github/graphql/repositories/dependencies.js');
 

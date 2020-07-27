@@ -16,8 +16,8 @@ exports.up = (knex) =>
     table.integer('watching_count').unsigned();
     table.integer('followers_count').unsigned();
     table.integer('following_count').unsigned();
-    table.timestamp('created_at');
-    table.timestamp('updated_at');
+    table.timestamp('created_at', { useTz: true });
+    table.timestamp('updated_at', { useTz: true });
   });
 
 exports.down = (knex) => knex.schema.dropTable('users');

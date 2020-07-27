@@ -4,8 +4,11 @@
   "main": "index.js",
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "export": "node index.js"
+  },
   "dependencies": {
-    "@monorepo/database-config": "*",
+    "@gittrends/database-config": "*",
     "bluebird": "^3.7.2",
     "bottleneck": "^2.19.5",
     "commander": "^6.0.0",

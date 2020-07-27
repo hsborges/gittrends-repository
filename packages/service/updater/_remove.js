@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { mongo } = require('@monorepo/database-config');
+const { mongo } = require('@gittrends/database-config');
 
 module.exports = {
   async reactions({ issue, pull, event }) {

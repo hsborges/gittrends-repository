@@ -15,13 +15,11 @@
   "engines": {
     "node": ">=12.0.0"
   },
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ]
-  },
+  "workspaces": [
+    "packages/*"
+  ],
   "devDependencies": {
-    "@monorepo/eslint-config": "*",
+    "@gittrends/eslint-config": "*",
     "commitizen": "^4.1.2",
     "cz-conventional-changelog": "3.2.0"
   },

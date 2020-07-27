@@ -3,7 +3,7 @@
  */
 const { isArray, omit } = require('lodash');
 
-const { mongo } = require('@monorepo/database-config');
+const { mongo } = require('@gittrends/database-config');
 
 module.exports = {
   async users(users) {

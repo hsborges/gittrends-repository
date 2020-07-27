@@ -6,7 +6,7 @@ exports.up = (knex) =>
     table.string('id').primary();
     table.string('repository');
     table.string('user');
-    table.timestamp('starred_at');
+    table.timestamp('starred_at', { useTz: true });
 
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
     table.foreign('user').references('id').inTable('users');

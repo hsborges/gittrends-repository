@@ -7,7 +7,7 @@ require('dotenv').config({ path: '../../.env' });
 
 const consola = require('consola');
 const { chain, mergeWith, isArray, omit } = require('lodash');
-const { mongo } = require('@monorepo/database-config');
+const { mongo } = require('@gittrends/database-config');
 const { program } = require('commander');
 const { version } = require('./package.json');
 
