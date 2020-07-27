@@ -1,6 +1,6 @@
 <!-- ABOUT THE PROJECT -->
 
-# <center>GitTrends.app Service</center>
+# <center>GitTrends.app</center>
 
 The goal of this project is to collect and analyze information from public GitHub projects using GitHub GraphQL API - Access [gittrends.app](https://gittrends.app) for more information.
 
@@ -41,30 +41,23 @@ cp .env.example .env
 4. Run database migrations
 
 ```sh
-yarn workspace @gittrends/database-config run mongo:migrate
+yarn workspace @gittrends/database-config mongo:migrate
+yarn workspace @gittrends/database-config postgres:migrate
 ```
 
 5. Create a text file (e.g., `tokens.txt`) and put your Github access tokens
-
-## Packages
-
-<!-- TODO -->
 
 ### Docker
 
 You can also use docker containers:
 
 ```sh
-# create a volume to store github data
+# create volumes and networks
 docker volume create gittrends.app-database
 docker volume create gittrends.app-website-database
+docker network create gittrends
 # run containers
 docker-compose up -d
-# add/update repositories on dataset
-docker-compose exec service node add-repositories.js --limit <number> --language <language>
-docker-compose exec service node scheduler.js all
-# to backup dataset
-docker-compose exec -T mongo mongodump --archive --gzip --db "$(echo $GITTRENDS_MONGO_DB)" > ./dump-`date -u +%s000`.gz
 ```
 
 <!-- ROADMAP -->

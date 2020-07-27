@@ -1,5 +1,3 @@
-# @gittrends/website
-
 ## Build Setup
 
 ```bash
