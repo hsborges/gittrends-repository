@@ -3,6 +3,7 @@
  */
 const { get, omit, isEqual } = require('lodash');
 const { mongo } = require('@gittrends/database-config');
+const Bottleneck = require('bottleneck');
 
 const save = require('./_save.js');
 const remove = require('./_remove.js');
@@ -37,82 +38,91 @@ const updateDetails = async function (repo, type = 'issue') {
   const errors = [];
   const collection = mongo[`${type}s`];
 
-  const cursor = collection.aggregate(
-    [
-      { $match: { repository: repo._id, '_meta.updated_at': { $exists: false } } },
-      { $project: { _id: 1, _meta: 1 } }
-    ],
-    { batchSize: 10, allowDiskUse: true }
+  const limiter = new Bottleneck({
+    minTime: 0,
+    maxConcurrent: parseInt(process.env.GITTRENDS_UPDATER_CONCURRENCY || 1, 10)
+  });
+
+  const promises = (
+    await collection
+      .aggregate(
+        [
+          { $match: { repository: repo._id, '_meta.updated_at': { $exists: false } } },
+          { $project: { _id: 1, _meta: 1 } }
+        ],
+        { batchSize: 10, allowDiskUse: true }
+      )
+      .toArray()
+  ).map((i) =>
+    limiter.schedule(() =>
+      getIssueOrPull(i._id, type, { lastCursor: get(i, '_meta.last_cursor') })
+        .then(async ({ [type]: data, timeline = [], commits = [], users = [], endCursor }) => {
+          const reactables = timeline
+            .filter((e) => e.reaction_groups)
+            .map((e) => ({ id: e.id, event: true }))
+            .concat(data.reaction_groups ? [{ id: i._id }] : []);
+
+          const reactionsPromise = getReactions(reactables).then((responses) =>
+            Promise.map(responses, (response, index) =>
+              saveReactions(response.reactions, response.users, {
+                repository: repo._id,
+                [type]: i._id,
+                ...(reactables[index].event ? { event: reactables[index].id } : {})
+              })
+            )
+          );
+
+          if (timeline && timeline.length) {
+            await mongo.timeline.bulkWrite(
+              timeline.map((event) => ({
+                replaceOne: {
+                  filter: { _id: event.id },
+                  replacement: {
+                    repository: repo._id,
+                    [type]: i._id,
+                    ...omit(event, ['id', 'reaction_groups'])
+                  },
+                  upsert: true
+                }
+              })),
+              { ordered: false }
+            );
+          }
+
+          if (commits && commits.length) {
+            await mongo.commits.bulkWrite(
+              commits.map((commit) => {
+                const filter = { _id: commit.id };
+                const replacement = { repository: repo._id, ...omit(commit, 'id') };
+                return { replaceOne: { filter, replacement, upsert: true } };
+              }),
+              { ordered: false }
+            );
+          }
+
+          if (users && users.length) await save.users(users);
+
+          return reactionsPromise.then(() =>
+            collection.replaceOne(
+              { _id: i._id },
+              {
+                ...omit(data, ['id', 'reaction_groups']),
+                _meta: {
+                  updated_at: new Date(),
+                  last_cursor: endCursor || get(i, '_meta.last_cursor')
+                }
+              }
+            )
+          );
+        })
+        .catch((err) => {
+          if (err instanceof NotFoundError) return remove[type]({ id: i._id });
+          return errors.push(err);
+        })
+    )
   );
 
-  for (let i = await cursor.next(); i !== null; i = await cursor.next()) {
-    await getIssueOrPull(i._id, type, { lastCursor: get(i, '_meta.last_cursor') })
-      .then(async ({ [type]: data, timeline = [], commits = [], users = [], endCursor }) => {
-        const reactables = timeline
-          .filter((e) => e.reaction_groups)
-          .map((e) => ({ id: e.id, event: true }))
-          .concat(data.reaction_groups ? [{ id: i._id }] : []);
-
-        const reactionsPromise = getReactions(reactables).then((responses) =>
-          Promise.map(responses, (response, index) =>
-            saveReactions(response.reactions, response.users, {
-              repository: repo._id,
-              [type]: i._id,
-              ...(reactables[index].event ? { event: reactables[index].id } : {})
-            })
-          )
-        );
-
-        if (timeline && timeline.length) {
-          await mongo.timeline.bulkWrite(
-            timeline.map((event) => ({
-              replaceOne: {
-                filter: { _id: event.id },
-                replacement: {
-                  repository: repo._id,
-                  [type]: i._id,
-                  ...omit(event, ['id', 'reaction_groups'])
-                },
-                upsert: true
-              }
-            })),
-            { ordered: false }
-          );
-        }
-
-        if (commits && commits.length) {
-          await mongo.commits.bulkWrite(
-            commits.map((commit) => {
-              const filter = { _id: commit.id };
-              const replacement = { repository: repo._id, ...omit(commit, 'id') };
-              return { replaceOne: { filter, replacement, upsert: true } };
-            }),
-            { ordered: false }
-          );
-        }
-
-        if (users && users.length) await save.users(users);
-
-        return reactionsPromise.then(() =>
-          collection.replaceOne(
-            { _id: i._id },
-            {
-              ...omit(data, ['id', 'reaction_groups']),
-              _meta: {
-                updated_at: new Date(),
-                last_cursor: endCursor || get(i, '_meta.last_cursor')
-              }
-            }
-          )
-        );
-      })
-      .catch((err) => {
-        if (err instanceof NotFoundError) return remove[type]({ id: i._id });
-        return errors.push(err);
-      });
-  }
-
-  cursor.close();
+  await Promise.all(promises);
 
   const graphqlErrors = errors
     .filter((e) => e instanceof RequestError)
