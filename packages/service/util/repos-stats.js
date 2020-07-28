@@ -3,7 +3,7 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config();
+require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
 const chalk = require('chalk');
@@ -11,11 +11,11 @@ const numeral = require('numeral');
 const { table } = require('table');
 const { startCase, difference } = require('lodash');
 
-const connection = require('../modules/connection.js');
+const { mongo } = require('@gittrends/database-config');
 const { resources } = require('../package.json').config;
 
 Promise.resolve()
-  .then(() => connection.connect())
+  .then(() => mongo.connect())
   .then(async () => {
     const reposResources = difference(resources, ['users']);
 
@@ -44,7 +44,7 @@ Promise.resolve()
       { repos: { $sum: '$repos' } }
     );
 
-    const [result] = await connection.repositories
+    const [result] = await mongo.repositories
       .aggregate([
         { $addFields: fields },
         { $group: { _id: null, total: { $sum: 1 }, ...pipe2 } },
@@ -83,4 +83,4 @@ Promise.resolve()
     )
   )
   .then((data) => console.log(data))
-  .finally(() => connection.disconnect());
+  .finally(() => mongo.disconnect());

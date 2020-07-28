@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-require('dotenv').config();
+require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
 const Bull = require('bull');

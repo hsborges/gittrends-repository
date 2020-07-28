@@ -3,26 +3,26 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config();
+require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
 const numeral = require('numeral');
 const chalk = require('chalk');
 const { table } = require('table');
 
-const connection = require('../modules/connection.js');
+const { mongo } = require('@gittrends/database-config');
 
 Promise.resolve()
-  .then(() => connection.connect())
+  .then(() => mongo.connect())
   .then(() =>
-    connection.db
+    mongo.db
       .listCollections()
       .toArray()
       .map((c) => c.name)
   )
   .then((names) => {
     return Promise.mapSeries(names, async (name) => {
-      const stats = await connection.db.collection(name).stats();
+      const stats = await mongo.db.collection(name).stats();
       return [name, stats.count, stats.storageSize, stats.nindexes, stats.totalIndexSize];
     }).then((data) =>
       [
@@ -53,4 +53,4 @@ Promise.resolve()
     table(data, { columnDefault: { alignment: 'right' }, columns: { 0: { alignment: 'left' } } })
   )
   .then((data) => console.log(data))
-  .finally(() => connection.disconnect());
+  .finally(() => mongo.disconnect());
