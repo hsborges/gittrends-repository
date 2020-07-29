@@ -115,8 +115,8 @@ const updateDetails = async function (repo, type = 'issue') {
             )
           );
         })
-        .catch((err) => {
-          if (err instanceof NotFoundError) remove[type]({ id: i._id });
+        .catch(async (err) => {
+          if (err instanceof NotFoundError) await remove[type]({ id: i._id });
           else errors.push(err);
         })
     )
