@@ -102,7 +102,7 @@ const updateDetails = async function (repo, type = 'issue') {
 
           if (users && users.length) await save.users(users);
 
-          return reactionsPromise.then(() =>
+          await reactionsPromise.then(() =>
             collection.replaceOne(
               { _id: i._id },
               {
@@ -116,8 +116,8 @@ const updateDetails = async function (repo, type = 'issue') {
           );
         })
         .catch((err) => {
-          if (err instanceof NotFoundError) return remove[type]({ id: i._id });
-          return errors.push(err);
+          if (err instanceof NotFoundError) remove[type]({ id: i._id });
+          else errors.push(err);
         })
     )
   );
