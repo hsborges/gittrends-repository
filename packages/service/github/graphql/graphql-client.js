@@ -6,7 +6,6 @@ const moment = require('moment');
 const axios = require('axios');
 const pRetry = require('promise-retry');
 const UserAgent = require('user-agents');
-const debug = require('debug')('gittrends:github:graphql:client');
 const compact = require('../../helpers/compact.js');
 const Errors = require('../../helpers/errors.js');
 
@@ -69,7 +68,6 @@ module.exports.post = async (parameters) => {
   return pRetry(
     (retry) =>
       requestClient({ method: 'post', data: parameters }).catch((err) => {
-        debug(err.message || err);
         if (err.response && err.response.status === 502) throw err;
         return retry(err);
       }),
