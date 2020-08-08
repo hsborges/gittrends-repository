@@ -7,6 +7,7 @@ require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
 const Bull = require('bull');
+const consola = require('consola');
 const program = require('commander');
 const { mongo } = require('@gittrends/database-config');
 
@@ -27,7 +28,7 @@ program
     if (resources.indexOf(resource.toLowerCase()) < 0)
       throw new Error("Invalid 'resource' argument values!");
 
-    console.log(`Processing ${resource.toLowerCase()} job using ${program.workers} workers`);
+    consola.info(`Processing ${resource.toLowerCase()} job using ${program.workers} workers`);
 
     return mongo.connect().then(() => {
       const queue = new Bull(`updates:${resource}`, {
@@ -43,6 +44,15 @@ program
       });
 
       queue.process('*', program.workers, worker);
+
+      let timeout = null;
+      process.on('SIGTERM', async () => {
+        consola.warn('Signal received: closing processing queue');
+        if (!timeout) {
+          await queue.close().then(() => process.exit(0));
+          timeout = setTimeout(() => process.exit(1), 30 * 1000);
+        }
+      });
     });
   })
   .parse(process.argv);
