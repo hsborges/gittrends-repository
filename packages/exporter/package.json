@@ -12,7 +12,7 @@
     "bluebird": "^3.7.2",
     "bottleneck": "^2.19.5",
     "commander": "^6.0.0",
-    "consola": "^2.14.0",
+    "consola": "^2.15.0",
     "lodash": "^4.17.19",
     "moment": "^2.27.0",
     "node-cache": "^5.1.2"
