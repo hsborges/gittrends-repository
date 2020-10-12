@@ -22,7 +22,7 @@ const {
 program
   .version(version)
   .arguments('<resource>')
-  .description('Update resource of a given type')
+  .description(`Update repositories metadata (${resources.join(', ')})`)
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
   .action(async (resource) => {
     if (resources.indexOf(resource.toLowerCase()) < 0)

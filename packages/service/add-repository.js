@@ -6,6 +6,7 @@ global.Promise = require('bluebird');
 require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
+const consola = require('consola');
 const { omit } = require('lodash');
 const { program } = require('commander');
 const { mongo } = require('@gittrends/database-config');
@@ -21,7 +22,7 @@ program
   .action(async (repo, otherRepos) =>
     Promise.mapSeries([repo, ...otherRepos], (_repo) => {
       if (!/.*\/.*/.test(_repo)) throw new TypeError(`Invalid repository name (${_repo})!`);
-      console.log(`Searching for repository ${_repo} ...`);
+      consola.info(`Searching for repository ${_repo} ...`);
       return get(..._repo.split('/')).then(async ({ repository, users }) => {
         await mongo.connect();
         await mongo.users
@@ -39,11 +40,11 @@ program
       });
     })
       .then(() => {
-        console.log('Repository successfully added!');
+        consola.success('Repository successfully added!');
         process.exit(0);
       })
       .catch((err) => {
-        console.error(err);
+        consola.error(err);
         process.exit(1);
       })
   )

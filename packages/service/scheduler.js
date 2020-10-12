@@ -8,6 +8,7 @@ require('pretty-error').start();
 
 const _ = require('lodash');
 const moment = require('moment');
+const consola = require('consola');
 const Bull = require('bull');
 const { program } = require('commander');
 const { mongo } = require('@gittrends/database-config');
@@ -100,7 +101,7 @@ const repositoriesScheduler = async (res, wait, limit = 10000) => {
       priority: !meta.updated_at ? 1 : undefined
     })
   )
-    .then(() => console.log(`Number of ${res} scheduled: ${jobsMetadata.length}`))
+    .then(() => consola.success(`Number of ${res} scheduled: ${jobsMetadata.length}`))
     .finally(() => queue.close());
 };
 
@@ -154,7 +155,7 @@ const usersScheduler = async (wait, limit = 100000) => {
       }
     )
   )
-    .then(() => console.log(`Number of users scheduled: ${usersIds.length}`))
+    .then(() => consola.success(`Number of users scheduled: ${usersIds.length}`))
     .finally(() => queue.close());
 };
 
@@ -170,7 +171,7 @@ program
       .connect()
       .then(() =>
         Promise.mapSeries(resourcesParser([resource, ...other]), async (res) => {
-          console.log(`Scheduling ${res} jobs ...`);
+          consola.info(`Scheduling ${res} jobs ...`);
           switch (res) {
             case 'users':
               return usersScheduler(program.wait, program.limit);
@@ -179,7 +180,7 @@ program
           }
         })
       )
-      .catch((err) => console.error(err))
+      .catch((err) => consola.error(err))
       .finally(() => mongo.disconnect())
       .finally(() => process.exit(0))
   )

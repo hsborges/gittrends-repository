@@ -6,7 +6,7 @@ global.Promise = require('bluebird');
 require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
-const moment = require('moment');
+const consola = require('consola');
 
 /* eslint-disable global-require, import/no-dynamic-require */
 /* execute */
@@ -30,11 +30,11 @@ module.exports = async ({ id, name, data: { ids } }) => {
           return require(`${base}/${resource}`)(id);
       }
     })
-    .then(() => console.log(`${moment().format('LTS')} | Job ${name} finished!`))
+    .then(() => consola.success(`[${name}] finished!`))
     .catch(async (err) => {
-      console.error(`Error thrown by ${resource} of ${name}.`);
-      console.error(err);
-      if (err && err.meta) console.error(JSON.stringify(err.meta));
+      consola.error(`Error thrown by ${resource} of ${name}.`);
+      consola.error(err);
+      if (err && err.meta) consola.error(JSON.stringify(err.meta));
       throw err;
     });
 };
