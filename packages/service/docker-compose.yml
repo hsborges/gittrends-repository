@@ -1,9 +1,27 @@
 version: '3.7'
 
 services:
+  mongo:
+    image: mongo:latest
+    restart: always
+    ports:
+      - ${GITTRENDS_MONGO_PORT}:27017
+    volumes:
+      - 'db:/data/db'
+    networks:
+      - gittrends
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - ${GITTRENDS_REDIS_PORT}:6379
+    command: --maxmemory 50mb --maxmemory-policy volatile-lfu
+    networks:
+      - gittrends
+
   proxy:
     image: node:alpine
-    container_name: github-proxy-server
     restart: always
     expose:
       - 80
@@ -21,7 +39,6 @@ services:
 
   service:
     image: node:latest
-    container_name: gittrends-service
     restart: always
     ports:
       - 8080
@@ -32,9 +49,9 @@ services:
     working_dir: /usr/src/app/packages/service
     command: /bin/bash -c "npx pm2 start pm2-ecosystem.yml && npx pm2 logs"
     environment:
-      GITTRENDS_MONGO_HOST: gittrends-db
-      GITTRENDS_REDIS_HOST: gittrends-cache
-      GITTRENDS_PROXY_HOST: github-proxy-server
+      GITTRENDS_MONGO_HOST: mongo
+      GITTRENDS_REDIS_HOST: redis
+      GITTRENDS_PROXY_HOST: proxy
       GITTRENDS_PROXY_PORT: 80
       BULL_BOARD_PORT: 8080
     networks:
@@ -44,6 +61,11 @@ services:
       options:
         max-size: 200k
         max-file: '5'
+
+volumes:
+  db:
+    external: true
+    name: gittrends.app-database
 
 networks:
   gittrends:

@@ -10,7 +10,7 @@ module.exports = async function (fastify) {
     console.log(request.hostname);
     const repo = await fastify
       .knex('repositories')
-      .where('name_with_owner', 'ILIKE', `${request.params.owner}/${request.params.name}`)
+      .where('name_with_owner', 'like', `${request.params.owner}/${request.params.name}`)
       .first('*');
 
     const [owner, topics, meta] = await Promise.all([

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nuxt --dotenv ../../.env --port 8080",
     "build": "nuxt build --dotenv ../../.env",
-    "start": "nuxt start --dotenv ../../.env --port 8080",
+    "start": "nuxt start --dotenv ../../.env",
     "generate": "nuxt generate --dotenv ../../.env",
     "lint:js": "eslint --ext .js,.vue --ignore-path .gitignore ."
   },

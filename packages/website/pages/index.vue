@@ -66,9 +66,7 @@ export default {
     },
     format: (v) => (v < 1000 ? v : numeral(v).format('0.0a')),
     random(min, max) {
-      min = Math.ceil(min);
-      max = Math.floor(max);
-      return Math.floor(Math.random() * (max - min + 1)) + min;
+      return Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min);
     }
   }
 };

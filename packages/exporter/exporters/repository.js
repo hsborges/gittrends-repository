@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 const { omit, has, size } = require('lodash');
-
 const exporter = require('./index');
 
 module.exports = async ({ id, knex, mongo }) => {
@@ -15,7 +14,10 @@ module.exports = async ({ id, knex, mongo }) => {
 
   // find repository
   const repo = await mongo.repositories.findOne(
-    { _id: id },
+    {
+      _id: id,
+      '_meta.updated_at': { $exists: true }
+    },
     {
       projection: {
         _id: 1,
@@ -47,13 +49,7 @@ module.exports = async ({ id, knex, mongo }) => {
     }
   );
 
-  if (repo && has(repo, '_meta.updated_at')) {
-    // remove previous data
-    await knex('repositories').where({ id }).delete();
-
-    // insert user
-    // await exporter.user({ id: repo.owner, knex, mongo });
-
+  if (repo) {
     // insert repository
     await knex('repositories').insert(
       omit({ id: repo._id, ...repo }, ['_id', 'languages', 'repository_topics', '_meta'])

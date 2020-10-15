@@ -11,7 +11,11 @@
     "add-repository": "node add-repository.js",
     "schedule": "node scheduler.js",
     "update": "node updater.js",
-    "pm2": "pm2 start pm2-ecosystem.yml"
+    "pm2": "pm2 start pm2-ecosystem.yml",
+    "docker-compose:up": "docker-compose --env-file ../../.env up",
+    "docker-compose:down": "docker-compose --env-file ../../.env down",
+    "docker-compose:stop": "docker-compose --env-file ../../.env stop",
+    "docker-compose:logs": "docker-compose --env-file ../../.env logs"
   },
   "dependencies": {
     "@gittrends/database-config": "*",

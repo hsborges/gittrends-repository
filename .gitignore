@@ -118,4 +118,4 @@ dist
 
 .migrate
 tokens.txt
-.env
+donated-tokens.txt

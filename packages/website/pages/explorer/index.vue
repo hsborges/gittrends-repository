@@ -46,7 +46,7 @@
       >
         <div class="flex info">
           <div class="icon flex flex-shrink-0 w-16 items-center justify-center">
-            <object :data="repo.open_graph_image_url" type="image/png" class="w-12 h-12"> </object>
+            <object :data="repo.open_graph_image_url" type="image/png" class="w-12 h-12"></object>
           </div>
           <div class="content flex-block flex-grow py-2 pr-3">
             <p class="font-bold text-secondary">{{ repo.name_with_owner }}</p>
@@ -120,7 +120,7 @@ export default {
     }
   },
   watch: {
-    '$route.query'(to) {
+    '$route.query': function (to) {
       if (_.isEmpty(to) && (this.filter.query || this.filter.language)) {
         this.reset();
         this.applyFilter();

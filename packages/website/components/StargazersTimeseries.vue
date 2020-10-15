@@ -63,7 +63,7 @@ export default {
   },
   created() {
     Chart.Legend.prototype.afterFit = function () {
-      this.height = this.height + 15;
+      this.height += 15;
     };
   },
   mounted() {
@@ -123,7 +123,7 @@ export default {
       };
     },
     removeTimeseries(repo) {
-      if (Array.isArray(repo)) return repo.forEach((r) => this.removeRepository(r));
+      if (Array.isArray(repo)) repo.forEach((r) => this.removeRepository(r));
       else delete this.series[repo];
     },
     updateDatasets() {

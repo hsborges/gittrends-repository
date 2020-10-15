@@ -18,8 +18,10 @@
   "workspaces": [
     "packages/*"
   ],
+  "dependencies": {
+    "@gittrends/eslint-config": "1.0.0"
+  },
   "devDependencies": {
-    "@gittrends/eslint-config": "*",
     "commitizen": "^4.1.2",
     "cz-conventional-changelog": "3.2.0"
   },

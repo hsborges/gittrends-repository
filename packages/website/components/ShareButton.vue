@@ -10,10 +10,9 @@ import qs from 'querystring';
 export default {
   computed: {
     baseUrl() {
-      return (
-        `${window.location.protocol}//${window.location.hostname}` +
-        (window.location.port ? `:${window.location.port}` : '')
-      );
+      return `${window.location.protocol}//${window.location.hostname}${
+        window.location.port ? `:${window.location.port}` : ''
+      }`;
     },
     url() {
       return qs.encode({

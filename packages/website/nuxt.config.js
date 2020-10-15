@@ -1,9 +1,6 @@
+const { GITTRENDS_API_HOST = 'localhost', GITTRENDS_API_PORT = 3000 } = process.env;
+
 export default {
-  /*
-   ** Nuxt rendering mode
-   ** See https://nuxtjs.org/api/configuration-mode
-   */
-  mode: 'universal',
   /*
    ** Nuxt target
    ** See https://nuxtjs.org/api/configuration-target
@@ -70,7 +67,7 @@ export default {
 
   proxy: {
     '/api/': {
-      target: 'http://localhost:3000',
+      target: `http://${GITTRENDS_API_HOST}:${GITTRENDS_API_PORT}`,
       pathRewrite: { '^/api/': '' }
     }
   },

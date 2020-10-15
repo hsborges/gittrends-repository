@@ -3,22 +3,20 @@
  */
 require('dotenv').config({ path: '../../.env' });
 
+const { resolve } = require('path');
+
+const rootDir = resolve(__dirname, '..', '..');
+
 module.exports = {
-  client: 'postgresql',
+  client: 'sqlite3',
   connection: {
-    host: process.env.GITTRENDS_POSTGRES_HOST,
-    port: process.env.GITTRENDS_POSTGRES_PORT,
-    database: process.env.GITTRENDS_POSTGRES_DB,
-    user: process.env.GITTRENDS_POSTGRES_USERNAME,
-    password: process.env.GITTRENDS_POSTGRES_PASSWORD,
-    timezone: 'utc'
-  },
-  pool: {
-    min: 2,
-    max: 10
+    filename: process.env.GITTRENDS_API_FILENAME
+      ? resolve(rootDir, process.env.GITTRENDS_API_FILENAME)
+      : resolve(rootDir, 'dumps', `database-${process.env.NODE_ENV || 'development'}.sqlite3`)
   },
   migrations: {
-    directory: 'knex_migrations',
+    directory: resolve(__dirname, 'knex_migrations'),
     tableName: 'knex_migrations'
-  }
+  },
+  useNullAsDefault: true
 };

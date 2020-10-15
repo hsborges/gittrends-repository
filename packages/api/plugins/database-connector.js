@@ -2,6 +2,7 @@ const { knex } = require('@gittrends/database-config');
 const fastifyPlugin = require('fastify-plugin');
 
 async function dbConnector(fastify) {
+  await knex.raw('PRAGMA case_sensitive_like=ON');
   fastify.decorate('knex', knex);
 }
 

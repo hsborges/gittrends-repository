@@ -75,10 +75,15 @@ export default {
       this.visible = false;
     },
     async sendRequest() {
-      if (!this.request.repository)
-        return (this.request.feedback = 'Repository is a mandatory field!');
-      if (!/.+\/.+/gi.test(this.request.repository))
-        return (this.request.feedback = 'Invalid repository format!');
+      if (!this.request.repository) {
+        this.request.feedback = 'Repository is a mandatory field!';
+        return;
+      }
+
+      if (!/.+\/.+/gi.test(this.request.repository)) {
+        this.request.feedback = 'Invalid repository format!';
+        return;
+      }
 
       this.request.sending = true;
       await this.axios(`https://api.github.com/repos/${this.request.repository}`)

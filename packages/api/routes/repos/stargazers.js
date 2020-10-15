@@ -13,7 +13,7 @@ module.exports = async function (fastify) {
 
     const repo = await fastify
       .knex('repositories')
-      .where('name_with_owner', 'ilike', `${owner}/${name}`)
+      .where('name_with_owner', 'like', `${owner}/${name}`)
       .first('id');
 
     if (!repo) return reply.callNotFound();
@@ -21,7 +21,7 @@ module.exports = async function (fastify) {
     const timeseries = await fastify
       .knex('stargazers')
       .select(
-        fastify.knex.raw("date_trunc('week', starred_at) as week"),
+        fastify.knex.raw("date(starred_at / 1000, 'unixepoch', 'weekday 0') as week"),
         fastify.knex.raw('count(*) as stargazers_count')
       )
       .where({ repository: repo.id })
@@ -54,7 +54,7 @@ module.exports = async function (fastify) {
 
     return reply.send({
       timeseries: timeseries.map((ts) => [
-        moment.utc(ts.week).endOf('isoweek').toDate(),
+        moment.utc(ts.week).endOf('day').toDate(),
         parseInt(ts.stargazers_count, 10)
       ]),
       first,

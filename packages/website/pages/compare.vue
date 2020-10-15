@@ -207,7 +207,7 @@ export default {
 
     this.$nextTick(() => {
       if (names && names.length) return Promise.all(names.map((name) => this.add(name)));
-      else return this.suggest();
+      return this.suggest();
     });
   },
   methods: {
@@ -217,7 +217,7 @@ export default {
         .then(({ data }) => {
           const repos = _.shuffle(data.repositories);
           const suggestions = [];
-          for (let i = 0; i < Math.ceil(repos.length / 2); i++) {
+          for (let i = 0; i < Math.ceil(repos.length / 2); i += 1) {
             const r1 = repos[i];
             const r2 = repos[repos.length - i - 1];
 
@@ -248,7 +248,8 @@ export default {
       if (this.repositories.length === 6)
         return this.showMessage('Remove one repository before adding new ones.');
 
-      this.suggestions = this.message = null;
+      this.suggestions = null;
+      this.message = null;
       this.loading = true;
 
       const repo = await this.$axios(`/api/repos/${nameWithOwner}`).then(({ data }) => ({
@@ -268,7 +269,7 @@ export default {
         this.showMessage(`Stargazers timeseries missing for ${repo.name_with_owner} :(`);
       }
 
-      this.updateUrl();
+      return this.updateUrl();
     },
     remove(nameWithOwner) {
       this.repositories = this.repositories.filter((r) => r.name_with_owner !== nameWithOwner);
@@ -282,9 +283,14 @@ export default {
     },
     async find(v) {
       if (!v) return;
-      else if (v.length < 3) return this.showMessage('You must provide at least 4 characters');
 
-      this.suggestions = this.message = null;
+      if (v.length < 3) {
+        this.showMessage('You must provide at least 4 characters');
+        return;
+      }
+
+      this.suggestions = null;
+      this.message = null;
       const name = v.trim().toLowerCase();
 
       const { repositories } = await this.$axios(

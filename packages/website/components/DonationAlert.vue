@@ -5,9 +5,7 @@
       <span class="hidden md:inline leading-normal">
         Hey, we need your support to expand our database. Click here to donate a GitHub access token
       </span>
-      <span class="md:hidden text-sm leading-normal">
-        Enjoying? Donate a access token
-      </span>
+      <span class="md:hidden text-sm leading-normal"> Enjoying? Donate a access token </span>
       \o/
     </nuxt-link>
     <i

@@ -5,18 +5,17 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "postgres:migrate": "knex migrate:latest",
-    "postgres:rollback": "knex migrate:rollback",
-    "mongo:migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate"
+    "mongo:migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate",
+    "sqlite3:migrate": "knex migrate:latest"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
     "knex": "^0.21.3",
     "mongodb": "^3.6.0",
-    "pg": "^8.3.0"
+    "sqlite3": "^5.0.0"
   },
   "devDependencies": {
-    "migrate": "^1.7.0",
-    "sqlite3": "^5.0.0"
+    "commitizen": "^4.1.2",
+    "migrate": "^1.7.0"
   }
 }

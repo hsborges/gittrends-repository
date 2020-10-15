@@ -36,9 +36,7 @@
           Although GitHub hosts millions of repositories, GitTrends only monitor popular
           repositories (i.e., those ones with a large number of stars). If your repository is not
           indexed, you can
-          <a class="cursor-pointer" @click.prevent="$refs.modal.show()">
-            click here
-          </a>
+          <a class="cursor-pointer" @click.prevent="$refs.modal.show()"> click here </a>
           or send an email to us requesting its inclusion (please, tell us why it would be useful
           for you).
         </p>
@@ -50,9 +48,7 @@
             <img src="@/assets/images/hudson.jpg" class="h-32 md:h-full" />
           </div>
           <div class="description flex flex-grow flex-col text-base md:text-lg pt-8 md:pt-0">
-            <span class="name text-lg md:text-xl font-bold">
-              Hudson Silva Borges
-            </span>
+            <span class="name text-lg md:text-xl font-bold"> Hudson Silva Borges </span>
             <span>
               Assistant professor at
               <abbr title="Faculty of Computer Science">FACOM</abbr>/<abbr
@@ -60,9 +56,7 @@
                 >UFMS</abbr
               >, Brazil.
             </span>
-            <span>
-              Email: hsborges [a] facom.ufms.br
-            </span>
+            <span> Email: hsborges [a] facom.ufms.br </span>
           </div>
         </div>
       </article>

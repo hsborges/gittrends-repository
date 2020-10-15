@@ -3,10 +3,7 @@
  */
 const { omit } = require('lodash');
 
-module.exports = async ({ knex, mongo, BATCH_SIZE = 25000 }) => {
-  await knex.raw('ALTER TABLE users DISABLE TRIGGER ALL;');
-  await knex('users').delete();
-
+module.exports = async ({ knex, mongo, BATCH_SIZE = 50 }) => {
   const cursor = mongo.users.find(
     {},
     {
@@ -26,28 +23,23 @@ module.exports = async ({ knex, mongo, BATCH_SIZE = 25000 }) => {
         following_count: 1,
         created_at: 1,
         updated_at: 1
-      },
-      batchSize: BATCH_SIZE
+      }
     }
   );
 
+  let user = null;
   let batch = [];
-  while (await cursor.hasNext()) {
-    batch.push(await cursor.next());
-    if (batch.length === BATCH_SIZE) {
+  do {
+    user = await cursor.next();
+
+    if (user && batch.length < BATCH_SIZE) {
+      batch.push(user);
+    } else if (batch.length) {
       await knex.batchInsert(
         'users',
-        batch.map((user) => omit({ id: user._id, ...user }, '_id'))
+        batch.map((u) => omit({ id: u._id, ...u }, '_id'))
       );
       batch = [];
     }
-  }
-
-  if (batch.length > 0)
-    await knex.batchInsert(
-      'users',
-      batch.map((user) => omit({ id: user._id, ...user }, '_id'))
-    );
-
-  await knex.raw('ALTER TABLE users ENABLE TRIGGER ALL;');
+  } while (user);
 };
