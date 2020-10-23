@@ -9,65 +9,30 @@ apps:
     cron_restart: '0 * * * *'
     autorestart: false
 
-  - name: gittrends-repos
+  - name: gittrends-updater
     script: updater.js
-    args: repos --workers 1
-    instances: 1,
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
-  - name: gittrends-stargazers
-    script: updater.js
-    args: stargazers --workers 1
-    instances: 1,
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
-  - name: gittrends-watchers
-    script: updater.js
-    args: watchers --workers 1
-    instances: 1,
+    args: repos stargazers watchers tags releases dependencies --workers 1
+    instances: 1
     exec_mode: cluster
     instance_var: INSTANCE_ID
 
   - name: gittrends-issues
     script: updater.js
     args: issues --workers 1
-    instances: 1,
+    instances: 1
     exec_mode: cluster
     instance_var: INSTANCE_ID
 
   - name: gittrends-pulls
     script: updater.js
     args: pulls --workers 1
-    instances: 1,
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
-  - name: gittrends-tags
-    script: updater.js
-    args: tags --workers 1
-    instances: 1,
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
-  - name: gittrends-releases
-    script: updater.js
-    args: releases --workers 1
-    instances: 1,
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
-  - name: gittrends-dependencies
-    script: updater.js
-    args: dependencies --workers 1
-    instances: 1,
+    instances: 1
     exec_mode: cluster
     instance_var: INSTANCE_ID
 
   - name: gittrends-users
     script: updater.js
     args: users --workers 1
-    instances: 1,
+    instances: 1
     exec_mode: cluster
     instance_var: INSTANCE_ID

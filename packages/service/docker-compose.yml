@@ -21,10 +21,10 @@ services:
       - gittrends
 
   proxy:
-    image: node:alpine
+    image: node:latest
     restart: always
-    expose:
-      - 80
+    ports:
+      - ${GITTRENDS_PROXY_PORT}:80
     volumes:
       - ../../:/usr/src/app
     working_dir: /usr/src/app/packages/service
@@ -41,7 +41,7 @@ services:
     image: node:latest
     restart: always
     ports:
-      - 8080
+      - ${BULL_BOARD_PORT}:8080
     depends_on:
       - proxy
     volumes:
