@@ -41,11 +41,15 @@ cp .env.example .env
 4. Run database migrations
 
 ```sh
-yarn workspace @gittrends/database-config mongo:migrate
-yarn workspace @gittrends/database-config postgres:migrate
+yarn workspace @gittrends/database-config migrate
 ```
 
 5. Create a text file (e.g., `tokens.txt`) and put your Github access tokens
+
+```sh
+touch tokens.txt
+echo "[username]:<github_access_token>" >> tokens.txt
+```
 
 ### Docker
 
@@ -54,7 +58,6 @@ You can also use docker containers:
 ```sh
 # create volumes and networks
 docker volume create gittrends.app-database
-docker volume create gittrends.app-website-database
 docker network create gittrends
 # run containers
 docker-compose up -d
