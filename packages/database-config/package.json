@@ -5,8 +5,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "mongo:migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate",
-    "sqlite3:migrate": "knex migrate:latest"
+    "migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
