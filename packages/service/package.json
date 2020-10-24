@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@gittrends/database-config": "*",
-    "@hsborges/github-proxy-server": "^1.3.3",
+    "@hsborges/github-proxy-server": "^1.3.4",
     "axios": "^0.19.1",
     "bluebird": "^3.7.2",
     "bottleneck": "^2.19.5",
