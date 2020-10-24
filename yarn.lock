@@ -951,10 +951,10 @@
     postcss "7.0.32"
     purgecss "^2.3.0"
 
-"@hsborges/github-proxy-server@^1.3.4":
-  version "1.3.4"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-1.3.4.tgz#cc85438c7a6967aaeae683aaeb60ce5b3347e7cd"
-  integrity sha512-uNS5pUL8JbF9a1t7zutZLGACU77E53KmmZA/eibhO+Pri7W4x7ghY3wLPONkQbZlCElPLEPmDL6aLGmFX1mEYg==
+"@hsborges/github-proxy-server@^1.3.5":
+  version "1.3.5"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-1.3.5.tgz#d89e27e80f628f2ba7cf11c23cb178d5314fc9a2"
+  integrity sha512-zXJ0xXY+iuJ55rg6R4azTTkCVQxfDQ0iTAiwbgT4bWiv2ZhWb2Auw67LcItYZOY4B+N9sj64ul9jPLZO6f68AA==
   dependencies:
     "@polka/send-type" "^0.5.2"
     bluebird "^3.7.2"
@@ -3398,9 +3398,9 @@ caniuse-api@^3.0.0:
     lodash.uniq "^4.5.0"
 
 caniuse-lite@^1.0.0, caniuse-lite@^1.0.30000981, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001135, caniuse-lite@^1.0.30001148:
-  version "1.0.30001150"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001150.tgz#6d0d829da654b0b233576de00335586bc2004df1"
-  integrity sha512-kiNKvihW0m36UhAFnl7bOAv0i1K1f6wpfVtTF5O5O82XzgtBnb05V0XeV3oZ968vfg2sRNChsHw8ASH2hDfoYQ==
+  version "1.0.30001151"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001151.tgz#1ddfde5e6fff02aad7940b4edb7d3ac76b0cb00b"
+  integrity sha512-Zh3sHqskX6mHNrqUerh+fkf0N72cMxrmflzje/JyVImfpknscMnkeJrlFGJcqTmaa0iszdYptGpWMJCRQDkBVw==
 
 capture-exit@^2.0.0:
   version "2.0.0"
