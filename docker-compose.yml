@@ -1,6 +1,20 @@
 version: '3.7'
 
 services:
+  postgres:
+    image: postgres:alpine
+    restart: always
+    ports:
+      - ${GITTRENDS_DATABASE_PORT}:5432
+    volumes:
+      - 'db:/var/lib/postgresql/data'
+    environment:
+      POSTGRES_USER: ${GITTRENDS_DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
+      POSTGRES_DB: ${GITTRENDS_DATABASE_DB}
+    networks:
+      - gittrends
+
   website-api:
     image: node:latest
     restart: always
@@ -10,6 +24,8 @@ services:
       - .:/usr/src/app
     working_dir: /usr/src/app/packages/api
     command: yarn start --port 80
+    depends_on:
+      - postgres
     networks:
       - gittrends
 
@@ -42,6 +58,11 @@ services:
       - website-server
     networks:
       - gittrends
+
+volumes:
+  db:
+    external: true
+    name: gittrends.app-website
 
 networks:
   gittrends:

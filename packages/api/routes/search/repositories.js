@@ -33,9 +33,9 @@ module.exports = async function (fastify) {
     const repositories = await fastify
       .knex('repositories')
       .where((builder) => {
-        builder.where('name_with_owner', 'like', `%${request.query.query}%`);
+        builder.where('name_with_owner', 'ilike', `%${request.query.query}%`);
         if (request.query.language)
-          builder.where('primary_language', 'like', request.query.language);
+          builder.where('primary_language', 'ilike', request.query.language);
       })
       .orderByRaw(
         request.query.sortBy === 'random'
@@ -48,9 +48,9 @@ module.exports = async function (fastify) {
     const [{ count }] = await fastify
       .knex('repositories')
       .where((builder) => {
-        builder.where('name_with_owner', 'like', `%${request.query.query}%`);
+        builder.where('name_with_owner', 'ilike', `%${request.query.query}%`);
         if (request.query.language)
-          builder.where('primary_language', 'like', request.query.language);
+          builder.where('primary_language', 'ilike', request.query.language);
       })
       .count('id', { as: 'count' });
 
@@ -59,9 +59,9 @@ module.exports = async function (fastify) {
       .select('primary_language as language')
       .count('*', { as: 'count' })
       .where((builder) => {
-        builder.where('name_with_owner', 'like', `%${request.query.query}%`);
+        builder.where('name_with_owner', 'ilike', `%${request.query.query}%`);
         if (request.query.language)
-          builder.where('primary_language', 'like', request.query.language);
+          builder.where('primary_language', 'ilike', request.query.language);
       })
       .groupBy('primary_language')
       .orderBy('count', 'desc');

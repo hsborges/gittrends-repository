@@ -13,7 +13,7 @@ module.exports = async function (fastify) {
 
     const repo = await fastify
       .knex('repositories')
-      .where('name_with_owner', 'like', `${owner}/${name}`)
+      .where('name_with_owner', 'ilike', `${owner}/${name}`)
       .first('id');
 
     if (!repo) return reply.callNotFound();
@@ -21,7 +21,7 @@ module.exports = async function (fastify) {
     const timeseries = await fastify
       .knex('stargazers')
       .select(
-        fastify.knex.raw("date(starred_at / 1000, 'unixepoch', 'weekday 0') as week"),
+        fastify.knex.raw("date_trunc('week', starred_at) as week"),
         fastify.knex.raw('count(*) as stargazers_count')
       )
       .where({ repository: repo.id })
@@ -35,28 +35,26 @@ module.exports = async function (fastify) {
         .knex('stargazers')
         .where({ repository: repo.id })
         .orderBy('starred_at', 'asc')
-        .first('*')
-        .then(async (stargazer) => ({
-          ...stargazer,
-          user: await fastify.knex('users').where({ id: stargazer.user }).first('*')
-        })),
+        .first('user', 'starred_at'),
 
       fastify
         .knex('stargazers')
         .where({ repository: repo.id })
         .orderBy('starred_at', 'desc')
-        .first('*')
-        .then(async (stargazer) => ({
-          ...stargazer,
-          user: await fastify.knex('users').where({ id: stargazer.user }).first('*')
-        }))
+        .first('user', 'starred_at')
     ]);
 
     return reply.send({
-      timeseries: timeseries.map((ts) => [
-        moment.utc(ts.week).endOf('day').toDate(),
-        parseInt(ts.stargazers_count, 10)
-      ]),
+      timeseries: timeseries.reduce(
+        (o, ts) => ({
+          ...o,
+          [moment.utc(ts.week).endOf('isoweek').format('YYYY-MM-DD')]: parseInt(
+            ts.stargazers_count,
+            10
+          )
+        }),
+        {}
+      ),
       first,
       last
     });

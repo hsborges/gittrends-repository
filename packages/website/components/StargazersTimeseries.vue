@@ -28,7 +28,7 @@ SetTwo8[0] = '#68b2b1';
 export default {
   props: {
     repository: { type: String, default: null },
-    timeseries: { type: Array, default: null },
+    timeseries: { type: Object, default: null },
     hideLegend: { type: Boolean, default: false }
   },
   data() {
@@ -137,12 +137,13 @@ export default {
       );
     },
     transform(stargazers) {
-      return stargazers
+      return Object.keys(stargazers)
         .reduce(
           (m, s) =>
             m.concat({
-              x: new Date(s[0]),
-              y: s[1] + (this.type === 'cumulative' && m.length > 0 ? m[m.length - 1].y : 0)
+              x: new Date(s),
+              y:
+                stargazers[s] + (this.type === 'cumulative' && m.length > 0 ? m[m.length - 1].y : 0)
             }),
           []
         )

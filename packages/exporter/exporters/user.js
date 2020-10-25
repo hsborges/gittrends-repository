@@ -3,27 +3,31 @@
  */
 const { omit } = require('lodash');
 
-module.exports = async ({ id, knex, mongo }) => {
+const fields = [
+  'login',
+  'type',
+  'name',
+  'location',
+  'avatar_url',
+  'website_url',
+  'repositories_count',
+  'starred_repositories_count',
+  'gists_count',
+  'watching_count',
+  'followers_count',
+  'following_count',
+  'created_at',
+  'updated_at'
+];
+
+module.exports = async ({ id, knex, mongo, updateOnConflict = false }) => {
   const users = await mongo.users
     .find(
       { _id: { $in: typeof id === 'string' ? [id] : id } },
       {
         projection: {
           _id: 1,
-          login: 1,
-          type: 1,
-          name: 1,
-          location: 1,
-          avatar_url: 1,
-          website_url: 1,
-          repositories_count: 1,
-          starred_repositories_count: 1,
-          gists_count: 1,
-          watching_count: 1,
-          followers_count: 1,
-          following_count: 1,
-          created_at: 1,
-          updated_at: 1
+          ...fields.reduce((o, f) => ({ ...o, [f]: 1 }), {})
         }
       }
     )
@@ -33,8 +37,12 @@ module.exports = async ({ id, knex, mongo }) => {
     await Promise.map(users, async (user) =>
       knex.raw(
         `? ON CONFLICT (id)
-            DO NOTHING
-            RETURNING *;`,
+           DO ${
+             updateOnConflict
+               ? `UPDATE SET ${fields.map((f) => `${f} = EXCLUDED.${f}`).join(', ')}`
+               : 'NOTHING'
+           }
+        `,
         [knex('users').insert(omit({ id: user._id, ...user }, '_id'))]
       )
     );

@@ -5,13 +5,14 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate"
+    "postgres:migrate": "knex migrate:latest",
+    "mongo:migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
     "knex": "^0.21.3",
     "mongodb": "^3.6.0",
-    "sqlite3": "^5.0.0"
+    "pg": "^8.4.1"
   },
   "devDependencies": {
     "commitizen": "^4.1.2",

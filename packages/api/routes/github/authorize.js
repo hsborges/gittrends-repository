@@ -3,8 +3,6 @@ const axios = require('axios');
 const faker = require('faker');
 const qs = require('querystring');
 const nodemailer = require('nodemailer');
-const { appendFile } = require('fs/promises');
-const { resolve } = require('path');
 
 const env = _.capitalize(process.env.NODE_ENV || 'development');
 
@@ -62,11 +60,11 @@ module.exports = async function (fastify) {
           })
       : null;
 
-    const filePath = resolve(__dirname, '..', '..', '..', '..', 'donated-tokens.txt');
-    const content = [new Date().toISOString(), uInfo.login, uInfo.email, token, type, scope];
-    const appendPromise = appendFile(filePath, `${content.join(',')}\n`);
+    const insertPromise = fastify
+      .knex('github_tokens')
+      .insert({ token, type, scope, login: uInfo.login, email: uInfo.email });
 
-    await Promise.all([mailPromise, appendPromise]);
+    await Promise.all([mailPromise, insertPromise]);
 
     return reply.redirect(
       `${request.headers.referer}authorization?success=true&login=${uInfo.login}`

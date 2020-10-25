@@ -9,7 +9,7 @@
       ></Timeseries>
     </div>
     <div
-      v-if="timeseries && timeseries.length"
+      v-if="timeseries"
       class="flex w-full md:w-2/6 justify-center items-center md:items-stretch pt-6"
     >
       <table class="flex table table-auto w-11/12 text-base">
@@ -91,27 +91,36 @@ export default {
   },
   async created() {
     await this.$axios(`/api/repos/${this.repository}/stargazers`).then(({ data }) => {
-      if (!(data && data.timeseries.length)) return;
+      if (!(data && Object.keys(data.timeseries).length)) return;
 
       this.timeseries = data.timeseries;
-      this.first = data.first;
-      this.last = data.last;
 
-      const [date, stargazers] = this.timeseries.reduce((m, s) => (m[1] > s[1] ? m : s), []);
+      const [date, stargazers] = Object.entries(this.timeseries).reduce(
+        (m, s) => (m[1] > s[1] ? m : s),
+        []
+      );
       this.peak = { date, stargazers };
+
+      Promise.all([
+        this.$axios(`/api/users/${data.first.user}`).catch(() => null),
+        this.$axios(`/api/users/${data.last.user}`).catch(() => null)
+      ]).then(([first, last]) => {
+        this.first = { ...data.first, user: first && first.data };
+        this.last = { ...data.last, user: last && last.data };
+      });
     });
   },
   methods: {
     formatDate: (d, f) => moment.parseZone(d).format(`ll${f ? 'l' : ''}`),
     formatNumber: (n) => numeral(n).format('0,0'),
     getStargazersLastWeek() {
-      return this.timeseries[this.timeseries.length - 1][1];
+      return Object.values(this.timeseries).slice(-2)[0];
     },
     getStargazersLastMonth() {
-      return this.timeseries
+      return Object.values(this.timeseries)
+        .slice(-5)
         .slice(0, -1)
-        .slice(-4)
-        .reduce((m, v) => m + v[1], 0);
+        .reduce((m, v) => m + v, 0);
     }
   }
 };

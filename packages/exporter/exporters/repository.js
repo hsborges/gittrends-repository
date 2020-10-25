@@ -50,6 +50,12 @@ module.exports = async ({ id, knex, mongo }) => {
   );
 
   if (repo) {
+    // remove repository metadata
+    await knex('repositories').where({ id }).delete();
+
+    // insert users
+    await exporter.user({ id: [repo.owner], knex, mongo });
+
     // insert repository
     await knex('repositories').insert(
       omit({ id: repo._id, ...repo }, ['_id', 'languages', 'repository_topics', '_meta'])

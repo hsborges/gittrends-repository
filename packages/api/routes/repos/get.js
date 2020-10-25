@@ -7,11 +7,12 @@ const schema = {
 
 module.exports = async function (fastify) {
   fastify.get('/:owner/:name', { schema }, async function (request, reply) {
-    console.log(request.hostname);
     const repo = await fastify
       .knex('repositories')
-      .where('name_with_owner', 'like', `${request.params.owner}/${request.params.name}`)
+      .where('name_with_owner', 'ilike', `${request.params.owner}/${request.params.name}`)
       .first('*');
+
+    if (!repo) return reply.callNotFound();
 
     const [owner, topics, meta] = await Promise.all([
       fastify.knex('users').where({ id: repo.owner }).first('*'),
