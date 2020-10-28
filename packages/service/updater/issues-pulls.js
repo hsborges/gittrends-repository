@@ -72,47 +72,50 @@ const updateDetails = async function (repo, type = 'issue') {
             )
           );
 
-          if (timeline && timeline.length) {
-            await mongo.timeline.bulkWrite(
-              timeline.map((event) => ({
-                replaceOne: {
-                  filter: { _id: event.id },
-                  replacement: {
-                    repository: repo._id,
-                    [type]: i._id,
-                    ...omit(event, ['id', 'reaction_groups'])
-                  },
-                  upsert: true
+          const timelinePromise =
+            timeline && timeline.length
+              ? mongo.timeline.bulkWrite(
+                  timeline.map((event) => ({
+                    replaceOne: {
+                      filter: { _id: event.id },
+                      replacement: {
+                        repository: repo._id,
+                        [type]: i._id,
+                        ...omit(event, ['id', 'reaction_groups'])
+                      },
+                      upsert: true
+                    }
+                  })),
+                  { ordered: false }
+                )
+              : null;
+
+          const commitsPromise =
+            commits && commits.length
+              ? mongo.commits.bulkWrite(
+                  commits.map((commit) => {
+                    const filter = { _id: commit.id };
+                    const replacement = { repository: repo._id, ...omit(commit, 'id') };
+                    return { replaceOne: { filter, replacement, upsert: true } };
+                  }),
+                  { ordered: false }
+                )
+              : null;
+
+          const usersPromise = users && users.length ? save.users(users) : null;
+
+          await Promise.all([reactionsPromise, timelinePromise, commitsPromise, usersPromise]).then(
+            () =>
+              collection.replaceOne(
+                { _id: i._id },
+                {
+                  ...omit(data, ['id', 'reaction_groups']),
+                  _meta: {
+                    updated_at: new Date(),
+                    last_cursor: endCursor || get(i, '_meta.last_cursor')
+                  }
                 }
-              })),
-              { ordered: false }
-            );
-          }
-
-          if (commits && commits.length) {
-            await mongo.commits.bulkWrite(
-              commits.map((commit) => {
-                const filter = { _id: commit.id };
-                const replacement = { repository: repo._id, ...omit(commit, 'id') };
-                return { replaceOne: { filter, replacement, upsert: true } };
-              }),
-              { ordered: false }
-            );
-          }
-
-          if (users && users.length) await save.users(users);
-
-          await reactionsPromise.then(() =>
-            collection.replaceOne(
-              { _id: i._id },
-              {
-                ...omit(data, ['id', 'reaction_groups']),
-                _meta: {
-                  updated_at: new Date(),
-                  last_cursor: endCursor || get(i, '_meta.last_cursor')
-                }
-              }
-            )
+              )
           );
         })
         .catch(async (err) => {
