@@ -17,19 +17,21 @@ const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
 const saveReactions = async (reactions, users, { repository, issue, pull, event }) => {
   if (reactions && reactions.length) {
-    await mongo.reactions.bulkWrite(
-      reactions.map((r) => ({
-        replaceOne: {
-          filter: { _id: r.id },
-          replacement: {
-            ...compact({ repository, issue, pull, event }),
-            ...omit(r, 'id')
-          },
-          upsert: true
-        }
-      })),
-      { ordered: true }
-    );
+    await mongo.reactions
+      .bulkWrite(
+        reactions.map((r) => ({
+          replaceOne: {
+            filter: { _id: r.id },
+            replacement: {
+              ...compact({ repository, issue, pull, event }),
+              ...omit(r, 'id')
+            },
+            upsert: true
+          }
+        })),
+        { ordered: true }
+      )
+      .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)));
   }
   return save.users(users);
 };
@@ -74,32 +76,36 @@ const updateDetails = async function (repo, type = 'issue') {
 
           const timelinePromise =
             timeline && timeline.length
-              ? mongo.timeline.bulkWrite(
-                  timeline.map((event) => ({
-                    replaceOne: {
-                      filter: { _id: event.id },
-                      replacement: {
-                        repository: repo._id,
-                        [type]: i._id,
-                        ...omit(event, ['id', 'reaction_groups'])
-                      },
-                      upsert: true
-                    }
-                  })),
-                  { ordered: false }
-                )
+              ? mongo.timeline
+                  .bulkWrite(
+                    timeline.map((event) => ({
+                      replaceOne: {
+                        filter: { _id: event.id },
+                        replacement: {
+                          repository: repo._id,
+                          [type]: i._id,
+                          ...omit(event, ['id', 'reaction_groups'])
+                        },
+                        upsert: true
+                      }
+                    })),
+                    { ordered: false }
+                  )
+                  .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)))
               : null;
 
           const commitsPromise =
             commits && commits.length
-              ? mongo.commits.bulkWrite(
-                  commits.map((commit) => {
-                    const filter = { _id: commit.id };
-                    const replacement = { repository: repo._id, ...omit(commit, 'id') };
-                    return { replaceOne: { filter, replacement, upsert: true } };
-                  }),
-                  { ordered: false }
-                )
+              ? mongo.commits
+                  .bulkWrite(
+                    commits.map((commit) => {
+                      const filter = { _id: commit.id };
+                      const replacement = { repository: repo._id, ...omit(commit, 'id') };
+                      return { replaceOne: { filter, replacement, upsert: true } };
+                    }),
+                    { ordered: false }
+                  )
+                  .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)))
               : null;
 
           const usersPromise = users && users.length ? save.users(users) : null;
