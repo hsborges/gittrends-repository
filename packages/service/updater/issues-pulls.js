@@ -4,6 +4,7 @@
 const { get, omit, isEqual } = require('lodash');
 const { mongo } = require('@gittrends/database-config');
 const Bottleneck = require('bottleneck');
+const consola = require('consola');
 
 const save = require('./_save.js');
 const remove = require('./_remove.js');
@@ -16,6 +17,9 @@ const getReactions = require('../github/graphql/repositories/reactions.js');
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
 const saveReactions = async (reactions, users, { repository, issue, pull, event }) => {
+  if (reactions.length > BATCH_SIZE)
+    consola.warn(`[repo=${repository}]: writing ${reactions.length} reactions ...`);
+
   if (reactions && reactions.length) {
     await mongo.reactions
       .bulkWrite(
@@ -74,6 +78,11 @@ const updateDetails = async function (repo, type = 'issue') {
             )
           );
 
+          if (timeline && timeline.length > BATCH_SIZE)
+            consola.warn(
+              `[repo=${repo}]: writing ${timeline.length} timeline events for ${type} ${i._id} ...`
+            );
+
           const timelinePromise =
             timeline && timeline.length
               ? mongo.timeline
@@ -94,6 +103,11 @@ const updateDetails = async function (repo, type = 'issue') {
                   .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)))
               : null;
 
+          if (commits && commits.length > BATCH_SIZE)
+            consola.warn(
+              `[repo=${repo}]: writing ${commits.length} commits for ${type} ${i._id} ...`
+            );
+
           const commitsPromise =
             commits && commits.length
               ? mongo.commits
@@ -107,6 +121,9 @@ const updateDetails = async function (repo, type = 'issue') {
                   )
                   .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)))
               : null;
+
+          if (users && users.length > BATCH_SIZE)
+            consola.warn(`[repo=${repo}]: writing ${users.length} users for ${type} ${i._id} ...`);
 
           const usersPromise = users && users.length ? save.users(users) : null;
 
