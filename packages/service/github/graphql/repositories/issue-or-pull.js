@@ -373,7 +373,7 @@ module.exports = async function (id, type, { lastCursor } = {}) {
 
   return compact({
     [type]: merge(ghObject, { assignees, labels }),
-    timeline,
+    timeline: chain(timeline).compact().uniqBy('id').value(),
     users: chain(users).compact().uniqBy('id').value(),
     commits: chain(commits).compact().uniqBy('id').value(),
     endCursor: variables.at
