@@ -3,12 +3,18 @@
  */
 const { isArray, omit, compact } = require('lodash');
 
+const consola = require('consola');
 const { mongo } = require('@gittrends/database-config');
+
+const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
 async function bulkWrite(collection, operations) {
   const _operations = compact(operations);
 
   if (_operations.length === 0) return Promise.resolve();
+
+  if (_operations > BATCH_SIZE)
+    consola.warn(`[${collection}]: writing ${_operations.length} operations ...`);
 
   return mongo[collection]
     .bulkWrite(_operations, { ordered: false })
