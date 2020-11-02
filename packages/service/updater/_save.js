@@ -13,7 +13,7 @@ async function bulkWrite(collection, operations) {
 
   if (_operations.length === 0) return Promise.resolve();
 
-  if (_operations > BATCH_SIZE)
+  if (_operations.length > BATCH_SIZE)
     consola.warn(`[${collection}]: writing ${_operations.length} operations ...`);
 
   return mongo[collection]
