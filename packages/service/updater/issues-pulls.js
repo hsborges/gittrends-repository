@@ -4,7 +4,6 @@
 const { get, omit, isEqual } = require('lodash');
 const { mongo } = require('@gittrends/database-config');
 const Bottleneck = require('bottleneck');
-const consola = require('consola');
 
 const save = require('./_save.js');
 const remove = require('./_remove.js');
@@ -16,29 +15,12 @@ const getReactions = require('../github/graphql/repositories/reactions.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
-const saveReactions = async (reactions, users, { repository, issue, pull, event }) => {
-  if (reactions.length > BATCH_SIZE)
-    consola.warn(`[repo=${repository}]: writing ${reactions.length} reactions ...`);
-
-  if (reactions && reactions.length) {
-    await mongo.reactions
-      .bulkWrite(
-        reactions.map((r) => ({
-          replaceOne: {
-            filter: { _id: r.id },
-            replacement: {
-              ...compact({ repository, issue, pull, event }),
-              ...omit(r, 'id')
-            },
-            upsert: true
-          }
-        })),
-        { ordered: true }
-      )
-      .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)));
-  }
-  return save.users(users);
-};
+async function saveReactions(reactions, users, { repository, issue, pull, event }) {
+  return Promise.all([
+    save.reactions(reactions.map((r) => compact({ ...r, repository, issue, pull, event }))),
+    save.users(users)
+  ]);
+}
 
 const updateDetails = async function (repo, type = 'issue') {
   const errors = [];
@@ -68,77 +50,30 @@ const updateDetails = async function (repo, type = 'issue') {
             .map((e) => ({ id: e.id, event: true }))
             .concat(data.reaction_groups ? [{ id: i._id }] : []);
 
-          const reactionsPromise = getReactions(reactables).then((responses) =>
-            Promise.map(responses, (response, index) =>
-              saveReactions(response.reactions, response.users, {
-                repository: repo._id,
-                [type]: i._id,
-                ...(reactables[index].event ? { event: reactables[index].id } : {})
-              })
-            )
-          );
-
-          if (timeline && timeline.length > BATCH_SIZE)
-            consola.warn(
-              `[repo=${repo}]: writing ${timeline.length} timeline events for ${type} ${i._id} ...`
-            );
-
-          const timelinePromise =
-            timeline && timeline.length
-              ? mongo.timeline
-                  .bulkWrite(
-                    timeline.map((event) => ({
-                      replaceOne: {
-                        filter: { _id: event.id },
-                        replacement: {
-                          repository: repo._id,
-                          [type]: i._id,
-                          ...omit(event, ['id', 'reaction_groups'])
-                        },
-                        upsert: true
-                      }
-                    })),
-                    { ordered: false }
-                  )
-                  .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)))
-              : null;
-
-          if (commits && commits.length > BATCH_SIZE)
-            consola.warn(
-              `[repo=${repo}]: writing ${commits.length} commits for ${type} ${i._id} ...`
-            );
-
-          const commitsPromise =
-            commits && commits.length
-              ? mongo.commits
-                  .bulkWrite(
-                    commits.map((commit) => {
-                      const filter = { _id: commit.id };
-                      const replacement = { repository: repo._id, ...omit(commit, 'id') };
-                      return { replaceOne: { filter, replacement, upsert: true } };
-                    }),
-                    { ordered: false }
-                  )
-                  .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)))
-              : null;
-
-          if (users && users.length > BATCH_SIZE)
-            consola.warn(`[repo=${repo}]: writing ${users.length} users for ${type} ${i._id} ...`);
-
-          const usersPromise = users && users.length ? save.users(users) : null;
-
-          await Promise.all([reactionsPromise, timelinePromise, commitsPromise, usersPromise]).then(
-            () =>
-              collection.replaceOne(
-                { _id: i._id },
-                {
-                  ...omit(data, ['id', 'reaction_groups']),
-                  _meta: {
-                    updated_at: new Date(),
-                    last_cursor: endCursor || get(i, '_meta.last_cursor')
-                  }
-                }
+          await Promise.all([
+            getReactions(reactables).then((responses) =>
+              Promise.mapSeries(responses, (response, index) =>
+                saveReactions(response.reactions, response.users, {
+                  repository: repo._id,
+                  [type]: i._id,
+                  ...(reactables[index].event ? { event: reactables[index].id } : {})
+                })
               )
+            ),
+            save.timeline(timeline.map((e) => ({ ...e, repository: repo._id, [type]: i._id }))),
+            save.commits(commits.map((c) => ({ ...c, repository: repo._id }))),
+            save.users(users)
+          ]).then(() =>
+            collection.replaceOne(
+              { _id: i._id },
+              {
+                ...omit(data, ['id', 'reaction_groups']),
+                _meta: {
+                  updated_at: new Date(),
+                  last_cursor: endCursor || get(i, '_meta.last_cursor')
+                }
+              }
+            )
           );
         })
         .catch(async (err) => {
