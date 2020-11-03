@@ -6,9 +6,9 @@ global.Promise = require('bluebird');
 require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
-const Bull = require('bull');
 const consola = require('consola');
 const program = require('commander');
+const BeeQueue = require('bee-queue');
 const Bottleneck = require('bottleneck');
 const { mongo } = require('@gittrends/database-config');
 
@@ -18,6 +18,21 @@ const {
   config: { resources },
   version
 } = require('./package.json');
+
+const beeSettings = {
+  redis: {
+    host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
+    port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
+    db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
+  },
+  stallInterval: 10000,
+  isWorker: true,
+  getEvents: false,
+  sendEvents: false,
+  storeJobs: false,
+  removeOnSuccess: true,
+  removeOnFailure: true
+};
 
 /* execute */
 program
@@ -41,19 +56,13 @@ program
 
     return mongo.connect().then(() => {
       const queues = selectedResources.map((r) => {
-        const queue = new Bull(`updates:${r}`, {
-          redis: {
-            host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
-            port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
-            db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
-          },
-          settings: {
-            stalledInterval: 60000,
-            maxStalledCount: 10
-          }
-        });
+        const queue = new BeeQueue(`updates:${r}`, beeSettings);
 
-        queue.process('*', program.workers, (job) => limiter.schedule(() => worker(job)));
+        queue.checkStalledJobs(60 * 1000);
+
+        queue.process(program.workers, (job) =>
+          limiter.schedule(() => worker({ ...job, resource: r }))
+        );
 
         return queue;
       });

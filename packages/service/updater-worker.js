@@ -7,12 +7,11 @@ require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
 const consola = require('consola');
+const scheduler = require('./scheduler.js');
 
 /* eslint-disable global-require, import/no-dynamic-require */
 /* execute */
-module.exports = async ({ id, name, data: { ids } }) => {
-  const [, resource] = /(.+)@.*/i.exec(name) || [];
-
+module.exports = async ({ id, resource, data: { name, ids } }) => {
   return Promise.resolve()
     .then(() => {
       const base = './updater';
@@ -25,14 +24,20 @@ module.exports = async ({ id, name, data: { ids } }) => {
           return require(`${base}/repository`)(id);
         case 'issues':
         case 'pulls':
-          return require(`${base}/issues-pulls`)(id, resource);
+          if (/^d-(.*)/g.test(id))
+            return require(`${base}/issue-pull`)(id.slice(2), resource.slice(0, -1));
+
+          return require(`${base}/issues-pulls`)(id, resource).then(() => {
+            if (['issues', 'pulls'].indexOf(resource) < 0) return null;
+            return scheduler[resource](id);
+          });
         default:
           return require(`${base}/${resource}`)(id);
       }
     })
-    .then(() => consola.success(`[${name}] finished!`))
+    .then(() => consola.success(`[${resource}@${name || id}] finished!`))
     .catch(async (err) => {
-      consola.error(`Error thrown by ${resource} of ${name}.`);
+      consola.error(`Error thrown by ${resource} of ${resource}@${name || id}.`);
       consola.error(err);
       if (err && err.meta) consola.error(JSON.stringify(err.meta));
       throw err;

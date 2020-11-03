@@ -118,4 +118,6 @@ dist
 
 .migrate
 tokens.txt
+tokens.dev.txt
+tokens.prod.txt
 donated-tokens.txt
