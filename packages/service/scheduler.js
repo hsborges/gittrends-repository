@@ -35,23 +35,27 @@ const beeSettings = {
 };
 
 async function scheduleIssueOrPullDetails(res, repoId) {
-  const records = await mongo[res]
-    .aggregate(
-      [
-        ...(repoId ? [{ $match: { repository: repoId } }] : []),
-        { $match: { '_meta.updated_at': { $exists: false } } },
-        { $project: { _id: 1 } }
-      ],
-      { allowDiskUse: true }
-    )
-    .toArray();
+  const cursor = await mongo[res].aggregate(
+    [
+      ...(repoId ? [{ $match: { repository: repoId } }] : []),
+      { $match: { '_meta.updated_at': { $exists: false } } },
+      { $project: { _id: 1 } }
+    ],
+    { allowDiskUse: true }
+  );
 
   // get queue connection
   const queue = new BeeQueue(`updates:${res}`, beeSettings);
 
-  return Promise.mapSeries(records, (record) =>
-    queue.createJob({}).setId(`d-${record._id}`).save()
-  ).then(() => queue.close());
+  const promises = [];
+  let record = null;
+
+  // eslint-disable-next-line no-cond-assign
+  while ((record = await cursor.next())) {
+    promises.push(queue.createJob({}).setId(`d-${record._id}`).save());
+  }
+
+  return Promise.all(promises).then(() => queue.close());
 }
 
 /* COMMANDS */
