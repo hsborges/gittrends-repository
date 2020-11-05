@@ -11,7 +11,9 @@ const program = require('commander');
 const Bottleneck = require('bottleneck');
 
 const client = require('../github/graphql/graphql-client.js');
+const remove = require('../updater/_remove.js');
 const { version } = require('../package.json');
+const { NotFoundError } = require('../helpers/errors.js');
 
 const query = `
 query($id:ID!) {
@@ -55,10 +57,21 @@ program
             (data) =>
               promises.push(
                 limiter.schedule(async () => {
-                  const response = await client.post({ query, variables: { id: data._id } });
-                  const repository = get(response, 'data.data.node.repository.id');
-                  await mongo[resource].updateOne({ _id: data._id }, { $set: { repository } });
-                  consola.success(`[${resource}=${data._id}] -> ${repository}`);
+                  const response = await client
+                    .post({ query, variables: { id: data._id } })
+                    .catch(async (err) => {
+                      if (err instanceof NotFoundError) return null;
+                      throw err;
+                    });
+
+                  if (response) {
+                    const repository = get(response, 'data.data.node.repository.id');
+                    await mongo[resource].updateOne({ _id: data._id }, { $set: { repository } });
+                    consola.success(`[${resource}=${data._id}] -> ${repository}`);
+                  } else {
+                    await remove[resource.slice(0, -1)](data._id);
+                    consola.warn(`[${resource}=${data._id}] deleted!`);
+                  }
                 })
               ),
             (err) => (err ? reject(err) : resolve())
