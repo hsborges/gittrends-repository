@@ -11,7 +11,6 @@ const program = require('commander');
 const Bottleneck = require('bottleneck');
 
 const client = require('../github/graphql/graphql-client.js');
-const remove = require('../updater/_remove.js');
 const { version } = require('../package.json');
 const { NotFoundError } = require('../helpers/errors.js');
 
@@ -43,7 +42,7 @@ program
       await Promise.mapSeries(['issues', 'pulls'], async (resource) => {
         const cursor = await mongo[resource].aggregate(
           [
-            { $match: { repository: { $exists: false } } },
+            { $match: { repository: { $exists: false }, '_meta.deleted': { $exists: false } } },
             { $limit: program.batchSize },
             { $project: { _id: 1 } }
           ],
@@ -69,7 +68,10 @@ program
                     await mongo[resource].updateOne({ _id: data._id }, { $set: { repository } });
                     consola.success(`[${resource}=${data._id}] -> ${repository}`);
                   } else {
-                    await remove[resource.slice(0, -1)]({ id: data._id });
+                    await mongo[resource].updateOne(
+                      { _id: data._id },
+                      { $set: { '_meta.deleted': true } }
+                    );
                     consola.warn(`[${resource}=${data._id}] deleted!`);
                   }
                 })
