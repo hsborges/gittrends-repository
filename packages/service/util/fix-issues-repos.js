@@ -30,35 +30,51 @@ query($id:ID!) {
 program
   .version(version)
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
+  .option('--batch-size [number]', 'Number of records on each batch', Number, 100000)
   .action(async () => {
     await mongo.connect();
 
     const limiter = new Bottleneck({ maxConcurrent: program.workers, minTime: 0 });
+    let hasMore = true;
 
-    return Promise.mapSeries(['issues', 'pulls'], async (resource) => {
-      const cursor = await mongo[resource].aggregate(
-        [{ $match: { repository: { $exists: false } } }, { $project: { _id: 1 } }],
-        { allowDiskUse: true }
-      );
+    do {
+      await Promise.mapSeries(['issues', 'pulls'], async (resource) => {
+        const cursor = await mongo[resource].aggregate(
+          [
+            { $match: { repository: { $exists: false } } },
+            { $limit: program.batchSize },
+            { $project: { _id: 1 } }
+          ],
+          { allowDiskUse: true }
+        );
 
-      const promises = [];
+        const promises = [];
 
-      return new Promise((resolve, reject) =>
-        cursor.forEach(
-          (data) =>
-            promises.push(
-              limiter.schedule(async () => {
-                const response = await client.post({ query, variables: { id: data._id } });
-                const repository = get(response, 'data.data.node.repository.id');
-                await mongo[resource].updateOne({ _id: data._id }, { $set: { repository } });
-                consola.success(`[${resource}=${data._id}] -> ${repository}`);
-              })
-            ),
-          (err) => (err ? reject(err) : resolve())
+        return new Promise((resolve, reject) =>
+          cursor.forEach(
+            (data) =>
+              promises.push(
+                limiter.schedule(async () => {
+                  const response = await client.post({ query, variables: { id: data._id } });
+                  const repository = get(response, 'data.data.node.repository.id');
+                  await mongo[resource].updateOne({ _id: data._id }, { $set: { repository } });
+                  consola.success(`[${resource}=${data._id}] -> ${repository}`);
+                })
+              ),
+            (err) => (err ? reject(err) : resolve())
+          )
         )
-      )
-        .then(() => Promise.all(promises))
-        .catch(consola.error);
-    });
+          .then(async () => {
+            await Promise.all(promises);
+            hasMore = promises.length === program.batchSize;
+          })
+          .catch((err) => {
+            consola.error(err);
+            hasMore = false;
+          });
+      });
+    } while (hasMore);
+
+    await mongo.disconnect();
   })
   .parse(process.argv);
