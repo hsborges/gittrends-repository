@@ -69,7 +69,7 @@ program
                     await mongo[resource].updateOne({ _id: data._id }, { $set: { repository } });
                     consola.success(`[${resource}=${data._id}] -> ${repository}`);
                   } else {
-                    await remove[resource.slice(0, -1)](data._id);
+                    await remove[resource.slice(0, -1)]({ id: data._id });
                     consola.warn(`[${resource}=${data._id}] deleted!`);
                   }
                 })
