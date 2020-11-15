@@ -5,55 +5,47 @@ module.exports = `fragment actor on Actor {
   avatarUrl login type:__typename
   ... on Node { id }
   ... on User {
-    anyPinnableItems
     bio
     company
-    # contributionsCollection
     createdAt
     databaseId
     email
-    # gist
-    # hovercard
+    followers { totalCount }
+    following { totalCount }
+    gists { totalCount }
     isBountyHunter
     isCampusExpert
     isDeveloperProgramMember
     isEmployee
     isHireable
     isSiteAdmin
-    #itemShowcase
     location
     name
-    # organization  { id databaseId login }
-    pinnedItemsRemaining
-    status { id createdAt emoji expiresAt indicatesLimitedAvailability message updatedAt }
-    updatedAt
-    websiteUrl
-
-    # Connections
-    followers { totalCount }
-    following { totalCount }
-    gists { totalCount }
-    pinnedItems { totalCount }
+    projects { totalCount }
+    projectsUrl
     repositories { totalCount }
+    repositoriesContributedTo { totalCount }
     starredRepositories { totalCount }
+    status { id createdAt emoji expiresAt indicatesLimitedAvailability message updatedAt }
+    twitterUsername
+    updatedAt
     watching { totalCount }
+    websiteUrl
   }
   ... on Organization {
-    anyPinnableItems
     createdAt
     databaseId
     description
     email
     isVerified
     location
-    name
-    # organizationBillingEmail
-    updatedAt
-    websiteUrl
-    # connections
     membersWithRole { totalCount }
+    name
     repositories(privacy: PUBLIC) { totalCount }
     teams { totalCount }
+    twitterUsername
+    updatedAt
+    websiteUrl
   }
   ... on Mannequin {
     createdAt
@@ -65,6 +57,13 @@ module.exports = `fragment actor on Actor {
     createdAt
     databaseId
     updatedAt
+  }
+  ... on EnterpriseUserAccount {
+    createdAt
+    # enterprise { id }
+    name
+    updatedAt
+    user { id }
   }
 }
 `;

@@ -6,8 +6,8 @@ global.Promise = require('bluebird');
 require('dotenv').config({ path: '../../.env' });
 
 const consola = require('consola');
-const { chain, mergeWith, isArray, omit } = require('lodash');
-const { mongo } = require('@gittrends/database-config');
+const { chain, mergeWith, isArray } = require('lodash');
+const { knex, Actor, Repository } = require('@gittrends/database-config');
 const { program } = require('commander');
 const { version } = require('./package.json');
 
@@ -31,7 +31,7 @@ Promise.map(new Array(3), () => search(program.limit, { language: program.langua
 
     const repositories = chain(result.repositories)
       .uniqBy('id')
-      .orderBy(['stargazers_count'], ['desc'])
+      .orderBy('stargazers_count', 'desc')
       .slice(0, program.limit)
       .value();
 
@@ -45,22 +45,13 @@ Promise.map(new Array(3), () => search(program.limit, { language: program.langua
   .spread(async (repos, users) => {
     consola.info('Adding repositories to database ...');
 
-    const insert = (docs, collection) => {
-      if (!docs || !docs.length) return Promise.resolve();
-      return collection
-        .bulkWrite(
-          docs.map((doc) => ({
-            insertOne: { document: omit({ ...doc, _id: doc.id }, 'id') }
-          })),
-          { ordered: false }
-        )
-        .catch((err) => (err.code === 11000 ? Promise.resolve() : Promise.reject(err)));
-    };
-
-    return Promise.resolve(mongo.connect())
-      .then(() => insert(users, mongo.users))
-      .then(() => insert(repos, mongo.repositories))
-      .finally(() => mongo.disconnect());
+    return knex.transaction(async (trx) =>
+      Promise.all([
+        Actor.query(trx).insert(users).toKnexQuery().onConflict('id').ignore(),
+        Repository.query(trx).insert(repos).toKnexQuery().onConflict('id').ignore()
+      ])
+    );
   })
   .then(() => consola.success('Repositories successfully added!'))
-  .catch((err) => consola.error(err));
+  .catch((err) => consola.error(err))
+  .finally(() => knex.destroy());

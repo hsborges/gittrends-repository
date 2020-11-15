@@ -39,5 +39,12 @@ module.exports = `fragment actor on Actor {
     databaseId
     updatedAt
   }
+   ... on EnterpriseUserAccount {
+    createdAt
+    # enterprise { id }
+    name
+    updatedAt
+    user { id }
+  }
 }
 `;

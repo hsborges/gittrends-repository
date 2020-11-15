@@ -12,7 +12,7 @@ const consola = require('consola');
 const BeeQueue = require('bee-queue');
 
 const { program } = require('commander');
-const { mongo } = require('@gittrends/database-config');
+const { knex, Metadata, Repository } = require('@gittrends/database-config');
 
 const {
   config: { resources: defaultResources },
@@ -66,52 +66,34 @@ const resourcesParser = (resources) => {
   throw new Error("Invalid 'resources' argument values!");
 };
 
-const repositoriesScheduler = async (res, wait, limit = 10000) => {
+const repositoriesScheduler = async (res, wait) => {
   // get queue connection
   const queue = new BeeQueue(`updates:${res}`, beeSettings);
   // find and save jobs on queue
-  const prefix = res === 'repos' ? '_meta' : `_meta.${res}`;
-  const before = moment().subtract(wait, 'hours').toDate();
+  const before = moment().subtract(wait, 'hours').toISOString();
+
   // get metadata
   const jobsList = (
-    await mongo.repositories
-      .aggregate(
-        [
-          { $match: { '_meta.removed': { $ne: true } } },
-          {
-            $match: {
-              $or: [
-                { [`${prefix}.updated_at`]: { $exists: false } },
-                { [`${prefix}.updated_at`]: { $eq: null } },
-                { [`${prefix}.updated_at`]: { $lt: before } }
-              ]
-            }
-          },
-          { $sort: { [`${prefix}.updated_at`]: 1 } },
-          { $limit: limit },
-          {
-            $project: {
-              _id: 1,
-              name_with_owner: 1
-            }
-          }
-        ],
-        { allowDiskUse: true }
+    await Repository.query()
+      .leftJoin(
+        Metadata.query()
+          .where('metadata.resource', res)
+          .andWhere('metadata.key', 'updatedAt')
+          .as('metadata'),
+        'repositories.id',
+        'metadata.id'
       )
-      .toArray()
+      .where('metadata.value', '<=', before)
+      .orWhereNull('metadata.id')
   ).map((r) =>
     queue
       .createJob({ name: r.name_with_owner })
-      .setId(r._id)
+      .setId(r.id)
       .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10))
       .save()
   );
   // add to queue
   return Promise.all(jobsList)
-    .then(async () => {
-      if (['issues', 'pulls'].indexOf(res) < 0) return null;
-      return scheduleIssueOrPullDetails(res);
-    })
     .then(async () => consola.success(`Number of ${res} scheduled: ${jobsList.length}`))
     .finally(() => queue.close());
 };
@@ -177,21 +159,17 @@ if (require.main === module) {
     .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
     .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
     .action(async (resource, other) =>
-      mongo
-        .connect()
-        .then(() =>
-          Promise.mapSeries(resourcesParser([resource, ...other]), async (res) => {
-            consola.info(`Scheduling ${res} jobs ...`);
-            switch (res) {
-              case 'users':
-                return usersScheduler(program.wait, program.limit);
-              default:
-                return repositoriesScheduler(res, program.wait, program.limit);
-            }
-          })
-        )
+      Promise.mapSeries(resourcesParser([resource, ...other]), async (res) => {
+        consola.info(`Scheduling ${res} jobs ...`);
+        switch (res) {
+          case 'users':
+            return usersScheduler(program.wait, program.limit);
+          default:
+            return repositoriesScheduler(res, program.wait, program.limit);
+        }
+      })
         .catch((err) => consola.error(err))
-        .finally(() => mongo.disconnect())
+        .finally(() => knex.destroy())
         .finally(() => process.exit(0))
     )
     .parse(process.argv);

@@ -10,8 +10,9 @@
   },
   "dependencies": {
     "dotenv": "^8.2.0",
-    "knex": "^0.21.3",
+    "knex": "^0.21.12",
     "mongodb": "^3.6.0",
+    "objection": "^2.2.3",
     "pg": "^8.4.1"
   },
   "devDependencies": {

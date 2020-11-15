@@ -1,61 +1,62 @@
 /*
  *  Author: Hudson S. Borges
  */
-const _ = require('lodash');
-const { mongo } = require('@gittrends/database-config');
+const { knex, Actor, Metadata, Watcher } = require('@gittrends/database-config');
 
-const save = require('./_save.js');
 const getWatchers = require('../github/graphql/repositories/watchers.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
 /* exports */
 module.exports = async (repositoryId) => {
-  const path = '_meta.watchers';
+  const metadata = await Metadata.query()
+    .where({ id: repositoryId, resource: 'watchers', key: 'lastCursor' })
+    .first();
 
-  const repo = await mongo.repositories.findOne(
-    { _id: repositoryId },
-    { projection: { updated_at: 1, [path]: 1 } }
-  );
+  let lastCursor = metadata && metadata.value;
 
-  const metadata = _.get(repo, path, {});
+  for (let hasMore = true; hasMore; ) {
+    hasMore = await getWatchers(repositoryId, { lastCursor, max: BATCH_SIZE }).then(
+      async ({ watchers, users, endCursor, hasNextPage }) => {
+        await knex.transaction(async (trx) => {
+          if (watchers && watchers.length) {
+            await Promise.all([
+              Actor.query(trx).insert(users).toKnexQuery().onConflict('id').ignore(),
+              Watcher.query(trx)
+                .insert(watchers.map((w) => ({ repository: repositoryId, ...w })))
+                .toKnexQuery()
+                .onConflict(['repository', 'user'])
+                .ignore()
+            ]);
+          }
 
-  if (_.isEqual(repo.updated_at, metadata.repo_updated_at)) {
-    // repository not modified
-    await mongo.repositories.updateOne(
-      { _id: repo._id },
-      { $set: { [path]: { ...metadata, updated_at: new Date() } } }
-    );
-  } else {
-    // modified or not updated
-    for (let hasMore = true; hasMore; ) {
-      hasMore = await getWatchers(repo._id, {
-        lastCursor: metadata.last_cursor,
-        max: BATCH_SIZE
-      }).then(async ({ watchers, users, endCursor, hasNextPage }) => {
-        if (watchers && watchers.length) {
-          await Promise.join(
-            mongo.watchers
-              .bulkWrite(
-                watchers.map((watcher) => ({
-                  insertOne: { document: { repository: repo._id, ...watcher } }
-                })),
-                { ordered: false }
-              )
-              .catch((err) => (err.code === 11000 ? null : Promise.reject(err))),
-            save.users(users)
-          );
-        }
+          if (!hasNextPage) {
+            await Metadata.query(trx)
+              .insert({
+                id: repositoryId,
+                resource: 'watchers',
+                key: 'updatedAt',
+                value: new Date().toISOString()
+              })
+              .toKnexQuery()
+              .onConflict(['id', 'resource', 'key'])
+              .merge();
+          }
 
-        metadata.last_cursor = endCursor || metadata.last_cursor;
-        if (!hasNextPage) {
-          metadata.updated_at = new Date();
-          metadata.repo_updated_at = repo.updated_at;
-        }
+          await Metadata.query(trx)
+            .insert({
+              id: repositoryId,
+              resource: 'watchers',
+              key: 'lastCursor',
+              value: (lastCursor = endCursor || lastCursor)
+            })
+            .toKnexQuery()
+            .onConflict(['id', 'resource', 'key'])
+            .merge();
+        });
 
-        await mongo.repositories.updateOne({ _id: repo._id }, { $set: { [path]: metadata } });
         return hasNextPage;
-      });
-    }
+      }
+    );
   }
 };

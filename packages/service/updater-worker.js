@@ -38,7 +38,7 @@ module.exports = async ({ id, resource, data: { name, ids } }) => {
     .then(() => consola.success(`[${resource}@${name || id}] finished!`))
     .catch(async (err) => {
       consola.error(`Error thrown by ${resource} of ${resource}@${name || id}.`);
-      consola.error(err);
+      consola.error(err.message || err);
       if (err && err.meta) consola.error(JSON.stringify(err.meta));
       throw err;
     });
