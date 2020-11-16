@@ -1,62 +1,48 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { omit, get, isEqual } = require('lodash');
-const { mongo } = require('@gittrends/database-config');
+const { knex, Actor, Release, Metadata } = require('@gittrends/database-config');
 
-const save = require('./_save.js');
 const getReleases = require('../github/graphql/repositories/releases.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
 /* exports */
 module.exports = async function (repositoryId) {
-  const path = '_meta.releases';
+  const path = { id: repositoryId, resource: 'releases' };
 
-  const repo = await mongo.repositories.findOne(
-    { _id: repositoryId },
-    { projection: { updated_at: 1, [path]: 1 } }
-  );
+  const metadata = await Metadata.query()
+    .where({ ...path, key: 'lastCursor' })
+    .first();
 
-  const metadata = get(repo, path, {});
+  let lastCursor = metadata && metadata.value;
 
-  if (isEqual(repo.updated_at, metadata.repo_updated_at)) {
-    // repository not modified
-    await mongo.repositories.updateOne(
-      { _id: repo._id },
-      { $set: { [path]: { ...metadata, updated_at: new Date() } } }
+  // modified or not updated
+  for (let hasMore = true; hasMore; ) {
+    hasMore = await getReleases(repositoryId, { lastCursor, max: BATCH_SIZE }).then(
+      async ({ releases, users, endCursor, hasNextPage }) =>
+        knex
+          .transaction((trx) =>
+            Promise.all([
+              Actor.query(trx).insert(users).toKnexQuery().onConflict('id').ignore(),
+              Release.query(trx)
+                .insert(releases.map((r) => ({ repository: repositoryId, ...r })))
+                .toKnexQuery()
+                .onConflict('id')
+                .ignore(),
+              Metadata.query(trx)
+                .insert([
+                  { ...path, key: 'lastCursor', value: (lastCursor = endCursor || lastCursor) },
+                  ...(hasNextPage
+                    ? [{ ...path, key: 'updatedAt', value: new Date().toISOString() }]
+                    : [])
+                ])
+                .toKnexQuery()
+                .onConflict(['id', 'resource', 'key'])
+                .merge()
+            ])
+          )
+          .then(() => hasNextPage)
     );
-  } else {
-    // modified or not updated
-    for (let hasMore = true; hasMore; ) {
-      hasMore = await getReleases(repo._id, {
-        lastCursor: metadata.last_cursor,
-        max: BATCH_SIZE
-      }).then(async ({ releases, users, endCursor, hasNextPage }) => {
-        if (releases && releases.length) {
-          const operations = releases.map((release) => ({
-            replaceOne: {
-              filter: { _id: release.id },
-              replacement: { repository: repo._id, ...omit(release, 'id') },
-              upsert: true
-            }
-          }));
-
-          await Promise.join(
-            mongo.releases.bulkWrite(operations, { ordered: false }),
-            save.users(users)
-          );
-        }
-
-        metadata.last_cursor = endCursor || metadata.last_cursor;
-        if (!hasNextPage) {
-          metadata.updated_at = new Date();
-          metadata.repo_updated_at = repo.updated_at;
-        }
-
-        await mongo.repositories.updateOne({ _id: repo._id }, { $set: { [path]: metadata } });
-        return hasNextPage;
-      });
-    }
   }
 };

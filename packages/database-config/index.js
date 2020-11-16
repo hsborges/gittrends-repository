@@ -9,6 +9,7 @@ module.exports.mongo = require('./mongo');
 module.exports.Metadata = require('./models/Metadata');
 module.exports.Actor = require('./models/Actor');
 module.exports.Commit = require('./models/Commit');
+module.exports.Release = require('./models/Release');
 module.exports.Repository = require('./models/Repository');
 module.exports.Stargazer = require('./models/Stargazer');
 module.exports.Tag = require('./models/Tag');

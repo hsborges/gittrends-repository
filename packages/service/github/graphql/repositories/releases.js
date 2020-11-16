@@ -22,16 +22,15 @@ module.exports = async function (repositoryId, { lastCursor, max }) {
             author { ...actor }
             createdAt
             description
-            # descriptionHTML
             id
             isDraft
             isPrerelease
             name
             publishedAt
+            releaseAssets { totalCount }
             tag { id }
             tagName
             updatedAt
-            # url
           }
         }
       }
