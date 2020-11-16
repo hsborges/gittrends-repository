@@ -39,10 +39,10 @@ exports.up = async (knex) => {
     table.boolean('merge_commit_allowed');
     table.integer('milestones_count').unsigned();
     table.text('mirror_url');
-    table.string('name');
-    table.string('name_with_owner');
+    table.string('name').notNullable();
+    table.string('name_with_owner').notNullable();
     table.text('open_graph_image_url');
-    table.string('owner');
+    table.string('owner').notNullable();
     table.string('parent');
     table.string('primary_language');
     table.timestamp('pushed_at', { useTz: true });

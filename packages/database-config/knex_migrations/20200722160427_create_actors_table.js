@@ -4,8 +4,8 @@
 exports.up = (knex) =>
   knex.schema.createTable('actors', (table) => {
     table.string('id').primary();
-    table.string('type');
-    table.string('login');
+    table.string('type').notNullable();
+    table.string('login').notNullable();
     table.string('avatar_url');
 
     // Users

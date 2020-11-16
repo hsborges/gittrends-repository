@@ -3,8 +3,8 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('watchers', (table) => {
-    table.string('repository');
-    table.string('user');
+    table.string('repository').notNullable();
+    table.string('user').notNullable();
 
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
     table.foreign('user').references('id').inTable('actors');

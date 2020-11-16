@@ -4,8 +4,8 @@
 exports.up = (knex) =>
   knex.schema.createTable('metadata', (table) => {
     table.string('id');
-    table.string('resource');
-    table.string('key');
+    table.string('resource').notNullable();
+    table.string('key').notNullable();
     table.string('value');
 
     table.primary(['id', 'resource', 'key']);
