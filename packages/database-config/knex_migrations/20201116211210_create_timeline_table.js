@@ -10,6 +10,9 @@ exports.up = (knex) =>
     table.json('payload').notNullable();
 
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
+    table.foreign('issue').references('id').inTable('issues').onDelete('CASCADE');
+
+    table.index(['repository', 'issue']);
   });
 
 exports.down = (knex) => knex.schema.dropTable('timeline');

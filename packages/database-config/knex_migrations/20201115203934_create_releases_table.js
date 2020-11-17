@@ -10,7 +10,7 @@ exports.up = (knex) =>
     table.text('description');
     table.boolean('is_draft');
     table.boolean('is_prerelease');
-    table.string('name');
+    table.string('name').notNullable();
     table.timestamp('published_at', { useTz: true });
     table.integer('release_assets_count');
     table.string('tag');
@@ -20,6 +20,8 @@ exports.up = (knex) =>
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
     table.foreign('author').references('id').inTable('actors');
     // table.foreign('tag').references('id').inTable('tags');
+
+    table.index('repository');
   });
 
 exports.down = (knex) => knex.schema.dropTable('releases');

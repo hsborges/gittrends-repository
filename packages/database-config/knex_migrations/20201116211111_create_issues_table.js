@@ -70,6 +70,8 @@ exports.up = async (knex) => {
     table.foreign('merged_by').references('id').inTable('actors');
     table.foreign('merge_commit').references('id').inTable('commits');
     table.foreign('potential_merge_commit').references('id').inTable('commits');
+
+    table.index(['repository', 'type']);
   });
 };
 

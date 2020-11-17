@@ -23,6 +23,8 @@ exports.up = (knex) =>
     table.json('status');
 
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
+
+    table.index('repository');
   });
 
 exports.down = (knex) => knex.schema.dropTable('commits');

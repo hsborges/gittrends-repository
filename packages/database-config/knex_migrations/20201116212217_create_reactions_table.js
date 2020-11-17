@@ -15,6 +15,8 @@ exports.up = (knex) =>
     table.foreign('issue').references('id').inTable('issues').onDelete('CASCADE');
     table.foreign('event').references('id').inTable('timeline').onDelete('CASCADE');
     table.foreign('user').references('id').inTable('actors');
+
+    table.index(['repository', 'issue']);
   });
 
 exports.down = (knex) => knex.schema.dropTable('reactions');

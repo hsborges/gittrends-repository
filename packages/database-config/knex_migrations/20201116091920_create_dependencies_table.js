@@ -13,8 +13,10 @@ exports.up = (knex) =>
     table.json('target_repository');
     table.string('requirements');
 
-    table.primary(['repository', 'manifest', 'package_name']);
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
+
+    table.primary(['repository', 'manifest', 'package_name']);
+    table.index('repository');
   });
 
 exports.down = (knex) => knex.schema.dropTable('dependencies');

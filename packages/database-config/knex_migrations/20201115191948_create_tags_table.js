@@ -13,6 +13,8 @@ exports.up = (knex) =>
 
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
     table.foreign('target').references('id').inTable('commits');
+
+    table.index('repository');
   });
 
 exports.down = (knex) => knex.schema.dropTable('tags');
