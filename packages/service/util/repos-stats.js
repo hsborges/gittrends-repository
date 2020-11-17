@@ -11,66 +11,50 @@ const numeral = require('numeral');
 const { table } = require('table');
 const { startCase, difference } = require('lodash');
 
-const { mongo } = require('@gittrends/database-config');
+const { knex, Repository, Metadata } = require('@gittrends/database-config');
 const { resources } = require('../package.json').config;
 
-Promise.resolve()
-  .then(() => mongo.connect())
-  .then(async () => {
-    const reposResources = difference(resources, ['users']);
+(async () => {
+  const reposResources = difference(resources, ['users']);
 
-    const fields = reposResources.reduce((acc, f) => {
-      const metadataKey = f === 'repos' ? `$_meta` : `$_meta.${f}`;
-      return {
-        ...acc,
-        [f]: { $cond: [{ $ifNull: [`${metadataKey}.updated_at`, false] }, 1, 0] },
-        [`${f}_partial`]: {
-          $cond: [
-            {
-              $and: [
-                { $ifNull: [`${metadataKey}`, false] },
-                { $not: [`${metadataKey}.updated_at`] }
-              ]
-            },
-            1,
-            0
-          ]
-        }
-      };
-    }, {});
+  const { total: totalRepositories } = (await Repository.query()
+    .count('*', { as: 'total' })
+    .first()) || { total: 0 };
 
-    const pipe2 = reposResources.reduce(
-      (acc, f) => ({ ...acc, [f]: { $sum: `$${f}` }, [`${f}_partial`]: { $sum: `$${f}_partial` } }),
-      { repos: { $sum: '$repos' } }
-    );
+  if (totalRepositories === 0) throw new Error('Database is empty!');
 
-    const [result] = await mongo.repositories
-      .aggregate([
-        { $addFields: fields },
-        { $group: { _id: null, total: { $sum: 1 }, ...pipe2 } },
-        { $project: { _id: 0 } }
-      ])
-      .toArray();
+  console.log(totalRepositories);
 
-    return reposResources
-      .reduce((acc, resource) => {
-        const updatedRatio = result[resource] / result.total;
-        const inProgressRatio = result[`${resource}_partial`] / result.total;
-        const pendingRatio = 1 - updatedRatio - inProgressRatio;
-        return acc.concat([
-          [
-            startCase(resource),
-            result[resource],
-            numeral(updatedRatio).format('0.[00]%'),
-            result[`${resource}_partial`],
-            numeral(inProgressRatio).format('0.[00]%'),
-            result.total - result[resource] - result[`${resource}_partial`],
-            numeral(pendingRatio).format('0.[00]%')
-          ]
-        ]);
-      }, [])
-      .sort((a, b) => a[0].localeCompare(b[0]));
-  })
+  const data = [];
+
+  // eslint-disable-next-line no-restricted-syntax, guard-for-in
+  for (const resource of reposResources) {
+    const { total: updated } = (await Metadata.query()
+      .where({ resource, key: 'updatedAt' })
+      .groupBy('resource')
+      .count('*', { as: 'total' })
+      .first()) || { total: 0 };
+
+    const { total: updating } = (await Metadata.query()
+      .where({ resource })
+      .andWhereNot({ key: 'updatedAt' })
+      .groupBy('resource')
+      .count('*', { as: 'total' })
+      .first()) || { total: 0 };
+
+    data.push([
+      startCase(resource),
+      updated,
+      numeral(updated / totalRepositories).format('0.[00]%'),
+      updating,
+      numeral(updating / totalRepositories).format('0.[00]%'),
+      totalRepositories - updated - updating,
+      numeral((totalRepositories - updated - updating) / totalRepositories).format('0.[00]%')
+    ]);
+  }
+
+  return data.sort((a, b) => a[0].localeCompare(b[0]));
+})()
   .then((data) =>
     table(
       [
@@ -83,4 +67,5 @@ Promise.resolve()
     )
   )
   .then((data) => console.log(data))
-  .finally(() => mongo.disconnect());
+  .catch(console.error)
+  .finally(() => knex.destroy());
