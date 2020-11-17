@@ -15,6 +15,19 @@ services:
     networks:
       - gittrends
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    ports:
+      - 8080:80
+    volumes:
+      - 'pgadmin-db:/var/lib/pgadmin'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gittrends.app
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - gittrends
+
   website-api:
     image: node:latest
     restart: always
@@ -63,6 +76,8 @@ volumes:
   db:
     external: true
     name: gittrends.app-website
+  pgadmin-db:
+    name: pgadmin.gittrends.app
 
 networks:
   gittrends:

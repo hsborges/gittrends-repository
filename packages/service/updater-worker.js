@@ -17,9 +17,7 @@ module.exports = async ({ id, resource, data: { name, ids } }) => {
       const base = './updater';
       switch (resource) {
         case 'users':
-          return require(`${base}/user`)(id);
-        case 'users-bucket':
-          return require(`${base}/user`)(ids);
+          return require(`${base}/user`)(ids || id);
         case 'repos':
           return require(`${base}/repository`)(id);
         case 'issues':
@@ -38,7 +36,7 @@ module.exports = async ({ id, resource, data: { name, ids } }) => {
     .then(() => consola.success(`[${resource}@${name || id}] finished!`))
     .catch(async (err) => {
       consola.error(`Error thrown by ${resource} of ${resource}@${name || id}.`);
-      consola.error(err.message || err);
+      consola.error(err);
       if (err && err.meta) consola.error(JSON.stringify(err.meta));
       throw err;
     });

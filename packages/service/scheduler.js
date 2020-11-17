@@ -12,7 +12,14 @@ const consola = require('consola');
 const BeeQueue = require('bee-queue');
 
 const { program } = require('commander');
-const { knex, Metadata, Repository } = require('@gittrends/database-config');
+const {
+  knex,
+  Metadata,
+  Actor,
+  Repository,
+  Issue,
+  PullRequest
+} = require('@gittrends/database-config');
 
 const {
   config: { resources: defaultResources },
@@ -35,25 +42,31 @@ const beeSettings = {
 };
 
 async function scheduleIssueOrPullDetails(res, repoId) {
-  const cursor = await mongo[res].aggregate(
-    [
-      ...(repoId ? [{ $match: { repository: repoId } }] : []),
-      { $match: { '_meta.updated_at': { $exists: false } } },
-      { $project: { _id: 1 } }
-    ],
-    { allowDiskUse: true }
-  );
+  const Model = res === 'issues' ? Issue : PullRequest;
+  const typeName = res === 'issues' ? 'ISSUE' : 'PULL_REQUEST';
 
   // get queue connection
   const queue = new BeeQueue(`updates:${res}`, beeSettings);
 
   const promises = [];
-  let record = null;
 
-  // eslint-disable-next-line no-cond-assign
-  while ((record = await cursor.next())) {
-    promises.push(queue.createJob({}).setId(`d-${record._id}`).save());
-  }
+  await Model.query()
+    .leftJoin(
+      Metadata.query()
+        .where({ id: repoId, resource: res.slice(0, -1), key: 'updatedAt' })
+        .as('metadata'),
+      'metadata.id',
+      `issues.id`
+    )
+    .where({ repository: repoId, type: typeName })
+    .orWhereNull('metadata.value')
+    .select(`issues.id`)
+    .toKnexQuery()
+    .stream((stream) =>
+      stream.on('data', (record) =>
+        promises.push(queue.createJob({}).setId(`d-${record.id}`).save())
+      )
+    );
 
   return Promise.all(promises).then(() => queue.close());
 }
@@ -113,30 +126,15 @@ const usersScheduler = async (wait, limit = 100000) => {
     .getJobs('active', { size: Number.MAX_SAFE_INTEGER })
     .then((jobs) => jobs.map((job) => job.data.ids).reduce((acc, u) => acc.concat(u), []));
   // find and save jobs on queue
-  const before = moment().subtract(wait, 'hours').toDate();
+  const before = moment().subtract(wait, 'hours').toISOString();
   // get metadata
   const usersIds = (
-    await mongo.users
-      .aggregate(
-        [
-          { $match: { _id: { $nin: [...waiting, ...active] } } },
-          { $match: { '_meta.removed': { $ne: true } } },
-          {
-            $match: {
-              $or: [
-                { '_meta.updated_at': { $exists: false } },
-                { '_meta.updated_at': { $eq: null } },
-                { '_meta.updated_at': { $lt: before } }
-              ]
-            }
-          },
-          { $limit: limit },
-          { $project: { _id: 1 } }
-        ],
-        { allowDiskUse: true }
-      )
-      .toArray()
-  ).map((r) => r._id);
+    await Actor.query()
+      .whereNotIn('id', active.concat(waiting))
+      .andWhere((builder) => builder.whereNull('_updated_at').orWhere('_updated_at', '<', before))
+      .select('id')
+      .limit(limit - counts.waiting)
+  ).map((r) => r.id);
   // add to queue
   return Promise.all(
     _.chunk(usersIds, 50).map((ids) =>

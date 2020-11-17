@@ -1,10 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { get, omit, isEqual } = require('lodash');
-const { mongo } = require('@gittrends/database-config');
+const { knex, Issue, PullRequest, Metadata } = require('@gittrends/database-config');
 
-const save = require('./_save.js');
+const insertUsers = require('./_insertActors');
 const getIssuesOrPulls = require('../github/graphql/repositories/issues-or-pulls.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -14,76 +13,63 @@ module.exports = async function _get(repositoryId, resource) {
   if (!resource || (resource !== 'issues' && resource !== 'pulls'))
     throw new TypeError('Resource must be "issues" or "pulls"!');
 
-  const path = `_meta.${resource}`;
+  const metaPath = { id: repositoryId, resource };
+  const metadata = await Metadata.query()
+    .where({ ...metaPath, key: 'lastCursor' })
+    .first();
 
-  const repo = await mongo.repositories.findOne(
-    { _id: repositoryId },
-    { projection: { updated_at: 1, [path]: 1 } }
-  );
+  const Model = resource === 'issues' ? Issue : PullRequest;
+  let lastCursor = metadata && metadata.value;
 
-  const metadata = get(repo, path, {});
-
-  // modified or not updated
-  if (!isEqual(repo.updated_at, metadata.repo_updated_at)) {
+  return knex.transaction(async (trx) => {
     for (let hasMore = true; hasMore; ) {
-      hasMore = await getIssuesOrPulls(repo._id, resource, {
-        lastCursor: metadata.last_cursor,
+      hasMore = await getIssuesOrPulls(repositoryId, resource, {
+        lastCursor,
         max: BATCH_SIZE
-      })
-        .then(async ({ issues, pulls, ...other }) => {
-          const [_issues, _pulls] = await Promise.all([
-            Promise.map(issues || [], async (issue) =>
-              mongo.issues
-                .findOne({ _id: issue.id }, { projection: { _meta: 1 } })
-                .then((d) => (d ? { ...issue, _meta: omit(d._meta, 'updated_at') } : issue))
-            ),
-            Promise.map(pulls || [], async (pull) =>
-              mongo.pulls
-                .findOne({ _id: pull.id }, { projection: { _meta: 1 } })
-                .then((d) => (d ? { ...pull, _meta: omit(d._meta, 'updated_at') } : pull))
-            )
-          ]);
+      }).then(async ({ users, [resource]: records, endCursor, hasNextPage }) => {
+        lastCursor = endCursor || lastCursor;
 
-          return { issues: _issues, pulls: _pulls, ...other };
-        })
-        .then(async ({ users, issues, pulls, endCursor, hasNextPage }) => {
-          metadata.last_cursor = endCursor || metadata.last_cursor;
+        if (users && users.length) await insertUsers(users, trx);
 
-          if (issues && issues.length) {
-            const operations = issues.map((issue) => {
-              const filter = { _id: issue.id };
-              const replacement = { repository: repo._id, ...omit(issue, 'id') };
-              return { replaceOne: { filter, replacement, upsert: true } };
-            });
-            await mongo.issues.bulkWrite(operations, { ordered: false });
-          }
+        if (records && records.length) {
+          await Promise.map(records, async (record) => {
+            await Metadata.query(trx)
+              .delete()
+              .where({ id: record.id, resource: resource.slice(0, -1), key: 'updatedAt' })
+              .then(() => Model.query(trx).delete().where({ id: record.id }))
+              .then(() => Model.query(trx).insert({ repository: repositoryId, ...record }));
+          });
+        }
 
-          if (pulls && pulls.length) {
-            const operations = pulls.map((pull) => {
-              const filter = { _id: pull.id };
-              const replacement = { repository: repo._id, ...omit(pull, 'id') };
-              return { replaceOne: { filter, replacement, upsert: true } };
-            });
-            await mongo.pulls.bulkWrite(operations, { ordered: false });
-          }
+        await Metadata.query(trx)
+          .insert({ ...metaPath, key: 'lastCursor', value: lastCursor })
+          .toKnexQuery()
+          .onConflict(['id', 'resource', 'key'])
+          .merge();
 
-          if (users && users.length) await save.users(users);
-
-          await mongo.repositories.updateOne({ _id: repo._id }, { $set: { [path]: metadata } });
-
-          return hasNextPage;
-        });
+        return hasNextPage;
+      });
     }
-  }
 
-  return mongo.repositories.updateOne(
-    { _id: repo._id },
-    {
-      $set: {
-        [`${path}.updated_at`]: new Date(),
-        [`${path}.repo_updated_at`]: repo.updated_at,
-        [`${path}.pending`]: await mongo[resource].estimatedDocumentCount({ repository: repo._id })
-      }
-    }
-  );
+    const [{ pending }] = await Model.query(trx)
+      .leftJoin(
+        Metadata.query(trx)
+          .where({ ...metaPath, key: 'updatedAt' })
+          .as('metadata'),
+        `issues.id`,
+        'metadata.id'
+      )
+      .whereNull('metadata.id')
+      .andWhere('type', resource === 'issues' ? 'ISSUE' : 'PULL_REQUEST')
+      .count('*', { as: 'pending' });
+
+    return Metadata.query(trx)
+      .insert([
+        { ...metaPath, key: 'updatedAt', value: new Date().toISOString() },
+        { ...metaPath, key: 'pending', value: pending }
+      ])
+      .toKnexQuery()
+      .onConflict(['id', 'resource', 'key'])
+      .merge();
+  });
 };

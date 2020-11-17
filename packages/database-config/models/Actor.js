@@ -36,7 +36,7 @@ class Actor extends Model {
         repositories_contributed_to_count: { type: 'number' },
         starred_repositories_count: { type: 'number' },
         status: { type: 'object' },
-        watching_count: { type: 'string' },
+        watching_count: { type: 'number' },
 
         // Organization
         description: { type: 'string' },
@@ -57,7 +57,10 @@ class Actor extends Model {
         repositories_count: { type: 'number' },
         twitter_username: { type: 'string' },
         updated_at: { type: 'object' },
-        website_url: { type: 'string' }
+        website_url: { type: 'string' },
+
+        // local
+        _updated_at: { type: 'object' }
       }
     };
   }

@@ -1,21 +1,22 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { get, omit } = require('lodash');
-const { mongo } = require('@gittrends/database-config');
+const { omit } = require('lodash');
+const db = require('@gittrends/database-config');
 
-const save = require('./_save.js');
-const remove = require('./_remove.js');
-const compact = require('../helpers/compact.js');
+const insertUsers = require('./_insertActors');
 const { NotFoundError } = require('../helpers/errors.js');
 const getIssueOrPull = require('../github/graphql/repositories/issue-or-pull.js');
 const getReactions = require('../github/graphql/repositories/reactions.js');
 
-async function saveReactions(reactions, users, { repository, issue, pull, event }) {
-  return Promise.all([
-    save.reactions(reactions.map((r) => compact({ ...r, repository, issue, pull, event }))),
-    save.users(users)
-  ]);
+async function saveReactions(reactions, users, { repository, issue, event, trx }) {
+  return insertUsers(users, trx).then(() =>
+    db.Reaction.query(trx)
+      .insert(reactions.map((r) => ({ ...r, repository, issue, event })))
+      .toKnexQuery()
+      .onConflict('id')
+      .ignore()
+  );
 }
 
 /* exports */
@@ -23,51 +24,72 @@ module.exports = async function _get(id, resource) {
   if (!resource || (resource !== 'issue' && resource !== 'pull'))
     throw new TypeError('Resource must be "issue" or "pull"!');
 
-  const collection = mongo[`${resource}s`];
+  const Model = resource === 'issue' ? db.Issue : db.PullRequest;
+  const record = await Model.query().findById(id).select('repository');
+  const [{ lastCursor } = {}] = await db.Metadata.query()
+    .where({ id, resource, key: 'lastCursor' })
+    .select(db.knex.ref('value').as('lastCursor'));
 
-  return collection.findOne({ _id: id }).then((r) =>
-    getIssueOrPull(id, resource, { lastCursor: get(r, '_meta.last_cursor') })
+  return db.knex.transaction((trx) =>
+    getIssueOrPull(id, resource, { lastCursor })
       .then(async ({ [resource]: data, timeline = [], commits = [], users = [], endCursor }) => {
         const reactables = timeline
           .filter((e) => e.reaction_groups)
           .map((e) => ({ id: e.id, event: true }))
           .concat(data.reaction_groups ? [{ id }] : []);
 
-        await Promise.all([
-          getReactions(reactables).then((responses) =>
-            Promise.mapSeries(responses, (response, index) =>
-              saveReactions(response.reactions, response.users, {
-                repository: r.repository,
-                [resource]: id,
-                ...(reactables[index].event ? { event: reactables[index].id } : {})
-              })
-            )
-          ),
-          save.timeline(timeline.map((e) => ({ ...e, repository: r.repository, [resource]: id }))),
-          save.commits(commits.map((c) => ({ ...c, repository: r.repository }))),
-          save.users(users)
-        ]).then(() =>
-          collection.replaceOne(
-            { _id: id },
-            {
-              ...omit(data, ['id', 'reaction_groups']),
-              repository: r.repository,
-              _meta: {
-                updated_at: new Date(),
-                last_cursor: endCursor || get(r, '_meta.last_cursor')
-              }
-            }
-          )
-        );
+        await insertUsers(users, trx)
+          .then(async () => {
+            await db.Commit.query(trx)
+              .insert(commits.map((c) => ({ ...c, repository: record.repository })))
+              .toKnexQuery()
+              .onConflict('id')
+              .ignore();
+
+            await db.TimelineEvent.query(trx)
+              .insert(
+                timeline.map((e) => ({
+                  id: e.id,
+                  repository: record.repository,
+                  issue: id,
+                  type: e.type,
+                  payload: omit(e, ['id', 'type'])
+                }))
+              )
+              .toKnexQuery()
+              .onConflict('id')
+              .ignore();
+
+            await getReactions(reactables).then((responses) =>
+              Promise.mapSeries(responses, (response, index) =>
+                saveReactions(response.reactions, response.users, {
+                  repository: record.repository,
+                  issue: id,
+                  ...(reactables[index].event ? { event: reactables[index].id } : {}),
+                  trx
+                })
+              )
+            );
+          })
+          .then(() =>
+            db.Metadata.query(trx)
+              .insert([
+                { id, resource, key: 'lastCursor', value: endCursor || lastCursor },
+                { id, resource, key: 'updatedAt', value: new Date().toISOString() }
+              ])
+              .toKnexQuery()
+              .onConflict(['id', 'resource', 'key'])
+              .merge()
+          );
       })
       .then(() =>
-        mongo.repositories.updateOne(
-          { _id: r.repository },
-          { $inc: { [`_meta.${resource}s.pending`]: -1 } }
+        trx.raw(
+          'UPDATE metadata SET value = value::integer - 1 WHERE id = ? AND resource = ? AND key = ?',
+          [record.repository, `${resource}s`, 'pending']
         )
       )
       .catch(async (err) => {
-        if (err instanceof NotFoundError) await remove[resource]({ id });
+        if (err instanceof NotFoundError) await Model.query(trx).deleteById(id);
         throw err;
       })
   );
