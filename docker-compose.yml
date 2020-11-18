@@ -19,7 +19,7 @@ services:
     image: dpage/pgadmin4:latest
     restart: always
     ports:
-      - ${GITTRENDS_QUEUE_BOARD_PORT}:80
+      - ${GITTRENDS_PGADMIN_PORT}:80
     volumes:
       - 'pgadmin-db:/var/lib/pgadmin'
     environment:
