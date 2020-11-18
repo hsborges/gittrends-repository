@@ -4,3 +4,5 @@ _tmp/
 # User config files
 .migrate
 dump-*
+
+pm2-ecosystem.yml

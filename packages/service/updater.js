@@ -10,7 +10,6 @@ const consola = require('consola');
 const program = require('commander');
 const BeeQueue = require('bee-queue');
 const Bottleneck = require('bottleneck');
-const { mongo } = require('@gittrends/database-config');
 
 const worker = require('./updater-worker.js');
 
@@ -54,27 +53,25 @@ program
       `Processing ${selectedResources.join(', ')} job(s) using ${program.workers} workers`
     );
 
-    return mongo.connect().then(() => {
-      const queues = selectedResources.map((r) => {
-        const queue = new BeeQueue(`updates:${r}`, beeSettings);
+    const queues = selectedResources.map((r) => {
+      const queue = new BeeQueue(`updates:${r}`, beeSettings);
 
-        queue.checkStalledJobs(60 * 1000);
+      queue.checkStalledJobs(60 * 1000);
 
-        queue.process(program.workers, (job) =>
-          limiter.schedule(() => worker({ ...job, resource: r }))
-        );
+      queue.process(program.workers, (job) =>
+        limiter.schedule(() => worker({ ...job, resource: r }))
+      );
 
-        return queue;
-      });
+      return queue;
+    });
 
-      let timeout = null;
-      process.on('SIGTERM', async () => {
-        consola.warn('Signal received: closing queues');
-        if (!timeout) {
-          await Promise.all(queues.map((q) => q.close())).then(() => process.exit(0));
-          timeout = setTimeout(() => process.exit(1), 30 * 1000);
-        }
-      });
+    let timeout = null;
+    process.on('SIGTERM', async () => {
+      consola.warn('Signal received: closing queues');
+      if (!timeout) {
+        await Promise.all(queues.map((q) => q.close())).then(() => process.exit(0));
+        timeout = setTimeout(() => process.exit(1), 30 * 1000);
+      }
     });
   })
   .parse(process.argv);

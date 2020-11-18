@@ -45,12 +45,10 @@ Promise.map(new Array(3), () => search(program.limit, { language: program.langua
   .spread(async (repos, users) => {
     consola.info('Adding repositories to database ...');
 
-    return knex.transaction(async (trx) =>
-      Promise.all([
-        Actor.query(trx).insert(users).toKnexQuery().onConflict('id').ignore(),
-        Repository.query(trx).insert(repos).toKnexQuery().onConflict('id').ignore()
-      ])
-    );
+    return knex.transaction(async (trx) => {
+      await Actor.query(trx).insert(users).toKnexQuery().onConflict('id').ignore();
+      return Repository.query(trx).insert(repos).toKnexQuery().onConflict('id').ignore();
+    });
   })
   .then(() => consola.success('Repositories successfully added!'))
   .catch((err) => consola.error(err))

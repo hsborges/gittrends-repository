@@ -16,8 +16,8 @@ module.exports = {
     timezone: 'utc'
   },
   pool: {
-    min: 2,
-    max: 10
+    min: parseInt(process.env.GITTRENDS_DATABASE_POOL_MIN || 2, 10),
+    max: parseInt(process.env.GITTRENDS_DATABASE_POOL_MAX || 10, 10)
   },
   migrations: {
     directory: resolve(__dirname, 'knex_migrations'),

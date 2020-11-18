@@ -1,16 +1,6 @@
 version: '3.7'
 
 services:
-  mongo:
-    image: mongo:latest
-    restart: always
-    ports:
-      - ${GITTRENDS_MONGO_PORT}:27017
-    volumes:
-      - 'db:/data/db'
-    networks:
-      - gittrends
-
   redis:
     image: redis:alpine
     restart: always
@@ -41,7 +31,7 @@ services:
     image: node:latest
     restart: always
     ports:
-      - ${BULL_BOARD_PORT}:8080
+      - ${GITTRENDS_QUEUE_BOARD_PORT}:8080
     depends_on:
       - proxy
     volumes:
@@ -49,7 +39,7 @@ services:
     working_dir: /usr/src/app/packages/service
     command: /bin/bash -c "npx pm2 start pm2-ecosystem.yml && npx pm2 logs"
     environment:
-      GITTRENDS_MONGO_HOST: mongo
+      GITTRENDS_DATABASE_HOST: postgres
       GITTRENDS_REDIS_HOST: redis
       GITTRENDS_PROXY_HOST: proxy
       GITTRENDS_PROXY_PORT: 80
@@ -61,11 +51,6 @@ services:
       options:
         max-size: 200k
         max-file: '5'
-
-volumes:
-  db:
-    external: true
-    name: gittrends.app-database
 
 networks:
   gittrends:
