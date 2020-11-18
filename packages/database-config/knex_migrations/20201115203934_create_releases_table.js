@@ -10,7 +10,7 @@ exports.up = (knex) =>
     table.text('description');
     table.boolean('is_draft');
     table.boolean('is_prerelease');
-    table.string('name').notNullable();
+    table.string('name');
     table.timestamp('published_at', { useTz: true });
     table.integer('release_assets_count');
     table.string('tag');
