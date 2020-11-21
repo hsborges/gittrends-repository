@@ -13,7 +13,6 @@ To get a local copy up and running follow these simple steps.
 ### Prerequisites
 
 - [NodeJS](https://nodejs.org)
-- [Mongo](https://www.mongodb.com)
 - [PostgreSQL](https://www.postgresql.org)
 - [Redis](https://redis.io)
 - [Docker](https://www.docker.com) (Optional)
@@ -41,8 +40,7 @@ cp .env.example .env
 4. Run database migrations
 
 ```sh
-yarn workspace @gittrends/database-config mongo:migrate
-yarn workspace @gittrends/database-config postgres:migrate
+yarn workspace @gittrends/database-config run-migrations
 ```
 
 5. Create a text file (e.g., `tokens.txt`) and put your Github access tokens
@@ -58,8 +56,7 @@ You can also use docker containers:
 
 ```sh
 # create volumes and networks
-docker volume create gittrends.app-database
-docker volume create gittrends.app-website
+docker volume create gittrends.app
 docker network create gittrends
 # run containers
 docker-compose up -d
