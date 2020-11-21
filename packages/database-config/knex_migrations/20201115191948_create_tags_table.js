@@ -12,7 +12,7 @@ exports.up = (knex) =>
     table.json('tagger');
 
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
-    table.foreign('target').references('id').inTable('commits');
+    // table.foreign('target').references('id').inTable('commits');
 
     table.index('repository');
   });

@@ -3,6 +3,7 @@
  */
 const { knex, Stargazer, Metadata } = require('@gittrends/database-config');
 
+const upsertMetadata = require('./_upsertMetadata');
 const insertUsers = require('./_insertActors');
 const getStargazers = require('../github/graphql/repositories/stargazers');
 
@@ -23,27 +24,24 @@ module.exports = async function (repositoryId) {
       async ({ stargazers, users, endCursor, hasNextPage }) =>
         knex
           .transaction(async (trx) =>
-            insertUsers(users, trx).then(() =>
-              Promise.all([
-                Stargazer.query(trx)
-                  .insert(stargazers.map((s) => ({ repository: repositoryId, ...s })))
-                  .toKnexQuery()
-                  .onConflict(['repository', 'user', 'starred_at'])
-                  .ignore(),
-                Metadata.query(trx)
-                  .insert([
-                    { ...meta, key: 'lastCursor', value: (lastCursor = endCursor || lastCursor) },
-                    hasNextPage
-                      ? { ...meta, key: 'updatedAt', value: new Date().toISOString() }
-                      : {}
-                  ])
-                  .toKnexQuery()
-                  .onConflict(['id', 'resource', 'key'])
-                  .merge()
-              ])
-            )
+            Promise.all([
+              insertUsers(users, trx),
+              Stargazer.query(trx)
+                .insert(stargazers.map((s) => ({ repository: repositoryId, ...s })))
+                .toKnexQuery()
+                .onConflict(['repository', 'user', 'starred_at'])
+                .ignore(),
+              upsertMetadata(
+                { ...meta, key: 'lastCursor', value: (lastCursor = endCursor || lastCursor) },
+                trx
+              )
+            ])
           )
           .then(() => hasNextPage)
     );
+
+    if (global.gc) global.gc();
   }
+
+  return upsertMetadata({ ...meta, key: 'updatedAt', value: new Date().toISOString() });
 };

@@ -25,7 +25,7 @@ module.exports = async function _get(id, resource) {
     throw new TypeError('Resource must be "issue" or "pull"!');
 
   const Model = resource === 'issue' ? db.Issue : db.PullRequest;
-  const record = await Model.query().findById(id).select('repository');
+  const record = await Model.query().findById(id).select('repository').first();
   const [{ lastCursor } = {}] = await db.Metadata.query()
     .where({ id, resource, key: 'lastCursor' })
     .select(db.knex.ref('value').as('lastCursor'));

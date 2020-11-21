@@ -43,7 +43,6 @@ const beeSettings = {
 
 async function scheduleIssueOrPullDetails(res, repoId) {
   const Model = res === 'issues' ? Issue : PullRequest;
-  const typeName = res === 'issues' ? 'ISSUE' : 'PULL_REQUEST';
 
   // get queue connection
   const queue = new BeeQueue(`updates:${res}`, beeSettings);
@@ -58,9 +57,8 @@ async function scheduleIssueOrPullDetails(res, repoId) {
       'metadata.id',
       `issues.id`
     )
-    .where({ repository: repoId, type: typeName })
-    .orWhereNull('metadata.value')
-    .select(`issues.id`)
+    .where({ repository: repoId })
+    .select(['issues.id', 'issues.type'])
     .toKnexQuery()
     .stream((stream) =>
       stream.on('data', (record) =>
@@ -90,14 +88,20 @@ const repositoriesScheduler = async (res, wait) => {
     await Repository.query()
       .leftJoin(
         Metadata.query()
-          .where('metadata.resource', res)
-          .andWhere('metadata.key', 'updatedAt')
+          .whereIn('metadata.key', ['updatedAt', 'pending'])
+          .andWhere('metadata.resource', res)
           .as('metadata'),
         'repositories.id',
         'metadata.id'
       )
-      .where('metadata.value', '<=', before)
+      .where((builder) =>
+        builder.where('metadata.key', 'updatedAt').andWhere('metadata.value', '<=', before)
+      )
+      .orWhere((builder) =>
+        builder.where('metadata.key', 'pending').andWhere('metadata.value', '<>', '0')
+      )
       .orWhereNull('metadata.id')
+      .distinct(['repositories.id', 'repositories.name_with_owner'])
   ).map((r) =>
     queue
       .createJob({ name: r.name_with_owner })

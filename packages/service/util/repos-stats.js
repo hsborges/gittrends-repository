@@ -23,24 +23,29 @@ const { resources } = require('../package.json').config;
 
   if (totalRepositories === 0) throw new Error('Database is empty!');
 
-  console.log(totalRepositories);
-
   const data = [];
 
   // eslint-disable-next-line no-restricted-syntax, guard-for-in
   for (const resource of reposResources) {
-    const { total: updated } = (await Metadata.query()
-      .where({ resource, key: 'updatedAt' })
-      .groupBy('resource')
-      .count('*', { as: 'total' })
-      .first()) || { total: 0 };
+    const updatedRepos = (
+      await Metadata.query()
+        .whereNotIn(
+          'id',
+          Metadata.query()
+            .where({ resource, key: 'pending' })
+            .andWhere('value', '<>', '0')
+            .select('id')
+        )
+        .where({ resource, key: 'updatedAt' })
+        .select('id')
+    ).map((m) => m.id);
 
-    const { total: updating } = (await Metadata.query()
-      .where({ resource })
-      .andWhereNot({ key: 'updatedAt' })
-      .groupBy('resource')
-      .count('*', { as: 'total' })
-      .first()) || { total: 0 };
+    const updated = updatedRepos.length;
+
+    const updating = difference(
+      (await Metadata.query().where({ resource }).distinct('id')).map((m) => m.id),
+      updatedRepos
+    ).length;
 
     data.push([
       startCase(resource),

@@ -18,7 +18,7 @@ exports.up = (knex) =>
     table.timestamp('updated_at', { useTz: true });
 
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
-    table.foreign('author').references('id').inTable('actors');
+    // table.foreign('author').references('id').inTable('actors');
     // table.foreign('tag').references('id').inTable('tags');
 
     table.index('repository');

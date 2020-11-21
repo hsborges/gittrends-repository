@@ -9,8 +9,12 @@ class PullRequest extends Issue {
     return 'id';
   }
 
-  $query(...args) {
-    return super.$query(...args).where('type', 'PULL_REQUEST');
+  static get issueType() {
+    return 'PULL_REQUEST';
+  }
+
+  static query(...args) {
+    return super.query(...args).where('issues.type', this.issueType);
   }
 
   async $beforeInsert(context) {

@@ -3,6 +3,7 @@
  */
 const { knex, Release, Metadata } = require('@gittrends/database-config');
 
+const upsertMetadata = require('./_upsertMetadata');
 const insertUsers = require('./_insertActors');
 const getReleases = require('../github/graphql/repositories/releases.js');
 
@@ -24,27 +25,22 @@ module.exports = async function (repositoryId) {
       async ({ releases, users, endCursor, hasNextPage }) =>
         knex
           .transaction((trx) =>
-            insertUsers(users, trx).then(() =>
-              Promise.all([
-                Release.query(trx)
-                  .insert(releases.map((r) => ({ repository: repositoryId, ...r })))
-                  .toKnexQuery()
-                  .onConflict('id')
-                  .ignore(),
-                Metadata.query(trx)
-                  .insert([
-                    { ...path, key: 'lastCursor', value: (lastCursor = endCursor || lastCursor) },
-                    ...(hasNextPage
-                      ? [{ ...path, key: 'updatedAt', value: new Date().toISOString() }]
-                      : [])
-                  ])
-                  .toKnexQuery()
-                  .onConflict(['id', 'resource', 'key'])
-                  .merge()
-              ])
-            )
+            Promise.all([
+              insertUsers(users, trx),
+              Release.query(trx)
+                .insert(releases.map((r) => ({ repository: repositoryId, ...r })))
+                .toKnexQuery()
+                .onConflict('id')
+                .ignore(),
+              upsertMetadata(
+                { ...path, key: 'lastCursor', value: (lastCursor = endCursor || lastCursor) },
+                trx
+              )
+            ])
           )
           .then(() => hasNextPage)
     );
   }
+
+  upsertMetadata({ ...path, key: 'updatedAt', value: new Date().toISOString() });
 };

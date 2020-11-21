@@ -6,7 +6,7 @@ services:
     restart: always
     ports:
       - ${GITTRENDS_REDIS_PORT}:6379
-    command: --maxmemory 50mb --maxmemory-policy volatile-lfu
+    command: --maxmemory 500mb --maxmemory-policy volatile-lfu
     networks:
       - gittrends
 

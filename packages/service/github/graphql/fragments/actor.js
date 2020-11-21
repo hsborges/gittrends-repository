@@ -5,8 +5,8 @@ module.exports = `fragment actor on Actor {
   avatarUrl login type:__typename
   ... on Node { id }
   ... on User {
-    bio
-    company
+    # bio
+    # company
     createdAt
     databaseId
     email
@@ -19,9 +19,9 @@ module.exports = `fragment actor on Actor {
   ... on Organization {
     createdAt
     databaseId
-    description
+    # description
     email
-    isVerified
+    # isVerified
     location
     name
     twitterUsername

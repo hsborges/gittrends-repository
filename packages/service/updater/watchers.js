@@ -3,6 +3,7 @@
  */
 const { knex, Metadata, Watcher } = require('@gittrends/database-config');
 
+const upsertMetadata = require('./_upsertMetadata');
 const insertUsers = require('./_insertActors');
 const getWatchers = require('../github/graphql/repositories/watchers.js');
 
@@ -22,31 +23,22 @@ module.exports = async (repositoryId) => {
       async ({ watchers, users, endCursor, hasNextPage }) =>
         knex
           .transaction(async (trx) =>
-            insertUsers(users, trx).then(() =>
-              Promise.all([
-                Watcher.query(trx)
-                  .insert(watchers.map((w) => ({ repository: repositoryId, ...w })))
-                  .toKnexQuery()
-                  .onConflict(['repository', 'user'])
-                  .ignore(),
-                Metadata.query(trx)
-                  .insert([
-                    {
-                      ...metaPath,
-                      key: 'lastCursor',
-                      value: (lastCursor = endCursor || lastCursor)
-                    },
-                    hasNextPage
-                      ? { ...metaPath, key: 'updatedAt', value: new Date().toISOString() }
-                      : {}
-                  ])
-                  .toKnexQuery()
-                  .onConflict(['id', 'resource', 'key'])
-                  .merge()
-              ])
-            )
+            Promise.all([
+              insertUsers(users, trx),
+              Watcher.query(trx)
+                .insert(watchers.map((w) => ({ repository: repositoryId, ...w })))
+                .toKnexQuery()
+                .onConflict(['repository', 'user'])
+                .ignore(),
+              upsertMetadata(
+                { ...metaPath, key: 'lastCursor', value: (lastCursor = endCursor || lastCursor) },
+                trx
+              )
+            ])
           )
           .then(() => hasNextPage)
     );
   }
+
+  return upsertMetadata({ ...metaPath, key: 'updatedAt', value: new Date().toISOString() });
 };

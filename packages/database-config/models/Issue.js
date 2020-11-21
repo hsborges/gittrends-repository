@@ -9,8 +9,12 @@ class Issue extends Model {
     return 'id';
   }
 
-  $query(...args) {
-    return super.$query(...args).where('type', 'ISSUE');
+  static get issueType() {
+    return 'ISSUE';
+  }
+
+  static query(...args) {
+    return super.query(...args).where('issues.type', this.issueType);
   }
 
   async $beforeInsert(context) {

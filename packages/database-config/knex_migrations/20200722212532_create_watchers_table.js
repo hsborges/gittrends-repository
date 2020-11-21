@@ -7,7 +7,7 @@ exports.up = (knex) =>
     table.string('user').notNullable();
 
     table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
-    table.foreign('user').references('id').inTable('actors');
+    // table.foreign('user').references('id').inTable('actors');
 
     table.primary(['repository', 'user']);
     table.index('repository');

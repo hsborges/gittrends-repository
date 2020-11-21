@@ -3,6 +3,7 @@
  */
 const { knex, Commit, Tag, Metadata } = require('@gittrends/database-config');
 
+const upsertMetadata = require('./_upsertMetadata');
 const insertUsers = require('./_insertActors');
 const getTags = require('../github/graphql/repositories/tags.js');
 
@@ -18,21 +19,19 @@ module.exports = async (repositoryId) => {
     let lastCursor = metadata && metadata.value;
 
     await getTags(repositoryId, { lastCursor }).then(async ({ tags, commits, users, endCursor }) =>
-      insertUsers(users, trx)
-        .then(() =>
-          Promise.all([
-            Commit.query(trx).insert(commits).toKnexQuery().onConflict('id').ignore(),
-            Tag.query(trx)
-              .insert(tags.map((t) => ({ repository: repositoryId, ...t })))
-              .toKnexQuery()
-              .onConflict('id')
-              .ignore()
-          ])
+      Promise.all([
+        insertUsers(users, trx),
+        Promise.map(commits, (commit) =>
+          Commit.query(trx).insert(commit).toKnexQuery().onConflict('id').ignore()
+        ),
+        Promise.map(
+          tags.map((t) => ({ repository: repositoryId, ...t })),
+          (tag) => Tag.query(trx).insert(tag).toKnexQuery().onConflict('id').ignore()
         )
-        .then(() => (lastCursor = endCursor || lastCursor))
+      ]).then(() => (lastCursor = endCursor || lastCursor))
     );
 
-    return Metadata.query(trx).insert([
+    return upsertMetadata([
       { ...path, key: 'updatedAt', value: new Date().toISOString() },
       { ...path, key: 'lastCursor', value: lastCursor }
     ]);

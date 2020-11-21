@@ -3,6 +3,7 @@
  */
 const { knex, Issue, PullRequest, Metadata } = require('@gittrends/database-config');
 
+const upsertMetadata = require('./_upsertMetadata');
 const insertUsers = require('./_insertActors');
 const getIssuesOrPulls = require('../github/graphql/repositories/issues-or-pulls.js');
 
@@ -32,23 +33,29 @@ module.exports = async function _get(repositoryId, resource) {
         if (users && users.length) await insertUsers(users, trx);
 
         if (records && records.length) {
-          await Promise.map(records, async (record) => {
-            await Metadata.query(trx)
-              .delete()
-              .where({ id: record.id, resource: resource.slice(0, -1), key: 'updatedAt' })
-              .then(() => Model.query(trx).delete().where({ id: record.id }))
-              .then(() => Model.query(trx).insert({ repository: repositoryId, ...record }));
-          });
+          await Promise.map(records, async (record) =>
+            Promise.all([
+              Metadata.query(trx).deleteById([record.id, resource.slice(0, -1), 'updatedAt']),
+              Model.query(trx)
+                .deleteById(record.id)
+                .then(() =>
+                  Model.query(trx)
+                    .insert({
+                      repository: repositoryId,
+                      ...record
+                    })
+                    .returning('id')
+                )
+            ])
+          );
         }
 
-        await Metadata.query(trx)
-          .insert({ ...metaPath, key: 'lastCursor', value: lastCursor })
-          .toKnexQuery()
-          .onConflict(['id', 'resource', 'key'])
-          .merge();
+        await upsertMetadata({ ...metaPath, key: 'lastCursor', value: lastCursor }, trx);
 
         return hasNextPage;
       });
+
+      if (global.gc) global.gc();
     }
 
     const [{ pending }] = await Model.query(trx)
@@ -60,16 +67,15 @@ module.exports = async function _get(repositoryId, resource) {
         'metadata.id'
       )
       .whereNull('metadata.id')
-      .andWhere('type', resource === 'issues' ? 'ISSUE' : 'PULL_REQUEST')
+      .andWhere('repository', repositoryId)
       .count('*', { as: 'pending' });
 
-    return Metadata.query(trx)
-      .insert([
+    return upsertMetadata(
+      [
         { ...metaPath, key: 'updatedAt', value: new Date().toISOString() },
         { ...metaPath, key: 'pending', value: pending }
-      ])
-      .toKnexQuery()
-      .onConflict(['id', 'resource', 'key'])
-      .merge();
+      ],
+      trx
+    );
   });
 };
