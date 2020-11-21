@@ -33,20 +33,20 @@ module.exports = async function _get(repositoryId, resource) {
         if (users && users.length) await insertUsers(users, trx);
 
         if (records && records.length) {
-          await Promise.map(records, async (record) =>
-            Promise.all([
-              Metadata.query(trx).deleteById([record.id, resource.slice(0, -1), 'updatedAt']),
-              Model.query(trx)
-                .deleteById(record.id)
-                .then(() =>
-                  Model.query(trx)
-                    .insert({
-                      repository: repositoryId,
-                      ...record
-                    })
-                    .returning('id')
-                )
-            ])
+          const ids = records.map((r) => r.id);
+          await Promise.all([
+            Metadata.query(trx)
+              .delete()
+              .whereIn('id', ids)
+              .andWhere({ resource: resource.slice(0, -1), key: 'updatedAt' }),
+            Model.query(trx).delete().whereIn('id', ids)
+          ]);
+
+          await Model.query(trx).insert(
+            records.map((record) => ({
+              repository: repositoryId,
+              ...record
+            }))
           );
         }
 

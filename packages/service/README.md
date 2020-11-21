@@ -51,7 +51,7 @@ docker-compose up -d
 docker-compose exec service yarn add-repositories --limit <number> --language <language>
 docker-compose exec service yarn schedule all
 # to backup dataset
-docker run --rm -v gittrends.app-database:/volume -v $(pwd):/backup alpine tar -cjf /backup/dump-`date -u +%s000`.tar.bz2 -C /volume ./
-docker run --rm -v gittrends.app-database:/volume -v $(pwd):/backup alpine sh -c "rm -rf /volume/* /volume/..?* /volume/.[!.]* ; tar -C /volume/ -xjf /backup/$(find . -name "dump-*.tar.bz2" | head -n1)"
+docker run --rm -v gittrends.app:/volume -v $(pwd):/backup alpine tar -cjf /backup/dump-`date -u +%s000`.tar.bz2 -C /volume ./
+docker run --rm -v gittrends.app:/volume -v $(pwd):/backup alpine sh -c "rm -rf /volume/* /volume/..?* /volume/.[!.]* ; tar -C /volume/ -xjf /backup/$(find . -name "dump-*.tar.bz2" | head -n1)"
 
 ```

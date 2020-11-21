@@ -9,7 +9,7 @@ const FastMap = require('collections/fast-map');
 const LfuSet = require('collections/lfu-set');
 
 const waiting = new FastMap();
-const cache = new LfuSet([], 1000000);
+const cache = new LfuSet([], 100000);
 const limiter = new Bottleneck({ maxConcurrent: 1, minTime: 0 });
 
 async function insert(user) {
@@ -29,12 +29,11 @@ async function insert(user) {
 module.exports = (users, transaction, replace = false) => {
   return limiter
     .schedule(() => {
-      const promises = [];
       const nuUsers = [];
 
-      users.forEach((user) => {
-        if (cache.has(user.id)) return Promise.resolve();
-        if (!replace && waiting.has(user.id)) return waiting.get(user.id);
+      const promises = users.reduce((mem, user) => {
+        if (cache.has(user.id)) return mem.concat(Promise.resolve());
+        if (!replace && waiting.has(user.id)) return mem.concat(waiting.get(user.id));
 
         if (replace) {
           const promise = Actor.query(transaction)
@@ -44,11 +43,12 @@ module.exports = (users, transaction, replace = false) => {
             .finally(() => waiting.delete(user.id));
 
           waiting.set(user.id, promise);
-          promises.push(promise);
+          return mem.concat(promise);
         }
 
-        return nuUsers.push(user);
-      });
+        nuUsers.push(user);
+        return mem;
+      }, []);
 
       const promise = insert(nuUsers, transaction)
         .then(() => cache.addEach(nuUsers.map((u) => u.id)))

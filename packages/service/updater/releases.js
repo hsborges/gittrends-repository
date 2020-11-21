@@ -42,5 +42,5 @@ module.exports = async function (repositoryId) {
     );
   }
 
-  upsertMetadata({ ...path, key: 'updatedAt', value: new Date().toISOString() });
+  return upsertMetadata({ ...path, key: 'updatedAt', value: new Date().toISOString() });
 };

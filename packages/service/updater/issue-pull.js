@@ -61,7 +61,7 @@ module.exports = async function _get(id, resource) {
               .ignore();
 
             await getReactions(reactables).then((responses) =>
-              Promise.mapSeries(responses, (response, index) =>
+              Promise.map(responses, (response, index) =>
                 saveReactions(response.reactions, response.users, {
                   repository: record.repository,
                   issue: id,
