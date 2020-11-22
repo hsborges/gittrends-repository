@@ -11,15 +11,13 @@ module.exports = async function (fastify) {
   fastify.get('/:owner/:name/stargazers', { schema }, async function (request, reply) {
     const { owner, name } = request.params;
 
-    const repo = await fastify
-      .knex('repositories')
+    const repo = await fastify.Repository.query()
       .where('name_with_owner', 'ilike', `${owner}/${name}`)
       .first('id');
 
     if (!repo) return reply.callNotFound();
 
-    const timeseries = await fastify
-      .knex('stargazers')
+    const timeseries = await fastify.Stargazer.query()
       .select(
         fastify.knex.raw("date_trunc('week', starred_at) as week"),
         fastify.knex.raw('count(*) as stargazers_count')
@@ -31,14 +29,12 @@ module.exports = async function (fastify) {
     if (timeseries.length === 0) reply.send({ timeseries });
 
     const [first, last] = await Promise.all([
-      fastify
-        .knex('stargazers')
+      fastify.Stargazer.query()
         .where({ repository: repo.id })
         .orderBy('starred_at', 'asc')
         .first('user', 'starred_at'),
 
-      fastify
-        .knex('stargazers')
+      fastify.Stargazer.query()
         .where({ repository: repo.id })
         .orderBy('starred_at', 'desc')
         .first('user', 'starred_at')

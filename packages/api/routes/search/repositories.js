@@ -30,8 +30,7 @@ const schema = {
 
 module.exports = async function (fastify) {
   fastify.get('/repos', { schema }, async function (request, reply) {
-    const repositories = await fastify
-      .knex('repositories')
+    const repositories = await fastify.Repository.query()
       .where((builder) => {
         builder.where('name_with_owner', 'ilike', `%${request.query.query}%`);
         if (request.query.language)
@@ -45,8 +44,7 @@ module.exports = async function (fastify) {
       .limit(request.query.limit)
       .offset(request.query.offset);
 
-    const [{ count }] = await fastify
-      .knex('repositories')
+    const [{ count }] = await fastify.Repository.query()
       .where((builder) => {
         builder.where('name_with_owner', 'ilike', `%${request.query.query}%`);
         if (request.query.language)
@@ -54,8 +52,7 @@ module.exports = async function (fastify) {
       })
       .count('id', { as: 'count' });
 
-    const languages = await fastify
-      .knex('repositories')
+    const languages = await fastify.Repository.query()
       .select('primary_language as language')
       .count('*', { as: 'count' })
       .where((builder) => {
