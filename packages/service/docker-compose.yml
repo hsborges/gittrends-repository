@@ -14,11 +14,11 @@ services:
     image: node:latest
     restart: always
     ports:
-      - ${GITTRENDS_PROXY_PORT}:80
+      - ${GITTRENDS_PROXY_PORT}:8080
     volumes:
       - ../../:/usr/src/app
     working_dir: /usr/src/app/packages/service
-    command: npx github-proxy-server --port 80 --request-interval 50 --tokens ../../tokens.txt --verbose
+    command: npx github-proxy-server --port 8080 --request-interval 50 --tokens ../../tokens.txt --verbose
     networks:
       - gittrends
     logging:

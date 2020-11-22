@@ -29,6 +29,29 @@ services:
     networks:
       - gittrends
 
+  pgbackups:
+    image: prodrigestivill/postgres-backup-local
+    restart: always
+    volumes:
+      - ./backup:/backups
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${GITTRENDS_DATABASE_DB}
+      POSTGRES_USER: ${GITTRENDS_DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
+      POSTGRES_EXTRA_OPTS: -Z9 --schema=public --blobs
+      SCHEDULE: '@weekly'
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+      HEALTHCHECK_PORT: 8888
+    networks:
+      - gittrends
+
   website-api:
     image: node:latest
     restart: always
