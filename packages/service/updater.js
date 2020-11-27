@@ -12,6 +12,7 @@ const program = require('commander');
 const BeeQueue = require('bee-queue');
 const Bottleneck = require('bottleneck');
 
+const { Issue, PullRequest, Metadata } = require('@gittrends/database-config');
 const worker = require('./updater-worker.js');
 
 const {
@@ -59,19 +60,56 @@ program
 
       queue.checkStalledJobs(10 * 1000);
 
-      queue.process(program.workers, (job) =>
-        limiter.schedule(async () => {
+      queue.process(program.workers, async (job) => {
+        await limiter.schedule(async () => {
           const jobId = `${resource}@${job.data.name}`;
           try {
-            await worker({ ...job, resource: r });
+            await worker({ ...job, resource: r }).finally(async () => {
+              if (['issues', 'pulls'].indexOf(r) >= 0) {
+                const promises = [];
+                const Model = r === 'issues' ? Issue : PullRequest;
+
+                await Model.query()
+                  .leftJoin(
+                    Metadata.query()
+                      .where({ id: job.id, resource: r.slice(0, -1), key: 'updatedAt' })
+                      .as('metadata'),
+                    'metadata.id',
+                    `issues.id`
+                  )
+                  .where({ repository: job.id })
+                  .select(['issues.id', 'issues.type'])
+                  .toKnexQuery()
+                  .stream((stream) =>
+                    stream.on('data', (record) =>
+                      promises.push(
+                        limiter
+                          .schedule({ priority: 0 }, () =>
+                            worker({
+                              id: record.id,
+                              resource: r.slice(0, -1)
+                            })
+                          )
+                          // TODO
+                          .catch((err) => consola.error(err))
+                      )
+                    )
+                  );
+
+                await Promise.all(promises);
+              }
+            });
+
             return consola.success(`[${jobId}] finished!`);
           } catch (err) {
             consola.error(`Error thrown by ${jobId}.`);
             consola.error(err);
             throw err;
           }
-        })
-      );
+        });
+
+        if (global.gc) global.gc();
+      });
 
       return queue;
     });

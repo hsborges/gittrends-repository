@@ -35,34 +35,6 @@ const beeSettings = {
   removeOnFailure: true
 };
 
-async function scheduleIssueOrPullDetails(res, repoId) {
-  const Model = res === 'issues' ? db.Issue : db.PullRequest;
-
-  // get queue connection
-  const queue = new BeeQueue(`updates:${res}`, beeSettings);
-
-  const promises = [];
-
-  await Model.query()
-    .leftJoin(
-      db.Metadata.query()
-        .where({ id: repoId, resource: res.slice(0, -1), key: 'updatedAt' })
-        .as('metadata'),
-      'metadata.id',
-      `issues.id`
-    )
-    .where({ repository: repoId })
-    .select(['issues.id', 'issues.type'])
-    .toKnexQuery()
-    .stream((stream) =>
-      stream.on('data', (record) =>
-        promises.push(queue.createJob({}).setId(`d-${record.id}`).save())
-      )
-    );
-
-  return Promise.all(promises).then(() => queue.close());
-}
-
 /* COMMANDS */
 const resourcesParser = (resources) => {
   const nr = resources.map((r) => r.toLowerCase());
@@ -147,31 +119,24 @@ const usersScheduler = async (wait, limit = 100000) => {
 };
 
 /* Script entry point */
-if (require.main === module) {
-  program
-    .version(version)
-    .arguments('<resource> [other_resources...]')
-    .description('Schedule jobs on queue to further processing')
-    .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
-    .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
-    .action(async (resource, other) =>
-      Promise.mapSeries(resourcesParser([resource, ...other]), async (res) => {
-        consola.info(`Scheduling ${res} jobs ...`);
-        switch (res) {
-          case 'users':
-            return usersScheduler(program.wait, program.limit);
-          default:
-            return repositoriesScheduler(res, program.wait, program.limit);
-        }
-      })
-        .catch((err) => consola.error(err))
-        .finally(() => db.knex.destroy())
-        .finally(() => process.exit(0))
-    )
-    .parse(process.argv);
-} else {
-  module.exports.repositories = repositoriesScheduler;
-  module.exports.users = usersScheduler;
-  module.exports.issues = (id) => scheduleIssueOrPullDetails('issues', id);
-  module.exports.pulls = (id) => scheduleIssueOrPullDetails('pulls', id);
-}
+program
+  .version(version)
+  .arguments('<resource> [other_resources...]')
+  .description('Schedule jobs on queue to further processing')
+  .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
+  .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
+  .action(async (resource, other) =>
+    Promise.mapSeries(resourcesParser([resource, ...other]), async (res) => {
+      consola.info(`Scheduling ${res} jobs ...`);
+      switch (res) {
+        case 'users':
+          return usersScheduler(program.wait, program.limit);
+        default:
+          return repositoriesScheduler(res, program.wait, program.limit);
+      }
+    })
+      .catch((err) => consola.error(err))
+      .finally(() => db.knex.destroy())
+      .finally(() => process.exit(0))
+  )
+  .parse(process.argv);

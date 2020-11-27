@@ -5,10 +5,8 @@ const { Actor } = require('@gittrends/database-config');
 
 const pRetry = require('promise-retry');
 const Bottleneck = require('bottleneck');
-const FastMap = require('collections/fast-map');
 const LfuSet = require('collections/lfu-set');
 
-const waiting = new FastMap();
 const cache = new LfuSet([], 100000);
 const limiter = new Bottleneck({ maxConcurrent: 1, minTime: 0 });
 
@@ -26,35 +24,25 @@ async function insert(user) {
   );
 }
 
-module.exports = (users, transaction, replace = false) => {
+module.exports = function (users, transaction, replace = false) {
   return limiter
-    .schedule(() => {
-      const nuUsers = [];
-
-      const promises = users.reduce((mem, user) => {
-        if (cache.has(user.id)) return mem.concat(Promise.resolve());
-        if (!replace && waiting.has(user.id)) return mem.concat(waiting.get(user.id));
+    .schedule(() =>
+      users.reduce((mem, user) => {
+        if (cache.has(user.id)) return mem;
 
         if (replace) {
           const promise = Actor.query(transaction)
             .update(user)
             .where('id', user.id)
-            .then(() => cache.add(user.id))
-            .finally(() => waiting.delete(user.id));
+            .then(() => cache.add(user.id));
 
-          waiting.set(user.id, promise);
           return mem.concat(promise);
         }
 
-        nuUsers.push(user);
-        return mem;
-      }, []);
-
-      const promise = insert(nuUsers, transaction)
-        .then(() => cache.addEach(nuUsers.map((u) => u.id)))
-        .finally(() => waiting.deleteEach(nuUsers.map((u) => u.id)));
-
-      return promises.concat([promise]);
-    })
-    .then((promises) => Promise.all(promises));
+        return mem.concat([user]);
+      }, [])
+    )
+    .then((nuUsers) =>
+      insert(nuUsers, transaction).then(() => cache.addEach(nuUsers.map((u) => u.id)))
+    );
 };
