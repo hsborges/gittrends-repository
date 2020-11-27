@@ -21,25 +21,26 @@ module.exports = async function (repositoryId) {
 
   // modified or not updated
   for (let hasMore = true; hasMore; ) {
-    hasMore = await getReleases(repositoryId, { lastCursor, max: BATCH_SIZE }).then(
-      async ({ releases, users, endCursor, hasNextPage }) =>
-        knex
-          .transaction((trx) =>
-            Promise.all([
-              insertUsers(users, trx),
-              Release.query(trx)
-                .insert(releases.map((r) => ({ repository: repositoryId, ...r })))
-                .toKnexQuery()
-                .onConflict('id')
-                .ignore(),
-              upsertMetadata(
-                { ...path, key: 'lastCursor', value: (lastCursor = endCursor || lastCursor) },
-                trx
-              )
-            ])
-          )
-          .then(() => hasNextPage)
+    const result = await getReleases(repositoryId, { lastCursor, max: BATCH_SIZE });
+
+    await knex.transaction((trx) =>
+      Promise.all([
+        insertUsers(result.users, trx),
+        Release.query(trx)
+          .insert(result.releases.map((r) => ({ repository: repositoryId, ...r })))
+          .toKnexQuery()
+          .onConflict('id')
+          .ignore(),
+        upsertMetadata(
+          { ...path, key: 'lastCursor', value: (lastCursor = result.endCursor || lastCursor) },
+          trx
+        )
+      ])
     );
+
+    hasMore = result.hasNextPage;
+
+    if (global.gc) global.gc();
   }
 
   return upsertMetadata({ ...path, key: 'updatedAt', value: new Date().toISOString() });

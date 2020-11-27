@@ -6,20 +6,14 @@ global.Promise = require('bluebird');
 require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
-const _ = require('lodash');
-const moment = require('moment');
+const redis = require('redis');
+const dayjs = require('dayjs');
 const consola = require('consola');
 const BeeQueue = require('bee-queue');
+const db = require('@gittrends/database-config');
 
 const { program } = require('commander');
-const {
-  knex,
-  Metadata,
-  Actor,
-  Repository,
-  Issue,
-  PullRequest
-} = require('@gittrends/database-config');
+const { chunk, intersection } = require('lodash');
 
 const {
   config: { resources: defaultResources },
@@ -28,11 +22,11 @@ const {
 
 // queue connection options
 const beeSettings = {
-  redis: {
+  redis: redis.createClient({
     host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
     port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
     db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
-  },
+  }),
   isWorker: false,
   getEvents: false,
   sendEvents: false,
@@ -42,7 +36,7 @@ const beeSettings = {
 };
 
 async function scheduleIssueOrPullDetails(res, repoId) {
-  const Model = res === 'issues' ? Issue : PullRequest;
+  const Model = res === 'issues' ? db.Issue : db.PullRequest;
 
   // get queue connection
   const queue = new BeeQueue(`updates:${res}`, beeSettings);
@@ -51,7 +45,7 @@ async function scheduleIssueOrPullDetails(res, repoId) {
 
   await Model.query()
     .leftJoin(
-      Metadata.query()
+      db.Metadata.query()
         .where({ id: repoId, resource: res.slice(0, -1), key: 'updatedAt' })
         .as('metadata'),
       'metadata.id',
@@ -73,7 +67,7 @@ async function scheduleIssueOrPullDetails(res, repoId) {
 const resourcesParser = (resources) => {
   const nr = resources.map((r) => r.toLowerCase());
   if (resources.indexOf('all') >= 0) return defaultResources;
-  if (nr.length === _.intersection(nr, defaultResources).length) return nr;
+  if (nr.length === intersection(nr, defaultResources).length) return nr;
   throw new Error("Invalid 'resources' argument values!");
 };
 
@@ -81,13 +75,13 @@ const repositoriesScheduler = async (res, wait) => {
   // get queue connection
   const queue = new BeeQueue(`updates:${res}`, beeSettings);
   // find and save jobs on queue
-  const before = moment().subtract(wait, 'hours').toISOString();
+  const before = dayjs().subtract(wait, 'hours').toISOString();
 
   // get metadata
   const jobsList = (
-    await Repository.query()
+    await db.Repository.query()
       .leftJoin(
-        Metadata.query()
+        db.Metadata.query()
           .whereIn('metadata.key', ['updatedAt', 'pending'])
           .andWhere('metadata.resource', res)
           .as('metadata'),
@@ -130,10 +124,10 @@ const usersScheduler = async (wait, limit = 100000) => {
     .getJobs('active', { size: Number.MAX_SAFE_INTEGER })
     .then((jobs) => jobs.map((job) => job.data.ids).reduce((acc, u) => acc.concat(u), []));
   // find and save jobs on queue
-  const before = moment().subtract(wait, 'hours').toISOString();
+  const before = dayjs().subtract(wait, 'hours').toISOString();
   // get metadata
   const usersIds = (
-    await Actor.query()
+    await db.Actor.query()
       .whereNotIn('id', active.concat(waiting))
       .andWhere((builder) => builder.whereNull('_updated_at').orWhere('_updated_at', '<', before))
       .select('id')
@@ -141,7 +135,7 @@ const usersScheduler = async (wait, limit = 100000) => {
   ).map((r) => r.id);
   // add to queue
   return Promise.all(
-    _.chunk(usersIds, 50).map((ids) =>
+    chunk(usersIds, 50).map((ids) =>
       queue
         .createJob({ ids })
         .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10))
@@ -171,7 +165,7 @@ if (require.main === module) {
         }
       })
         .catch((err) => consola.error(err))
-        .finally(() => knex.destroy())
+        .finally(() => db.knex.destroy())
         .finally(() => process.exit(0))
     )
     .parse(process.argv);

@@ -6,6 +6,7 @@ global.Promise = require('bluebird');
 require('dotenv').config({ path: '../../.env' });
 require('pretty-error').start();
 
+const redis = require('redis');
 const consola = require('consola');
 const program = require('commander');
 const BeeQueue = require('bee-queue');
@@ -19,11 +20,11 @@ const {
 } = require('./package.json');
 
 const beeSettings = {
-  redis: {
+  redis: redis.createClient({
     host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
     port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
     db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
-  },
+  }),
   stallInterval: 10000,
   isWorker: true,
   getEvents: false,
@@ -56,10 +57,20 @@ program
     const queues = selectedResources.map((r) => {
       const queue = new BeeQueue(`updates:${r}`, beeSettings);
 
-      queue.checkStalledJobs(60 * 1000);
+      queue.checkStalledJobs(10 * 1000);
 
       queue.process(program.workers, (job) =>
-        limiter.schedule(() => worker({ ...job, resource: r }))
+        limiter.schedule(async () => {
+          const jobId = `${resource}@${job.data.name}`;
+          try {
+            await worker({ ...job, resource: r });
+            return consola.success(`[${jobId}] finished!`);
+          } catch (err) {
+            consola.error(`Error thrown by ${jobId}.`);
+            consola.error(err);
+            throw err;
+          }
+        })
       );
 
       return queue;

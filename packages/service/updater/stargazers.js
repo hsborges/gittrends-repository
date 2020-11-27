@@ -20,25 +20,24 @@ module.exports = async function (repositoryId) {
 
   // repository modified
   for (let hasMore = true; hasMore; ) {
-    hasMore = await getStargazers(repositoryId, { lastCursor, max: BATCH_SIZE }).then(
-      async ({ stargazers, users, endCursor, hasNextPage }) =>
-        knex
-          .transaction(async (trx) =>
-            Promise.all([
-              insertUsers(users, trx),
-              Stargazer.query(trx)
-                .insert(stargazers.map((s) => ({ repository: repositoryId, ...s })))
-                .toKnexQuery()
-                .onConflict(['repository', 'user', 'starred_at'])
-                .ignore(),
-              upsertMetadata(
-                { ...meta, key: 'lastCursor', value: (lastCursor = endCursor || lastCursor) },
-                trx
-              )
-            ])
-          )
-          .then(() => hasNextPage)
+    const response = await getStargazers(repositoryId, { lastCursor, max: BATCH_SIZE });
+
+    await knex.transaction(async (trx) =>
+      Promise.all([
+        insertUsers(response.users, trx),
+        Stargazer.query(trx)
+          .insert(response.stargazers.map((s) => ({ repository: repositoryId, ...s })))
+          .toKnexQuery()
+          .onConflict(['repository', 'user', 'starred_at'])
+          .ignore(),
+        upsertMetadata(
+          { ...meta, key: 'lastCursor', value: (lastCursor = response.endCursor || lastCursor) },
+          trx
+        )
+      ])
     );
+
+    hasMore = response.hasNextPage;
 
     if (global.gc) global.gc();
   }
