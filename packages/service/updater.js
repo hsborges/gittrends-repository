@@ -59,7 +59,7 @@ program
 
       queue.process(program.workers, async (job) => {
         await limiter.schedule(async () => {
-          const jobId = `${resource}@${job.data.name}`;
+          const jobId = `${r}@${job.data.name}`;
           try {
             await worker({ ...job, resource: r }).finally(async () => {
               if (['issues', 'pulls'].indexOf(r) >= 0) {
