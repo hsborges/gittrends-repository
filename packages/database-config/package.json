@@ -5,17 +5,16 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "run-migrations": "knex migrate:latest"
+    "run-migrations": "npx -n '-r @hsborges/env-config' knex migrate:latest"
   },
   "dependencies": {
-    "dotenv": "^8.2.0",
+    "find-up": "^5.0.0",
     "knex": "^0.21.12",
     "objection": "^2.2.3",
     "pg": "^8.5.1",
     "pg-query-stream": "^3.4.2"
   },
   "devDependencies": {
-    "commitizen": "^4.2.2",
-    "migrate": "^1.7.0"
+    "@hsborges/env-config": "file:../env-config"
   }
 }

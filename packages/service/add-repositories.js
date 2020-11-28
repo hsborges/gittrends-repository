@@ -3,8 +3,6 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config({ path: '../../.env' });
-
 const consola = require('consola');
 const { chain, mergeWith, isArray } = require('lodash');
 const { knex, Actor, Repository } = require('@gittrends/database-config');

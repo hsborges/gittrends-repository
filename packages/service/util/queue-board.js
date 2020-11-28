@@ -1,10 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-require('dotenv').config({ path: '../../.env' });
-require('pretty-error').start();
-
 const Arena = require('bull-arena');
+
+// eslint-disable-next-line import/no-extraneous-dependencies
+require('@hsborges/env-config');
 
 // Mandatory import of queue library.
 const Bee = require('bee-queue');

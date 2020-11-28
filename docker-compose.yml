@@ -34,8 +34,6 @@ services:
     restart: always
     volumes:
       - ./backup:/backups
-    links:
-      - postgres
     depends_on:
       - postgres
     environment:
@@ -53,30 +51,34 @@ services:
       - gittrends
 
   website-api:
-    image: node:latest
+    build:
+      context: .
+      dockerfile: ./packages/website-api/Dockerfile
     restart: always
-    expose:
-      - 80
-    volumes:
-      - .:/usr/src/app
-    working_dir: /usr/src/app/packages/api
-    command: yarn start --port 80
+    ports:
+      - ${GITTRENDS_API_PORT}:80
+    environment:
+      GITTRENDS_DATABASE_HOST: postgres
+    env_file:
+      - .env
     depends_on:
       - postgres
     networks:
       - gittrends
 
   website-server:
-    image: node:latest
+    build:
+      context: .
+      dockerfile: ./packages/website/Dockerfile
+      args:
+        GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+        GITTRENDS_API_HOST: website-api
+        GITTRENDS_API_PORT: 80
     restart: always
-    expose:
-      - 80
-    volumes:
-      - .:/usr/src/app
+    ports:
+      - ${GITTRENDS_WEBSITE_PORT}:80
     depends_on:
       - website-api
-    working_dir: /usr/src/app/packages/website
-    command: yarn start -H 0.0.0.0 -p 80
     environment:
       GITTRENDS_API_HOST: website-api
       GITTRENDS_API_PORT: 80

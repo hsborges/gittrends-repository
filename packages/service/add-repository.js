@@ -3,9 +3,6 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config({ path: '../../.env' });
-require('pretty-error').start();
-
 const consola = require('consola');
 const { program } = require('commander');
 const { knex, Actor, Repository } = require('@gittrends/database-config');

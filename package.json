@@ -19,7 +19,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "@gittrends/eslint-config": "1.0.0"
+    "@gittrends/eslint-config": "file:packages/eslint-config"
   },
   "devDependencies": {
     "commitizen": "^4.1.2",

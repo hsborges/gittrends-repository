@@ -1,5 +1,4 @@
-const { GITTRENDS_API_HOST = 'localhost', GITTRENDS_API_PORT = 3000 } = process.env;
-
+// eslint-disable-next-line import/no-extraneous-dependencies
 export default {
   /*
    ** Nuxt target
@@ -67,7 +66,7 @@ export default {
 
   proxy: {
     '/api/': {
-      target: `http://${GITTRENDS_API_HOST}:${GITTRENDS_API_PORT}`,
+      target: `http://${process.env.GITTRENDS_API_HOST}:${process.env.GITTRENDS_API_PORT}`,
       pathRewrite: { '^/api/': '' }
     }
   },

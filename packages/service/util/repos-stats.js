@@ -3,8 +3,8 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config({ path: '../../.env' });
-require('pretty-error').start();
+// eslint-disable-next-line import/no-extraneous-dependencies
+require('@hsborges/env-config');
 
 const chalk = require('chalk');
 const numeral = require('numeral');

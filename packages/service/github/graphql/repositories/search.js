@@ -3,8 +3,6 @@
  */
 const { get, chain, differenceBy, min, isNumber } = require('lodash');
 
-const debug = require('debug')('gittrends:graphql:search');
-
 const client = require('../graphql-client.js');
 const actorFragment = require('../fragments/actor.js');
 const repoFragment = require('../fragments/repository.js');
@@ -61,8 +59,7 @@ module.exports = async (limit, { language }) => {
       .catch((err) => {
         if (err instanceof BadGatewayError) return (total = Math.ceil(total / 2));
         throw err;
-      })
-      .finally(() => debug('%o', { repos: repos.length, users: users.length, maxStargazers }));
+      });
   }
 
   return {

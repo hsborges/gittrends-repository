@@ -1,4 +1,4 @@
-const moment = require('moment');
+const dayjs = require('dayjs');
 
 const schema = {
   params: {
@@ -44,7 +44,7 @@ module.exports = async function (fastify) {
       timeseries: timeseries.reduce(
         (o, ts) => ({
           ...o,
-          [moment.utc(ts.week).endOf('isoweek').format('YYYY-MM-DD')]: parseInt(
+          [dayjs.utc(ts.week).endOf('isoweek').format('YYYY-MM-DD')]: parseInt(
             ts.stargazers_count,
             10
           )

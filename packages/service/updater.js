@@ -3,9 +3,6 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config({ path: '../../.env' });
-require('pretty-error').start();
-
 const redis = require('redis');
 const consola = require('consola');
 const program = require('commander');

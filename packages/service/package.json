@@ -6,15 +6,14 @@
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "scripts": {
     "proxy-server": "github-proxy-server --tokens ../../tokens.txt",
-    "add-repositories": "node add-repositories.js",
-    "add-repository": "node add-repository.js",
-    "schedule": "node scheduler.js",
-    "update": "node --expose-gc updater.js",
+    "add-repositories": "node -r @hsborges/env-config add-repositories.js",
+    "add-repository": "node -r @hsborges/env-config add-repository.js",
+    "schedule": "node -r @hsborges/env-config scheduler.js",
+    "update": "node -r @hsborges/env-config --expose-gc updater.js",
     "docker-compose": "docker-compose --env-file ../../.env"
   },
   "dependencies": {
-    "@gittrends/database-config": "*",
-    "@hsborges/github-proxy-server": "^1.3.7",
+    "@gittrends/database-config": "file:../database-config",
     "axios": "^0.21.0",
     "bee-queue": "^1.3.1",
     "bluebird": "^3.7.2",
@@ -25,20 +24,18 @@
     "commander": "^6.2.0",
     "consola": "^2.15.0",
     "dayjs": "^1.9.6",
-    "debug": "^4.2.0",
-    "dotenv": "^8.2.0",
     "jest": "^26.6.3",
     "js-yaml": "^3.14.0",
     "lodash": "^4.17.20",
-    "node-cache": "^5.1.2",
     "numeral": "^2.0.6",
-    "pretty-error": "^2.1.2",
     "promise-retry": "^2.0.1",
     "redis": "^3.0.2",
     "table": "^6.0.3",
     "user-agents": "^1.0.559"
   },
   "devDependencies": {
+    "@hsborges/env-config": "file:../env-config",
+    "@hsborges/github-proxy-server": "^1.3.7",
     "core-util-is": "^1.0.2",
     "pm2": "^4.5.0"
   },

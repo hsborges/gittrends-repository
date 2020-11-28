@@ -1,7 +1,7 @@
-const path = require('path');
 const cors = require('fastify-cors');
 const helmet = require('fastify-helmet');
 const AutoLoad = require('fastify-autoload');
+const { join } = require('path');
 
 const compact = require('./helpers/compact');
 
@@ -13,14 +13,14 @@ module.exports = async function (fastify, opts) {
   // those should be support plugins that are reused
   // through your application
   fastify.register(AutoLoad, {
-    dir: path.join(__dirname, 'plugins'),
+    dir: join(__dirname, 'plugins'),
     options: { ...opts }
   });
 
   // This loads all plugins defined in routes
   // define your routes in one of these
   fastify.register(AutoLoad, {
-    dir: path.join(__dirname, 'routes'),
+    dir: join(__dirname, 'routes'),
     options: { ...opts }
   });
 
