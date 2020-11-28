@@ -1,6 +1,13 @@
 apps:
   - name: queue-board
     script: util/queue-board.js
+    out_file: /dev/null
+
+  - name: proxy-server
+    interpreter: npx
+    script: github-proxy-server
+    args: --port 3000 --request-interval 50 --tokens ../../tokens.txt
+    out_file: /dev/null
 
   - name: scheduler
     script: scheduler.js

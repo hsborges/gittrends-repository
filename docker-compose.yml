@@ -50,6 +50,15 @@ services:
     networks:
       - gittrends
 
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - ${GITTRENDS_REDIS_PORT}:6379
+    command: --maxmemory 50mb --maxmemory-policy allkeys-lru
+    networks:
+      - gittrends
+
   website-api:
     build:
       context: .

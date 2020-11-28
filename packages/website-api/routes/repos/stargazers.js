@@ -1,4 +1,7 @@
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+
+dayjs.extend(utc);
 
 const schema = {
   params: {
@@ -32,12 +35,14 @@ module.exports = async function (fastify) {
       fastify.Stargazer.query()
         .where({ repository: repo.id })
         .orderBy('starred_at', 'asc')
-        .first('user', 'starred_at'),
+        .first('user', 'starred_at')
+        .select('user', 'starred_at'),
 
       fastify.Stargazer.query()
         .where({ repository: repo.id })
         .orderBy('starred_at', 'desc')
         .first('user', 'starred_at')
+        .select('user', 'starred_at')
     ]);
 
     return reply.send({

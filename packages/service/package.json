@@ -9,8 +9,7 @@
     "add-repositories": "node -r @hsborges/env-config add-repositories.js",
     "add-repository": "node -r @hsborges/env-config add-repository.js",
     "schedule": "node -r @hsborges/env-config scheduler.js",
-    "update": "node -r @hsborges/env-config --expose-gc updater.js",
-    "docker-compose": "docker-compose --env-file ../../.env"
+    "update": "node -r @hsborges/env-config --expose-gc updater.js"
   },
   "dependencies": {
     "@gittrends/database-config": "file:../database-config",
