@@ -6,7 +6,7 @@ module.exports = {
     node: true,
     jest: true
   },
-  extends: ['airbnb-base', 'prettier'],
+  extends: ['eslint:recommended', 'standard', 'prettier'],
   plugins: ['prettier'],
   parserOptions: {
     ecmaVersion: 2020,
@@ -20,7 +20,6 @@ module.exports = {
     'func-names': 'off',
     'object-curly-newline': 'off',
     'max-len': 'off',
-    'no-console': 'off',
     'no-process-exit': 'off',
     'no-await-in-loop': 'off',
     'no-loop-func': 'off',

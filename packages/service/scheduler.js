@@ -17,8 +17,8 @@ const {
   version
 } = require('./package.json');
 
-// queue connection options
-const beeSettings = {
+// queue connection
+const queue = new BeeQueue('updates', {
   redis: redis.createClient({
     host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
     port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
@@ -30,7 +30,7 @@ const beeSettings = {
   storeJobs: false,
   removeOnSuccess: true,
   removeOnFailure: true
-};
+});
 
 /* COMMANDS */
 const resourcesParser = (resources) => {
@@ -41,8 +41,6 @@ const resourcesParser = (resources) => {
 };
 
 const repositoriesScheduler = async (res, wait) => {
-  // get queue connection
-  const queue = new BeeQueue(`updates:${res}`, beeSettings);
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hours').toISOString();
 
@@ -68,51 +66,43 @@ const repositoriesScheduler = async (res, wait) => {
   ).map((r) =>
     queue
       .createJob({ name: r.name_with_owner })
-      .setId(r.id)
+      .setId(`${res}@${r.id}`)
       .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10))
       .save()
   );
   // add to queue
-  return Promise.all(jobsList)
-    .then(async () => consola.success(`Number of ${res} scheduled: ${jobsList.length}`))
-    .finally(() => queue.close());
+  return Promise.all(jobsList).then(async () =>
+    consola.success(`Number of ${res} scheduled: ${jobsList.length}`)
+  );
 };
 
 const usersScheduler = async (wait, limit = 100000) => {
-  // get queue connection
-  const queue = new BeeQueue('updates:users', beeSettings);
-  // throws an error when there is more than 1k jobs waiting
-  const counts = await queue.checkHealth();
-  if (counts.waiting > 1000)
-    throw new Error('There are already more than 1k users batch jobs scheduled!');
   // get jobs on queue
   const waiting = await queue
     .getJobs('waiting', { size: Number.MAX_SAFE_INTEGER })
-    .then((jobs) => jobs.map((job) => job.data.ids).reduce((acc, u) => acc.concat(u), []));
-  const active = await queue
-    .getJobs('active', { size: Number.MAX_SAFE_INTEGER })
-    .then((jobs) => jobs.map((job) => job.data.ids).reduce((acc, u) => acc.concat(u), []));
+    .then((jobs) =>
+      jobs.filter(({ id }) => /users@.+/i.test(id)).reduce((acc, j) => acc.concat(j.data.ids), [])
+    );
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hours').toISOString();
   // get metadata
   const usersIds = (
     await db.Actor.query()
-      .whereNotIn('id', active.concat(waiting))
+      .whereNotIn('id', waiting)
       .andWhere((builder) => builder.whereNull('_updated_at').orWhere('_updated_at', '<', before))
       .select('id')
-      .limit(limit - counts.waiting)
+      .limit(limit)
   ).map((r) => r.id);
   // add to queue
   return Promise.all(
     chunk(usersIds, 50).map((ids) =>
       queue
         .createJob({ ids })
+        .setId(`users@${ids[0]}+`)
         .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10))
         .save()
     )
-  )
-    .then(() => consola.success(`Number of users scheduled: ${usersIds.length}`))
-    .finally(() => queue.close());
+  ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
 
 /* Script entry point */
@@ -122,8 +112,11 @@ program
   .description('Schedule jobs on queue to further processing')
   .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
   .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
-  .action(async (resource, other) =>
-    Promise.mapSeries(resourcesParser([resource, ...other]), async (res) => {
+  .option('--destroy-queue', 'Destroy queue before scheduling resources')
+  .action(async (resource, other) => {
+    if (program.destroyQueue) await queue.destroy();
+
+    return Promise.map(resourcesParser([resource, ...other]), async (res) => {
       consola.info(`Scheduling ${res} jobs ...`);
       switch (res) {
         case 'users':
@@ -134,6 +127,7 @@ program
     })
       .catch((err) => consola.error(err))
       .finally(() => db.knex.destroy())
-      .finally(() => process.exit(0))
-  )
+      .finally(() => queue.close())
+      .finally(() => process.exit(0));
+  })
   .parse(process.argv);
