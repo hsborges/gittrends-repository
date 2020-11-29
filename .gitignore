@@ -115,9 +115,6 @@ dist
 
 # End of https://www.toptal.com/developers/gitignore/api/yarn,dotenv,node
 
-
-.migrate
 tokens.txt
 tokens.dev.txt
 tokens.prod.txt
-donated-tokens.txt

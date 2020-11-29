@@ -21,11 +21,11 @@ WORKDIR /app
 COPY --from=env-config /app/env-config env-config
 COPY --from=database-config /app/database-config database-config
 
-WORKDIR /app/website-api
-COPY /packages/website-api/package.json .
+WORKDIR /app/service
+COPY /packages/service/package.json .
 RUN yarn install
-COPY /packages/website-api/. .
+COPY /packages/service/. .
 
-EXPOSE 80
+VOLUME [ "/app/service/" ]
 
-CMD [ "yarn", "start", "--port",  "80" ]
+CMD [ "node", "util/repos-stats.js" ]

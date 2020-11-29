@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "scripts": {
-    "proxy-server": "github-proxy-server --tokens ../../tokens.txt",
+    "proxy-server": "github-proxy-server --tokens tokens.txt",
     "add-repositories": "node -r @hsborges/env-config add-repositories.js",
     "add-repository": "node -r @hsborges/env-config add-repository.js",
     "schedule": "node -r @hsborges/env-config scheduler.js",

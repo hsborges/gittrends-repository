@@ -43,13 +43,6 @@ cp .env.example .env
 yarn workspace @gittrends/database-config run-migrations
 ```
 
-5. Create a text file (e.g., `tokens.txt`) and put your Github access tokens
-
-```sh
-touch tokens.txt
-echo "[username]:<github_access_token>" >> tokens.txt
-```
-
 ### Docker
 
 You can also use docker containers:
