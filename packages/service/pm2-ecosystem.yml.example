@@ -1,15 +1,15 @@
 apps:
-  - name: queue-board
+  - name: gittrends-queue-board
     script: util/queue-board.js
     out_file: /dev/null
 
-  - name: proxy-server
+  - name: gittrends-proxy-server
     interpreter: npx
     script: github-proxy-server
-    args: --port 3000 --request-interval 50 --tokens ../../tokens.txt
+    args: --port 3000 --request-interval 50 --tokens tokens.txt
     out_file: /dev/null
 
-  - name: scheduler
+  - name: gittrends-scheduler
     interpreter_args: -r @hsborges/env-config
     script: scheduler.js
     args: all
@@ -17,34 +17,10 @@ apps:
     cron_restart: '0/4 * * * *'
     autorestart: false
 
-  - name: updater
+  - name: gittrends-updater
     interpreter_args: -r @hsborges/env-config
     script: updater.js
-    args: repos stargazers watchers tags releases dependencies --workers 1
-    instances: 1
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
-  - name: issues
-    interpreter_args: -r @hsborges/env-config
-    script: updater.js
-    args: issues --workers 1
-    instances: 1
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
-  - name: pulls
-    interpreter_args: -r @hsborges/env-config
-    script: updater.js
-    args: pulls --workers 1
-    instances: 1
-    exec_mode: cluster
-    instance_var: INSTANCE_ID
-
-  - name: users
-    interpreter_args: -r @hsborges/env-config
-    script: updater.js
-    args: users --workers 1
+    args: --workers 1
     instances: 1
     exec_mode: cluster
     instance_var: INSTANCE_ID
