@@ -19,6 +19,12 @@ program
   .version(version)
   .description('Update repositories metadata')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
+  .option(
+    '--redis-db [number]',
+    'Override the configured redis db',
+    Number,
+    parseInt(process.env.GITTRENDS_REDIS_DB || 0)
+  )
   .action(async () => {
     consola.info(`Updating resources using ${program.workers} workers`);
 
@@ -28,7 +34,7 @@ program
       redis: redis.createClient({
         host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
         port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
-        db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
+        db: program.redisDb
       }),
       stallInterval: 10000,
       isWorker: true,
