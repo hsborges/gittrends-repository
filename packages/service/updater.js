@@ -55,12 +55,12 @@ program
               await Model.query()
                 .leftJoin(
                   Metadata.query()
-                    .where({ id: job.id, resource: resource.slice(0, -1), key: 'updatedAt' })
+                    .where({ id, resource: resource.slice(0, -1), key: 'updatedAt' })
                     .as('metadata'),
                   'metadata.id',
                   `issues.id`
                 )
-                .where({ repository: job.id })
+                .where({ repository: id })
                 .select(['issues.id', 'issues.type'])
                 .toKnexQuery()
                 .stream((stream) =>
