@@ -39,12 +39,13 @@ program
       removeOnFailure: true
     });
 
-    queue.checkStalledJobs(10 * 1000);
+    queue.checkStalledJobs(10 * 1000, () => (global.gc ? global.gc() : null));
 
     queue.process(program.workers, async (job) => {
+      const [resource, id] = job.id.split('@');
+      const jobId = `${resource}@${job.data.name}`;
+
       await limiter.schedule(async () => {
-        const [resource, id] = job.id.split('@');
-        const jobId = `${resource}@${job.data.name}`;
         try {
           await worker({ id, resource, data: job.data }).finally(async () => {
             if (['issues', 'pulls'].indexOf(resource) >= 0) {
@@ -89,8 +90,6 @@ program
           throw err;
         }
       });
-
-      if (global.gc) global.gc();
     });
 
     let timeout = null;
