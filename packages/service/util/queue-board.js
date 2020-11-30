@@ -14,7 +14,7 @@ Arena(
     Bee,
     queues: [
       {
-        name: 'Updates',
+        name: 'updates',
         hostId: 'Updates',
         redis: {
           host: process.env.GITTRENDS_REDIS_HOST || 'localhost',

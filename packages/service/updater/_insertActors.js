@@ -7,7 +7,7 @@ const pRetry = require('promise-retry');
 const Bottleneck = require('bottleneck');
 const LfuSet = require('collections/lfu-set');
 
-const cache = new LfuSet([], 100000);
+const cache = new LfuSet([], parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10));
 const limiter = new Bottleneck({ maxConcurrent: 1, minTime: 0 });
 
 async function insert(user) {
