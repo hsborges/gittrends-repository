@@ -4,11 +4,9 @@
 const { Actor } = require('@gittrends/database-config');
 
 const pRetry = require('promise-retry');
-const Bottleneck = require('bottleneck');
 const LfuSet = require('collections/lfu-set');
 
 const cache = new LfuSet([], parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10));
-const limiter = new Bottleneck({ maxConcurrent: 1, minTime: 0 });
 
 async function insert(user) {
   return pRetry(
@@ -24,25 +22,22 @@ async function insert(user) {
   );
 }
 
-module.exports = function (users, transaction, replace = false) {
-  return limiter
-    .schedule(() =>
-      users.reduce((mem, user) => {
-        if (cache.has(user.id)) return mem;
+module.exports = async function (users, transaction, replace = false) {
+  const nuUsers = users.reduce((mem, user) => {
+    if (cache.has(user.id)) return mem;
 
-        if (replace) {
-          const promise = Actor.query(transaction)
-            .update(user)
-            .where('id', user.id)
-            .then(() => cache.add(user.id));
+    if (replace) {
+      const promise = Actor.query(transaction)
+        .update(user)
+        .where('id', user.id)
+        .then(() => cache.add(user.id));
 
-          return mem.concat(promise);
-        }
+      return mem.concat(promise);
+    }
 
-        return mem.concat([user]);
-      }, [])
-    )
-    .then((nuUsers) =>
-      insert(nuUsers, transaction).then(() => cache.addEach(nuUsers.map((u) => u.id)))
-    );
+    return mem.concat([user]);
+  }, []);
+
+  await insert(nuUsers, transaction);
+  return cache.addEach(nuUsers.map((u) => u.id));
 };

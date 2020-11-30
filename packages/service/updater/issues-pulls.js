@@ -1,6 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
+const { chunk } = require('lodash');
 const { knex, Issue, PullRequest, Metadata } = require('@gittrends/database-config');
 
 const upsertMetadata = require('./_upsertMetadata');
@@ -42,11 +43,10 @@ module.exports = async function _get(repositoryId, resource) {
             Model.query(trx).delete().whereIn('id', ids)
           ]);
 
-          await Model.query(trx).insert(
-            records.map((record) => ({
-              repository: repositoryId,
-              ...record
-            }))
+          await Promise.mapSeries(chunk(records, 100), (_records) =>
+            Model.query(trx).insert(
+              _records.map((record) => ({ repository: repositoryId, ...record }))
+            )
           );
         }
 
