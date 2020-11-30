@@ -17,7 +17,7 @@
     "bee-queue": "^1.3.1",
     "bluebird": "^3.7.2",
     "bottleneck": "^2.19.5",
-    "bull-arena": "^3.4.0",
+    "bull-arena": "^3.6.1",
     "chalk": "^4.1.0",
     "collections": "^5.1.12",
     "commander": "^6.2.0",
@@ -29,12 +29,12 @@
     "numeral": "^2.0.6",
     "promise-retry": "^2.0.1",
     "redis": "^3.0.2",
-    "table": "^6.0.3",
+    "table": "^6.0.4",
     "user-agents": "^1.0.559"
   },
   "devDependencies": {
     "@hsborges/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^1.3.7",
+    "@hsborges/github-proxy-server": "^1.4.0",
     "core-util-is": "^1.0.2",
     "pm2": "^4.5.0"
   },
