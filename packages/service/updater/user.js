@@ -2,9 +2,8 @@
  *  Author: Hudson S. Borges
  */
 const { isArray, get: getValue } = require('lodash');
-const { Actor } = require('@gittrends/database-config');
 
-const { actors } = require('./helper/insert');
+const dao = require('./helper/dao');
 const get = require('../github/graphql/users/get.js');
 
 const { NotFoundError } = require('../helpers/errors');
@@ -19,19 +18,17 @@ module.exports = async function (userId) {
           .map((e) => e.path[1])
           .map((i) => userId[i]);
 
-        await Actor.query().delete().whereIn(ids);
+        await dao.actors.delete({}).whereIn(ids);
         return { users: getValue(err, 'response.data.users', []) };
       }
       throw err;
     })
-    .then((response) =>
-      actors.insert(
+    .then((response) => {
+      return dao.actors.update(
         (isArray(userId) ? response.users : [response.user]).map((u) => ({
           ...u,
           _updated_at: new Date()
-        })),
-        null,
-        true
-      )
-    );
+        }))
+      );
+    });
 };

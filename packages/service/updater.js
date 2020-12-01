@@ -55,7 +55,6 @@ program
         try {
           await worker({ id, resource, data: job.data }).finally(async () => {
             if (['issues', 'pulls'].indexOf(resource) >= 0) {
-              const promises = [];
               const Model = resource === 'issues' ? Issue : PullRequest;
 
               await Model.query()
@@ -69,27 +68,29 @@ program
                 .where({ repository: id })
                 .select(['issues.id', 'issues.type'])
                 .toKnexQuery()
-                .stream((stream) =>
-                  stream.on('data', (record) =>
-                    promises.push(
-                      limiter
-                        .schedule({ priority: 0 }, () =>
-                          worker({
-                            id: record.id,
-                            resource: resource.slice(0, -1)
-                          })
-                        )
-                        // TODO
-                        .catch((err) => consola.error(err))
-                    )
-                  )
-                );
+                .stream((stream) => {
+                  let lastPromise = null;
 
-              await Promise.all(promises);
+                  stream.on('data', (record) => {
+                    lastPromise = limiter
+                      .schedule({ priority: 0 }, () =>
+                        worker({
+                          id: record.id,
+                          resource: resource.slice(0, -1)
+                        })
+                      )
+                      // TODO
+                      .catch((err) => consola.error(err));
+                  });
+
+                  stream.on('end', () => {
+                    (lastPromise || Promise.resolve()).then(() =>
+                      consola.success(`[${jobId}] finished!`)
+                    );
+                  });
+                });
             }
           });
-
-          return consola.success(`[${jobId}] finished!`);
         } catch (err) {
           consola.error(`Error thrown by ${jobId}.`);
           consola.error(err);

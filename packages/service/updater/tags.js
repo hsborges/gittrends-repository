@@ -1,33 +1,28 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { knex, Tag, Metadata } = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
 
-const upsertMetadata = require('./_upsertMetadata');
-const { actors, commits } = require('./helper/insert');
+const dao = require('./helper/dao');
 const getTags = require('../github/graphql/repositories/tags.js');
 
 /* exports */
 module.exports = async function (repositoryId) {
   return knex.transaction(async (trx) => {
     const path = { id: repositoryId, resource: 'tags' };
-    const metadata = await Metadata.query(trx)
-      .where({ ...path, key: 'lastCursor' })
-      .first();
+    const metadata = await dao.metadata.find({ ...path, key: 'lastCursor' }).first();
 
     const lastCursor = metadata && metadata.value;
     const result = await getTags(repositoryId, { lastCursor });
+    const rows = result.tags.map((t) => ({ repository: repositoryId, ...t }));
 
     await Promise.all([
-      actors.insert(result.users, trx),
-      commits.insert(result.commits, trx),
-      Promise.map(
-        result.tags.map((t) => ({ repository: repositoryId, ...t })),
-        (tag) => Tag.query(trx).insert(tag).toKnexQuery().onConflict('id').ignore()
-      )
+      dao.actors.insert(result.users, trx),
+      dao.commits.insert(result.commits, trx),
+      dao.tags.insert(rows, trx)
     ]);
 
-    return upsertMetadata([
+    return dao.metadata.upsert([
       { ...path, key: 'updatedAt', value: new Date().toISOString() },
       { ...path, key: 'lastCursor', value: result.endCursor || lastCursor }
     ]);

@@ -1,10 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { knex, Metadata, Watcher } = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
 
-const upsertMetadata = require('./_upsertMetadata');
-const { actors } = require('./helper/insert');
+const dao = require('./helper/dao');
 const getWatchers = require('../github/graphql/repositories/watchers.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -12,27 +11,20 @@ const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 /* exports */
 module.exports = async function (repositoryId) {
   const meta = { id: repositoryId, resource: 'watchers' };
-  const metadata = await Metadata.query()
-    .where({ ...meta, key: 'lastCursor' })
-    .first();
+  const metadata = await dao.metadata.find({ ...meta, key: 'lastCursor' }).first();
 
   let lastCursor = metadata && metadata.value;
 
   for (let hasMore = true; hasMore; ) {
     const result = await getWatchers(repositoryId, { lastCursor, max: BATCH_SIZE });
+    const rows = result.watchers.map((w) => ({ repository: repositoryId, ...w }));
+    const lastMeta = { key: 'lastCursor', value: (lastCursor = result.endCursor || lastCursor) };
 
     await knex.transaction(async (trx) =>
       Promise.all([
-        actors.insert(result.users, trx),
-        Watcher.query(trx)
-          .insert(result.watchers.map((w) => ({ repository: repositoryId, ...w })))
-          .toKnexQuery()
-          .onConflict(['repository', 'user'])
-          .ignore(),
-        upsertMetadata(
-          { ...meta, key: 'lastCursor', value: (lastCursor = result.endCursor || lastCursor) },
-          trx
-        )
+        dao.actors.insert(result.users, trx),
+        dao.watchers.insert(rows, trx),
+        dao.metadata.upsert({ ...meta, ...lastMeta }, trx)
       ])
     );
 
@@ -41,5 +33,5 @@ module.exports = async function (repositoryId) {
     if (global.gc) global.gc();
   }
 
-  return upsertMetadata({ ...meta, key: 'updatedAt', value: new Date().toISOString() });
+  return dao.metadata.upsert({ ...meta, key: 'updatedAt', value: new Date().toISOString() });
 };

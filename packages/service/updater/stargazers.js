@@ -1,10 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { knex, Stargazer, Metadata } = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
 
-const upsertMetadata = require('./_upsertMetadata');
-const { actors } = require('./helper/insert');
+const dao = require('./helper/dao');
 const getStargazers = require('../github/graphql/repositories/stargazers');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -12,9 +11,7 @@ const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 /* exports */
 module.exports = async function (repositoryId) {
   const meta = { id: repositoryId, resource: 'stargazers' };
-  const metadata = await Metadata.query()
-    .where({ ...meta, key: 'lastCursor' })
-    .first();
+  const metadata = await dao.metadata.find({ ...meta, key: 'lastCursor' }).first();
 
   let lastCursor = metadata && metadata.value;
 
@@ -22,18 +19,14 @@ module.exports = async function (repositoryId) {
   for (let hasMore = true; hasMore; ) {
     const response = await getStargazers(repositoryId, { lastCursor, max: BATCH_SIZE });
 
+    const rows = response.stargazers.map((s) => ({ repository: repositoryId, ...s }));
+    const lastMeta = { key: 'lastCursor', value: (lastCursor = response.endCursor || lastCursor) };
+
     await knex.transaction(async (trx) =>
       Promise.all([
-        actors.insert(response.users, trx),
-        Stargazer.query(trx)
-          .insert(response.stargazers.map((s) => ({ repository: repositoryId, ...s })))
-          .toKnexQuery()
-          .onConflict(['repository', 'user', 'starred_at'])
-          .ignore(),
-        upsertMetadata(
-          { ...meta, key: 'lastCursor', value: (lastCursor = response.endCursor || lastCursor) },
-          trx
-        )
+        dao.actors.insert(response.users, trx),
+        dao.stargazers.insert(rows, trx),
+        dao.metadata.upsert({ ...meta, ...lastMeta }, trx)
       ])
     );
 
@@ -42,5 +35,5 @@ module.exports = async function (repositoryId) {
     if (global.gc) global.gc();
   }
 
-  return upsertMetadata({ ...meta, key: 'updatedAt', value: new Date().toISOString() });
+  return dao.metadata.upsert({ ...meta, key: 'updatedAt', value: new Date().toISOString() });
 };

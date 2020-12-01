@@ -1,10 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { knex, Release, Metadata } = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
 
-const upsertMetadata = require('./_upsertMetadata');
-const { actors } = require('./helper/insert');
+const dao = require('./helper/dao');
 const getReleases = require('../github/graphql/repositories/releases.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -12,10 +11,7 @@ const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 /* exports */
 module.exports = async function (repositoryId) {
   const path = { id: repositoryId, resource: 'releases' };
-
-  const metadata = await Metadata.query()
-    .where({ ...path, key: 'lastCursor' })
-    .first();
+  const metadata = await dao.metadata.find({ ...path, key: 'lastCursor' }).first();
 
   let lastCursor = metadata && metadata.value;
 
@@ -23,18 +19,14 @@ module.exports = async function (repositoryId) {
   for (let hasMore = true; hasMore; ) {
     const result = await getReleases(repositoryId, { lastCursor, max: BATCH_SIZE });
 
+    const rows = result.releases.map((r) => ({ repository: repositoryId, ...r }));
+    const lastMeta = { key: 'lastCursor', value: (lastCursor = result.endCursor || lastCursor) };
+
     await knex.transaction((trx) =>
       Promise.all([
-        actors.insert(result.users, trx),
-        Release.query(trx)
-          .insert(result.releases.map((r) => ({ repository: repositoryId, ...r })))
-          .toKnexQuery()
-          .onConflict('id')
-          .ignore(),
-        upsertMetadata(
-          { ...path, key: 'lastCursor', value: (lastCursor = result.endCursor || lastCursor) },
-          trx
-        )
+        dao.actors.insert(result.users, trx),
+        dao.releases.insert(rows, trx),
+        dao.metadata.upsert({ ...path, ...lastMeta }, trx)
       ])
     );
 
@@ -43,5 +35,5 @@ module.exports = async function (repositoryId) {
     if (global.gc) global.gc();
   }
 
-  return upsertMetadata({ ...path, key: 'updatedAt', value: new Date().toISOString() });
+  return dao.metadata.upsert({ ...path, key: 'updatedAt', value: new Date().toISOString() });
 };

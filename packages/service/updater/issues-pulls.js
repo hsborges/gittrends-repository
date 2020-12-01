@@ -2,10 +2,9 @@
  *  Author: Hudson S. Borges
  */
 const { chunk } = require('lodash');
-const { knex, Issue, PullRequest, Metadata } = require('@gittrends/database-config');
+const { knex, Metadata, Issue, PullRequest } = require('@gittrends/database-config');
 
-const upsertMetadata = require('./_upsertMetadata');
-const { actors } = require('./helper/insert');
+const dao = require('./helper/dao');
 const getIssuesOrPulls = require('../github/graphql/repositories/issues-or-pulls.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -16,9 +15,7 @@ module.exports = async function _get(repositoryId, resource) {
     throw new TypeError('Resource must be "issues" or "pulls"!');
 
   const metaPath = { id: repositoryId, resource };
-  const metadata = await Metadata.query()
-    .where({ ...metaPath, key: 'lastCursor' })
-    .first();
+  const metadata = await dao.metadata.find({ ...metaPath, key: 'lastCursor' }).first();
 
   const Model = resource === 'issues' ? Issue : PullRequest;
   let lastCursor = metadata && metadata.value;
@@ -31,7 +28,7 @@ module.exports = async function _get(repositoryId, resource) {
       }).then(async ({ users, [resource]: records, endCursor, hasNextPage }) => {
         lastCursor = endCursor || lastCursor;
 
-        if (users && users.length) await actors.insert(users, trx);
+        if (users && users.length) await dao.actors.insert(users, trx);
 
         if (records && records.length) {
           const ids = records.map((r) => r.id);
@@ -50,7 +47,7 @@ module.exports = async function _get(repositoryId, resource) {
           );
         }
 
-        await upsertMetadata({ ...metaPath, key: 'lastCursor', value: lastCursor }, trx);
+        await dao.metadata.upsert({ ...metaPath, key: 'lastCursor', value: lastCursor }, trx);
 
         return hasNextPage;
       });
@@ -70,7 +67,7 @@ module.exports = async function _get(repositoryId, resource) {
       .andWhere('repository', repositoryId)
       .count('*', { as: 'pending' });
 
-    return upsertMetadata(
+    return dao.metadata.upsert(
       [
         { ...metaPath, key: 'updatedAt', value: new Date().toISOString() },
         { ...metaPath, key: 'pending', value: pending }

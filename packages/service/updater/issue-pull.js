@@ -4,19 +4,16 @@
 const { omit } = require('lodash');
 const db = require('@gittrends/database-config');
 
-const insert = require('./helper/insert');
+const dao = require('./helper/dao');
 const { NotFoundError } = require('../helpers/errors.js');
 const getIssueOrPull = require('../github/graphql/repositories/issue-or-pull.js');
 const getReactions = require('../github/graphql/repositories/reactions.js');
 
 async function saveReactions(reactions, users, { repository, issue, event, trx }) {
-  return insert.actors.insert(users, trx).then(() =>
-    db.Reaction.query(trx)
-      .insert(reactions.map((r) => ({ ...r, repository, issue, event })))
-      .toKnexQuery()
-      .onConflict('id')
-      .ignore()
-  );
+  return dao.actors.insert(users, trx).then(() => {
+    const rows = reactions.map((r) => ({ ...r, repository, issue, event }));
+    return dao.reactions.insert(rows, trx);
+  });
 }
 
 /* exports */
@@ -26,9 +23,9 @@ module.exports = async function _get(id, resource) {
 
   const Model = resource === 'issue' ? db.Issue : db.PullRequest;
   const record = await Model.query().findById(id).select('repository').first();
-  const [{ lastCursor } = {}] = await db.Metadata.query()
-    .where({ id, resource, key: 'lastCursor' })
-    .select(db.knex.ref('value').as('lastCursor'));
+  const metadata = await dao.metadata.find({ id, resource, key: 'lastCursor' }).first();
+
+  const lastCursor = metadata && metadata.value;
 
   return db.knex.transaction((trx) =>
     getIssueOrPull(id, resource, { lastCursor })
@@ -38,27 +35,22 @@ module.exports = async function _get(id, resource) {
           .map((e) => ({ id: e.id, event: true }))
           .concat(data.reaction_groups ? [{ id }] : []);
 
-        await insert.actors
+        await dao.actors
           .insert(users, trx)
           .then(async () => {
-            await insert.commits.insert(
-              commits.map((c) => ({ ...c, repository: record.repository })),
+            const rows = commits.map((c) => ({ ...c, repository: record.repository }));
+            await dao.commits.insert(rows, trx);
+
+            await dao.timeline.insert(
+              timeline.map((e) => ({
+                id: e.id,
+                repository: record.repository,
+                issue: id,
+                type: e.type,
+                payload: omit(e, ['id', 'type'])
+              })),
               trx
             );
-
-            await db.TimelineEvent.query(trx)
-              .insert(
-                timeline.map((e) => ({
-                  id: e.id,
-                  repository: record.repository,
-                  issue: id,
-                  type: e.type,
-                  payload: omit(e, ['id', 'type'])
-                }))
-              )
-              .toKnexQuery()
-              .onConflict('id')
-              .ignore();
 
             await getReactions(reactables).then((responses) =>
               Promise.map(responses, (response, index) =>
@@ -72,14 +64,10 @@ module.exports = async function _get(id, resource) {
             );
           })
           .then(() =>
-            db.Metadata.query(trx)
-              .insert([
-                { id, resource, key: 'lastCursor', value: endCursor || lastCursor },
-                { id, resource, key: 'updatedAt', value: new Date().toISOString() }
-              ])
-              .toKnexQuery()
-              .onConflict(['id', 'resource', 'key'])
-              .merge()
+            dao.metadata.upsert([
+              { id, resource, key: 'lastCursor', value: endCursor || lastCursor },
+              { id, resource, key: 'updatedAt', value: new Date().toISOString() }
+            ])
           );
       })
       .then(() =>

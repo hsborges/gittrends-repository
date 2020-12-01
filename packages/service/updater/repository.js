@@ -1,9 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { knex, Repository, Metadata } = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
 
-const { actors } = require('./helper/insert');
+const dao = require('./helper/dao');
 const get = require('../github/graphql/repositories/get');
 const { NotFoundError, BlockedError } = require('../helpers/errors');
 
@@ -12,27 +12,22 @@ module.exports = async function (repositoryId) {
   return get(repositoryId)
     .then(({ repository, users }) =>
       knex.transaction(async (trx) =>
-        actors.insert(users, trx).then(() =>
-          Promise.all([
-            Repository.query(trx).findById(repositoryId).update(repository),
-            Metadata.query(trx)
-              .insert({
-                id: repositoryId,
-                resource: 'repos',
-                key: 'updatedAt',
-                value: new Date().toISOString()
-              })
-              .toKnexQuery()
-              .onConflict(['id', 'resource', 'key'])
-              .merge()
-          ])
-        )
+        Promise.all([
+          dao.actors.insert(users, trx),
+          dao.repositories.update(repository, trx),
+          dao.metadata.upsert({
+            id: repositoryId,
+            resource: 'repos',
+            key: 'updatedAt',
+            value: new Date().toISOString()
+          })
+        ])
       )
     )
     .catch(async (err) => {
       // TODO - add an specific field instead of delete
       if (err instanceof NotFoundError || err instanceof BlockedError)
-        await Repository.query().deleteById(repositoryId);
+        await dao.repositories.delete({ id: repositoryId });
       throw err;
     });
 };
