@@ -14,12 +14,14 @@ module.exports = async function (repositoryId) {
 
     const lastCursor = metadata && metadata.value;
     const result = await getTags(repositoryId, { lastCursor });
-    const rows = result.tags.map((t) => ({ repository: repositoryId, ...t }));
 
     await Promise.all([
       dao.actors.insert(result.users, trx),
       dao.commits.insert(result.commits, trx),
-      dao.tags.insert(rows, trx)
+      dao.tags.insert(
+        result.tags.map((t) => ({ repository: repositoryId, ...t })),
+        trx
+      )
     ]);
 
     return dao.metadata.upsert([
