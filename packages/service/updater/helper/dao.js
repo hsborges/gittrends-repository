@@ -42,10 +42,9 @@ class DAO {
   }
 
   insert(records, transaction) {
-    const nuRecords = records.reduce((mem, record) => {
-      if (this.cache && this.cache.has(this._hash(record))) return mem;
-      return mem.concat([record]);
-    }, []);
+    const nuRecords = records.filter(
+      (record) => !(this.cache && this.cache.has(this._hash(record)))
+    );
 
     return _retry(this.model, nuRecords, transaction).then((...results) => {
       if (this.cache) this.cache.addEach(nuRecords.map((u) => this._hash(u)));
