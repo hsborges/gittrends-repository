@@ -8,13 +8,13 @@ const getTags = require('../github/graphql/repositories/tags.js');
 
 /* exports */
 module.exports = async function (repositoryId) {
+  const path = { id: repositoryId, resource: 'tags' };
+  const metadata = await dao.metadata.find({ ...path, key: 'lastCursor' }).first();
+
+  const lastCursor = metadata && metadata.value;
+  const result = await getTags(repositoryId, { lastCursor });
+
   return knex.transaction(async (trx) => {
-    const path = { id: repositoryId, resource: 'tags' };
-    const metadata = await dao.metadata.find({ ...path, key: 'lastCursor' }).first();
-
-    const lastCursor = metadata && metadata.value;
-    const result = await getTags(repositoryId, { lastCursor });
-
     await Promise.all([
       dao.actors.insert(result.users, trx),
       dao.commits.insert(result.commits, trx),
