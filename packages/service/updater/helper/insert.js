@@ -27,7 +27,7 @@ class Inserter {
   }
 
   async insert(records, transaction, replace = false) {
-    const nuUsers = records.reduce((mem, record) => {
+    const nuRecords = records.reduce((mem, record) => {
       if (this.cache.has(record.id)) return mem;
 
       if (replace) {
@@ -43,9 +43,9 @@ class Inserter {
       return mem.concat([record]);
     }, []);
 
-    await _retry(this.model, nuUsers);
+    await _retry(this.model, nuRecords);
 
-    return this.cache.addEach(nuUsers.map((u) => u.id));
+    return this.cache.addEach(nuRecords.map((u) => u.id));
   }
 }
 
