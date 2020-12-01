@@ -12,7 +12,7 @@ async function _retry(model, records, transaction) {
   return pRetry(
     async function (retry) {
       try {
-        await model
+        return model
           .query(transaction)
           .insert(records)
           .toKnexQuery()
@@ -29,7 +29,7 @@ async function _retry(model, records, transaction) {
 
 class DAO {
   constructor(model, { cacheSize = parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10) } = {}) {
-    this.cache = new LfuSet([], cacheSize);
+    this.cache = cacheSize === 0 ? null : new LfuSet([], cacheSize);
     this.model = model;
   }
 
@@ -43,12 +43,12 @@ class DAO {
 
   insert(records, transaction) {
     const nuRecords = records.reduce((mem, record) => {
-      if (this.cache.has(this._hash(record))) return mem;
+      if (this.cache && this.cache.has(this._hash(record))) return mem;
       return mem.concat([record]);
     }, []);
 
     return _retry(this.model, nuRecords, transaction).then((...results) => {
-      this.cache.addEach(nuRecords.map((u) => this._hash(u)));
+      if (this.cache) this.cache.addEach(nuRecords.map((u) => this._hash(u)));
       return results;
     });
   }
