@@ -3,7 +3,6 @@
  */
 global.Promise = require('bluebird');
 
-const redis = require('redis');
 const consola = require('consola');
 const program = require('commander');
 const BeeQueue = require('bee-queue');
@@ -31,11 +30,11 @@ program
     const limiter = new Bottleneck({ maxConcurrent: program.workers, minTime: 0 });
 
     const queue = new BeeQueue('updates', {
-      redis: redis.createClient({
+      redis: {
         host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
         port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
         db: program.redisDb
-      }),
+      },
       stallInterval: 10000,
       isWorker: true,
       getEvents: false,
@@ -45,7 +44,7 @@ program
       removeOnFailure: true
     });
 
-    queue.checkStalledJobs(10 * 1000, () => (global.gc ? global.gc() : null));
+    queue.checkStalledJobs(10 * 1000);
 
     queue.process(program.workers, async (job) => {
       const [resource, id] = job.id.split('@');
