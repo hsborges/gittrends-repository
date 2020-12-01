@@ -1,10 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { knex, Commit, Tag, Metadata } = require('@gittrends/database-config');
+const { knex, Tag, Metadata } = require('@gittrends/database-config');
 
 const upsertMetadata = require('./_upsertMetadata');
-const insertUsers = require('./_insertActors');
+const { actors, commits } = require('./helper/insert');
 const getTags = require('../github/graphql/repositories/tags.js');
 
 /* exports */
@@ -19,10 +19,8 @@ module.exports = async function (repositoryId) {
     const result = await getTags(repositoryId, { lastCursor });
 
     await Promise.all([
-      insertUsers(result.users, trx),
-      Promise.map(result.commits, (commit) =>
-        Commit.query(trx).insert(commit).toKnexQuery().onConflict('id').ignore()
-      ),
+      actors.insert(result.users, trx),
+      commits.insert(result.commits, trx),
       Promise.map(
         result.tags.map((t) => ({ repository: repositoryId, ...t })),
         (tag) => Tag.query(trx).insert(tag).toKnexQuery().onConflict('id').ignore()

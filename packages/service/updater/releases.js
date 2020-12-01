@@ -4,7 +4,7 @@
 const { knex, Release, Metadata } = require('@gittrends/database-config');
 
 const upsertMetadata = require('./_upsertMetadata');
-const insertUsers = require('./_insertActors');
+const { actors } = require('./helper/insert');
 const getReleases = require('../github/graphql/repositories/releases.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -25,7 +25,7 @@ module.exports = async function (repositoryId) {
 
     await knex.transaction((trx) =>
       Promise.all([
-        insertUsers(result.users, trx),
+        actors.insert(result.users, trx),
         Release.query(trx)
           .insert(result.releases.map((r) => ({ repository: repositoryId, ...r })))
           .toKnexQuery()

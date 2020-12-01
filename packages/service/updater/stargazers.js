@@ -4,7 +4,7 @@
 const { knex, Stargazer, Metadata } = require('@gittrends/database-config');
 
 const upsertMetadata = require('./_upsertMetadata');
-const insertUsers = require('./_insertActors');
+const { actors } = require('./helper/insert');
 const getStargazers = require('../github/graphql/repositories/stargazers');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -24,7 +24,7 @@ module.exports = async function (repositoryId) {
 
     await knex.transaction(async (trx) =>
       Promise.all([
-        insertUsers(response.users, trx),
+        actors.insert(response.users, trx),
         Stargazer.query(trx)
           .insert(response.stargazers.map((s) => ({ repository: repositoryId, ...s })))
           .toKnexQuery()

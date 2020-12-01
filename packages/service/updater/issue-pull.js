@@ -4,13 +4,13 @@
 const { omit } = require('lodash');
 const db = require('@gittrends/database-config');
 
-const insertUsers = require('./_insertActors');
+const insert = require('./helper/insert');
 const { NotFoundError } = require('../helpers/errors.js');
 const getIssueOrPull = require('../github/graphql/repositories/issue-or-pull.js');
 const getReactions = require('../github/graphql/repositories/reactions.js');
 
 async function saveReactions(reactions, users, { repository, issue, event, trx }) {
-  return insertUsers(users, trx).then(() =>
+  return insert.actors.insert(users, trx).then(() =>
     db.Reaction.query(trx)
       .insert(reactions.map((r) => ({ ...r, repository, issue, event })))
       .toKnexQuery()
@@ -38,13 +38,13 @@ module.exports = async function _get(id, resource) {
           .map((e) => ({ id: e.id, event: true }))
           .concat(data.reaction_groups ? [{ id }] : []);
 
-        await insertUsers(users, trx)
+        await insert.actors
+          .insert(users, trx)
           .then(async () => {
-            await db.Commit.query(trx)
-              .insert(commits.map((c) => ({ ...c, repository: record.repository })))
-              .toKnexQuery()
-              .onConflict('id')
-              .ignore();
+            await insert.commits.insert(
+              commits.map((c) => ({ ...c, repository: record.repository })),
+              trx
+            );
 
             await db.TimelineEvent.query(trx)
               .insert(

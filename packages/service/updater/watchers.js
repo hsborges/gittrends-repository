@@ -4,7 +4,7 @@
 const { knex, Metadata, Watcher } = require('@gittrends/database-config');
 
 const upsertMetadata = require('./_upsertMetadata');
-const insertUsers = require('./_insertActors');
+const { actors } = require('./helper/insert');
 const getWatchers = require('../github/graphql/repositories/watchers.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -23,7 +23,7 @@ module.exports = async function (repositoryId) {
 
     await knex.transaction(async (trx) =>
       Promise.all([
-        insertUsers(result.users, trx),
+        actors.insert(result.users, trx),
         Watcher.query(trx)
           .insert(result.watchers.map((w) => ({ repository: repositoryId, ...w })))
           .toKnexQuery()

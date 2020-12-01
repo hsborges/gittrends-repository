@@ -5,7 +5,7 @@ const { chunk } = require('lodash');
 const { knex, Issue, PullRequest, Metadata } = require('@gittrends/database-config');
 
 const upsertMetadata = require('./_upsertMetadata');
-const insertUsers = require('./_insertActors');
+const { actors } = require('./helper/insert');
 const getIssuesOrPulls = require('../github/graphql/repositories/issues-or-pulls.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
@@ -31,7 +31,7 @@ module.exports = async function _get(repositoryId, resource) {
       }).then(async ({ users, [resource]: records, endCursor, hasNextPage }) => {
         lastCursor = endCursor || lastCursor;
 
-        if (users && users.length) await insertUsers(users, trx);
+        if (users && users.length) await actors.insert(users, trx);
 
         if (records && records.length) {
           const ids = records.map((r) => r.id);

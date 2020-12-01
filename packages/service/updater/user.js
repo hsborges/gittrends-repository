@@ -4,7 +4,7 @@
 const { isArray, get: getValue } = require('lodash');
 const { Actor } = require('@gittrends/database-config');
 
-const insertUsers = require('./_insertActors');
+const { actors } = require('./helper/insert');
 const get = require('../github/graphql/users/get.js');
 
 const { NotFoundError } = require('../helpers/errors');
@@ -25,7 +25,7 @@ module.exports = async function (userId) {
       throw err;
     })
     .then((response) =>
-      insertUsers(
+      actors.insert(
         (isArray(userId) ? response.users : [response.user]).map((u) => ({
           ...u,
           _updated_at: new Date()

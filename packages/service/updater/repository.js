@@ -3,7 +3,7 @@
  */
 const { knex, Repository, Metadata } = require('@gittrends/database-config');
 
-const insertUsers = require('./_insertActors');
+const { actors } = require('./helper/insert');
 const get = require('../github/graphql/repositories/get');
 const { NotFoundError, BlockedError } = require('../helpers/errors');
 
@@ -12,7 +12,7 @@ module.exports = async function (repositoryId) {
   return get(repositoryId)
     .then(({ repository, users }) =>
       knex.transaction(async (trx) =>
-        insertUsers(users, trx).then(() =>
+        actors.insert(users, trx).then(() =>
           Promise.all([
             Repository.query(trx).findById(repositoryId).update(repository),
             Metadata.query(trx)
