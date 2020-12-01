@@ -51,6 +51,8 @@ program
       const [resource, id] = job.id.split('@');
       const jobId = `${resource}@${job.data.name}`;
 
+      const subProcesses = [];
+
       await limiter.schedule(async () => {
         try {
           await worker({ id, resource, data: job.data }).finally(async () => {
@@ -69,23 +71,17 @@ program
                 .select(['issues.id', 'issues.type'])
                 .toKnexQuery()
                 .stream((stream) => {
-                  let lastPromise = null;
-
                   stream.on('data', (record) => {
-                    lastPromise = limiter
-                      .schedule({ priority: 0 }, () =>
-                        worker({
-                          id: record.id,
-                          resource: resource.slice(0, -1)
-                        })
-                      )
-                      // TODO
-                      .catch((err) => consola.error(err));
-                  });
-
-                  stream.on('end', () => {
-                    (lastPromise || Promise.resolve()).then(() =>
-                      consola.success(`[${jobId}] finished!`)
+                    subProcesses.push(
+                      limiter
+                        .schedule({ priority: 0 }, () =>
+                          worker({
+                            id: record.id,
+                            resource: resource.slice(0, -1)
+                          })
+                        )
+                        // TODO
+                        .catch((err) => consola.error(err))
                     );
                   });
                 });
@@ -97,6 +93,11 @@ program
           throw err;
         }
       });
+
+      if (subProcesses.length) await Promise.all(subProcesses);
+      if (global.gc) global.gc();
+
+      consola.success(`[${jobId}] finished!`);
     });
 
     let timeout = null;
