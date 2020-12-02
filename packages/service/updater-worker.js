@@ -1,21 +1,21 @@
 /*
  *  Author: Hudson S. Borges
  */
-/* eslint-disable global-require, import/no-dynamic-require */
-/* execute */
+const updater = require(`./updater/index`);
+
 module.exports = async ({ id, resource, data: { ids } = {} }) => {
   switch (resource) {
     case 'users':
-      return require(`./updater/user`)(ids || id);
+      return updater.user(ids || id);
     case 'repos':
-      return require(`./updater/repository`)(id);
+      return updater.repository(id);
     case 'issues':
     case 'pulls':
-      return require(`./updater/issues-pulls`)(id, resource);
+      return updater.issue_pull(id, resource);
     case 'issue':
     case 'pull':
-      return require(`./updater/issue-pull`)(id, resource);
+      return updater.issues_pulls(id, resource);
     default:
-      return require(`./updater/${resource}`)(id);
+      return updater[resource](id);
   }
 };
