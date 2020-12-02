@@ -46,6 +46,8 @@ class DAO {
       (record) => !(this.cache && this.cache.has(this._hash(record)))
     );
 
+    if (records.length === 0) return;
+
     return _retry(this.model, nuRecords, transaction).then((...results) => {
       if (this.cache) this.cache.addEach(nuRecords.map((u) => this._hash(u)));
       return results;
