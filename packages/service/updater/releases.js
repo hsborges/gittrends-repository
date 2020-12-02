@@ -31,8 +31,6 @@ module.exports = async function (repositoryId) {
     );
 
     hasMore = result.hasNextPage;
-
-    if (global.gc) global.gc();
   }
 
   return dao.metadata.upsert({ ...path, key: 'updatedAt', value: new Date().toISOString() });

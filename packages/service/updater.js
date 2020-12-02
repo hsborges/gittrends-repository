@@ -46,13 +46,13 @@ program
 
     queue.checkStalledJobs(10 * 1000);
 
-    queue.process(program.workers, (job) => {
+    queue.process(program.workers, async (job) => {
       const [resource, id] = job.id.split('@');
       const jobId = `${resource}@${job.data.name}`;
 
       const subProcesses = [];
 
-      return limiter
+      await limiter
         .schedule(() =>
           worker({ id, resource, data: job.data })
             .catch((err) => {
@@ -61,8 +61,6 @@ program
               throw err;
             })
             .finally(async () => {
-              if (global.gc) global.gc();
-
               if (['issues', 'pulls'].indexOf(resource) >= 0) {
                 const Model = resource === 'issues' ? Issue : PullRequest;
 
@@ -96,6 +94,8 @@ program
           if (subProcesses.length) return Promise.all(subProcesses);
           consola.success(`[${jobId}] finished!`);
         });
+
+      if (global.gc) global.gc();
     });
 
     let timeout = null;

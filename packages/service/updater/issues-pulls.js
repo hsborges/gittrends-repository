@@ -51,8 +51,6 @@ module.exports = async function _get(repositoryId, resource) {
 
         return hasNextPage;
       });
-
-      if (global.gc) global.gc();
     }
 
     const [{ pending }] = await Model.query(trx)
