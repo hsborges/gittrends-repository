@@ -46,56 +46,57 @@ program
 
     queue.checkStalledJobs(10 * 1000);
 
-    queue.process(program.workers, async (job) => {
+    queue.process(program.workers, (job) => {
       const [resource, id] = job.id.split('@');
       const jobId = `${resource}@${job.data.name}`;
 
       const subProcesses = [];
 
-      await limiter.schedule(async () => {
-        try {
-          await worker({ id, resource, data: job.data }).finally(async () => {
-            if (['issues', 'pulls'].indexOf(resource) >= 0) {
-              const Model = resource === 'issues' ? Issue : PullRequest;
+      return limiter
+        .schedule(() =>
+          worker({ id, resource, data: job.data })
+            .catch((err) => {
+              consola.error(`Error thrown by ${jobId}.`);
+              consola.error(err);
+              throw err;
+            })
+            .finally(async () => {
+              if (['issues', 'pulls'].indexOf(resource) >= 0) {
+                const Model = resource === 'issues' ? Issue : PullRequest;
 
-              await Model.query()
-                .leftJoin(
-                  Metadata.query()
-                    .where({ id, resource: resource.slice(0, -1), key: 'updatedAt' })
-                    .as('metadata'),
-                  'metadata.id',
-                  `issues.id`
-                )
-                .where({ repository: id })
-                .select(['issues.id', 'issues.type'])
-                .toKnexQuery()
-                .stream((stream) => {
-                  stream.on('data', (record) => {
-                    subProcesses.push(
-                      limiter
-                        .schedule({ priority: 0 }, () =>
-                          worker({
-                            id: record.id,
-                            resource: resource.slice(0, -1)
-                          })
-                        )
-                        // TODO
-                        .catch((err) => consola.error(err))
-                    );
+                await Model.query()
+                  .leftJoin(
+                    Metadata.query()
+                      .where({ id, resource: resource.slice(0, -1), key: 'updatedAt' })
+                      .as('metadata'),
+                    'metadata.id',
+                    `issues.id`
+                  )
+                  .where({ repository: id })
+                  .select(['issues.id', 'issues.type'])
+                  .toKnexQuery()
+                  .stream((stream) => {
+                    stream.on('data', (record) => {
+                      subProcesses.push(
+                        limiter
+                          .schedule({ priority: 0 }, () =>
+                            worker({
+                              id: record.id,
+                              resource: resource.slice(0, -1)
+                            })
+                          )
+                          // TODO
+                          .catch((err) => consola.error(err))
+                      );
+                    });
                   });
-                });
-            }
-          });
-        } catch (err) {
-          consola.error(`Error thrown by ${jobId}.`);
-          consola.error(err);
-          throw err;
-        }
-      });
-
-      if (subProcesses.length) await Promise.all(subProcesses);
-
-      consola.success(`[${jobId}] finished!`);
+              }
+            })
+        )
+        .then(() => {
+          if (subProcesses.length) return Promise.all(subProcesses);
+          consola.success(`[${jobId}] finished!`);
+        });
     });
 
     let timeout = null;
