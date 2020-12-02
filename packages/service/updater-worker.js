@@ -11,10 +11,10 @@ module.exports = async ({ id, resource, data: { ids } = {} }) => {
       return updater.repository(id);
     case 'issues':
     case 'pulls':
-      return updater.issue_pull(id, resource);
+      return updater.issues_pulls(id, resource);
     case 'issue':
     case 'pull':
-      return updater.issues_pulls(id, resource);
+      return updater.issue_pull(id, resource);
     default:
       return updater[resource](id);
   }
