@@ -10,19 +10,17 @@ const db = require('@gittrends/database-config');
 
 async function _retry(model, records, transaction) {
   return pRetry(
-    async function (retry) {
-      try {
-        return model
-          .query(transaction)
-          .insert(records)
-          .toKnexQuery()
-          .onConflict(model.idColumn)
-          .ignore();
-      } catch (err) {
-        if (err.message.indexOf('deadlock') >= 0) retry(err);
-        throw err;
-      }
-    },
+    (retry) =>
+      model
+        .query(transaction)
+        .insert(records)
+        .toKnexQuery()
+        .onConflict(model.idColumn)
+        .ignore()
+        .catch((err) => {
+          if (err.message.indexOf('deadlock') >= 0) retry(err);
+          throw err;
+        }),
     { retries: 3, minTimeout: 100, randomize: true }
   );
 }
@@ -46,11 +44,8 @@ class DAO {
       (record) => !(this.cache && this.cache.has(this._hash(record)))
     );
 
-    if (records.length === 0) return;
-
-    return _retry(this.model, nuRecords, transaction).then((...results) => {
+    return _retry(this.model, nuRecords, transaction).finally(() => {
       if (this.cache) this.cache.addEach(nuRecords.map((u) => this._hash(u)));
-      return results;
     });
   }
 
@@ -74,7 +69,6 @@ class DAO {
   }
 }
 
-module.exports = DAO;
 module.exports.actors = new DAO(db.Actor);
 module.exports.commits = new DAO(db.Commit);
 module.exports.dependencies = new DAO(db.Dependency, { cacheSize: 0 });

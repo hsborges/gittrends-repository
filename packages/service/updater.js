@@ -61,6 +61,8 @@ program
               throw err;
             })
             .finally(async () => {
+              if (global.gc) global.gc();
+
               if (['issues', 'pulls'].indexOf(resource) >= 0) {
                 const Model = resource === 'issues' ? Issue : PullRequest;
 
