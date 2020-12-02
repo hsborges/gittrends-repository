@@ -94,7 +94,6 @@ program
       });
 
       if (subProcesses.length) await Promise.all(subProcesses);
-      if (global.gc) global.gc();
 
       consola.success(`[${jobId}] finished!`);
     });

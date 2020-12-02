@@ -24,7 +24,7 @@ module.exports = async function (repositoryId) {
       )
     ]);
 
-    await dao.metadata.upsert([
+    return dao.metadata.upsert([
       { ...path, key: 'updatedAt', value: new Date().toISOString() },
       { ...path, key: 'lastCursor', value: result.endCursor || lastCursor }
     ]);
