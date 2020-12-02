@@ -80,10 +80,7 @@ program
                       subProcesses.push(
                         limiter
                           .schedule({ priority: 0 }, () =>
-                            worker({
-                              id: record.id,
-                              resource: resource.slice(0, -1)
-                            })
+                            worker({ id: record.id, resource: resource.slice(0, -1) })
                           )
                           // TODO
                           .catch((err) => consola.error(err))
