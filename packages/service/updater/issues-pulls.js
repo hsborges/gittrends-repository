@@ -65,7 +65,7 @@ module.exports = async function _get(repositoryId, resource) {
       .andWhere('repository', repositoryId)
       .count('*', { as: 'pending' });
 
-    return dao.metadata.upsert(
+    await dao.metadata.upsert(
       [
         { ...metaPath, key: 'updatedAt', value: new Date().toISOString() },
         { ...metaPath, key: 'pending', value: pending }
