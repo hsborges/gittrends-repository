@@ -1,37 +1,43 @@
 /*
  *  Author: Hudson S. Borges
  */
+const Ajv = require('ajv');
 const pRetry = require('promise-retry');
 const LfuSet = require('collections/lfu-set');
-const { pick, isArray } = require('lodash');
+
+const { pick, isArray, isObjectLike, mapValues, isDate } = require('lodash');
 
 const db = require('@gittrends/database-config');
-
-async function _retry(model, records, transaction) {
-  return pRetry(
-    (retry) =>
-      model
-        .query(transaction)
-        .insert(records)
-        .toKnexQuery()
-        .onConflict(model.idColumn)
-        .ignore()
-        .catch((err) => {
-          if (err.message.indexOf('deadlock') >= 0) retry(err);
-          throw err;
-        }),
-    { retries: 3, minTimeout: 100, randomize: true }
-  );
-}
 
 class DAO {
   constructor(model, { cacheSize = parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10) } = {}) {
     this.cache = cacheSize === 0 ? null : new LfuSet([], cacheSize);
     this.model = model;
+
+    this.validate = new Ajv({
+      allErrors: true,
+      removeAdditional: true,
+      coerceTypes: true,
+      useDefaults: true
+    }).compile(this.model.jsonSchema);
   }
 
   _hash(record) {
     return Object.values(pick(record, this.model.idColumn)).join('.');
+  }
+
+  _transform(record) {
+    if (isArray(record)) return record.map((r) => this._transform(r));
+
+    const result = mapValues(record, (value) => {
+      if (isDate(value)) return value.toISOString();
+      if (isArray(value) || isObjectLike(value)) return JSON.stringify(value);
+      return value;
+    });
+
+    if (!this.validate(result)) throw new Error(JSON.stringify(this.validate.errors));
+
+    return result;
   }
 
   find(query, transaction) {
@@ -43,23 +49,38 @@ class DAO {
       (record) => !(this.cache && this.cache.has(this._hash(record)))
     );
 
-    return _retry(this.model, nuRecords, transaction).finally(() => {
+    return pRetry(
+      (retry) =>
+        this.model
+          .query(transaction)
+          .insert(this._transform(records))
+          .onConflict(this.model.idColumn)
+          .ignore()
+          .catch((err) => {
+            if (err.message.indexOf('deadlock') >= 0) retry(err);
+            throw err;
+          }),
+      { retries: 3, minTimeout: 0, maxTimeout: 100 }
+    ).then((...result) => {
       if (this.cache) this.cache.addEach(nuRecords.map((u) => this._hash(u)));
+      return Promise.resolve(...result);
     });
   }
 
   upsert(records, transaction) {
     return this.model
       .query(transaction)
-      .insert(records)
-      .toKnexQuery()
+      .insert(this._transform(records))
       .onConflict(this.model.idColumn)
       .merge();
   }
 
   update(records, transaction) {
     return Promise.map(isArray(records) ? records : [records], (record) =>
-      this.model.query(transaction).update(record).where(pick(record, this.model.idColumn))
+      this.model
+        .query(transaction)
+        .update(this._transform(record))
+        .where(pick(record, this.model.idColumn))
     );
   }
 

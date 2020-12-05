@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class Watcher extends Model {
   static get tableName() {

@@ -2,13 +2,11 @@
  *  Author: Hudson S. Borges
  */
 const { get, set, snakeCase, size, reduce, omit } = require('lodash');
-const { isArray, cloneDeep, assignWith, isPlainObject } = require('lodash');
+const { isArray, assignWith, isPlainObject } = require('lodash');
 
 const compact = require('../../helpers/compact.js');
 
-module.exports = (data) => {
-  const object = cloneDeep(data);
-
+module.exports = function (object) {
   if (isArray(object))
     return compact(
       object
@@ -18,7 +16,7 @@ module.exports = (data) => {
 
   if (isPlainObject(object)) {
     const _object = reduce(
-      cloneDeep(object),
+      object,
       (m, v, k) => {
         const _result = module.exports(v);
 
@@ -53,6 +51,7 @@ module.exports = (data) => {
         case 'Organization':
         case 'Mannequin':
         case 'Bot':
+        case 'EnterpriseUserAccount':
           _object.users = (_object.users || []).concat(_object.data);
           return { ..._object, data: _object.data.id };
         case 'Commit':

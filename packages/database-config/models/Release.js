@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class Release extends Model {
   static get tableName() {
@@ -17,16 +17,16 @@ class Release extends Model {
         id: { type: 'string' },
         repository: { type: 'string' },
         author: { type: 'string' },
-        created_at: { type: 'object' },
+        created_at: { type: 'string', format: 'date-time' },
         description: { type: 'string' },
         is_draft: { type: 'boolean' },
         is_prerelease: { type: 'boolean' },
         name: { type: 'string' },
-        published_at: { type: 'object' },
+        published_at: { type: 'string', format: 'date-time' },
         release_assets_count: { type: 'number' },
         tag: { type: 'string' },
         tag_name: { type: 'string' },
-        updated_at: { type: 'object' }
+        updated_at: { type: 'string', format: 'date-time' }
       }
     };
   }

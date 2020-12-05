@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class Actor extends Model {
   static get tableName() {
@@ -35,7 +35,7 @@ class Actor extends Model {
         projects_url: { type: 'string' },
         repositories_contributed_to_count: { type: 'number' },
         starred_repositories_count: { type: 'number' },
-        status: { type: 'object' },
+        status: { type: 'string', format: 'json-pointer' },
         watching_count: { type: 'number' },
 
         // Organization
@@ -49,18 +49,18 @@ class Actor extends Model {
         user: { type: 'string' },
 
         // Common properties
-        created_at: { type: 'object' },
+        created_at: { type: 'string', format: 'date-time' },
         database_id: { type: 'number' },
         email: { type: 'string' },
         location: { type: 'string' },
         name: { type: 'string' },
         repositories_count: { type: 'number' },
         twitter_username: { type: 'string' },
-        updated_at: { type: 'object' },
+        updated_at: { type: 'string', format: 'date-time' },
         website_url: { type: 'string' },
 
         // local
-        _updated_at: { type: 'object' }
+        _updated_at: { type: 'string', format: 'date-time' }
       }
     };
   }

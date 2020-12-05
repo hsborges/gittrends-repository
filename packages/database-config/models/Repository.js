@@ -1,5 +1,4 @@
-const { Model } = require('objection');
-const Metadata = require('./Metadata');
+const Model = require('./Model');
 
 class Repository extends Model {
   static get tableName() {
@@ -18,15 +17,15 @@ class Repository extends Model {
         id: { type: 'string' },
         assignable_users_count: { type: 'number' },
         code_of_conduct: { type: 'string' },
-        contact_links: { type: 'array' },
-        created_at: { type: 'object' },
+        contact_links: { type: 'string', pattern: '^\\[.*\\]$' },
+        created_at: { type: 'string', format: 'date-time' },
         database_id: { type: 'number' },
         default_branch: { type: 'string' },
         delete_branch_on_merge: { type: 'boolean' },
         description: { type: 'string' },
         disk_usage: { type: 'number' },
         forks_count: { type: 'number' },
-        funding_links: { type: 'array' },
+        funding_links: { type: 'string', pattern: '^\\[.*\\]$' },
         has_issues_enabled: { type: 'boolean' },
         has_projects_enabled: { type: 'boolean' },
         has_wiki_enabled: { type: 'boolean' },
@@ -45,7 +44,7 @@ class Repository extends Model {
         is_user_configuration_repository: { type: 'boolean' },
         issues_count: { type: 'number' },
         labels_count: { type: 'number' },
-        languages: { type: 'array' },
+        languages: { type: 'string', pattern: '^\\[.*\\]$' },
         license_info: { type: 'string' },
         lock_reason: { type: 'string' },
         mentionable_users_count: { type: 'number' },
@@ -58,29 +57,19 @@ class Repository extends Model {
         owner: { type: 'string' },
         parent: { type: 'string' },
         primary_language: { type: 'string' },
-        pushed_at: { type: 'object' },
+        pushed_at: { type: 'string', format: 'date-time' },
         pull_requests_count: { type: 'number' },
         rebase_merge_allowed: { type: 'boolean' },
         releases_count: { type: 'number' },
-        repository_topics: { type: 'array' },
+        repository_topics: { type: 'string', pattern: '^\\[.*\\]$' },
         squash_merge_allowed: { type: 'boolean' },
         stargazers_count: { type: 'number' },
         template_repository: { type: 'string' },
-        updated_at: { type: 'object' },
+        updated_at: { type: 'string', format: 'date-time' },
         url: { type: 'string' },
         uses_custom_open_graph_image: { type: 'boolean' },
         vulnerability_alerts_count: { type: 'number' },
         watchers_count: { type: 'number' }
-      }
-    };
-  }
-
-  static get relationMappings() {
-    return {
-      metadata: {
-        relation: Model.HasManyRelation,
-        modelClass: Metadata,
-        join: { from: 'repositories.id', to: 'metadata.id' }
       }
     };
   }

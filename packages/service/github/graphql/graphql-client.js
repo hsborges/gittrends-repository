@@ -64,7 +64,7 @@ const requestClient = axios.create({
 });
 
 /* exports */
-module.exports.post = async (parameters) => {
+module.exports.post = async function (parameters) {
   return pRetry(
     (retry) =>
       requestClient({ method: 'post', data: parameters }).catch((err) => {

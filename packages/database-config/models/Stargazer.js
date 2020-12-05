@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class Stargazer extends Model {
   static get tableName() {
@@ -16,7 +16,7 @@ class Stargazer extends Model {
       properties: {
         repository: { type: 'string' },
         user: { type: 'string' },
-        starred_at: { type: 'object' }
+        starred_at: { type: 'string', format: 'date-time' }
       }
     };
   }

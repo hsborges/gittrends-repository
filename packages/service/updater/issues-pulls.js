@@ -1,7 +1,6 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { chunk } = require('lodash');
 const { knex, Metadata, Issue, PullRequest } = require('@gittrends/database-config');
 
 const dao = require('./helper/dao');
@@ -28,29 +27,22 @@ module.exports = async function _get(repositoryId, resource) {
       }).then(async ({ users, [resource]: records, endCursor, hasNextPage }) => {
         lastCursor = endCursor || lastCursor;
 
-        if (users && users.length) await dao.actors.insert(users, trx);
+        const ids = records.map((r) => r.id);
+        const data = records.map((record) => ({ repository: repositoryId, ...record }));
 
-        if (records && records.length) {
-          const ids = records.map((r) => r.id);
-          await Promise.all([
-            Metadata.query(trx)
-              .delete()
-              .whereIn('id', ids)
-              .andWhere({ resource: resource.slice(0, -1), key: 'updatedAt' }),
-            Model.query(trx).delete().whereIn('id', ids)
-          ]);
-
-          await Promise.mapSeries(chunk(records, 100), (_records) =>
-            Model.query(trx).insert(
-              _records.map((record) => ({ repository: repositoryId, ...record }))
-            )
-          );
-        }
-
-        await dao.metadata.upsert({ ...metaPath, key: 'lastCursor', value: lastCursor }, trx);
+        await Promise.all([
+          dao.metadata
+            .delete({ resource: resource.slice(0, -1), key: 'updatedAt' })
+            .whereIn('id', ids),
+          dao.actors.insert(users, trx),
+          dao[resource].update(data, trx),
+          dao.metadata.upsert({ ...metaPath, key: 'lastCursor', value: lastCursor }, trx)
+        ]);
 
         return hasNextPage;
       });
+
+      if (global.gc) global.gc();
     }
 
     const [{ pending }] = await Model.query(trx)

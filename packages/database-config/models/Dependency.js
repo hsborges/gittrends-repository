@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class Dependency extends Model {
   static get tableName() {
@@ -21,7 +21,7 @@ class Dependency extends Model {
         has_dependencies: { type: 'boolean' },
         package_manager: { type: 'string' },
         package_name: { type: 'string' },
-        target_repository: { type: 'object' },
+        target_repository: { type: 'string', pattern: '^\\{.*\\}$' },
         requirements: { type: 'string' }
       }
     };

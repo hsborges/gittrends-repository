@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class Tag extends Model {
   static get tableName() {
@@ -20,7 +20,7 @@ class Tag extends Model {
         target: { type: 'string' },
         oid: { type: 'string' },
         message: { type: 'string' },
-        tagger: { type: 'object' }
+        tagger: { type: 'string', pattern: '^\\{.*\\}$' }
       }
     };
   }

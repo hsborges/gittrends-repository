@@ -19,7 +19,12 @@ class Issue extends Model {
 
   async $beforeInsert(context) {
     await super.$beforeInsert(context);
-    this.type = 'ISSUE';
+    this.type = this.issueType;
+  }
+
+  async $beforeUpdate(context) {
+    await super.$beforeUpdate(context);
+    this.type = this.issueType;
   }
 
   static get jsonSchema() {
