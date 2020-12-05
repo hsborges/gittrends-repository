@@ -8,9 +8,9 @@ const program = require('commander');
 const BeeQueue = require('bee-queue');
 const Bottleneck = require('bottleneck');
 
-const { Issue, PullRequest, Metadata } = require('@gittrends/database-config');
 const worker = require('./updater-worker.js');
 
+const { Issue, PullRequest, Metadata } = require('@gittrends/database-config');
 const { version } = require('./package.json');
 
 /* execute */
@@ -50,48 +50,43 @@ program
       const [resource, id] = job.id.split('@');
       const jobId = `${resource}@${job.data.name}`;
 
-      const subProcesses = [];
-
       await limiter
-        .schedule(() =>
-          worker({ id, resource, data: job.data })
-            .catch((err) => {
-              consola.error(`Error thrown by ${jobId}.`);
-              consola.error(err);
-              throw err;
-            })
-            .finally(async () => {
-              if (['issues', 'pulls'].indexOf(resource) >= 0) {
-                const Model = resource === 'issues' ? Issue : PullRequest;
+        .schedule(worker, { id, resource, data: job.data })
+        .catch((err) => {
+          consola.error(`Error thrown by ${jobId}.`);
+          consola.error(err);
+          throw err;
+        })
+        .finally(async () => {
+          if (['issues', 'pulls'].indexOf(resource) >= 0) {
+            const subProcesses = [];
+            const Model = resource === 'issues' ? Issue : PullRequest;
 
-                await Model.query()
-                  .leftJoin(
-                    Metadata.query()
-                      .where({ id, resource: resource.slice(0, -1), key: 'updatedAt' })
-                      .as('metadata'),
-                    'metadata.id',
-                    `issues.id`
-                  )
-                  .where({ repository: id })
-                  .select(['issues.id', 'issues.type'])
-                  .toKnexQuery()
-                  .stream((stream) => {
-                    stream.on('data', (record) => {
-                      subProcesses.push(
-                        limiter
-                          .schedule({ priority: 0 }, () =>
-                            worker({ id: record.id, resource: resource.slice(0, -1) })
-                          )
-                          // TODO
-                          .catch((err) => consola.error(err))
-                      );
-                    });
-                  });
-              }
-            })
-        )
-        .then(() => {
-          if (subProcesses.length) return Promise.all(subProcesses);
+            await Model.query()
+              .leftJoin(
+                Metadata.query()
+                  .where({ id, resource: resource.slice(0, -1), key: 'updatedAt' })
+                  .as('metadata'),
+                'metadata.id',
+                `issues.id`
+              )
+              .where({ repository: id })
+              .select(['issues.id'])
+              .toKnexQuery()
+              .stream((stream) => {
+                const options = { priority: 0 };
+                stream.on('data', (record) => {
+                  subProcesses.push(
+                    limiter
+                      .schedule(options, worker, { id: record.id, resource: resource.slice(0, -1) })
+                      .catch((err) => consola.error(err))
+                  );
+                });
+              });
+
+            await Promise.all(subProcesses);
+          }
+
           consola.success(`[${jobId}] finished!`);
         });
 

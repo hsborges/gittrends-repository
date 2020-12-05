@@ -10,8 +10,8 @@ const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
 /* exports */
 module.exports = async function (repositoryId) {
-  const meta = { id: repositoryId, resource: 'watchers' };
-  const metadata = await dao.metadata.find({ ...meta, key: 'lastCursor' }).first();
+  const metaKey = { id: repositoryId, resource: 'watchers' };
+  const metadata = await dao.metadata.find({ ...metaKey, key: 'lastCursor' }).first();
 
   let lastCursor = metadata && metadata.value;
 
@@ -24,12 +24,12 @@ module.exports = async function (repositoryId) {
       Promise.all([
         dao.actors.insert(result.users, trx),
         dao.watchers.insert(rows, trx),
-        dao.metadata.upsert({ ...meta, ...lastMeta }, trx)
+        dao.metadata.upsert({ ...metaKey, ...lastMeta }, trx)
       ])
     );
 
     hasMore = result.hasNextPage;
   }
 
-  return dao.metadata.upsert({ ...meta, key: 'updatedAt', value: new Date().toISOString() });
+  return dao.metadata.upsert({ ...metaKey, key: 'updatedAt', value: new Date().toISOString() });
 };

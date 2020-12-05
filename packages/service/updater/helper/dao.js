@@ -1,10 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-const pick = require('lodash/pick');
-const isArray = require('lodash/isArray');
 const pRetry = require('promise-retry');
 const LfuSet = require('collections/lfu-set');
+const { pick, isArray } = require('lodash');
 
 const db = require('@gittrends/database-config');
 

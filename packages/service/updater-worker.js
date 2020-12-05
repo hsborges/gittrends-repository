@@ -1,21 +1,19 @@
 /*
  *  Author: Hudson S. Borges
  */
-const updater = require(`./updater/index`);
-
 module.exports = async ({ id, resource, data: { ids } = {} }) => {
   switch (resource) {
     case 'users':
-      return updater.user(ids || id);
+      return require('./updater/user')(ids || id);
     case 'repos':
-      return updater.repository(id);
+      return require('./updater/repository')(id);
     case 'issues':
     case 'pulls':
-      return updater.issues_pulls(id, resource);
+      return require('./updater/issues-pulls')(id, resource);
     case 'issue':
     case 'pull':
-      return updater.issue_pull(id, resource);
+      return require('./updater/issue-pull')(id, resource);
     default:
-      return updater[resource](id);
+      return require(`./updater/${resource}`)(id);
   }
 };
