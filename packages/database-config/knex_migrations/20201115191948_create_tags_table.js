@@ -6,7 +6,7 @@ exports.up = (knex) =>
     table.string('id').primary();
     table.string('repository').notNullable();
     table.string('name').notNullable();
-    table.string('target').notNullable();
+    table.string('target');
     table.string('oid');
     table.text('message');
     table.json('tagger');
