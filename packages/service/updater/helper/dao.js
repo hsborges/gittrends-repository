@@ -52,8 +52,8 @@ class DAO {
     return pRetry(
       (retry) =>
         this.model
-          .query(transaction)
-          .insert(this._transform(records))
+          .query(this.cache ? null : transaction)
+          .insert(this._transform(nuRecords))
           .onConflict(this.model.idColumn)
           .ignore()
           .catch((err) => {

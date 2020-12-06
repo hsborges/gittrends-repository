@@ -21,8 +21,8 @@ program
       consola.info(`Searching for repository ${_repo} ...`);
       return get(..._repo.split('/')).then(async ({ repository, users }) =>
         knex.transaction(async (trx) => {
-          await Actor.query(trx).insert(users).toKnexQuery().onConflict('id').ignore();
-          return Repository.query(trx).insert(repository).toKnexQuery().onConflict('id').ignore();
+          await Actor.query(trx).insert(users).onConflict('id').ignore();
+          return Repository.query(trx).insert(repository).onConflict('id').ignore();
         })
       );
     })

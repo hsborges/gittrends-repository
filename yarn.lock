@@ -954,9 +954,7 @@
 "@gittrends/database-config@file:packages/database-config":
   version "1.0.0"
   dependencies:
-    find-up "^5.0.0"
     knex "^0.21.12"
-    objection "^2.2.3"
     pg "^8.5.1"
     pg-query-stream "^3.4.2"
 
@@ -2254,7 +2252,7 @@ ajv@5.5.2:
     fast-json-stable-stringify "^2.0.0"
     json-schema-traverse "^0.3.0"
 
-ajv@^6.1.0, ajv@^6.10.0, ajv@^6.10.2, ajv@^6.11.0, ajv@^6.12.0, ajv@^6.12.2, ajv@^6.12.3, ajv@^6.12.4, ajv@^6.12.5, ajv@^6.12.6:
+ajv@^6.1.0, ajv@^6.10.0, ajv@^6.10.2, ajv@^6.11.0, ajv@^6.12.2, ajv@^6.12.3, ajv@^6.12.4, ajv@^6.12.5, ajv@^6.12.6:
   version "6.12.6"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.12.6.tgz#baf5a62e802b07d977034586f8c3baf5adf26df4"
   integrity sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==
@@ -2787,7 +2785,7 @@ async@^2.6.3, async@~2.6.1:
   dependencies:
     lodash "^4.17.14"
 
-async@~3.2.0:
+async@^3.2.0, async@~3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/async/-/async-3.2.0.tgz#b3a2685c5ebb641d3de02d161002c60fc9f85720"
   integrity sha512-TR2mEZFVOj2pLStYxLht7TyfuRzaydfpxr3k9RpHIzMgw7A64dzsdqCxH1WJyQdoe8T10nDXd9wnEigmiuHIZw==
@@ -4614,11 +4612,6 @@ dayjs@~1.8.24, dayjs@~1.8.25:
   version "1.8.36"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.8.36.tgz#be36e248467afabf8f5a86bae0de0cdceecced50"
   integrity sha512-3VmRXEtw7RZKAf+4Tv1Ym9AGeo8r8+CjDi26x+7SYQil1UqtqdaokhzoEJohqlzt0m5kacJSDhJQkG/LWhpRBw==
-
-db-errors@^0.2.3:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/db-errors/-/db-errors-0.2.3.tgz#a6a38952e00b20e790f2695a6446b3c65497ffa2"
-  integrity sha512-OOgqgDuCavHXjYSJoV2yGhv6SeG8nk42aoCSoyXLZUH7VwFG27rxbavU1z+VrZbZjphw5UkDQwUlD21MwZpUng==
 
 de-indent@^1.0.2:
   version "1.0.2"
@@ -9544,14 +9537,6 @@ object.values@^1.1.0, object.values@^1.1.1:
     es-abstract "^1.17.0-next.1"
     function-bind "^1.1.1"
     has "^1.0.3"
-
-objection@^2.2.3:
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/objection/-/objection-2.2.3.tgz#7509620b75a6907227cfb6a3fc4135222bb2e749"
-  integrity sha512-uNya9GuHlNeix7H0URthVE3+CmAlXmxkU69LAcRnncLjujJ8l1YX8JCB2GVSErTYS3Oc2xneF1ZWaR/MS8r63g==
-  dependencies:
-    ajv "^6.12.0"
-    db-errors "^0.2.3"
 
 on-finished@^2.3.0, on-finished@~2.3.0:
   version "2.3.0"

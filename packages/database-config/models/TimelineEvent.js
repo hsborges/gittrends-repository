@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class TimelineEvent extends Model {
   static get tableName() {
@@ -18,7 +18,7 @@ class TimelineEvent extends Model {
         repository: { type: 'string' },
         issue: { type: 'string' },
         type: { type: 'string' },
-        payload: { type: 'object' }
+        payload: { type: 'string', pattern: '^\\{.*\\}$' }
       }
     };
   }

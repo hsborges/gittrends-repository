@@ -44,8 +44,8 @@ Promise.map(new Array(3), () => search(program.limit, { language: program.langua
     consola.info('Adding repositories to database ...');
 
     return knex.transaction(async (trx) => {
-      await Actor.query(trx).insert(users).toKnexQuery().onConflict('id').ignore();
-      return Repository.query(trx).insert(repos).toKnexQuery().onConflict('id').ignore();
+      await Actor.query(trx).insert(users).onConflict('id').ignore();
+      return Repository.query(trx).insert(repos).onConflict('id').ignore();
     });
   })
   .then(() => consola.success('Repositories successfully added!'))

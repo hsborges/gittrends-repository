@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class Issue extends Model {
   static get tableName() {
@@ -17,16 +17,6 @@ class Issue extends Model {
     return super.query(...args).where('issues.type', this.issueType);
   }
 
-  async $beforeInsert(context) {
-    await super.$beforeInsert(context);
-    this.type = this.issueType;
-  }
-
-  async $beforeUpdate(context) {
-    await super.$beforeUpdate(context);
-    this.type = this.issueType;
-  }
-
   static get jsonSchema() {
     return {
       type: 'object',
@@ -34,29 +24,29 @@ class Issue extends Model {
       properties: {
         id: { type: 'string' },
         repository: { type: 'string' },
-        type: { type: 'string' },
+        type: { type: 'string', const: this.issueType, default: this.issueType },
         active_lock_reason: { type: 'string' },
         author: { type: 'string' },
         author_association: { type: 'string' },
         body: { type: 'string' },
         closed: { type: 'boolean' },
-        closed_at: { type: 'object' },
-        created_at: { type: 'object' },
+        closed_at: { type: 'string', format: 'date-time' },
+        created_at: { type: 'string', format: 'date-time' },
         created_via_email: { type: 'boolean' },
         database_id: { type: 'number' },
         editor: { type: 'string' },
         includes_created_edit: { type: 'boolean' },
-        last_edited_at: { type: 'object' },
+        last_edited_at: { type: 'string', format: 'date-time' },
         locked: { type: 'boolean' },
-        milestone: { type: 'object' },
+        milestone: { type: 'string', pattern: '^\\{.*\\}$' },
         number: { type: 'number' },
-        published_at: { type: 'object' },
+        published_at: { type: 'string', format: 'date-time' },
         state: { type: 'string' },
         title: { type: 'string' },
-        assignees: { type: 'array' },
-        labels: { type: 'array' },
-        participants: { type: 'array' },
-        reaction_groups: { type: 'object' }
+        assignees: { type: 'string', pattern: '^\\[.*\\]$' },
+        labels: { type: 'string', pattern: '^\\[.*\\]$' },
+        participants: { type: 'string', pattern: '^\\[.*\\]$' },
+        reaction_groups: { type: 'string', pattern: '^\\{.*\\}$' }
       }
     };
   }

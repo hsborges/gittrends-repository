@@ -2,10 +2,10 @@
  *  Author: Hudson S. Borges
  */
 const { omit } = require('lodash');
-const db = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
+const { NotFoundError } = require('../helpers/errors.js');
 
 const dao = require('./helper/dao');
-const { NotFoundError } = require('../helpers/errors.js');
 const getIssueOrPull = require('../github/graphql/repositories/issue-or-pull.js');
 const getReactions = require('../github/graphql/repositories/reactions.js');
 
@@ -21,13 +21,12 @@ module.exports = async function _get(id, resource) {
   if (!resource || (resource !== 'issue' && resource !== 'pull'))
     throw new TypeError('Resource must be "issue" or "pull"!');
 
-  const Model = resource === 'issue' ? db.Issue : db.PullRequest;
-  const record = await Model.query().findById(id).select('repository').first();
+  const record = await dao[`${resource}s`].find({ id }).select('repository').first();
   const metadata = await dao.metadata.find({ id, resource, key: 'lastCursor' }).first();
 
-  const lastCursor = metadata && metadata.value;
+  const lastCursor = (metadata && metadata.value) || null;
 
-  return db.knex.transaction((trx) =>
+  await knex.transaction((trx) =>
     getIssueOrPull(id, resource, { lastCursor })
       .then(async ({ [resource]: data, timeline = [], commits = [], users = [], endCursor }) => {
         const reactables = timeline
@@ -77,7 +76,7 @@ module.exports = async function _get(id, resource) {
         )
       )
       .catch(async (err) => {
-        if (err instanceof NotFoundError) await Model.query(trx).deleteById(id);
+        if (err instanceof NotFoundError) await dao[`${resource}s`].delete({ id }, trx);
         throw err;
       })
   );

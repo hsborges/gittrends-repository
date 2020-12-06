@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 module.exports.knex = require('./knex');
-
 module.exports.Metadata = require('./models/Metadata');
 module.exports.Actor = require('./models/Actor');
 module.exports.Commit = require('./models/Commit');

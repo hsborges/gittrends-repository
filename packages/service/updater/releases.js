@@ -13,7 +13,7 @@ module.exports = async function (repositoryId) {
   const path = { id: repositoryId, resource: 'releases' };
   const metadata = await dao.metadata.find({ ...path, key: 'lastCursor' }).first();
 
-  let lastCursor = metadata && metadata.value;
+  let lastCursor = (metadata && metadata.value) || null;
 
   // modified or not updated
   for (let hasMore = true; hasMore; ) {

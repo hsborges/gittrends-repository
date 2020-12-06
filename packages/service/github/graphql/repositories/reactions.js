@@ -23,8 +23,8 @@ module.exports = async function (reactables = []) {
 
   const nodes = info
     .map((_info, index) => {
-      if (_info.has_next_page === false) return '';
-      const after = _info.end_cursor ? `, after: "${_info.end_cursor}"` : '';
+      if (_info.hasNextPage === false) return '';
+      const after = _info.endCursor ? `, after: "${_info.endCursor}"` : '';
       return `
       node_${index}:node(id: "${_info.id}") {
         type:__typename
@@ -59,7 +59,7 @@ module.exports = async function (reactables = []) {
         return {
           reactions: get(result, 'data.reactions.nodes', []),
           users: result.users || [],
-          meta: { end_cursor: pageInfo.end_cursor || _info.end_cursor }
+          endCursor: pageInfo.end_cursor || _info.endCursor
         };
       });
 
@@ -67,16 +67,16 @@ module.exports = async function (reactables = []) {
         const page = get(data, `data.node_${index}.reactions.page_info`, {});
         return {
           id: _info.id,
-          end_cursor: page.end_cursor || _info.end_cursor,
-          has_next_page: page.has_next_page || false
+          endCursor: page.end_cursor || _info.endCursor,
+          hasNextPage: page.has_next_page || false
         };
       });
 
-      if (nextIteration.reduce((a, m) => a || m.has_next_page, false)) {
+      if (nextIteration.reduce((a, m) => a || m.hasNextPage, false)) {
         (await module.exports(nextIteration)).forEach((res, index) => {
           reactions[index].reactions.push(...res.reactions);
           reactions[index].users.push(...res.users);
-          reactions[index].meta = res.meta;
+          reactions[index].endCursor = res.endCursor;
         });
       }
 

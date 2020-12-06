@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-module.exports = async ({ id, resource, data: { ids } = {} }) => {
+module.exports = async function ({ id, resource, data: { ids } = {} }) {
   switch (resource) {
     case 'users':
       return require('./updater/user')(ids || id);

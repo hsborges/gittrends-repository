@@ -79,7 +79,7 @@ module.exports = async function (id, type, { lastCursor, max } = {}) {
 
   return {
     [type]: compact(objects) || [],
-    users: chain(users).compact().uniqBy('id').value(),
+    users: chain(users).compact().uniqBy('id').value() || [],
     endCursor: variables.after,
     hasNextPage: variables.hasNextPage
   };

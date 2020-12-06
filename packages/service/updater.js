@@ -3,10 +3,10 @@
  */
 global.Promise = require('bluebird');
 
+const async = require('async');
 const consola = require('consola');
 const program = require('commander');
 const BeeQueue = require('bee-queue');
-const Bottleneck = require('bottleneck');
 
 const worker = require('./updater-worker.js');
 
@@ -27,15 +27,12 @@ program
   .action(async () => {
     consola.info(`Updating resources using ${program.workers} workers`);
 
-    const limiter = new Bottleneck({ maxConcurrent: program.workers, minTime: 0 });
-
     const queue = new BeeQueue('updates', {
       redis: {
         host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
         port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
         db: program.redisDb
       },
-      stallInterval: 10000,
       isWorker: true,
       getEvents: false,
       sendEvents: false,
@@ -46,12 +43,11 @@ program
 
     queue.checkStalledJobs(10 * 1000);
 
-    queue.process(program.workers, async (job) => {
+    const workersQueue = async.priorityQueue(async (job) => {
       const [resource, id] = job.id.split('@');
-      const jobId = `${resource}@${job.data.name}`;
+      const jobId = `${resource}@${(job.data && job.data.name) || id}`;
 
-      await limiter
-        .schedule(worker, { id, resource, data: job.data })
+      await worker({ id, resource, data: job.data }, 1)
         .catch((err) => {
           consola.error(`Error thrown by ${jobId}.`);
           consola.error(err);
@@ -59,10 +55,10 @@ program
         })
         .finally(async () => {
           if (['issues', 'pulls'].indexOf(resource) >= 0) {
-            const subProcesses = [];
             const Model = resource === 'issues' ? Issue : PullRequest;
 
             await Model.query()
+              .where({ repository: id })
               .leftJoin(
                 Metadata.query()
                   .where({ id, resource: resource.slice(0, -1), key: 'updatedAt' })
@@ -70,28 +66,32 @@ program
                 'metadata.id',
                 `issues.id`
               )
-              .where({ repository: id })
-              .select(['issues.id'])
-              .toKnexQuery()
+              .select('issues.id')
               .stream((stream) => {
-                const options = { priority: 0 };
+                let pending = 0;
+
                 stream.on('data', (record) => {
-                  subProcesses.push(
-                    limiter
-                      .schedule(options, worker, { id: record.id, resource: resource.slice(0, -1) })
-                      .catch((err) => consola.error(err))
-                  );
+                  pending += 1;
+                  workersQueue.push({ id: `${resource.slice(0, -1)}@${record.id}` }, 2, (err) => {
+                    pending -= 1;
+                    if (err) consola.error(err);
+                    if (!pending) consola.success(`[${jobId}] finished!`);
+                  });
+                });
+
+                stream.on('end', () => {
+                  if (!pending) consola.success(`[${jobId}] finished!`);
                 });
               });
-
-            await Promise.all(subProcesses);
+          } else {
+            consola.success(`[${jobId}] finished!`);
           }
-
-          consola.success(`[${jobId}] finished!`);
         });
 
       if (global.gc) global.gc();
-    });
+    }, program.workers);
+
+    queue.process(program.workers, (job, done) => workersQueue.push(job, 1, done));
 
     let timeout = null;
     process.on('SIGTERM', async () => {

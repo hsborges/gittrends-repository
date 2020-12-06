@@ -13,7 +13,7 @@ module.exports = async function (repositoryId) {
   const metaKey = { id: repositoryId, resource: 'stargazers' };
   const metadata = await dao.metadata.find({ ...metaKey, key: 'lastCursor' }).first();
 
-  let lastCursor = metadata && metadata.value;
+  let lastCursor = (metadata && metadata.value) || null;
 
   // repository modified
   for (let hasMore = true; hasMore; ) {

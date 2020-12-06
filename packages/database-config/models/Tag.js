@@ -12,7 +12,7 @@ class Tag extends Model {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['id', 'repository', 'name', 'target'],
+      required: ['id', 'repository', 'name'],
       properties: {
         id: { type: 'string' },
         repository: { type: 'string' },

@@ -1,4 +1,4 @@
-const { Model } = require('objection');
+const Model = require('./Model');
 
 class Reaction extends Model {
   static get tableName() {
@@ -19,7 +19,7 @@ class Reaction extends Model {
         issue: { type: 'string' },
         event: { type: 'string' },
         content: { type: 'string' },
-        created_at: { type: 'object' },
+        created_at: { type: 'string', format: 'date-time' },
         user: { type: 'string' }
       }
     };
