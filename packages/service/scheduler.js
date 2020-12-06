@@ -80,7 +80,7 @@ const usersScheduler = async (queue, wait, limit = 100000) => {
   ).map((r) => r.id);
   // add to queue
   return Promise.all(
-    chunk(usersIds, 50).map((ids) =>
+    chunk(usersIds, 10).map((ids) =>
       queue
         .createJob({ ids })
         .setId(`users@${ids[0]}+`)

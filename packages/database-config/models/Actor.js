@@ -35,7 +35,7 @@ class Actor extends Model {
         projects_url: { type: 'string' },
         repositories_contributed_to_count: { type: 'number' },
         starred_repositories_count: { type: 'number' },
-        status: { type: 'string', format: 'json-pointer' },
+        status: { type: 'string', pattern: '^\\{.*\\}$' },
         watching_count: { type: 'number' },
 
         // Organization
