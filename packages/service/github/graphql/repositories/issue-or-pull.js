@@ -26,10 +26,6 @@ module.exports = async function (id, type, { lastCursor } = {}) {
             ? ''
             : `
           ### CONNECTIONS ###
-          # commits(first: $total, after: $ac) {
-          #  pageInfo { hasNextPage endCursor }
-          #  nodes { commit { ...commit } }
-          # }
           suggestedReviewers @include(if: $full) {
             isAuthor
             isCommenter
@@ -41,7 +37,7 @@ module.exports = async function (id, type, { lastCursor } = {}) {
           baseRef @include(if: $full) { name target { ...commit } }
           baseRefName @include(if: $full)
           baseRefOid @include(if: $full)
-          # baseRepository { ...repo }
+          baseRepository { ...repo }
           canBeRebased @include(if: $full)
           changedFiles @include(if: $full)
           deletions @include(if: $full)
@@ -49,7 +45,7 @@ module.exports = async function (id, type, { lastCursor } = {}) {
           headRefName @include(if: $full)
           headRefOid @include(if: $full)
           headRepository @include(if: $full) { ...repo }
-          headRepositoryOwner @include(if: $full) { id login }
+          headRepositoryOwner @include(if: $full) { ...actor }
           isCrossRepository @include(if: $full)
           isDraft @include(if: $full)
           maintainerCanModify @include(if: $full)
@@ -69,15 +65,12 @@ module.exports = async function (id, type, { lastCursor } = {}) {
         author @include(if: $full) { ...actor }
         authorAssociation @include(if: $full)
         body @include(if: $full)
-        # bodyHTML @include(if: $full)
-        # bodyText @include(if: $full)
         closed @include(if: $full)
         closedAt @include(if: $full)
         createdAt @include(if: $full)
         createdViaEmail @include(if: $full)
         databaseId @include(if: $full)
         editor @include(if: $full) { ...actor }
-        # hovercard @include(if: $full)
         id @include(if: $full)
         includesCreatedEdit @include(if: $full)
         lastEditedAt @include(if: $full)
@@ -89,8 +82,6 @@ module.exports = async function (id, type, { lastCursor } = {}) {
         state @include(if: $full)
         title @include(if: $full)
         updatedAt @include(if: $full)
-        # url @include(if: $full)
-
 
         ### CONNECTIONS ###
         assignees(first: $total, after: $aa) {
@@ -166,6 +157,9 @@ module.exports = async function (id, type, { lastCursor } = {}) {
               }
             }
           }
+        }
+        participants(first: 100) {
+          nodes { ...actor }
         }
       }
     }
@@ -371,11 +365,11 @@ module.exports = async function (id, type, { lastCursor } = {}) {
       });
   }
 
-  return compact({
-    [type]: merge(ghObject, { assignees, labels }),
-    timeline: chain(timeline).compact().uniqBy('id').value(),
-    users: chain(users).compact().uniqBy('id').value(),
-    commits: chain(commits).compact().uniqBy('id').value(),
+  return {
+    [type]: compact(merge(ghObject, { assignees, labels })),
+    timeline: chain(timeline).compact().uniqBy('id').value() || [],
+    users: chain(users).compact().uniqBy('id').value() || [],
+    commits: chain(commits).compact().uniqBy('id').value() || [],
     endCursor: variables.at
-  });
+  };
 };

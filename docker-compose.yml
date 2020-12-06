@@ -4,6 +4,8 @@ services:
   postgres:
     image: postgres:alpine
     restart: always
+    command: -N 500
+    tty: true
     ports:
       - ${GITTRENDS_DATABASE_PORT}:5432
     volumes:
@@ -15,31 +17,78 @@ services:
     networks:
       - gittrends
 
-  website-api:
-    image: node:latest
+  pgadmin:
+    image: dpage/pgadmin4:latest
     restart: always
-    expose:
-      - 80
+    ports:
+      - ${GITTRENDS_PGADMIN_PORT}:80
     volumes:
-      - .:/usr/src/app
-    working_dir: /usr/src/app/packages/api
-    command: yarn start --port 80
+      - 'pgadmin-db:/var/lib/pgadmin'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gittrends.app
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - gittrends
+
+  pgbackups:
+    image: prodrigestivill/postgres-backup-local
+    restart: always
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${GITTRENDS_DATABASE_DB}
+      POSTGRES_USER: ${GITTRENDS_DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
+      POSTGRES_EXTRA_OPTS: -Z9 --schema=public --blobs
+      SCHEDULE: '@weekly'
+      BACKUP_KEEP_DAYS: 3
+      BACKUP_KEEP_WEEKS: 3
+      BACKUP_KEEP_MONTHS: 3
+      HEALTHCHECK_PORT: 8888
+    networks:
+      - gittrends
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - ${GITTRENDS_REDIS_PORT}:6379
+    command: --maxmemory 50mb --maxmemory-policy allkeys-lru
+    networks:
+      - gittrends
+
+  website-api:
+    build:
+      context: .
+      dockerfile: ./packages/website-api/Dockerfile
+    restart: always
+    ports:
+      - ${GITTRENDS_API_PORT}:80
+    environment:
+      GITTRENDS_DATABASE_HOST: postgres
+    env_file:
+      - .env
     depends_on:
       - postgres
     networks:
       - gittrends
 
   website-server:
-    image: node:latest
+    build:
+      context: .
+      dockerfile: ./packages/website/Dockerfile
+      args:
+        GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+        GITTRENDS_API_HOST: website-api
+        GITTRENDS_API_PORT: 80
     restart: always
-    expose:
-      - 80
-    volumes:
-      - .:/usr/src/app
+    ports:
+      - ${GITTRENDS_WEBSITE_PORT}:80
     depends_on:
       - website-api
-    working_dir: /usr/src/app/packages/website
-    command: yarn start -H 0.0.0.0 -p 80
     environment:
       GITTRENDS_API_HOST: website-api
       GITTRENDS_API_PORT: 80
@@ -62,8 +111,11 @@ services:
 volumes:
   db:
     external: true
-    name: gittrends.app-website
+    name: gittrends.app
+  pgadmin-db:
+    name: pgadmin.gittrends.app
 
 networks:
   gittrends:
     external: true
+    name: gittrends.app

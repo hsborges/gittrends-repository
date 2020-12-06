@@ -10,8 +10,8 @@ module.exports = `fragment repository on Repository {
   description
   defaultBranch:defaultBranchRef { name }
   primaryLanguage { name }
-  stargazers { totalCount }
-  forks { totalCount }
+  stargazersCount:stargazerCount
+  forksCount:forkCount
   createdAt
   pushedAt
   updatedAt

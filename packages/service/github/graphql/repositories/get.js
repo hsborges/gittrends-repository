@@ -19,7 +19,7 @@ module.exports = async function (repositoryIdOrName, name) {
   query($total:Int = 100, $al:String, $at:String, $skip:Boolean = false) {
     repository:${selector} {
       ... on Repository {
-        #### FIELDS ###
+        assignableUsers @skip(if: $skip) { totalCount }
         codeOfConduct @skip(if: $skip) { name }
         createdAt @skip(if: $skip)
         databaseId @skip(if: $skip)
@@ -27,70 +27,57 @@ module.exports = async function (repositoryIdOrName, name) {
         deleteBranchOnMerge  @skip(if: $skip)
         description @skip(if: $skip)
         diskUsage @skip(if: $skip)
-        # forkCount @skip(if: $skip)
-        # fundingLinks
+        forksCount:forkCount @skip(if: $skip)
+        fundingLinks @skip(if: $skip) { platform url }
         hasIssuesEnabled @skip(if: $skip)
         hasProjectsEnabled @skip(if: $skip)
         hasWikiEnabled @skip(if: $skip)
         homepageUrl @skip(if: $skip)
         id
         isArchived @skip(if: $skip)
+        isBlankIssuesEnabled @skip(if: $skip)
         isDisabled @skip(if: $skip)
+        isEmpty @skip(if: $skip)
         isFork @skip(if: $skip)
+        isInOrganization @skip(if: $skip)
         isLocked @skip(if: $skip)
         isMirror @skip(if: $skip)
         isPrivate @skip(if: $skip)
+        isSecurityPolicyEnabled @skip(if: $skip)
         isTemplate @skip(if: $skip)
+        isUserConfigurationRepository @skip(if: $skip)
+        issues @skip(if: $skip) { totalCount }
+        labels @skip(if: $skip) { totalCount }
+        languages(first: $total, after: $al) {
+          pageInfo { hasNextPage endCursor }
+          edges { language:node { name } size }
+        }
         licenseInfo @skip(if: $skip) { name }
         lockReason @skip(if: $skip)
+        mentionableUsers @skip(if: $skip) { totalCount }
         mergeCommitAllowed @skip(if: $skip)
+        milestones @skip(if: $skip) { totalCount }
         mirrorUrl @skip(if: $skip)
         name @skip(if: $skip)
         nameWithOwner @skip(if: $skip)
         openGraphImageUrl @skip(if: $skip)
         owner @skip(if: $skip) { ...actor }
-        parent @skip(if: $skip) { id databaseId nameWithOwner }
+        parent @skip(if: $skip) { id }
         primaryLanguage @skip(if: $skip) { name }
         pushedAt @skip(if: $skip)
-        rebaseMergeAllowed @skip(if: $skip)
-        # resourcePath @skip(if: $skip)
-        shortDescriptionHTML @skip(if: $skip)
-        squashMergeAllowed @skip(if: $skip)
-        # sshUrl @skip(if: $skip)
-        templateRepository @skip(if: $skip) { id databaseId nameWithOwner }
-        updatedAt @skip(if: $skip)
-        # url @skip(if: $skip)
-        usesCustomOpenGraphImage @skip(if: $skip)
-
-        ### CONNECTIONS ###
-        # assignableUsers @skip(if: $skip) { totalCount }
-        # branchProtectionRules @skip(if: $skip) { totalCount }
-        # collaborators @skip(if: $skip) { totalCount }
-        # commitComments @skip(if: $skip) { totalCount }
-        # deployKeys @skip(if: $skip) { totalCount }
-        # deployments @skip(if: $skip) { totalCount }
-        forks @skip(if: $skip) { totalCount }
-        issues @skip(if: $skip) { totalCount }
-        # labels @skip(if: $skip) { totalCount }
-        languages(first: $total, after: $al) {
-          pageInfo { hasNextPage endCursor }
-          edges { language:node { name } size }
-        }
-        # mentionableUsers @skip(if: $skip) { totalCount }
-        # milestones @skip(if: $skip) { totalCount }
-        # packages @skip(if: $skip) { totalCount }
-        # pinnedIssues @skip(if: $skip) { totalCount }
-        # projects @skip(if: $skip) { totalCount }
         pullRequests @skip(if: $skip) { totalCount }
-        # refs @skip(if: $skip) { totalCount }
-        # registryPackages @skip(if: $skip) { totalCount }
-        # registryPackagesForQuery @skip(if: $skip) { totalCount }
+        rebaseMergeAllowed @skip(if: $skip)
         releases @skip(if: $skip) { totalCount }
         repositoryTopics(first: $total, after: $at) {
           pageInfo { hasNextPage endCursor }
           nodes { topic { name } }
         }
-        stargazers @skip(if: $skip) { totalCount }
+        squashMergeAllowed @skip(if: $skip)
+        stargazersCount:stargazerCount @skip(if: $skip)
+        templateRepository @skip(if: $skip) { id }
+        updatedAt @skip(if: $skip)
+        url @skip(if: $skip)
+        usesCustomOpenGraphImage @skip(if: $skip)
         vulnerabilityAlerts @skip(if: $skip) { totalCount }
         watchers @skip(if: $skip) { totalCount }
       }

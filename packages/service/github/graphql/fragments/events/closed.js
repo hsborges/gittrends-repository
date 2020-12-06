@@ -3,6 +3,10 @@
  */
 module.exports = `fragment closedEvent on ClosedEvent {
   actor { ...actor }
-  closer { type:__typename ... on Node { id } }
+  closer {
+    type:__typename
+    ... on Node { id }
+    ... on Commit { ...commit }
+  }
   createdAt
 }`;

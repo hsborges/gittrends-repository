@@ -3,9 +3,9 @@
  */
 const { isArray, isPlainObject, isEqual, reduce } = require('lodash');
 
-const valuesToRemove = [null, undefined, '', false, {}];
+const valuesToRemove = [null, undefined, '', {}];
 
-module.exports = (object) => {
+module.exports = function (object) {
   if (isArray(object)) {
     const _object = object
       .map(module.exports)

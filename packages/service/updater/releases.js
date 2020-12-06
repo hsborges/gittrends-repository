@@ -1,62 +1,37 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { omit, get, isEqual } = require('lodash');
-const { mongo } = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
 
-const save = require('./_save.js');
+const dao = require('./helper/dao');
 const getReleases = require('../github/graphql/repositories/releases.js');
 
 const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
 
 /* exports */
 module.exports = async function (repositoryId) {
-  const path = '_meta.releases';
+  const path = { id: repositoryId, resource: 'releases' };
+  const metadata = await dao.metadata.find({ ...path, key: 'lastCursor' }).first();
 
-  const repo = await mongo.repositories.findOne(
-    { _id: repositoryId },
-    { projection: { updated_at: 1, [path]: 1 } }
-  );
+  let lastCursor = (metadata && metadata.value) || null;
 
-  const metadata = get(repo, path, {});
+  // modified or not updated
+  for (let hasMore = true; hasMore; ) {
+    const result = await getReleases(repositoryId, { lastCursor, max: BATCH_SIZE });
 
-  if (isEqual(repo.updated_at, metadata.repo_updated_at)) {
-    // repository not modified
-    await mongo.repositories.updateOne(
-      { _id: repo._id },
-      { $set: { [path]: { ...metadata, updated_at: new Date() } } }
+    const rows = result.releases.map((r) => ({ repository: repositoryId, ...r }));
+    const lastMeta = { key: 'lastCursor', value: (lastCursor = result.endCursor || lastCursor) };
+
+    await knex.transaction((trx) =>
+      Promise.all([
+        dao.actors.insert(result.users, trx),
+        dao.releases.insert(rows, trx),
+        dao.metadata.upsert({ ...path, ...lastMeta }, trx)
+      ])
     );
-  } else {
-    // modified or not updated
-    for (let hasMore = true; hasMore; ) {
-      hasMore = await getReleases(repo._id, {
-        lastCursor: metadata.last_cursor,
-        max: BATCH_SIZE
-      }).then(async ({ releases, users, endCursor, hasNextPage }) => {
-        if (releases && releases.length) {
-          const operations = releases.map((release) => ({
-            replaceOne: {
-              filter: { _id: release.id },
-              replacement: { repository: repo._id, ...omit(release, 'id') },
-              upsert: true
-            }
-          }));
 
-          await Promise.join(
-            mongo.releases.bulkWrite(operations, { ordered: false }),
-            save.users(users)
-          );
-        }
-
-        metadata.last_cursor = endCursor || metadata.last_cursor;
-        if (!hasNextPage) {
-          metadata.updated_at = new Date();
-          metadata.repo_updated_at = repo.updated_at;
-        }
-
-        await mongo.repositories.updateOne({ _id: repo._id }, { $set: { [path]: metadata } });
-        return hasNextPage;
-      });
-    }
+    hasMore = result.hasNextPage;
   }
+
+  return dao.metadata.upsert({ ...path, key: 'updatedAt', value: new Date().toISOString() });
 };

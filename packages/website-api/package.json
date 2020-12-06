@@ -1,0 +1,30 @@
+{
+  "name": "@gittrends/website-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx -n '-r @hsborges/env-config' fastify start -l info app.js",
+    "dev": "npx -n '-r @hsborges/env-config' fastify start -w -l info -P app.js ---port 8888"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@gittrends/database-config": "file:../database-config",
+    "axios": "^0.19.2",
+    "dayjs": "^1.9.6",
+    "faker": "^4.1.0",
+    "fastify": "^3.2.0",
+    "fastify-autoload": "^3.0.7",
+    "fastify-cli": "^2.0.2",
+    "fastify-cors": "^4.1.0",
+    "fastify-helmet": "^5.0.0",
+    "fastify-plugin": "^2.2.0",
+    "lodash": "^4.17.19",
+    "nodemailer": "^6.4.11"
+  },
+  "devDependencies": {
+    "@hsborges/env-config": "file:../env-config"
+  }
+}

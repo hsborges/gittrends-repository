@@ -2,46 +2,33 @@
  *  Author: Hudson S. Borges
  */
 const { isArray, get: getValue } = require('lodash');
-const { mongo } = require('@gittrends/database-config');
 
-const save = require('./_save.js');
+const dao = require('./helper/dao');
 const get = require('../github/graphql/users/get.js');
 
 const { NotFoundError } = require('../helpers/errors');
 
 /* exports */
 module.exports = async function (userId) {
-  return get(userId)
+  return get(isArray(userId) ? userId : [userId])
     .catch(async (err) => {
-      if (isArray(userId) && err instanceof NotFoundError) {
+      if (err instanceof NotFoundError) {
         const ids = err.response.errors
           .filter((e) => e.type === 'NOT_FOUND')
           .map((e) => e.path[1])
           .map((i) => userId[i]);
 
-        await mongo.users.updateMany(
-          { _id: { $in: ids } },
-          { $set: { _meta: { removed: true, updated_at: new Date() } } }
-        );
+        await dao.actors.delete({}).whereIn(ids);
         return { users: getValue(err, 'response.data.users', []) };
       }
       throw err;
     })
-    .then((response) =>
-      save.users(
+    .then((response) => {
+      return dao.actors.update(
         (isArray(userId) ? response.users : [response.user]).map((u) => ({
           ...u,
-          _meta: { updated_at: new Date() }
+          _updated_at: new Date()
         }))
-      )
-    )
-    .catch((err) => {
-      if (!isArray(userId) && err instanceof NotFoundError) {
-        return mongo.users.updateOne(
-          { _id: userId },
-          { $set: { _meta: { removed: true, updated_at: new Date() } } }
-        );
-      }
-      throw err;
+      );
     });
 };

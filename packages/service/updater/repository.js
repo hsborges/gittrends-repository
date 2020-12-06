@@ -1,49 +1,30 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { omit } = require('lodash');
-const { mongo } = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
 
-const save = require('./_save.js');
+const dao = require('./helper/dao');
 const get = require('../github/graphql/repositories/get');
 const { NotFoundError, BlockedError } = require('../helpers/errors');
 
 /* exports */
 module.exports = async function (repositoryId) {
-  const repo = await mongo.repositories.findOne(
-    { _id: repositoryId },
-    { projection: { _meta: 1 } }
-  );
+  const metaKeys = { id: repositoryId, resource: 'repos', key: 'updatedAt' };
 
-  return get(repo._id)
+  return get(repositoryId)
     .then(({ repository, users }) =>
-      Promise.all([
-        mongo.repositories.replaceOne(
-          { _id: repository.id },
-          { ...omit(repository, 'id'), _meta: { ...repo._meta, updated_at: new Date() } }
-        ),
-        save.users(users)
-      ])
+      knex.transaction(async (trx) =>
+        Promise.all([
+          dao.actors.insert(users, trx),
+          dao.repositories.update(repository, trx),
+          dao.metadata.upsert({ ...metaKeys, value: new Date().toISOString() }, trx)
+        ])
+      )
     )
     .catch((err) => {
-      if (err instanceof NotFoundError) {
-        return mongo.repositories.updateOne(
-          { _id: repo._id },
-          { $set: { '_meta.removed': true, '_meta.removed_at': new Date() } }
-        );
-      }
-      if (err instanceof BlockedError) {
-        return mongo.repositories.updateOne(
-          { _id: repo._id },
-          {
-            $set: {
-              '_meta.removed': true,
-              '_meta.removed_at': new Date(),
-              '_meta.removed_reason': 'blocked'
-            }
-          }
-        );
-      }
+      // TODO - add an specific field instead of delete
+      if (err instanceof NotFoundError || err instanceof BlockedError)
+        return dao.repositories.delete({ id: repositoryId });
       throw err;
     });
 };

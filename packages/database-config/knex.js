@@ -1,7 +1,11 @@
 /*
  *  Author: Hudson S. Borges
  */
-const knex = require('knex');
+const Model = require('./models/Model');
 const knexfile = require('./knexfile');
+// eslint-disable-next-line import/order
+const knex = require('knex')(knexfile);
 
-module.exports = knex(knexfile);
+Model.knex(knex);
+
+module.exports = knex;

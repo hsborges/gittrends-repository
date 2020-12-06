@@ -1,62 +1,37 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { get, omit, isEqual } = require('lodash');
-const { mongo } = require('@gittrends/database-config');
+const { knex } = require('@gittrends/database-config');
 
-const save = require('./_save.js');
+const dao = require('./helper/dao');
 const getTags = require('../github/graphql/repositories/tags.js');
 
+const BATCH_SIZE = parseInt(process.env.GITTRENDS_BATCH_SIZE || 500, 10);
+
 /* exports */
-module.exports = async (repositoryId) => {
-  const path = '_meta.tags';
+module.exports = async function (repositoryId) {
+  const metaKey = { id: repositoryId, resource: 'tags' };
+  const metadata = await dao.metadata.find({ ...metaKey, key: 'lastCursor' }).first();
 
-  const repo = await mongo.repositories.findOne(
-    { _id: repositoryId },
-    { projection: { name_with_owner: 1, updated_at: 1, [path]: 1 } }
-  );
+  let lastCursor = (metadata && metadata.value) || null;
 
-  const metadata = get(repo, path, {});
+  for (let hasMore = true; hasMore; ) {
+    const result = await getTags(repositoryId, { lastCursor, max: BATCH_SIZE });
 
-  // modified or not updated
-  if (!isEqual(repo.updated_at, get(repo, [path, 'repo_updated_at']))) {
-    await getTags(repo._id, { lastCursor: metadata.last_cursor }).then(
-      async ({ tags, commits, users, endCursor }) => {
-        await Promise.all([
-          tags.length
-            ? mongo.tags.bulkWrite(
-                tags.map((tag) => ({
-                  replaceOne: {
-                    filter: { _id: tag.id },
-                    replacement: { repository: repo._id, ...omit(tag, 'id') },
-                    upsert: true
-                  }
-                })),
-                { ordered: false }
-              )
-            : Promise.resolve(),
-          commits.length
-            ? mongo.commits.bulkWrite(
-                commits.map((commit) => ({
-                  replaceOne: {
-                    filter: { _id: commit.id },
-                    replacement: { repository: repo._id, ...omit(commit, 'id') },
-                    upsert: true
-                  }
-                })),
-                { ordered: false }
-              )
-            : Promise.resolve(),
-          save.users(users)
-        ]);
+    const tags = result.tags.map((t) => ({ repository: repositoryId, ...t }));
+    const lastMeta = { key: 'lastCursor', value: (lastCursor = result.endCursor || lastCursor) };
 
-        metadata.last_cursor = endCursor || metadata.last_cursor;
-      }
-    );
+    await knex.transaction(async (trx) => {
+      await Promise.all([
+        dao.actors.insert(result.users, trx),
+        dao.commits.insert(result.commits, trx),
+        dao.tags.insert(tags, trx),
+        dao.metadata.upsert({ ...metaKey, ...lastMeta }, trx)
+      ]);
+    });
+
+    hasMore = result.hasNextPage;
   }
 
-  return mongo.repositories.updateOne(
-    { _id: repo._id },
-    { $set: { [path]: { ...metadata, updated_at: new Date() } } }
-  );
+  return dao.metadata.upsert({ ...metaKey, key: 'updatedAt', value: new Date().toISOString() });
 };

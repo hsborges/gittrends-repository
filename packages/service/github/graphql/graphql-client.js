@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 const _ = require('lodash');
-const moment = require('moment');
+const dayjs = require('dayjs');
 const axios = require('axios');
 const pRetry = require('promise-retry');
 const UserAgent = require('user-agents');
@@ -16,7 +16,7 @@ const TIMEOUT = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT || 15000, 10);
 const RETRIES = parseInt(process.env.GITTRENDS_PROXY_RETRIES || 5, 10);
 const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT || new UserAgent().random().toString();
 
-const normalize = (object) => {
+function normalize(object) {
   if (_.isArray(object)) return object.map(normalize);
   if (_.isPlainObject(object)) {
     return _.reduce(
@@ -34,7 +34,7 @@ const normalize = (object) => {
           _.endsWith(_key, '_date') ||
           _key === 'date'
         ) {
-          const m = moment.parseZone(_value);
+          const m = dayjs(_value);
           _memo[_key] = m.isValid() ? m.toDate() : _value;
         } else {
           _memo[_key] = _value;
@@ -46,7 +46,7 @@ const normalize = (object) => {
     );
   }
   return object;
-};
+}
 
 const requestClient = axios.create({
   baseURL: `${PROTOCOL}://${HOST}:${PORT}/graphql`,
@@ -64,7 +64,7 @@ const requestClient = axios.create({
 });
 
 /* exports */
-module.exports.post = async (parameters) => {
+module.exports.post = async function (parameters) {
   return pRetry(
     (retry) =>
       requestClient({ method: 'post', data: parameters }).catch((err) => {

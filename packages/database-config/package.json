@@ -5,17 +5,14 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "postgres:migrate": "knex migrate:latest",
-    "mongo:migrate": "migrate up --env ../../.env --migrations-dir mongo_migrations --state-file ../../.migrate"
+    "run-migrations": "npx -n '-r @hsborges/env-config' knex migrate:latest"
   },
   "dependencies": {
-    "dotenv": "^8.2.0",
-    "knex": "^0.21.3",
-    "mongodb": "^3.6.0",
-    "pg": "^8.4.1"
+    "knex": "^0.21.12",
+    "pg": "^8.5.1",
+    "pg-query-stream": "^3.4.2"
   },
   "devDependencies": {
-    "commitizen": "^4.1.2",
-    "migrate": "^1.7.0"
+    "@hsborges/env-config": "file:../env-config"
   }
 }

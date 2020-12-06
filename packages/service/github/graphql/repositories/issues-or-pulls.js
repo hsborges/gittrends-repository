@@ -30,7 +30,6 @@ module.exports = async function (id, type, { lastCursor, max } = {}) {
             type:__typename
             author { ...actor }
             authorAssociation
-            bodyText
             closedAt
             createdAt
             createdViaEmail
@@ -43,7 +42,6 @@ module.exports = async function (id, type, { lastCursor, max } = {}) {
             state
             title
             updatedAt
-            # url
             ${type === 'issues' ? '' : 'baseRefName isCrossRepository merged mergedAt'}
           }
         }
@@ -80,8 +78,8 @@ module.exports = async function (id, type, { lastCursor, max } = {}) {
   }
 
   return {
-    [type]: compact(objects),
-    users: chain(users).compact().uniqBy('id').value(),
+    [type]: compact(objects) || [],
+    users: chain(users).compact().uniqBy('id').value() || [],
     endCursor: variables.after,
     hasNextPage: variables.hasNextPage
   };

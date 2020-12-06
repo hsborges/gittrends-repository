@@ -120,7 +120,7 @@ export default {
     }
   },
   watch: {
-    '$route.query': function (to) {
+    '$route.query'(to) {
       if (_.isEmpty(to) && (this.filter.query || this.filter.language)) {
         this.reset();
         this.applyFilter();

@@ -3,69 +3,103 @@
  */
 global.Promise = require('bluebird');
 
-require('dotenv').config({ path: '../../.env' });
-require('pretty-error').start();
-
-const Bull = require('bull');
+const async = require('async');
 const consola = require('consola');
 const program = require('commander');
-const Bottleneck = require('bottleneck');
-const { mongo } = require('@gittrends/database-config');
+const BeeQueue = require('bee-queue');
 
 const worker = require('./updater-worker.js');
 
-const {
-  config: { resources },
-  version
-} = require('./package.json');
+const { Issue, PullRequest, Metadata } = require('@gittrends/database-config');
+const { version } = require('./package.json');
 
 /* execute */
 program
   .version(version)
-  .arguments('<resource> [otherResourcers...]')
-  .description(`Update repositories metadata (${resources.join(', ')})`)
+  .description('Update repositories metadata')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
-  .action(async (resource, otherResourcers) => {
-    const selectedResources = [resource, ...otherResourcers];
+  .option(
+    '--redis-db [number]',
+    'Override the configured redis db',
+    Number,
+    parseInt(process.env.GITTRENDS_REDIS_DB || 0)
+  )
+  .action(async () => {
+    consola.info(`Updating resources using ${program.workers} workers`);
 
-    if (
-      selectedResources.reduce((valid, r) => valid && resources.indexOf(r.toLowerCase()) < 0, true)
-    )
-      throw new Error("Invalid 'resource' argument values!");
+    const queue = new BeeQueue('updates', {
+      redis: {
+        host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
+        port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
+        db: program.redisDb
+      },
+      isWorker: true,
+      getEvents: false,
+      sendEvents: false,
+      storeJobs: false,
+      removeOnSuccess: true,
+      removeOnFailure: true
+    });
 
-    const limiter = new Bottleneck({ maxConcurrent: program.workers, minTime: 0 });
+    queue.checkStalledJobs(10 * 1000);
 
-    consola.info(
-      `Processing ${selectedResources.join(', ')} job(s) using ${program.workers} workers`
-    );
+    const workersQueue = async.priorityQueue(async (job) => {
+      const [resource, id] = job.id.split('@');
+      const jobId = `${resource}@${(job.data && job.data.name) || id}`;
 
-    return mongo.connect().then(() => {
-      const queues = selectedResources.map((r) => {
-        const queue = new Bull(`updates:${r}`, {
-          redis: {
-            host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
-            port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
-            db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
-          },
-          settings: {
-            stalledInterval: 60000,
-            maxStalledCount: 10
+      await worker({ id, resource, data: job.data }, 1)
+        .catch((err) => {
+          consola.error(`Error thrown by ${jobId}.`);
+          consola.error(err);
+          throw err;
+        })
+        .finally(async () => {
+          if (['issues', 'pulls'].indexOf(resource) >= 0) {
+            const Model = resource === 'issues' ? Issue : PullRequest;
+
+            await Model.query()
+              .where({ repository: id })
+              .leftJoin(
+                Metadata.query()
+                  .where({ id, resource: resource.slice(0, -1), key: 'updatedAt' })
+                  .as('metadata'),
+                'metadata.id',
+                `issues.id`
+              )
+              .select('issues.id')
+              .stream((stream) => {
+                let pending = 0;
+
+                stream.on('data', (record) => {
+                  pending += 1;
+                  workersQueue.push({ id: `${resource.slice(0, -1)}@${record.id}` }, 2, (err) => {
+                    pending -= 1;
+                    if (err) consola.error(err);
+                    if (!pending) consola.success(`[${jobId}] finished!`);
+                  });
+                });
+
+                stream.on('end', () => {
+                  if (!pending) consola.success(`[${jobId}] finished!`);
+                });
+              });
+          } else {
+            consola.success(`[${jobId}] finished!`);
           }
         });
 
-        queue.process('*', program.workers, (job) => limiter.schedule(() => worker(job)));
+      if (global.gc) global.gc();
+    }, program.workers);
 
-        return queue;
-      });
+    queue.process(program.workers, (job, done) => workersQueue.push(job, 1, done));
 
-      let timeout = null;
-      process.on('SIGTERM', async () => {
-        consola.warn('Signal received: closing queues');
-        if (!timeout) {
-          await Promise.all(queues.map((q) => q.close())).then(() => process.exit(0));
-          timeout = setTimeout(() => process.exit(1), 30 * 1000);
-        }
-      });
+    let timeout = null;
+    process.on('SIGTERM', async () => {
+      consola.warn('Signal received: closing queues');
+      if (!timeout) {
+        await queue.close().then(() => process.exit(0));
+        timeout = setTimeout(() => process.exit(1), 30 * 1000);
+      }
     });
   })
   .parse(process.argv);
