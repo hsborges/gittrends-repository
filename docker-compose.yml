@@ -118,3 +118,4 @@ volumes:
 networks:
   gittrends:
     external: true
+    name: gittrends.app

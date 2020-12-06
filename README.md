@@ -50,7 +50,7 @@ You can also use docker containers:
 ```sh
 # create volumes and networks
 docker volume create gittrends.app
-docker network create gittrends
+docker network create gittrends.app
 # run containers
 docker-compose up -d
 ```

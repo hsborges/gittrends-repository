@@ -14,7 +14,7 @@ module.exports = async function (fastify) {
     if (!repo) return reply.callNotFound();
 
     repo.languages = (repo.languages || []).reduce((m, l) => ({ ...m, [l.language]: l.size }), {});
-    repo.owner = await fastify.Actor.query().findById(repo.owner);
+    repo.owner = await fastify.Actor.query().where({ id: repo.owner });
     repo._metadata = (
       await fastify.Metadata.query()
         .where({ id: repo.id, key: 'updatedAt' })

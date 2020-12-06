@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "npx -n '-r @hsborges/env-config' fastify start -l info app.js",
-    "dev": "npx -n '-r @hsborges/env-config' fastify start -w -l info -P app.js"
+    "dev": "npx -n '-r @hsborges/env-config' fastify start -w -l info -P app.js ---port 8888"
   },
   "keywords": [],
   "author": "",
