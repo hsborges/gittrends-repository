@@ -29,7 +29,7 @@ const priorities = (process.env.GITTRENDS_QUEUE_PRIORITIES || '')
   .split(/[\s,;]/g)
   .reduce((acc, p) => {
     const [key, value] = p.split('=');
-    return { ...acc, [key]: value };
+    return { ...acc, [key]: parseInt(value, 10) };
   }, {});
 
 const repositoriesScheduler = async (queue, res, wait) => {
