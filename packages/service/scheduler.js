@@ -117,8 +117,10 @@ program
       }
     });
 
-    const time = 1000 * 60 * 60 * program.wait;
-    await Promise.all([queue.clean(time, 'completed'), queue.clean(time, 'failed')]);
+    await Promise.all([
+      queue.clean(1000 * 60 * 60 * program.wait, 'completed'),
+      queue.clean(0, 'failed')
+    ]);
 
     if (program.destroyQueue) await queue.empty();
 
