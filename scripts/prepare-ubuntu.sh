@@ -4,7 +4,7 @@ apt update && apt dist-upgrade -y
 apt install -y curl tmux postgresql-client
 
 # install nodejs and yarn
-curl -sL https://deb.nodesource.com/setup_15.x | -E bash -
+curl -sL https://deb.nodesource.com/setup_15.x | bash -
 apt install -y nodejs
 
 curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
