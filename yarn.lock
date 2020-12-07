@@ -964,15 +964,15 @@
     dotenv "^8.2.0"
     find-up "^5.0.0"
 
-"@hsborges/github-proxy-server@^1.4.1":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-1.4.1.tgz#80934e223c0d6c854f0c785539c065dc304d4134"
-  integrity sha512-fh9Z/xivkvDg5g3CeHdsAN5mJn2TpupAR+vjCSa9KhqFeZUBrfMRvDhrUbmDg7oh1250LaIumj3DNVcHdnJEPA==
+"@hsborges/github-proxy-server@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-1.5.0.tgz#25d55eb94f7c9b8a82371479b29255f22de2dd69"
+  integrity sha512-I9UCcVsMqix0ASh6vfcnGruJrCySb/V2NSZE0CgFKgaIVyP/cmpltW1aCBu1Y7x0I5lsd3FebrPm76g9OaVRtw==
   dependencies:
     "@polka/send-type" "^0.5.2"
+    async "^3.2.0"
     bluebird "^3.7.2"
     body-parser "^1.19.0"
-    bottleneck "^2.19.5"
     chalk "^4.1.0"
     commander "^6.2.0"
     compression "^1.7.4"
@@ -2945,11 +2945,6 @@ boolbase@^1.0.0, boolbase@~1.0.0:
   resolved "https://registry.yarnpkg.com/boolbase/-/boolbase-1.0.0.tgz#68dff5fbe60c51eb37725ea9e3ed310dcc1e776e"
   integrity sha1-aN/1++YMUes3cl6p4+0xDcwed24=
 
-bottleneck@^2.19.5:
-  version "2.19.5"
-  resolved "https://registry.yarnpkg.com/bottleneck/-/bottleneck-2.19.5.tgz#5df0b90f59fd47656ebe63c78a98419205cadd91"
-  integrity sha512-VHiNCbI1lKdl44tGrhNfU3lup0Tj/ZBMJB5/2ZbNXRCPuRCO7ed2mgcK4r17y+KB2EfuYuRaVlwNbAeaWGSpbw==
-
 boxen@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/boxen/-/boxen-4.2.0.tgz#e411b62357d6d6d36587c8ac3d5d974daa070e64"
@@ -4313,6 +4308,11 @@ dayjs@^1.9.6:
   version "1.9.6"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.9.6.tgz#6f0c77d76ac1ff63720dd1197e5cb87b67943d70"
   integrity sha512-HngNLtPEBWRo8EFVmHFmSXAjtCX8rGNqeXQI0Gh7wCTSqwaKgPIDqu9m07wABVopNwzvOeCb+2711vQhDlcIXw==
+
+dayjs@^1.9.7:
+  version "1.9.7"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.9.7.tgz#4b260bb17dceed2d5f29038dfee03c65a6786fc0"
+  integrity sha512-IC877KBdMhBrCfBfJXHQlo0G8keZ0Opy7YIIq5QKtUbCuHMzim8S4PyiVK4YmihI3iOF9lhfUBW4AQWHTR5WHA==
 
 dayjs@~1.8.24, dayjs@~1.8.25:
   version "1.8.36"
