@@ -35,7 +35,9 @@ class DAO {
       return value;
     });
 
-    if (!this.validate(result)) throw new Error(JSON.stringify(this.validate.errors));
+    if (!this.validate(result)) {
+      throw new Error(JSON.stringify(this.validate.errors));
+    }
 
     return result;
   }

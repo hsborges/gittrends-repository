@@ -34,40 +34,43 @@ module.exports = async function _get(id, resource) {
           .map((e) => ({ id: e.id, event: true }))
           .concat(data.reaction_groups ? [{ id }] : []);
 
-        await dao.actors
-          .insert(users, trx)
-          .then(async () => {
-            const rows = commits.map((c) => ({ ...c, repository: record.repository }));
-            await dao.commits.insert(rows, trx);
+        const commitRows = commits.map((c) => ({ ...c, repository: record.repository }));
+        const timelineRows = timeline.map((e) => ({
+          id: e.id,
+          repository: record.repository,
+          issue: id,
+          type: e.type,
+          payload: omit(e, ['id', 'type'])
+        }));
 
-            await dao.timeline.insert(
-              timeline.map((e) => ({
-                id: e.id,
-                repository: record.repository,
-                issue: id,
-                type: e.type,
-                payload: omit(e, ['id', 'type'])
-              })),
+        await Promise.all([
+          dao.actors.insert(users, trx),
+          dao[`${resource}s`].update({
+            repository: record.repository,
+            ...data,
+            /* eslint-disable no-control-regex */
+            title: record.title.replace(/\u0000/g, ''),
+            body: record.title.replace(/\u0000/g, '')
+          }),
+          dao.commits.insert(commitRows, trx),
+          dao.timeline.insert(timelineRows, trx)
+        ]);
+
+        await getReactions(reactables).then((responses) =>
+          Promise.map(responses, (response, index) =>
+            saveReactions(response.reactions, response.users, {
+              repository: record.repository,
+              issue: id,
+              ...(reactables[index].event ? { event: reactables[index].id } : {}),
               trx
-            );
+            })
+          )
+        );
 
-            await getReactions(reactables).then((responses) =>
-              Promise.map(responses, (response, index) =>
-                saveReactions(response.reactions, response.users, {
-                  repository: record.repository,
-                  issue: id,
-                  ...(reactables[index].event ? { event: reactables[index].id } : {}),
-                  trx
-                })
-              )
-            );
-          })
-          .then(() =>
-            dao.metadata.upsert([
-              { id, resource, key: 'lastCursor', value: endCursor || lastCursor },
-              { id, resource, key: 'updatedAt', value: new Date().toISOString() }
-            ])
-          );
+        await dao.metadata.upsert([
+          { id, resource, key: 'lastCursor', value: endCursor || lastCursor },
+          { id, resource, key: 'updatedAt', value: new Date().toISOString() }
+        ]);
       })
       .then(() =>
         trx.raw(

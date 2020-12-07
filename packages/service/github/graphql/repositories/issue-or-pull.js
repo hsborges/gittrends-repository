@@ -279,6 +279,7 @@ module.exports = async function (id, type, { lastCursor } = {}) {
   const labels = [];
   const users = [];
   const commits = [];
+  const participants = [];
 
   const variables = { id, at: lastCursor, aa: null, al: null, total: 100 };
 
@@ -328,12 +329,15 @@ module.exports = async function (id, type, { lastCursor } = {}) {
         const _data = parser(get(data, ['data', type], {}));
 
         if (!ghObject)
-          ghObject = chain(_data.data).omit(['timeline', 'assignees', 'labels']).value();
+          ghObject = chain(_data.data)
+            .omit(['timeline', 'assignees', 'labels', 'participants'])
+            .value();
 
         users.push(...get(_data, 'users', []));
         commits.push(...get(_data, 'commits', []));
         labels.push(...get(_data, 'data.labels.nodes', []).map((l) => l.name));
         assignees.push(...get(_data, 'data.assignees.nodes', []));
+        participants.push(...get(_data, 'data.participants.nodes', []));
 
         timeline.push(
           ...get(_data, 'data.timeline.edges', []).map((edge) =>
@@ -366,7 +370,7 @@ module.exports = async function (id, type, { lastCursor } = {}) {
   }
 
   return {
-    [type]: compact(merge(ghObject, { assignees, labels })),
+    [type]: compact(merge(ghObject, { assignees, labels, participants })),
     timeline: chain(timeline).compact().uniqBy('id').value() || [],
     users: chain(users).compact().uniqBy('id').value() || [],
     commits: chain(commits).compact().uniqBy('id').value() || [],
