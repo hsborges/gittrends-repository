@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 const Ajv = require('ajv');
-const pRetry = require('promise-retry');
+const retry = require('retry');
 const LfuSet = require('collections/lfu-set');
 
 const { pick, isArray, isObjectLike, mapValues, isDate } = require('lodash');
@@ -51,19 +51,22 @@ class DAO {
       (record) => !(this.cache && this.cache.has(this._hash(record)))
     );
 
-    return pRetry(
-      (retry) =>
+    return new Promise((resolve, reject) => {
+      const operation = retry.operation({ forever: true, maxTimeout: 1000, randomize: true });
+
+      operation.attempt(() =>
         this.model
           .query(this.cache ? null : transaction)
           .insert(this._transform(nuRecords))
           .onConflict(this.model.idColumn)
           .ignore()
+          .then(resolve)
           .catch((err) => {
-            if (err.message.indexOf('deadlock') >= 0) retry(err);
-            throw err;
-          }),
-      { retries: 3, minTimeout: 0 }
-    ).then((...result) => {
+            if (err.message.indexOf('deadlock') >= 0 && operation.retry(err)) return;
+            return reject(operation.mainError() || err);
+          })
+      );
+    }).then((...result) => {
       if (this.cache) this.cache.addEach(nuRecords.map((u) => this._hash(u)));
       return Promise.resolve(...result);
     });

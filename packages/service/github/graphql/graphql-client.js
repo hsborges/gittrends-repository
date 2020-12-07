@@ -4,7 +4,7 @@
 const _ = require('lodash');
 const dayjs = require('dayjs');
 const axios = require('axios');
-const pRetry = require('promise-retry');
+const retry = require('retry');
 const UserAgent = require('user-agents');
 const compact = require('../../helpers/compact.js');
 const Errors = require('../../helpers/errors.js');
@@ -65,14 +65,18 @@ const requestClient = axios.create({
 
 /* exports */
 module.exports.post = async function (parameters) {
-  return pRetry(
-    (retry) =>
-      requestClient({ method: 'post', data: parameters }).catch((err) => {
-        if (err.response && err.response.status === 502) throw err;
-        return retry(err);
-      }),
-    { retries: RETRIES, randomize: true }
-  )
+  return new Promise((resolve, reject) => {
+    const operation = retry.operation({ retries: RETRIES, randomize: true, maxTimeout: 5000 });
+
+    operation.attempt(() =>
+      requestClient({ method: 'post', data: parameters })
+        .then(resolve)
+        .catch((err) => {
+          if (err.response && err.response.status === 502 && operation.retry(err)) return;
+          return reject(operation.mainError() || err);
+        })
+    );
+  })
     .catch((err) => {
       if (err.response && err.response.status === 502) {
         const params = [err.message, err, parameters.variables, err.response.data];
