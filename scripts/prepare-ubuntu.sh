@@ -25,5 +25,5 @@ chmod +x /usr/local/bin/docker-compose
 ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 # create gittrends network and volume on docker
-docker network create gittrends-app
+docker network create gittrends.app
 docker volume create --name=gittrends.app
