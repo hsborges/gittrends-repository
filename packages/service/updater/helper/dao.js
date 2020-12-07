@@ -33,7 +33,7 @@ class DAO {
       if (isDate(value)) return value.toISOString();
       if (isArray(value) || isObjectLike(value)) return JSON.stringify(value);
       // eslint-disable-next-line no-control-regex
-      if (typeof value === 'string') return value.title.replace(/\u0000/g, '');
+      if (typeof value === 'string') return value.replace(/\u0000/g, '');
       return value;
     });
 
