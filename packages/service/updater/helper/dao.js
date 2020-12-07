@@ -51,37 +51,33 @@ class DAO {
       (record) => !(this.cache && this.cache.has(this._hash(record)))
     );
 
-    return Promise.map(nuRecords, (record) =>
-      new Promise((resolve, reject) => {
-        const operation = retry.operation({ forever: true, maxTimeout: 1000, randomize: true });
+    new Promise((resolve, reject) => {
+      const operation = retry.operation({ forever: true, maxTimeout: 1000, randomize: true });
 
-        operation.attempt(() =>
-          this.model
-            .query(this.cache ? null : transaction)
-            .insert(this._transform(record))
-            .onConflict(this.model.idColumn)
-            .ignore()
-            .then(resolve)
-            .catch((err) => {
-              if (err.message.indexOf('deadlock') >= 0 && operation.retry(err)) return;
-              return reject(operation.mainError() || err);
-            })
-        );
-      }).then((...result) => {
-        if (this.cache) this.cache.add(this._hash(record));
-        return Promise.resolve(...result);
-      })
-    );
+      operation.attempt(() =>
+        this.model
+          .query(this.cache ? null : transaction)
+          .insert(this._transform(nuRecords))
+          .onConflict(this.model.idColumn)
+          .ignore()
+          .then(resolve)
+          .catch((err) => {
+            if (err.message.indexOf('deadlock') >= 0 && operation.retry(err)) return;
+            return reject(operation.mainError() || err);
+          })
+      );
+    }).then((...result) => {
+      if (this.cache) this.cache.addEach(nuRecords.map((r) => this._hash(r)));
+      return Promise.resolve(...result);
+    });
   }
 
   upsert(records, transaction) {
-    return Promise.map(isArray(records) ? records : [records], (record) =>
-      this.model
-        .query(transaction)
-        .insert(this._transform(record))
-        .onConflict(this.model.idColumn)
-        .merge()
-    );
+    return this.model
+      .query(transaction)
+      .insert(this._transform(records))
+      .onConflict(this.model.idColumn)
+      .merge();
   }
 
   update(records, transaction) {
