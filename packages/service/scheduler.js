@@ -3,10 +3,9 @@
  */
 global.Promise = require('bluebird');
 
-const redis = require('redis');
+const Bull = require('bull');
 const dayjs = require('dayjs');
 const consola = require('consola');
-const BeeQueue = require('bee-queue');
 const db = require('@gittrends/database-config');
 
 const { program } = require('commander');
@@ -24,6 +23,14 @@ const resourcesParser = (resources) => {
   if (nr.length === intersection(nr, defaultResources).length) return nr;
   throw new Error("Invalid 'resources' argument values!");
 };
+
+const priorities = (process.env.GITTRENDS_QUEUE_PRIORITIES || '')
+  .toLowerCase()
+  .split(/[\s,;]/g)
+  .reduce((acc, p) => {
+    const [key, value] = p.split('=');
+    return { ...acc, [key]: value };
+  }, {});
 
 const repositoriesScheduler = async (queue, res, wait) => {
   // find and save jobs on queue
@@ -49,11 +56,11 @@ const repositoriesScheduler = async (queue, res, wait) => {
       .orWhereNull('metadata.id')
       .distinct(['repositories.id', 'repositories.name_with_owner'])
   ).map((r) =>
-    queue
-      .createJob({ name: r.name_with_owner })
-      .setId(`${res}@${r.id}`)
-      .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10))
-      .save()
+    queue.add(
+      res,
+      { name: r.name_with_owner },
+      { jobId: `${res}@${r.id}`, priority: priorities[res] || 10 }
+    )
   );
   // add to queue
   return Promise.all(jobsList).then(async () =>
@@ -81,11 +88,7 @@ const usersScheduler = async (queue, wait, limit = 100000) => {
   // add to queue
   return Promise.all(
     chunk(usersIds, 10).map((ids) =>
-      queue
-        .createJob({ ids })
-        .setId(`users@${ids[0]}+`)
-        .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10))
-        .save()
+      queue.add('users', { ids }, { jobId: `users@${ids[0]}+`, priority: priorities.users || 10 })
     )
   ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
@@ -98,29 +101,26 @@ program
   .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
   .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
   .option('--destroy-queue', 'Destroy queue before scheduling resources')
-  .option(
-    '--redis-db [number]',
-    'Override the configured redis db',
-    Number,
-    parseInt(process.env.GITTRENDS_REDIS_DB || 0)
-  )
   .action(async (resource, other) => {
     // queue connection
-    const queue = new BeeQueue('updates', {
-      redis: redis.createClient({
+    const queue = new Bull('updates', {
+      redis: {
         host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
         port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
-        db: program.redisDb
-      }),
-      isWorker: false,
-      getEvents: false,
-      sendEvents: false,
-      storeJobs: false,
-      removeOnSuccess: true,
-      removeOnFailure: true
+        db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
+      },
+      settings: { maxStalledCount: 5 },
+      defaultOptions: {
+        attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || 3, 10),
+        removeOnComplete: true,
+        removeOnFail: true
+      }
     });
 
-    if (program.destroyQueue) await queue.destroy();
+    const time = 1000 * 60 * 60 * program.wait;
+    await Promise.all([queue.clean(time, 'completed'), queue.clean(time, 'failed')]);
+
+    if (program.destroyQueue) await queue.empty();
 
     return Promise.map(resourcesParser([resource, ...other]), async (res) => {
       consola.info(`Scheduling ${res} jobs ...`);

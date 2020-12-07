@@ -3,10 +3,10 @@
  */
 global.Promise = require('bluebird');
 
+const Bull = require('bull');
 const async = require('async');
 const consola = require('consola');
 const program = require('commander');
-const BeeQueue = require('bee-queue');
 
 const worker = require('./updater-worker.js');
 
@@ -18,30 +18,20 @@ program
   .version(version)
   .description('Update repositories metadata')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
-  .option(
-    '--redis-db [number]',
-    'Override the configured redis db',
-    Number,
-    parseInt(process.env.GITTRENDS_REDIS_DB || 0)
-  )
   .action(async () => {
     consola.info(`Updating resources using ${program.workers} workers`);
 
-    const queue = new BeeQueue('updates', {
+    const queue = new Bull('updates', {
       redis: {
         host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
         port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
-        db: program.redisDb
+        db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
       },
-      isWorker: true,
-      getEvents: false,
-      sendEvents: false,
-      storeJobs: false,
-      removeOnSuccess: true,
-      removeOnFailure: true
+      defaultOptions: {
+        removeOnComplete: true,
+        removeOnFail: true
+      }
     });
-
-    queue.checkStalledJobs(10 * 1000);
 
     const workersQueue = async.priorityQueue(async (job) => {
       const [resource, id] = job.id.split('@');
@@ -91,7 +81,7 @@ program
       if (global.gc) global.gc();
     }, program.workers);
 
-    queue.process(program.workers, (job, done) => workersQueue.push(job, 1, done));
+    queue.process('*', program.workers, (job, done) => workersQueue.push(job, 1, done));
 
     let timeout = null;
     process.on('SIGTERM', async () => {
