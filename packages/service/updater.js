@@ -72,7 +72,7 @@ program
 
                 stream.on('data', (record) => {
                   pending += 1;
-                  workersQueue.push({ id: `${resource.slice(0, -1)}@${record.id}` }, 2, (err) => {
+                  workersQueue.push({ id: `${resource.slice(0, -1)}@${record.id}` }, -1, (err) => {
                     pending -= 1;
                     if (err) consola.error(err);
                     if (!pending) consola.success(`[${jobId}] finished!`);
