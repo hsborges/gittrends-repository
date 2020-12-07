@@ -32,12 +32,12 @@ class DAO {
     const result = mapValues(record, (value) => {
       if (isDate(value)) return value.toISOString();
       if (isArray(value) || isObjectLike(value)) return JSON.stringify(value);
+      // eslint-disable-next-line no-control-regex
+      if (typeof value === 'string') return value.title.replace(/\u0000/g, '');
       return value;
     });
 
-    if (!this.validate(result)) {
-      throw new Error(JSON.stringify(this.validate.errors));
-    }
+    if (!this.validate(result)) throw new Error(JSON.stringify(this.validate.errors));
 
     return result;
   }

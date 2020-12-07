@@ -45,13 +45,7 @@ module.exports = async function _get(id, resource) {
 
         await Promise.all([
           dao.actors.insert(users, trx),
-          dao[`${resource}s`].update({
-            repository: record.repository,
-            ...data,
-            /* eslint-disable no-control-regex */
-            title: data.title.replace(/\u0000/g, ''),
-            body: data.title.replace(/\u0000/g, '')
-          }),
+          dao[`${resource}s`].update({ repository: record.repository, ...data }),
           dao.commits.insert(commitRows, trx),
           dao.timeline.insert(timelineRows, trx)
         ]);

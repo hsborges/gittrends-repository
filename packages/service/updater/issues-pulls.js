@@ -28,8 +28,6 @@ module.exports = async function _get(repositoryId, resource) {
       const ids = records.map((r) => r.id);
       const data = records.map((record) => ({
         repository: repositoryId,
-        // eslint-disable-next-line no-control-regex
-        title: record.title.replace(/\u0000/g, ''),
         ...record,
         type: dao[resource].model.issueType
       }));
