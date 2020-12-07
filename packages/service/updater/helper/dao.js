@@ -62,7 +62,7 @@ class DAO {
             if (err.message.indexOf('deadlock') >= 0) retry(err);
             throw err;
           }),
-      { retries: 3, minTimeout: 0, maxTimeout: 100 }
+      { retries: 3, minTimeout: 0 }
     ).then((...result) => {
       if (this.cache) this.cache.addEach(nuRecords.map((u) => this._hash(u)));
       return Promise.resolve(...result);
