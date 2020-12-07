@@ -2,8 +2,6 @@
  *  Author: Hudson S. Borges
  */
 const Ajv = require('ajv');
-const async = require('async');
-const retry = require('retry');
 const LfuSet = require('collections/lfu-set');
 
 const { pick, isArray, isObjectLike, mapValues, isDate } = require('lodash');
@@ -11,23 +9,9 @@ const { pick, isArray, isObjectLike, mapValues, isDate } = require('lodash');
 const db = require('@gittrends/database-config');
 
 class DAO {
-  constructor(
-    model,
-    {
-      cacheSize = parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10),
-      queueSize = parseInt(process.env.GITTRENDS_QUEUE_WRITE || 1, 10)
-    } = {}
-  ) {
+  constructor(model, { cacheSize = parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10) } = {}) {
     this.cache = cacheSize === 0 ? null : new LfuSet([], cacheSize);
     this.model = model;
-
-    this.queue = async.queue(
-      (func, callback) =>
-        func()
-          .then((...res) => callback(null, ...res))
-          .catch((err) => callback(err)),
-      queueSize
-    );
 
     this.validate = new Ajv({
       allErrors: true,
@@ -66,31 +50,15 @@ class DAO {
       (record) => !(this.cache && this.cache.has(this._hash(record)))
     );
 
-    return new Promise((resolve, reject) => {
-      this.queue.push(
-        () =>
-          new Promise((resolve, reject) => {
-            const operation = retry.operation({ forever: true, maxTimeout: 1000, randomize: true });
-
-            operation.attempt(() =>
-              this.model
-                .query(this.cache ? null : transaction)
-                .insert(this._transform(nuRecords))
-                .onConflict(this.model.idColumn)
-                .ignore()
-                .then(resolve)
-                .catch((err) => {
-                  if (err.message.indexOf('deadlock') >= 0 && operation.retry(err)) return;
-                  return reject(operation.mainError() || err);
-                })
-            );
-          }).then((...result) => {
-            if (this.cache) this.cache.addEach(nuRecords.map((r) => this._hash(r)));
-            return Promise.resolve(...result);
-          }),
-        (err, res) => (err ? reject(err) : resolve(res))
-      );
-    });
+    return this.model
+      .query(this.cache ? null : transaction)
+      .insert(this._transform(nuRecords))
+      .onConflict(this.model.idColumn)
+      .ignore()
+      .then((...result) => {
+        if (this.cache) this.cache.addEach(nuRecords.map((r) => this._hash(r)));
+        return Promise.resolve(...result);
+      });
   }
 
   upsert(records, transaction) {
