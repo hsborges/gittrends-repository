@@ -9,9 +9,17 @@ const { pick, isArray, isObjectLike, mapValues, isDate } = require('lodash');
 const db = require('@gittrends/database-config');
 
 class DAO {
-  constructor(model, { cacheSize = parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10) } = {}) {
-    this.cache = cacheSize === 0 ? null : new LfuSet([], cacheSize);
+  constructor(model, { cacheSize = 0 } = {}) {
     this.model = model;
+
+    if (cacheSize > 0) {
+      this.cache = new LfuSet([], cacheSize);
+      this.model
+        .query()
+        .select(this.model.idColumn)
+        .limit(cacheSize)
+        .then((records) => records.map((r) => this.cache.add(this._hash(r))));
+    }
 
     this.validate = new Ajv({
       allErrors: true,
@@ -51,12 +59,12 @@ class DAO {
     );
 
     return this.model
-      .query(this.cache ? null : transaction)
+      .query(transaction)
       .insert(this._transform(nuRecords))
       .onConflict(this.model.idColumn)
       .ignore()
       .then((...result) => {
-        if (this.cache) this.cache.addEach(nuRecords.map((r) => this._hash(r)));
+        if (this.cache) nuRecords.map((r) => this.cache.add(this._hash(r)));
         return Promise.resolve(...result);
       });
   }
@@ -83,18 +91,18 @@ class DAO {
   }
 }
 
-const disabled = { cacheSize: 0, queueSize: Number.MAX_SAFE_INTEGER };
+const cacheEnabled = { cacheSize: parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10) };
 
-module.exports.actors = new DAO(db.Actor);
-module.exports.commits = new DAO(db.Commit);
-module.exports.dependencies = new DAO(db.Dependency, disabled);
-module.exports.issues = new DAO(db.Issue, disabled);
-module.exports.metadata = new DAO(db.Metadata, disabled);
-module.exports.pulls = new DAO(db.PullRequest, disabled);
-module.exports.reactions = new DAO(db.Reaction, disabled);
-module.exports.releases = new DAO(db.Release, disabled);
-module.exports.repositories = new DAO(db.Repository, disabled);
-module.exports.stargazers = new DAO(db.Stargazer, disabled);
-module.exports.tags = new DAO(db.Tag, disabled);
-module.exports.timeline = new DAO(db.TimelineEvent, disabled);
-module.exports.watchers = new DAO(db.Watcher, disabled);
+module.exports.actors = new DAO(db.Actor, cacheEnabled);
+module.exports.commits = new DAO(db.Commit, cacheEnabled);
+module.exports.dependencies = new DAO(db.Dependency);
+module.exports.issues = new DAO(db.Issue);
+module.exports.metadata = new DAO(db.Metadata);
+module.exports.pulls = new DAO(db.PullRequest);
+module.exports.reactions = new DAO(db.Reaction);
+module.exports.releases = new DAO(db.Release);
+module.exports.repositories = new DAO(db.Repository);
+module.exports.stargazers = new DAO(db.Stargazer);
+module.exports.tags = new DAO(db.Tag);
+module.exports.timeline = new DAO(db.TimelineEvent);
+module.exports.watchers = new DAO(db.Watcher);
