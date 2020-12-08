@@ -10,8 +10,9 @@ FROM node:latest
 WORKDIR /app
 COPY --from=env-config /app/env-config env-config
 
-ARG GITTRENDS_API_HOST=localhost
-ARG GITTRENDS_API_PORT=3000
+ARG GITHUB_CLIENT_ID
+ARG GITTRENDS_API_HOST
+ARG GITTRENDS_API_PORT
 
 WORKDIR /app/website
 COPY /packages/website/package.json .
