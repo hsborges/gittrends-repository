@@ -22,11 +22,13 @@ module.exports = async function (repositoryId) {
     const rows = response.stargazers.map((s) => ({ repository: repositoryId, ...s }));
     const lastMeta = { key: 'lastCursor', value: (lastCursor = response.endCursor || lastCursor) };
 
-    await knex.transaction(async (trx) => {
-      await dao.actors.insert(response.users, trx);
-      await dao.stargazers.insert(rows, trx);
-      await dao.metadata.upsert({ ...metaKey, ...lastMeta }, trx);
-    });
+    await knex.transaction(async (trx) =>
+      Promise.all([
+        dao.actors.insert(response.users, trx),
+        dao.stargazers.insert(rows, trx),
+        dao.metadata.upsert({ ...metaKey, ...lastMeta }, trx)
+      ])
+    );
 
     hasMore = response.hasNextPage;
   }
