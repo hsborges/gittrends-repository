@@ -1,9 +1,7 @@
 apps:
-  - name: gittrends-proxy-server
-    interpreter: npx
-    script: github-proxy-server
+  - name: proxy-server
+    script: node_modules/.bin/github-proxy-server
     args: --port 3000 --request-interval 50 --tokens tokens.txt
-    out_file: /dev/null
 
   - name: scheduler
     interpreter_args: -r @gittrends/env-config
