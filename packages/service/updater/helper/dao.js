@@ -18,7 +18,11 @@ class DAO {
         .query()
         .select(this.model.idColumn)
         .limit(cacheSize)
-        .then((records) => records.map((r) => this.cache.add(this._hash(r))));
+        .stream((stream) => {
+          stream.on('data', (record) => (records) =>
+            records.map((r) => this.cache.add(this._hash(r)))
+          );
+        });
     }
 
     this.validate = new Ajv({
