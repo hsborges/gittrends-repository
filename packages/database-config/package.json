@@ -5,7 +5,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "run-migrations": "npx -n '-r @hsborges/env-config' knex migrate:latest"
+    "run-migrations": "node -r @gittrends/env-config ./node_modules/.bin/knex migrate:latest"
   },
   "dependencies": {
     "knex": "^0.21.12",
@@ -13,6 +13,6 @@
     "pg-query-stream": "^3.4.2"
   },
   "devDependencies": {
-    "@hsborges/env-config": "file:../env-config"
+    "@gittrends/env-config": "file:../env-config"
   }
 }

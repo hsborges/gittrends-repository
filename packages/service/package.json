@@ -6,10 +6,10 @@
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "scripts": {
     "proxy-server": "github-proxy-server --tokens tokens.txt",
-    "add-repositories": "node -r @hsborges/env-config add-repositories.js",
-    "add-repository": "node -r @hsborges/env-config add-repository.js",
-    "schedule": "node -r @hsborges/env-config scheduler.js",
-    "update": "node -r @hsborges/env-config --expose-gc updater.js"
+    "add-repositories": "node -r @gittrends/env-config add-repositories.js",
+    "add-repository": "node -r @gittrends/env-config add-repository.js",
+    "schedule": "node -r @gittrends/env-config scheduler.js",
+    "update": "node -r @gittrends/env-config --expose-gc updater.js"
   },
   "dependencies": {
     "@gittrends/database-config": "file:../database-config",
@@ -35,7 +35,7 @@
     "user-agents": "^1.0.559"
   },
   "devDependencies": {
-    "@hsborges/env-config": "file:../env-config",
+    "@gittrends/env-config": "file:../env-config",
     "@hsborges/github-proxy-server": "^1.5.1",
     "@types/bull": "^3.14.4",
     "core-util-is": "^1.0.2",

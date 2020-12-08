@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npx -n '-r @hsborges/env-config' nuxt --port 8080",
-    "build": "npx -n '-r @hsborges/env-config' nuxt build",
-    "start": "npx -n '-r @hsborges/env-config' nuxt start",
-    "generate": "npx -n '-r @hsborges/env-config' nuxt generate",
+    "dev": "node -r @gittrends/env-config ./node_modules/.bin/nuxt --port 8080",
+    "build": "node -r @gittrends/env-config ./node_modules/.bin/nuxt build",
+    "start": "node -r @gittrends/env-config ./node_modules/.bin/nuxt start",
+    "generate": "node -r @gittrends/env-config ./node_modules/.bin/nuxt generate",
     "lint:js": "eslint --ext .js,.vue --ignore-path .gitignore ."
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "nuxt": "^2.14.1"
   },
   "devDependencies": {
-    "@hsborges/env-config": "file:../env-config",
+    "@gittrends/env-config": "file:../env-config",
     "@nuxtjs/eslint-config": "^3.0.0",
     "@nuxtjs/eslint-module": "^2.0.0",
     "@nuxtjs/tailwindcss": "^3.0.0",

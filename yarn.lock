@@ -958,7 +958,7 @@
     pg "^8.5.1"
     pg-query-stream "^3.4.2"
 
-"@hsborges/env-config@file:packages/env-config":
+"@gittrends/env-config@file:packages/env-config":
   version "1.0.0"
   dependencies:
     dotenv "^8.2.0"
