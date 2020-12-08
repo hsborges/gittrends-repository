@@ -62,11 +62,15 @@ program
 
                 stream.on('data', (record) => {
                   pending += 1;
-                  workersQueue.push({ id: `${resource.slice(0, -1)}@${record.id}` }, -1, (err) => {
-                    pending -= 1;
-                    if (err) consola.error(err);
-                    if (!pending) consola.success(`[${jobId}] finished!`);
-                  });
+                  workersQueue.push(
+                    { id: `${resource.slice(0, -1)}@${record.id}` },
+                    job.opts.priority - 0.1,
+                    (err) => {
+                      pending -= 1;
+                      if (err) consola.error(err);
+                      if (!pending) consola.success(`[${jobId}] finished!`);
+                    }
+                  );
                 });
 
                 stream.on('end', () => {
@@ -81,7 +85,9 @@ program
       if (global.gc) global.gc();
     }, program.workers);
 
-    queue.process('*', program.workers, (job, done) => workersQueue.push(job, 1, done));
+    queue.process('*', program.workers, (job, done) =>
+      workersQueue.push(job, job.opts.priority, done)
+    );
 
     let timeout = null;
     process.on('SIGTERM', async () => {
