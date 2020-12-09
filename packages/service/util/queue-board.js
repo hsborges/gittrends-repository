@@ -4,7 +4,7 @@
 global.Promise = require('bluebird');
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-require('@hsborges/env-config');
+require('@gittrends/env-config');
 
 const Queue = require('bull');
 const app = require('express')();

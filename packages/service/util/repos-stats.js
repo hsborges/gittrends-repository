@@ -4,7 +4,7 @@
 global.Promise = require('bluebird');
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-require('@hsborges/env-config');
+require('@gittrends/env-config');
 
 const chalk = require('chalk');
 const numeral = require('numeral');

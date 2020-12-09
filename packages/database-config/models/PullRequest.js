@@ -11,7 +11,7 @@ class PullRequest extends Issue {
       required: ['id', 'repository'],
       properties: {
         ...super.jsonSchema.properties,
-        suggested_reviewers: { type: 'string', pattern: '^\\{.*\\}$' },
+        suggested_reviewers: { type: 'string', pattern: '^\\[.*\\]$' },
         additions: { type: 'number' },
         base_ref: { type: 'string', pattern: '^\\{.*\\}$' },
         base_ref_name: { type: 'string' },
