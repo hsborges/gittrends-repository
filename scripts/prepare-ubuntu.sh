@@ -5,7 +5,6 @@ apt install -y curl tmux postgresql-client
 
 # install zsh and some useful plugins
 apt install -y zsh
-chsh -s $(which zsh)
 zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship-prompt"
@@ -15,7 +14,7 @@ echo "ZSH_THEME=\"spaceship\"" >> ~/.zshrc
 echo "zinit light zdharma/fast-syntax-highlighting" >>  ~/.zshrc
 echo "zinit light zsh-users/zsh-autosuggestions" >>  ~/.zshrc
 echo "zinit light zsh-users/zsh-completions" >>  ~/.zshrc
-
+echo "exec /bin/zsh --login" >> ~/.bash_login
 
 # install nodejs and yarn
 curl -sL https://deb.nodesource.com/setup_15.x | bash -
