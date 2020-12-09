@@ -34,34 +34,45 @@ const priorities = (process.env.GITTRENDS_QUEUE_PRIORITIES || '')
 
 const repositoriesScheduler = async (queue, res, wait) => {
   // find and save jobs on queue
-  const before = dayjs().subtract(wait, 'hours').toISOString();
+  const jobsList = [];
 
-  // get metadata
-  const jobsList = (
-    await db.Repository.query()
-      .leftJoin(
-        db.Metadata.query()
-          .whereIn('metadata.key', ['updatedAt', 'pending'])
-          .andWhere('metadata.resource', res)
-          .as('metadata'),
-        'repositories.id',
-        'metadata.id'
-      )
-      .where((builder) =>
-        builder.where('metadata.key', 'updatedAt').andWhere('metadata.value', '<=', before)
-      )
-      .orWhere((builder) =>
-        builder.where('metadata.key', 'pending').andWhere('metadata.value', '<>', '0')
-      )
-      .orWhereNull('metadata.id')
-      .distinct(['repositories.id', 'repositories.name_with_owner'])
-  ).map((r) =>
-    queue.add(
-      res,
-      { name: r.name_with_owner },
-      { jobId: `${res}@${r.id}`, priority: priorities[res] || 10 }
-    )
-  );
+  await db.Repository.query()
+    .select([
+      'id',
+      'updated_at',
+      'name_with_owner',
+      db.Metadata.query()
+        .where(db.knex.raw(`metadata.id = repositories.id`))
+        .andWhere({ resource: res, key: 'updatedAt' })
+        .andWhere('value', '<', dayjs().subtract(wait, 'hours').toISOString())
+        .select('value')
+        .as('res_updated_at'),
+      db.Metadata.query()
+        .where(db.knex.raw(`metadata.id = repositories.id`))
+        .andWhere({ resource: res, key: 'pending' })
+        .andWhere('value', '<', dayjs().subtract(wait, 'hours').toISOString())
+        .select('value')
+        .as('res_pending')
+    ])
+    .stream((stream) => {
+      stream.on('data', (data) => {
+        if (
+          res === 'repos' ||
+          !data.res_updated_at ||
+          (data.res_updated_at && dayjs(data.res_updated_at).isBefore(data.updated_at)) ||
+          (data.res_pending && data.res_pending > 0)
+        ) {
+          jobsList.push(
+            queue.add(
+              res,
+              { name: data.name_with_owner },
+              { jobId: `${res}@${data.id}`, priority: priorities[res] || 10 }
+            )
+          );
+        }
+      });
+    });
+
   // add to queue
   return Promise.all(jobsList).then(async () =>
     consola.success(`Number of ${res} scheduled: ${jobsList.length}`)
