@@ -964,10 +964,10 @@
     dotenv "^8.2.0"
     find-up "^5.0.0"
 
-"@hsborges/github-proxy-server@^1.5.1":
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-1.5.1.tgz#07b847636a74a78cf5c7bd01bedf9ab31222e04e"
-  integrity sha512-5ojg6epSEViGrjgKq5Mxb+6KaS1RkrKozj6dzGOWH4HiSIm8XTheUjxvAKxLz486SnMCKDSdVrK3jqeJ+JjdwQ==
+"@hsborges/github-proxy-server@^1.5.2":
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-1.5.2.tgz#5b7095d760fbf1874103ba4c8936aa0353722140"
+  integrity sha512-uebgi0/Gag3AoME3bkttTUuAbTMmUcA/yFROK6yzt4g3nc3g4kf5Zp+hifN2gphYII820LEAWgRWgpf8uc5ASA==
   dependencies:
     "@polka/send-type" "^0.5.2"
     async "^3.2.0"
@@ -7891,10 +7891,18 @@ js-tokens@^3.0.2:
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
   integrity sha1-mGbfOVECEw449/mWvOtlRDIJwls=
 
-js-yaml@^3.13.1, js-yaml@^3.14.0:
+js-yaml@^3.13.1:
   version "3.14.0"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.14.0.tgz#a7a34170f26a21bb162424d8adacb4113a69e482"
   integrity sha512-/4IbIeHcD9VMHFqDR/gQ7EdZdLimOvW2DdcxFjdyyZ9NsbS+ccrXqVWDtab/lRl5AlUqmpBx8EhPaWR+OtY17A==
+  dependencies:
+    argparse "^1.0.7"
+    esprima "^4.0.0"
+
+js-yaml@^3.14.1:
+  version "3.14.1"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.14.1.tgz#dae812fdb3825fa306609a8717383c50c36a0537"
+  integrity sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==
   dependencies:
     argparse "^1.0.7"
     esprima "^4.0.0"
