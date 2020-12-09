@@ -11,8 +11,8 @@ WORKDIR /app
 COPY --from=env-config /app/env-config env-config
 
 ARG GITHUB_CLIENT_ID
-ARG GITTRENDS_API_HOST
-ARG GITTRENDS_API_PORT
+ENV GITTRENDS_API_HOST=${GITTRENDS_API_HOST}
+ENV GITTRENDS_API_PORT=${GITTRENDS_API_PORT}
 
 WORKDIR /app/website
 COPY /packages/website/package.json .
