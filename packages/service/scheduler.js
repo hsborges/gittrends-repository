@@ -44,22 +44,21 @@ const repositoriesScheduler = async (queue, res, wait) => {
       db.Metadata.query()
         .where(db.knex.raw(`metadata.id = repositories.id`))
         .andWhere({ resource: res, key: 'updatedAt' })
-        .andWhere('value', '<', dayjs().subtract(wait, 'hours').toISOString())
         .select('value')
         .as('res_updated_at'),
       db.Metadata.query()
         .where(db.knex.raw(`metadata.id = repositories.id`))
         .andWhere({ resource: res, key: 'pending' })
-        .andWhere('value', '<', dayjs().subtract(wait, 'hours').toISOString())
         .select('value')
         .as('res_pending')
     ])
     .stream((stream) => {
       stream.on('data', (data) => {
         if (
-          res === 'repos' ||
           !data.res_updated_at ||
-          (data.res_updated_at && dayjs(data.res_updated_at).isBefore(data.updated_at)) ||
+          (data.res_updated_at &&
+            dayjs().subtract(wait, 'hours').isAfter(data.res_updated_at) &&
+            (res === 'repos' || dayjs(data.res_updated_at).isBefore(data.updated_at))) ||
           (data.res_pending && data.res_pending > 0)
         ) {
           jobsList.push(
