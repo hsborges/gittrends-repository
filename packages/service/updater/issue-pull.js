@@ -10,10 +10,8 @@ const getIssueOrPull = require('../github/graphql/repositories/issue-or-pull.js'
 const getReactions = require('../github/graphql/repositories/reactions.js');
 
 async function saveReactions(reactions, users, { repository, issue, event, trx }) {
-  return dao.actors.insert(users, trx).then(() => {
-    const rows = reactions.map((r) => ({ ...r, repository, issue, event }));
-    return dao.reactions.insert(rows, trx);
-  });
+  const rows = reactions.map((r) => ({ ...r, repository, issue, event }));
+  return Promise.all([dao.actors.insert(users, trx), dao.reactions.insert(rows, trx)]);
 }
 
 /* exports */
