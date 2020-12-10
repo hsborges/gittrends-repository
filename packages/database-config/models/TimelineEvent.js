@@ -18,7 +18,7 @@ class TimelineEvent extends Model {
         repository: { type: 'string' },
         issue: { type: 'string' },
         type: { type: 'string' },
-        payload: { type: 'string', pattern: '^\\{.*\\}$' }
+        payload: { type: 'string' }
       }
     };
   }
