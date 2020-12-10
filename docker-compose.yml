@@ -75,7 +75,7 @@ services:
       - gittrends
     labels:
       - traefik.enable=true
-      - traefik.http.routers.website-api.rule=(Host(`gittrends.app`) || Host(`localhost`)) && PathPrefix(`/api`)
+      - traefik.http.routers.website-api.rule=(Host(`gittrends.app`) || Host(`www.gittrends.app`)) && PathPrefix(`/api`)
       - traefik.http.routers.website-api.entrypoints=web,websecure
       - traefik.http.routers.website-api.tls.certresolver=https-resolver
       - traefik.http.routers.website-api.middlewares=api-stripprefix
@@ -97,7 +97,7 @@ services:
       - gittrends
     labels:
       - traefik.enable=true
-      - traefik.http.routers.website-server.rule=Host(`gittrends.app`) || Host(`localhost`)
+      - traefik.http.routers.website-server.rule=Host(`gittrends.app`) || Host(`www.gittrends.app`)
       - traefik.http.routers.website-server.entrypoints=web,websecure
       - traefik.http.routers.website-server.tls.certresolver=https-resolver
 
@@ -114,7 +114,9 @@ services:
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.web.http.redirections.entrypoint.permanent=true
       - --entrypoints.websecure.address=:443
-      - --certificatesresolvers.https-resolver.acme.tlschallenge=true
+      - --certificatesresolvers.https-resolver.acme.httpchallenge=true
+      - --certificatesresolvers.https-resolver.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.https-resolver.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
       # - --certificatesresolvers.https-resolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
       - --certificatesresolvers.https-resolver.acme.email=hudsonsilbor@gmail.com
       - --certificatesresolvers.https-resolver.acme.storage=/letsencrypt/acme.json
@@ -131,6 +133,7 @@ services:
     networks:
       - gittrends
     labels:
+      - traefik.enable=true
       - traefik.http.routers.dashboard.rule=Host(`traefik.gittrends.app`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
       - traefik.http.routers.dashboard.service=api@internal
       - traefik.http.routers.dashboard.middlewares=auth
