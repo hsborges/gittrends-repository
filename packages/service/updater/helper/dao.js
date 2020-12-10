@@ -4,13 +4,14 @@
 const Ajv = require('ajv');
 const LfuSet = require('collections/lfu-set');
 
-const { pick, isArray, isObjectLike, mapValues, isDate } = require('lodash');
+const { pick, isArray, isObjectLike, mapValues, isDate, chunk } = require('lodash');
 
 const db = require('@gittrends/database-config');
 
 class DAO {
-  constructor(model, { cacheSize = 0 } = {}) {
+  constructor(model, { cacheSize = 0, chunkSize = 1000 } = {}) {
     this.model = model;
+    this.chunkSize = chunkSize;
 
     if (cacheSize > 0) {
       this.cache = new LfuSet([], cacheSize);
@@ -62,23 +63,27 @@ class DAO {
       (record) => !(this.cache && this.cache.has(this._hash(record)))
     );
 
-    return this.model
-      .query(transaction)
-      .insert(this._transform(nuRecords))
-      .onConflict(this.model.idColumn)
-      .ignore()
-      .then((...result) => {
-        if (this.cache) nuRecords.map((r) => this.cache.add(this._hash(r)));
-        return Promise.resolve(...result);
-      });
+    return Promise.map(chunk(nuRecords, this.chunkSize), (group) =>
+      this.model
+        .query(transaction)
+        .insert(this._transform(group))
+        .onConflict(this.model.idColumn)
+        .ignore()
+        .then((...result) => {
+          if (this.cache) nuRecords.map((r) => this.cache.add(this._hash(r)));
+          return Promise.resolve(...result);
+        })
+    );
   }
 
   upsert(records, transaction) {
-    return this.model
-      .query(transaction)
-      .insert(this._transform(records))
-      .onConflict(this.model.idColumn)
-      .merge();
+    return Promise.map(chunk(records), (group) =>
+      this.model
+        .query(transaction)
+        .insert(this._transform(group))
+        .onConflict(this.model.idColumn)
+        .merge()
+    );
   }
 
   update(records, transaction) {
@@ -95,18 +100,28 @@ class DAO {
   }
 }
 
-const cacheEnabled = { cacheSize: parseInt(process.env.GITTRENDS_LFU_SIZE || 50000, 10) };
+// Disable cache by default
+const defaultOptions = {
+  cacheSize: 0,
+  chunkSize: parseInt(process.env.GITTRENDS_DAO_CHUNK_SIZE || 1000, 10)
+};
 
+const cacheEnabled = {
+  ...defaultOptions,
+  cacheSize: parseInt(process.env.GITTRENDS_DAO_CACHE_SIZE || 50000, 10)
+};
+
+// exports
 module.exports.actors = new DAO(db.Actor, cacheEnabled);
 module.exports.commits = new DAO(db.Commit, cacheEnabled);
-module.exports.dependencies = new DAO(db.Dependency);
-module.exports.issues = new DAO(db.Issue);
-module.exports.metadata = new DAO(db.Metadata);
-module.exports.pulls = new DAO(db.PullRequest);
-module.exports.reactions = new DAO(db.Reaction);
-module.exports.releases = new DAO(db.Release);
-module.exports.repositories = new DAO(db.Repository);
-module.exports.stargazers = new DAO(db.Stargazer);
-module.exports.tags = new DAO(db.Tag);
-module.exports.timeline = new DAO(db.TimelineEvent);
-module.exports.watchers = new DAO(db.Watcher);
+module.exports.dependencies = new DAO(db.Dependency, defaultOptions);
+module.exports.issues = new DAO(db.Issue, defaultOptions);
+module.exports.metadata = new DAO(db.Metadata, defaultOptions);
+module.exports.pulls = new DAO(db.PullRequest, defaultOptions);
+module.exports.reactions = new DAO(db.Reaction, defaultOptions);
+module.exports.releases = new DAO(db.Release, defaultOptions);
+module.exports.repositories = new DAO(db.Repository, defaultOptions);
+module.exports.stargazers = new DAO(db.Stargazer, defaultOptions);
+module.exports.tags = new DAO(db.Tag, defaultOptions);
+module.exports.timeline = new DAO(db.TimelineEvent, defaultOptions);
+module.exports.watchers = new DAO(db.Watcher, defaultOptions);

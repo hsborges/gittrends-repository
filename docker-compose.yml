@@ -65,8 +65,6 @@ services:
       context: .
       dockerfile: ./packages/website-api/Dockerfile
     restart: always
-    ports:
-      - ${GITTRENDS_API_PORT}:80
     environment:
       GITTRENDS_DATABASE_HOST: postgres
     env_file:
@@ -75,6 +73,13 @@ services:
       - postgres
     networks:
       - gittrends
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.website-api.rule=(Host(`gittrends.app`) || Host(`www.gittrends.app`)) && PathPrefix(`/api`)
+      - traefik.http.routers.website-api.entrypoints=web,websecure
+      - traefik.http.routers.website-api.tls.certresolver=https-resolver
+      - traefik.http.routers.website-api.middlewares=api-stripprefix
+      - traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api
 
   website-server:
     build:
@@ -82,11 +87,7 @@ services:
       dockerfile: ./packages/website/Dockerfile
       args:
         GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
-        GITTRENDS_API_HOST: website-api
-        GITTRENDS_API_PORT: 80
     restart: always
-    ports:
-      - ${GITTRENDS_WEBSITE_PORT}:80
     depends_on:
       - website-api
     environment:
@@ -94,32 +95,50 @@ services:
       GITTRENDS_API_PORT: 80
     networks:
       - gittrends
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.website-server.rule=Host(`gittrends.app`) || Host(`www.gittrends.app`)
+      - traefik.http.routers.website-server.entrypoints=web,websecure
+      - traefik.http.routers.website-server.tls.certresolver=https-resolver
 
-  website:
-    image: nginx:alpine
+  traefik:
+    image: 'traefik:latest'
     restart: always
+    command:
+      # - --log.level=DEBUG
+      - --api.dashboard=true
+      # - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.https-resolver.acme.httpchallenge=true
+      - --certificatesresolvers.https-resolver.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.https-resolver.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+      # - --certificatesresolvers.https-resolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.https-resolver.acme.email=hudsonsilbor@gmail.com
+      - --certificatesresolvers.https-resolver.acme.storage=/letsencrypt/acme.json
     ports:
       - 80:80
       - 443:443
+      - 8080:8080
     volumes:
-      - ./data/nginx:/etc/nginx/conf.d
-      - ./data/certbot/conf:/etc/nginx/ssl
-      - ./data/certbot/data:/var/www/certbot
+      - ./data/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - website-api
       - website-server
     networks:
       - gittrends
-
-  certbot:
-    image: certbot/certbot:latest
-    command: certonly --webroot --webroot-path=/var/www/certbot --email hudsonsilbor@gmail.com --agree-tos --no-eff-email --force-renewal -d gittrends.app -d www.gittrends.app
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/logs:/var/log/letsencrypt
-      - ./data/certbot/data:/var/www/certbot
-    depends_on:
-      - website
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dashboard.rule=Host(`traefik.gittrends.app`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
+      - traefik.http.routers.dashboard.service=api@internal
+      - traefik.http.routers.dashboard.middlewares=auth
+      - traefik.http.middlewares.auth.basicauth.users=admin@gittrends.app:$$apr1$$tPnFN1yy$$X06fLb2niMBQKuQG1hPZ91
 
 volumes:
   db:
