@@ -66,7 +66,7 @@ const requestClient = axios.create({
 /* exports */
 module.exports.post = async function (parameters) {
   return new Promise((resolve, reject) => {
-    const operation = retry.operation({ retries: RETRIES, randomize: true, maxTimeout: 5000 });
+    const operation = retry.operation({ retries: RETRIES, randomize: true, maxTimeout: 500 });
 
     operation.attempt(() =>
       requestClient({ method: 'post', data: parameters })
