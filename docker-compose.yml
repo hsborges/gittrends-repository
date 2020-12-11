@@ -5,7 +5,6 @@ services:
     image: postgres:alpine
     restart: always
     command: -N 500
-    tty: true
     ports:
       - ${GITTRENDS_DATABASE_PORT}:5432
     volumes:
