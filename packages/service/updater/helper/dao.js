@@ -77,7 +77,7 @@ class DAO {
   }
 
   upsert(records, transaction) {
-    return Promise.map(chunk(records), (group) =>
+    return Promise.map(chunk(isArray(records) ? records : [records], this.chunkSize), (group) =>
       this.model
         .query(transaction)
         .insert(this._transform(group))
