@@ -19,7 +19,7 @@ module.exports = async function _get(id, resource) {
   if (!resource || (resource !== 'issue' && resource !== 'pull'))
     throw new TypeError('Resource must be "issue" or "pull"!');
 
-  const [record, metadata] = Promise.all([
+  const [record, metadata] = await Promise.all([
     dao[`${resource}s`].find({ id }).select('repository').first(),
     dao.metadata.find({ id, resource, key: 'lastCursor' }).first()
   ]);
