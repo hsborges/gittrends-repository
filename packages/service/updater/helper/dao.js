@@ -13,18 +13,7 @@ class DAO {
     this.model = model;
     this.chunkSize = chunkSize;
 
-    if (cacheSize > 0) {
-      this.cache = new LfuSet([], cacheSize);
-      this.model
-        .query()
-        .select(this.model.idColumn)
-        .limit(cacheSize)
-        .stream((stream) => {
-          stream.on('data', (record) => (records) =>
-            records.map((r) => this.cache.add(this._hash(r)))
-          );
-        });
-    }
+    if (cacheSize > 0) this.cache = new LfuSet([], cacheSize);
 
     this.validate = new Ajv({
       allErrors: true,
