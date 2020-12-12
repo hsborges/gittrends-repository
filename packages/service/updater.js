@@ -23,7 +23,7 @@ async function retriableWorker(...args) {
       worker(...args)
         .then(resolve)
         .catch((err) => {
-          if (err.message && /recovery.mode/gi.test(err.message) && operation.retry(err))
+          if (err.message && /recovery.mode|rollback/gi.test(err.message) && operation.retry(err))
             return null;
           else reject(operation.mainError() || err);
         });
