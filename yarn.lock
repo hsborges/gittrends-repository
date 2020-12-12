@@ -1028,10 +1028,10 @@
     dotenv "^8.2.0"
     find-up "^5.0.0"
 
-"@hsborges/github-proxy-server@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-2.1.0.tgz#5e010a124225b08ca4c6901a78ab3e893a21c9ac"
-  integrity sha512-pBYcv53WMW6f9dTU8MUd+JVW/ihHITd3bcN/NlC8BEPpQ7j0pY2fEX44SAOhgyevILSaHQRziaAc5hBKoGuvYA==
+"@hsborges/github-proxy-server@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-2.1.1.tgz#cb1f3227311e13e6028efa3f486d8e744b925ef7"
+  integrity sha512-OspzI/cAOAKtl43GNyZvRD9WwY1DxqkjOXLi/NvvHL/3qazbyTdIpZNgFIqUlglLkWgwqJBXfLKzDNRNY3KLSw==
   dependencies:
     async "^3.2.0"
     axios "^0.21.0"
@@ -1042,7 +1042,7 @@
     connect-timeout "^1.9.0"
     consola "^2.15.0"
     cors "^2.8.5"
-    dayjs "^1.9.6"
+    dayjs "^1.9.7"
     helmet "^4.2.0"
     lodash "^4.17.20"
     polka "^0.5.2"
@@ -4555,11 +4555,6 @@ date-fns@2.10.0:
   version "2.10.0"
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.10.0.tgz#abd10604d8bafb0bcbd2ba2e9b0563b922ae4b6b"
   integrity sha512-EhfEKevYGWhWlZbNeplfhIU/+N+x0iCIx7VzKlXma2EdQyznVlZhCptXUY+BegNpPW2kjdx15Rvq503YcXXrcA==
-
-dayjs@^1.9.6:
-  version "1.9.6"
-  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.9.6.tgz#6f0c77d76ac1ff63720dd1197e5cb87b67943d70"
-  integrity sha512-HngNLtPEBWRo8EFVmHFmSXAjtCX8rGNqeXQI0Gh7wCTSqwaKgPIDqu9m07wABVopNwzvOeCb+2711vQhDlcIXw==
 
 dayjs@^1.9.7:
   version "1.9.7"

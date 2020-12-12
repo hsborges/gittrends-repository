@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^2.1.0",
+    "@hsborges/github-proxy-server": "^2.1.1",
     "@types/bull": "^3.14.4",
     "core-util-is": "^1.0.2",
     "pm2": "^4.5.0"
