@@ -91,7 +91,6 @@ services:
   cache:
     image: nuster/nuster:latest
     restart: always
-    command: nuster -d -f /etc/nuster/nuster.cfg
     volumes:
       - ./data/nuster/nuster.cfg:/etc/nuster/nuster.cfg:ro
     depends_on:
