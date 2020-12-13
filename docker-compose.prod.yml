@@ -1,0 +1,39 @@
+version: '3.7'
+
+services:
+  cache:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.website-server.rule=Host(`gittrends.app`) || Host(`www.gittrends.app`)
+      - traefik.http.routers.website-server.entrypoints=web,websecure
+      - traefik.http.routers.website-server.tls.certresolver=https-resolver
+
+  traefik:
+    image: 'traefik:latest'
+    restart: always
+    command:
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.https-resolver.acme.httpchallenge=true
+      - --certificatesresolvers.https-resolver.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.https-resolver.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53
+      - --certificatesresolvers.https-resolver.acme.email=hudsonsilbor@gmail.com
+      - --certificatesresolvers.https-resolver.acme.storage=/letsencrypt/acme.json
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./data/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dashboard.rule=Host(`traefik.gittrends.app`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
+      - traefik.http.routers.dashboard.service=api@internal
+      - traefik.http.routers.dashboard.middlewares=auth
+      - traefik.http.middlewares.auth.basicauth.users=admin@gittrends.app:$$apr1$$tPnFN1yy$$X06fLb2niMBQKuQG1hPZ91

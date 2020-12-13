@@ -7,11 +7,29 @@ const Bull = require('bull');
 const async = require('async');
 const consola = require('consola');
 const program = require('commander');
+const retry = require('retry');
 
 const worker = require('./updater-worker.js');
 
 const { Issue, PullRequest, Metadata } = require('@gittrends/database-config');
 const { version } = require('./package.json');
+
+async function retriableWorker(...args) {
+  const options = { retries: 5, minTimeout: 1000, maxTimeout: 30000, randomize: true };
+  const operation = retry.operation(options);
+
+  return new Promise((resolve, reject) => {
+    operation.attempt(() => {
+      worker(...args)
+        .then(resolve)
+        .catch((err) => {
+          if (err.message && /recovery.mode|rollback/gi.test(err.message) && operation.retry(err))
+            return null;
+          else reject(operation.mainError() || err);
+        });
+    });
+  });
+}
 
 /* execute */
 program
@@ -37,7 +55,7 @@ program
       const [resource, id] = job.id.split('@');
       const jobId = `${resource}@${(job.data && job.data.name) || id}`;
 
-      await worker({ id, resource, data: job.data }, 1)
+      await retriableWorker({ id, resource, data: job.data }, 1)
         .catch((err) => {
           consola.error(`Error thrown by ${jobId}.`);
           consola.error(err);

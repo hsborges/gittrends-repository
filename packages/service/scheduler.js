@@ -56,9 +56,10 @@ const repositoriesScheduler = async (queue, res, wait) => {
       stream.on('data', (data) => {
         if (
           !data.res_updated_at ||
-          (data.res_updated_at &&
+          (res === 'repos' && dayjs().subtract(wait, 'hours').isAfter(data.res_updated_at)) ||
+          (res !== 'repos' &&
             dayjs().subtract(wait, 'hours').isAfter(data.res_updated_at) &&
-            (res === 'repos' || dayjs(data.res_updated_at).isBefore(data.updated_at))) ||
+            dayjs(data.res_updated_at).isBefore(data.updated_at)) ||
           (data.res_pending && data.res_pending > 0)
         ) {
           jobsList.push(
