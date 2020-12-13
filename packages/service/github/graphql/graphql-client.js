@@ -95,6 +95,8 @@ module.exports.post = async function (parameters) {
         const errorsStr = JSON.stringify(data.errors, null, 2);
         const message = `Github response contains ${data.errors.length} errors:\n${errorsStr}`;
         const params = [message, null, parameters.variables, data];
+        if (data.errors.find((e) => e.type === 'FORBIDDEN'))
+          throw new Errors.ForbiddenError(...params);
         if (data.errors.find((e) => e.type === 'NOT_FOUND'))
           throw new Errors.NotFoundError(...params);
         if (data.errors.find((e) => e.type === 'SERVICE_UNAVAILABLE'))

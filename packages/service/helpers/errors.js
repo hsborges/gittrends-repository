@@ -27,6 +27,7 @@ class RequestError extends CustomError {
 
 class BadGatewayError extends RequestError {}
 class BlockedError extends RequestError {}
+class ForbiddenError extends RequestError {}
 class NotFoundError extends RequestError {}
 class NotModifiedError extends RequestError {}
 class ServiceUnavailableError extends RequestError {}
@@ -36,6 +37,7 @@ class LoadingError extends RequestError {}
 module.exports = {
   BadGatewayError,
   BlockedError,
+  ForbiddenError,
   NotFoundError,
   NotModifiedError,
   NotUpdatedError,

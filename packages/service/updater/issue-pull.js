@@ -3,7 +3,7 @@
  */
 const { omit } = require('lodash');
 const { knex } = require('@gittrends/database-config');
-const { NotFoundError } = require('../helpers/errors.js');
+const { ForbiddenError, NotFoundError } = require('../helpers/errors.js');
 
 const dao = require('./helper/dao');
 const getIssueOrPull = require('../github/graphql/repositories/issue-or-pull.js');
@@ -64,6 +64,18 @@ module.exports = async function _get(id, resource) {
         await dao.metadata.upsert([
           { id, resource, key: 'lastCursor', value: endCursor || lastCursor },
           { id, resource, key: 'updatedAt', value: new Date().toISOString() }
+        ]);
+      })
+      .catch(async (err) => {
+        /*
+         *  TODO - remove this code and update database when github fix this issue
+         *  https://github.community/t/cannot-get-public-information-from-addedtoprojectevent-events/124989/7
+         */
+        if (!(err instanceof ForbiddenError)) throw err;
+
+        await dao.metadata.upsert([
+          { id, resource, key: 'updatedAt', value: new Date().toISOString() },
+          { id, resource, key: 'forbidden', value: 'true' }
         ]);
       })
       .then(() =>
