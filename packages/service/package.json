@@ -21,7 +21,7 @@
     "bull-board": "^1.1.2",
     "chalk": "^4.1.0",
     "collections": "^5.1.12",
-    "commander": "^6.2.0",
+    "commander": "^6.2.1",
     "consola": "^2.15.0",
     "dayjs": "^1.9.7",
     "express": "^4.17.1",
@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^2.1.1",
+    "@hsborges/github-proxy-server": "^2.1.3",
     "@types/bull": "^3.14.4",
     "core-util-is": "^1.0.2",
     "pm2": "^4.5.0"
