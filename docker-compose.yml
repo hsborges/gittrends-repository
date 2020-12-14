@@ -30,20 +30,22 @@ services:
       - gittrends
 
   pgbackups:
-    image: kartoza/pg-backup:latest
-    restart: on-failure
+    image: prodrigestivill/postgres-backup-local
+    restart: always
     volumes:
-      - ./backups:/backups
-    depends_on:
-      - postgres
+      - /backups:/backups
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DBNAME: ${GITTRENDS_DATABASE_DB}
-      POSTGRES_USER: ${GITTRENDS_DATABASE_USERNAME}
-      POSTGRES_PASS: ${GITTRENDS_DATABASE_PASSWORD}
-      DBLIST: ${GITTRENDS_DATABASE_DB}
-      REMOVE_BEFORE: 30
+      - POSTGRES_HOST=${GITTRENDS_DATABASE_HOST}
+      - POSTGRES_PORT=${GITTRENDS_DATABASE_PORT}
+      - POSTGRES_DB=${GITTRENDS_DATABASE_DB}
+      - POSTGRES_USER=${GITTRENDS_DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${GITTRENDS_DATABASE_PASSWORD}
+      - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
+      - SCHEDULE=@weekly
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=1
+      - HEALTHCHECK_PORT=9999
     networks:
       - gittrends
 
@@ -65,8 +67,6 @@ services:
       GITTRENDS_DATABASE_HOST: postgres
     env_file:
       - .env
-    depends_on:
-      - postgres
     networks:
       - gittrends
 
