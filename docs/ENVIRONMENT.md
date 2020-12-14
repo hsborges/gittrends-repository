@@ -4,16 +4,16 @@ First of all, we need to install common libs which may help in several tasks. Th
 
 ```bash
 # git and curl are mandatory
-apt install -y git curl tmux
+sudo apt install -y git curl tmux
 # the postgres client is recommended to backup and restore data
-apt install -y postgresql-client
+sudo apt install -y postgresql-client
 ```
 
 You may want to enhance the system terminal with `zsh` and some useful plugin.
 
 ```bash
 # install rerequisites
-apt install -y zsh
+sudo apt install -y zsh
 
 # install oh-my-zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -43,38 +43,40 @@ If you need to run the scripts on the machine, you must install `node` and `yarn
 
 ```bash
 # install requirements
-apt install curl gcc g++ make
+sudo apt install curl gcc g++ make
 
 # install nodejs
-curl -sL https://deb.nodesource.com/setup_15.x | bash -
-apt install -y nodejs
+curl -sL https://deb.nodesource.com/setup_15.x | sudo bash -
+sudo apt install -y nodejs
 
 # install yarn
-curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-apt update && apt install -y yarn
+curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+sudo echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+sudo apt update && sudo apt install -y yarn
 ```
 
 Finally, install `docker` and `docker-compose`.
 
 ```bash
 # install  docker
-apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add - # (on Debian)
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+# sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" # (on Debian)
+sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
 # add docker to system startup
-systemctl enable docker
-systemctl restart docker
+sudo systemctl enable docker
+sudo systemctl restart docker
 
 # add current user to docker group
-usermod -aG docker $USER
+sudo usermod -aG docker $USER
 
 # install docker-compose
-curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 # restart system is required to work properly
 ```
