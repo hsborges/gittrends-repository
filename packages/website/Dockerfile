@@ -1,24 +1,22 @@
-FROM node:latest as env-config
+FROM node:alpine as env-config
 
 WORKDIR /app/env-config
 COPY /packages/env-config/package.json .
 RUN yarn install
 COPY /packages/env-config/. .
 
-FROM node:latest
+FROM node:alpine
 
 WORKDIR /app
 COPY --from=env-config /app/env-config env-config
 
 ARG GITHUB_CLIENT_ID
-ENV GITTRENDS_API_HOST=${GITTRENDS_API_HOST}
-ENV GITTRENDS_API_PORT=${GITTRENDS_API_PORT}
 
 WORKDIR /app/website
 COPY /packages/website/package.json .
 RUN yarn install
 COPY /packages/website/. .
-RUN yarn build
+RUN yarn generate
 
 EXPOSE 80
 

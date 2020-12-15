@@ -1,11 +1,11 @@
-FROM node:latest AS env-config
+FROM node:alpine AS env-config
 
 WORKDIR /app/env-config
 COPY /packages/env-config/package.json .
 RUN yarn install
 COPY /packages/env-config/. .
 
-FROM node:latest AS database-config
+FROM node:alpine AS database-config
 
 WORKDIR /app
 COPY --from=env-config /app/env-config env-config

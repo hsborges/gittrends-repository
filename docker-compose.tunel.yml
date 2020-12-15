@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: cagataygurturk/docker-ssh-tunnel:0.0.1
+    container_name: postgres
+    volumes:
+      - $HOME/.ssh:/root/ssh:ro
+    ports:
+      - ${GITTRENDS_DATABASE_PORT}:5432
+    environment:
+      TUNNEL_HOST: ${GITTRENDS_DATABASE_TUNEL_HOST}
+      REMOTE_HOST: ${GITTRENDS_DATABASE_HOST}
+      LOCAL_PORT: 5432
+      REMOTE_PORT: 5432
+    networks:
+      - gittrends
+
+networks:
+  gittrends:
+    external: true
+    name: gittrends.app
