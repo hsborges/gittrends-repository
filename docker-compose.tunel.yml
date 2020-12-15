@@ -2,7 +2,9 @@ version: '3.7'
 
 services:
   postgres:
-    image: cagataygurturk/docker-ssh-tunnel:0.0.1
+    build:
+      context: ./packages/docker-autossh-tunnel/
+      dockerfile: ./Dockerfile
     container_name: postgres
     restart: always
     volumes:
