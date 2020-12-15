@@ -32,7 +32,7 @@ fi
 echo "### Creating dummy certificate for $domains ..."
 path="/etc/letsencrypt/live/$domains"
 mkdir -p "$data_path/conf/live/$domains"
-$COMPOSE run --rm --entrypoint "\
+$COMPOSE run --rm --no-deps --entrypoint "\
   openssl req -x509 -nodes -newkey rsa:$rsa_key_size -days 1\
     -keyout '$path/privkey.pem' \
     -out '$path/fullchain.pem' \
@@ -41,11 +41,11 @@ echo
 
 
 echo "### Starting nginx ..."
-$COMPOSE up --force-recreate -d nginx
+$COMPOSE up --force-recreate --no-deps -d website-api website-server nginx
 echo
 
 echo "### Deleting dummy certificate for $domains ..."
-$COMPOSE run --rm --entrypoint "\
+$COMPOSE run --rm --no-deps --entrypoint "\
   rm -Rf /etc/letsencrypt/live/$domains && \
   rm -Rf /etc/letsencrypt/archive/$domains && \
   rm -Rf /etc/letsencrypt/renewal/$domains.conf" certbot
@@ -68,7 +68,7 @@ esac
 # Enable staging mode if needed
 if [ $staging != "0" ]; then staging_arg="--staging"; fi
 
-$COMPOSE run --rm --entrypoint "\
+$COMPOSE run --rm --no-deps --entrypoint "\
   certbot certonly --webroot -w /var/www/certbot \
     $staging_arg \
     $email_arg \
