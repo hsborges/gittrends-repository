@@ -1,0 +1,18 @@
+apps:
+  - name: website-api
+    cwd: packages/website-api
+    interpreter: /bin/bash
+    script: yarn
+    args: start
+    env:
+      NODE_ENV: production
+      PORT: 8888
+
+  - name: website-server
+    cwd: packages/website
+    interpreter: /bin/bash
+    script: yarn
+    args: start
+    env:
+      NODE_ENV: production
+      PORT: 8080

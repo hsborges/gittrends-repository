@@ -1,0 +1,20 @@
+apps:
+  - name: website-api
+    cwd: packages/website-api
+    interpreter: /bin/bash
+    script: yarn
+    args: dev
+    env:
+      NODE_ENV: development
+      PORT: 8888
+
+  - name: website-server
+    cwd: packages/website
+    interpreter: /bin/bash
+    script: yarn
+    args: dev
+    env:
+      NODE_ENV: development
+      PORT: 8080
+      GITTRENDS_API_HOST: localhost
+      GITTRENDS_API_PORT: 8888

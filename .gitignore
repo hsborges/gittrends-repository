@@ -114,7 +114,3 @@ dist
 .vscode-test
 
 # End of https://www.toptal.com/developers/gitignore/api/yarn,dotenv,node
-
-tokens.txt
-tokens.dev.txt
-tokens.prod.txt

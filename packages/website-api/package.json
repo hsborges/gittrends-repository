@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node -r @gittrends/env-config ./node_modules/.bin/fastify start -l info app.js",
-    "dev": "node -r @gittrends/env-config ./node_modules/.bin/fastify start -w -l info -P app.js ---port 8888"
+    "dev": "node -r @gittrends/env-config ./node_modules/.bin/fastify start -w -l info -P app.js"
   },
   "keywords": [],
   "author": "",
@@ -15,7 +15,7 @@
     "axios": "^0.21.0",
     "dayjs": "^1.9.7",
     "faker": "^5.1.0",
-    "fastify": "^3.9.1",
+    "fastify": "^3.9.2",
     "fastify-autoload": "^3.0.7",
     "fastify-cli": "^2.0.2",
     "fastify-cors": "^5.1.0",

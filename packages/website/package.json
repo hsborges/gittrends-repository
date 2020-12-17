@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "node -r @gittrends/env-config ./node_modules/.bin/nuxt --port 8080",
+    "dev": "node -r @gittrends/env-config ./node_modules/.bin/nuxt",
     "build": "node -r @gittrends/env-config ./node_modules/.bin/nuxt build",
     "start": "node -r @gittrends/env-config ./node_modules/.bin/nuxt start",
     "generate": "node -r @gittrends/env-config ./node_modules/.bin/nuxt generate",
@@ -18,12 +18,12 @@
     "lodash": "^4.17.19",
     "moment": "^2.27.0",
     "numeral": "^2.0.6",
-    "nuxt": "^2.14.11"
+    "nuxt": "^2.14.12"
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
     "@nuxtjs/eslint-config": "^5.0.0",
-    "@nuxtjs/eslint-module": "^3.0.1",
+    "@nuxtjs/eslint-module": "^3.0.2",
     "@nuxtjs/tailwindcss": "^3.3.4",
     "@vue/test-utils": "^1.1.2",
     "babel-core": "7.0.0-bridge.0",

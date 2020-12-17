@@ -16,4 +16,4 @@ cp /root/ssh/* /root/.ssh/
 chmod -R 600 /root/.ssh/*
 
 echo '### Creating ssh tunnel with autossh ...'
-autossh -4 "$verbose" -C -N $TUNNEL_HOST -L *:$LOCAL_PORT:$REMOTE_HOST:$REMOTE_PORT
+autossh -4 "$verbose" -T -N $TUNNEL_HOST -L *:$LOCAL_PORT:$REMOTE_HOST:$REMOTE_PORT

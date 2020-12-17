@@ -1,7 +1,7 @@
 FROM alpine:3.2
 
-LABEL CREDITS_TO Cagatay Gurturk <cguertuerk@ebay.de>
-LABEL MAINTAINER Hudson Borges <hudsonsilbor@gmail.com>
+LABEL credits_to="Cagatay Gurturk <cguertuerk[at]ebay.de>"
+LABEL maintainer="Hudson Borges <hudsonsilbor[at]gmail.com>"
 
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
 RUN apk update
@@ -19,7 +19,7 @@ VOLUME [ "/root/ssh" ]
 
 EXPOSE 1-65535
 
-ENV AUTOSSH_PORT=9999
+ENV AUTOSSH_PORT=0
 
 CMD [ "bash", "autossh.sh" ]
 

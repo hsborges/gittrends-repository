@@ -1,8 +1,0 @@
-# temporary files
-_tmp/
-
-# User config files
-.migrate
-dump-*
-
-pm2-ecosystem.yml

@@ -62,46 +62,21 @@ services:
     networks:
       - gittrends
 
-  website-api:
-    build:
-      context: .
-      dockerfile: ./packages/website-api/Dockerfile
-    container_name: website-api
-    restart: always
-    depends_on:
-      - postgres
-    environment:
-      GITTRENDS_DATABASE_HOST: postgres
-    env_file:
-      - .env
-    networks:
-      - gittrends
-
-  website-server:
-    build:
-      context: .
-      dockerfile: ./packages/website/Dockerfile
-      args:
-        GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
-    container_name: website-server
-    restart: always
-    depends_on:
-      - website-api
-    environment:
-      GITTRENDS_API_HOST: website-api
-      GITTRENDS_API_PORT: 80
-    networks:
-      - gittrends
-
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: nginx
     restart: always
     volumes:
-      - ./data/nginx/development.conf:/etc/nginx/conf.d/default.conf
+      - ./data/nginx/development.conf:/app/data/nginx/default.conf:ro
+    environment:
+      GITTRENDS_DATABASE_HOST: postgres
+      GITTRENDS_DATABASE_PORT: 5432
+    env_file:
+      - .env
     depends_on:
-      - website-api
-      - website-server
+      - postgres
     ports:
       - 80:80
     networks:
