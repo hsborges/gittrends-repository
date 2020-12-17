@@ -22,7 +22,7 @@ class DAO {
       coerceTypes: true,
       useDefaults: true
     });
-    ajvFormats(this.validate);
+    ajvFormats(ajv);
 
     this.validate = ajv.compile(this.model.jsonSchema);
   }
