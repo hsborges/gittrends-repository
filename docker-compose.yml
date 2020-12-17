@@ -66,6 +66,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
     container_name: nginx
     restart: always
     volumes:

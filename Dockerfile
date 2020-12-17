@@ -14,6 +14,7 @@ RUN echo "stop program = \"nginx -s stop\"" >> /etc/monit/conf.d/nginx.conf
 WORKDIR /app
 COPY . .
 RUN yarn install
+ARG GITHUB_CLIENT_ID
 RUN yarn workspace @gittrends/website generate
 RUN cd /etc/nginx/conf.d && ln -s /app/data/nginx/default.conf gittrends.conf
 RUN mkdir /run/nginx
