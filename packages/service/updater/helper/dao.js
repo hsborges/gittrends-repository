@@ -1,8 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-const Ajv = require('ajv');
+const Ajv = require('ajv').default;
 const LfuSet = require('collections/lfu-set');
+const ajvFormats = require('ajv-formats');
 
 const { pick, isArray, isObjectLike, mapValues, isDate, chunk } = require('lodash');
 
@@ -15,12 +16,15 @@ class DAO {
 
     if (cacheSize > 0) this.cache = new LfuSet([], cacheSize);
 
-    this.validate = new Ajv({
+    const ajv = new Ajv({
       allErrors: true,
       removeAdditional: true,
       coerceTypes: true,
       useDefaults: true
-    }).compile(this.model.jsonSchema);
+    });
+    ajvFormats(this.validate);
+
+    this.validate = ajv.compile(this.model.jsonSchema);
   }
 
   _hash(record) {
