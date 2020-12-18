@@ -4,60 +4,51 @@
 const { chain, set, get, omit } = require('lodash');
 
 const client = require('../graphql-client.js');
-
 const parser = require('../parser.js');
-const actorFragment = require('../fragments/actor.js');
-const commitFragment = require('../fragments/commit.js');
-const tagFragment = require('../fragments/tag.js');
+
 const { BadGatewayError, ServiceUnavailableError } = require('../../../helpers/errors.js');
 
+const Query = require('../Query');
+const RepositoryComponent = require('../components/RepositoryComponent');
+
 /* eslint-disable no-param-reassign */
-module.exports = function (id, { lastCursor, max }) {
-  const query = `
-  query($id:ID!, $total:Int = 100, $after:String) {
-    repository:node(id: $id) {
-      ... on Repository {
-        refs(refPrefix:"refs/tags/", first: $total, direction: ASC, after: $after) {
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-          edges {
-            cursor
-            node {
-              id
-              name
-              target {
-                type:__typename
-                id
-                oid
-                ...commit
-                ...tag
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  ${actorFragment}
-  ${commitFragment}
-  ${tagFragment}
-  `;
+module.exports = async function (id, { lastCursor, max = Number.MAX_SAFE_INTEGER } = {}) {
+  const component = RepositoryComponent.withID(id).includeDetails(false);
+  const query = Query.withArgs({ total: 100 }).compose(component);
+
+  let hasNextPage = true;
+  let reducer = 1;
 
   const tags = [];
   const users = [];
   const commits = [];
 
-  return (function _request(
-    after,
-    total = Math.min(100, (max || Number.MAX_SAFE_INTEGER) - tags.length)
-  ) {
-    return client
-      .post({ query, variables: { id, total, after } })
+  for (; hasNextPage && tags.length < max; ) {
+    const total = Math.min(100, max - tags.length) / reducer;
+    component.includeTags(true, { after: lastCursor, total });
+
+    await client
+      .post({ query: query.toString() })
+      .then(({ data }) => {
+        const result = parser(get(data, 'data.repository.refs', {}));
+
+        tags.push(
+          ...get(result, 'data.edges', []).map((edge) =>
+            edge.node.target && edge.node.target.type === 'Tag'
+              ? omit(edge.node.target, 'type')
+              : edge.node
+          )
+        );
+
+        users.push(...get(result, 'users', []));
+        commits.push(...get(result, 'commits', []));
+
+        reducer = 1;
+        lastCursor = get(result, 'data.page_info.end_cursor', lastCursor);
+        hasNextPage = get(result, 'data.page_info.has_next_page');
+      })
       .catch(async (error) => {
-        if (error instanceof BadGatewayError && total > 1)
-          return _request(after, Math.ceil(total / 2));
+        if (error instanceof BadGatewayError && total > 1) return (reducer *= 2);
 
         if (error instanceof ServiceUnavailableError) {
           const isAllSame = error.response.errors.reduce(
@@ -73,13 +64,14 @@ module.exports = function (id, { lastCursor, max }) {
                 lastCursor
               );
 
+              component.includeTags(true, { after: cursor, total: 1 });
               return client
                 .post({
                   query: query
+                    .toString()
                     .replace(/additions/i, '')
                     .replace(/deletions/i, '')
-                    .replace(/changedFiles/i, ''),
-                  variables: { id, total: 1, cursor }
+                    .replace(/changedFiles/i, '')
                 })
                 .then((result) =>
                   set(
@@ -94,33 +86,14 @@ module.exports = function (id, { lastCursor, max }) {
           }
         }
         throw error;
-      })
-      .then(({ data }) => {
-        const result = parser(get(data, 'data.repository.refs', {}));
-        const hasNextPage = get(result, 'data.page_info.has_next_page');
-        const endCursor = get(result, 'data.page_info.end_cursor');
-
-        tags.push(
-          ...get(result, 'data.edges', []).map((edge) =>
-            edge.node.target && edge.node.target.type === 'Tag'
-              ? omit(edge.node.target, 'type')
-              : edge.node
-          )
-        );
-
-        users.push(...get(result, 'users', []));
-        commits.push(...get(result, 'commits', []));
-
-        if (hasNextPage && tags.length < (max || Number.MAX_SAFE_INTEGER))
-          return _request(endCursor);
-
-        return {
-          tags,
-          commits: chain(commits).compact().uniqBy('id').value(),
-          users: chain(users).compact().uniqBy('id').value(),
-          endCursor,
-          hasNextPage
-        };
       });
-  })(lastCursor);
+  }
+
+  return {
+    tags,
+    commits: chain(commits).compact().uniqBy('id').value(),
+    users: chain(users).compact().uniqBy('id').value(),
+    endCursor: lastCursor,
+    hasNextPage
+  };
 };

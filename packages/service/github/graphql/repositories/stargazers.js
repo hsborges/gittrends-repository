@@ -4,45 +4,28 @@
 const { chain, get } = require('lodash');
 
 const client = require('../graphql-client.js');
-const actorFragment = require('../fragments/actor.js');
 const parser = require('../parser.js');
 
-/* eslint-disable no-param-reassign */
-module.exports = async function (repositoryId, { lastCursor, max }) {
-  const query = `
-  query($id:ID!, $total:Int = 100, $after:String) {
-    repository:node(id: $id) {
-      ... on Repository {
-        stargazers_list:stargazers(first: $total, after: $after, orderBy: { direction: ASC, field: STARRED_AT }) {
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-          edges {
-            starredAt
-            user:node { ...actor }
-          }
-        }
-      }
-    }
-  }
-  ${actorFragment}
-  `;
+const Query = require('../Query');
+const RepositoryComponent = require('../components/RepositoryComponent');
 
+/* eslint-disable no-param-reassign */
+module.exports = async function (repositoryId, { lastCursor, max = Number.MAX_SAFE_INTEGER } = {}) {
+  const component = RepositoryComponent.withID(repositoryId).includeDetails(false);
+  const query = Query.withArgs({ total: 100 }).compose(component);
+
+  let hasNextPage = true;
   const stargazers = [];
   const users = [];
 
-  let hasNextPage = true;
+  for (; hasNextPage && stargazers.length < max; ) {
+    component.includeStargazers(true, {
+      after: lastCursor,
+      total: Math.min(100, max - stargazers.length)
+    });
 
-  const variables = {
-    id: repositoryId,
-    after: lastCursor,
-    total: Math.min(100, (max || Number.MAX_SAFE_INTEGER) - stargazers.length)
-  };
-
-  while (hasNextPage && stargazers.length < (max || Number.MAX_SAFE_INTEGER)) {
     await client
-      .post({ query, variables })
+      .post({ query: query.toString() })
       .catch((error) => {
         const errors = get(error, 'response.errors', []);
         if (errors.reduce((internal, e) => internal && e.type === 'INTERNAL', true))
@@ -50,21 +33,20 @@ module.exports = async function (repositoryId, { lastCursor, max }) {
         throw error;
       })
       .then(({ data }) => {
-        const result = parser(get(data, 'data.repository.stargazers_list', {}));
+        const result = parser(get(data, 'data.repository.stargazers', {}));
 
         stargazers.push(...get(result, 'data.edges', []));
         users.push(...get(result, 'users', []));
 
         hasNextPage = get(result, 'data.page_info.has_next_page', false);
-        variables.total = Math.min(100, (max || Number.MAX_SAFE_INTEGER) - stargazers.length);
-        variables.after = get(result, 'data.page_info.end_cursor', variables.after);
+        lastCursor = get(result, 'data.page_info.end_cursor', lastCursor);
       });
   }
 
   return {
     stargazers,
     users: chain(users).compact().uniqBy('id').value(),
-    endCursor: variables.after,
+    endCursor: lastCursor,
     hasNextPage
   };
 };
