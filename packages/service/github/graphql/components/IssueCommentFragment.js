@@ -4,7 +4,7 @@ const CommentFragment = require('./CommentFragment');
 
 module.exports = class IssueCommentFragment extends Fragment {
   static get code() {
-    return 'issueCommentFragment';
+    return 'issueComment';
   }
 
   static get dependencies() {

@@ -1,6 +1,7 @@
 const Component = require('../Component');
 const IssueFragment = require('./IssueFragment');
 const ActorFragment = require('./SimplifiedActorFragment');
+const IssueCommentFragment = require('./IssueCommentFragment');
 
 const AddedToProjectEvent = require('./events/AddedToProjectEvent');
 const AssignedEvent = require('./events/AssignedEvent');
@@ -39,11 +40,16 @@ module.exports = class IssueComponent extends Component {
 
     this._id = id;
     this._name = name || 'issue';
+    this.componentName = 'Issue';
 
     this._includeDetails = '';
     this._includeAssignees = '';
     this._includeLabels = '';
     this._includeParticipants = '';
+    this._includeTimeline = '';
+
+    this._extraFields = '';
+    this._extraTimelineEvents = '';
   }
 
   get fragments() {
@@ -51,6 +57,40 @@ module.exports = class IssueComponent extends Component {
 
     if (this._includeDetails) fragments.push(IssueFragment);
     if (this._includeAssignees || this._includeParticipants) fragments.push(ActorFragment);
+
+    if (this._includeTimeline)
+      fragments.push(
+        AddedToProjectEvent,
+        AssignedEvent,
+        ClosedEvent,
+        CommentDeletedEvent,
+        ConnectedEvent,
+        ConvertedNoteToIssueEvent,
+        CrossReferencedEvent,
+        DemilestonedEvent,
+        DisconnectedEvent,
+        LabeledEvent,
+        LockedEvent,
+        MarkedAsDuplicateEvent,
+        MentionedEvent,
+        MilestonedEvent,
+        MovedColumnsInProjectEvent,
+        PinnedEvent,
+        ReferencedEvent,
+        RemovedFromProjectEvent,
+        RenamedTitleEvent,
+        ReopenedEvent,
+        SubscribedEvent,
+        TransferredEvent,
+        UnassignedEvent,
+        UnlabeledEvent,
+        UnlockedEvent,
+        UnmarkedAsDuplicateEvent,
+        UnpinnedEvent,
+        UnsubscribedEvent,
+        UserBlockedEvent,
+        IssueCommentFragment
+      );
 
     return fragments;
   }
@@ -124,7 +164,7 @@ module.exports = class IssueComponent extends Component {
               ... on CrossReferencedEvent { ...${CrossReferencedEvent.code} }
               ... on DemilestonedEvent { ...${DemilestonedEvent.code} }
               ... on DisconnectedEvent { ...${DisconnectedEvent.code} }
-              ... on IssueComment { ...issueComment }
+              ... on IssueComment { ...${IssueCommentFragment.code} }
               ... on LabeledEvent { ...${LabeledEvent.code} }
               ... on LockedEvent { ...${LockedEvent.code} }
               ... on MarkedAsDuplicateEvent { ...${MarkedAsDuplicateEvent.code} }
@@ -145,6 +185,7 @@ module.exports = class IssueComponent extends Component {
               ... on UnpinnedEvent { ...${UnpinnedEvent.code} }
               ... on UnsubscribedEvent { ...${UnsubscribedEvent.code} }
               ... on UserBlockedEvent { ...${UserBlockedEvent.code} }
+              ${this._extraTimelineEvents}
             }
           }
         `
@@ -156,11 +197,13 @@ module.exports = class IssueComponent extends Component {
     return `
       ${this._name}:node(id: "${this._id}") {
         type:__typename
-        ... on ${IssueFragment.code} {
+        ... on ${this.componentName} {
           ${this._includeDetails}
           ${this._includeAssignees}
           ${this._includeLabels}
           ${this._includeParticipants}
+          ${this._includeTimeline}
+          ${this._extraFields}
         }
       }
     `;
