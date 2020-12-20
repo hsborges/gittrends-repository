@@ -1,28 +1,28 @@
 const Fragment = require('../Fragment');
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./SimplifiedActorFragment');
 
 module.exports = class CommitFragment extends Fragment {
   static get code() {
     return 'commit';
   }
 
-  get dependencies() {
-    return [new ActorFragment(false)];
+  static get dependencies() {
+    return [ActorFragment];
   }
 
-  toString() {
+  static toString() {
     return `
-    fragment ${CommitFragment.code} on Commit {
+    fragment ${this.code} on Commit {
       type:__typename
       additions
-      author { date email name user { ...actor } }
+      author { date email name user { ...${ActorFragment.code} } }
       authoredByCommitter
       authoredDate
       changedFiles
       comments { totalCount }
       committedDate
       committedViaWeb
-      committer { date email name user { ...actor } }
+      committer { date email name user { ...${ActorFragment.code} } }
       deletions
       id
       message
@@ -31,7 +31,7 @@ module.exports = class CommitFragment extends Fragment {
       pushedDate
       repository { id }
       signature {
-        email isValid signer { ...actor } state wasSignedByGitHub
+        email isValid signer { ...${ActorFragment.code} } state wasSignedByGitHub
       }
       status { contexts { context description createdAt } id state }
     }

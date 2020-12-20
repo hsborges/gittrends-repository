@@ -1,18 +1,18 @@
 const Fragment = require('../Fragment');
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./SimplifiedActorFragment');
 
 module.exports = class ReleasesFragment extends Fragment {
   static get code() {
     return 'release';
   }
 
-  get dependencies() {
-    return [new ActorFragment(false)];
+  static get dependencies() {
+    return [ActorFragment];
   }
 
-  toString() {
+  static toString() {
     return `
-    fragment ${ReleasesFragment.code} on Release {
+    fragment ${this.code} on Release {
       author { ...${ActorFragment.code} }
       createdAt
       description

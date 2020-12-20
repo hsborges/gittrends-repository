@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 const { get, set, snakeCase, size, reduce, omit } = require('lodash');
-const { isArray, assignWith, isPlainObject } = require('lodash');
+const { isArray, assignWith, isPlainObject, uniqBy } = require('lodash');
 
 const compact = require('../../helpers/compact.js');
 
@@ -74,7 +74,11 @@ module.exports = function (object) {
       }
     }
 
-    return _object;
+    return {
+      ..._object,
+      users: uniqBy(_object.users || [], 'id'),
+      commits: uniqBy(_object.commits || [], 'id')
+    };
   }
 
   return { data: object };

@@ -1,5 +1,5 @@
 const Fragment = require('../Fragment');
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./SimplifiedActorFragment');
 const CommitFragment = require('./CommitFragment');
 
 module.exports = class TagFragment extends Fragment {
@@ -7,19 +7,19 @@ module.exports = class TagFragment extends Fragment {
     return 'tag';
   }
 
-  get dependencies() {
-    return [new ActorFragment(false), new CommitFragment()];
+  static get dependencies() {
+    return [ActorFragment, CommitFragment];
   }
 
-  toString() {
+  static toString() {
     return `
-    fragment ${TagFragment.code} on Tag {
+    fragment ${this.code} on Tag {
       id
       message
       name
       oid
-      tagger { date email name user { ...actor } }
-      target { ...commit }
+      tagger { date email name user { ...${ActorFragment.code} } }
+      target { ...${CommitFragment.code} }
     }
     `;
   }

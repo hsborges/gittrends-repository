@@ -1,65 +1,76 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { get, omit } = require('lodash');
+const get = require('lodash/get');
 
-const client = require('../graphql-client.js');
-const details = require('./dependencies-details.js');
 const { TimedoutError, LoadingError } = require('../../../helpers/errors.js');
 
+const Query = require('../Query');
+const RepositoryComponent = require('../components/RepositoryComponent');
+const DependencyGraphManifestComponent = require('../components/DependencyGraphManifestComponent');
+
 module.exports = async function (repositoryId) {
-  const query = `
-  query($id:ID!, $after:String, $total:Int = 100) {
-    repository:node(id: $id) {
-      ... on Repository {
-        manifest:dependencyGraphManifests(first: $total, after: $after) {
-          pageInfo { hasNextPage endCursor }
-          nodes {
-            blobPath
-            dependenciesCount
-            exceedsMaxSize
-            filename
-            id
-            parseable
-          }
-        }
-      }
-    }
-  }
-  `;
+  if (!repositoryId) throw new TypeError('Repository ID is required!');
+
+  let hasNextPage = true;
+  let endCursor = null;
+  let reducer = 0;
 
   const dependencies = [];
-  const variables = { id: repositoryId, after: null, total: 100, hasNextPage: true };
 
-  for (; variables.hasNextPage; ) {
-    await client
-      .post({ query, variables: omit(variables, 'hasNextPage') })
-      .catch(async (err) => {
-        if ((err instanceof TimedoutError || err instanceof LoadingError) && variables.total > 1)
-          return (variables.total = Math.ceil(variables.total / 2));
-        throw err;
-      })
+  for (; hasNextPage; ) {
+    const total = 100 - reducer;
+    await Query.create()
+      .compose(
+        RepositoryComponent.with({ id: repositoryId })
+          .includeDetails(false)
+          .includeDependencyGraphManifests(true, { after: endCursor, first: total })
+      )
+      .run()
       .then(async ({ data }) => {
-        const manifest = get(data, 'data.repository.manifest', {});
+        reducer = 0;
+        const manifestPath = 'repository.dependency_graph_manifests';
 
-        await Promise.mapSeries(get(manifest, 'nodes', []), async (node) =>
-          details(node.id).then((res) =>
-            res.dependencies.forEach((_dep) =>
-              dependencies.push({
-                manifest: node.id,
-                filename: node.filename,
-                blob_path: node.blob_path,
-                ..._dep
-              })
-            )
-          )
-        );
+        const pageInfoPath = `${manifestPath}.page_info`;
+        hasNextPage = get(data, `${pageInfoPath}.has_next_page`);
+        endCursor = get(data, `${pageInfoPath}.end_cursor`, endCursor);
 
-        variables.total = 100;
-        variables.after = get(manifest, 'page_info.end_cursor', null);
-        variables.hasNextPage = get(manifest, 'page_info.has_next_page', false);
+        const manifests = get(data, `${manifestPath}.nodes`, []);
+
+        await Promise.map(manifests, async (manifest) => {
+          let _hasNextPage = true;
+          let _endCursor = null;
+
+          for (; _hasNextPage; ) {
+            await Query.withArgs()
+              .compose(
+                DependencyGraphManifestComponent.with({ id: manifest.id, name: 'manifest' })
+                  .includeDetails(false)
+                  .includeDependencies(true, { after: _endCursor })
+              )
+              .run()
+              .then(({ data }) => {
+                const pageInfoPath = 'manifest.dependencies.page_info';
+                _hasNextPage = get(data, `${pageInfoPath}.has_next_page`);
+                _endCursor = get(data, `${pageInfoPath}.end_cursor`, _endCursor);
+
+                get(data, 'manifest.dependencies.nodes', []).forEach((dependency) =>
+                  dependencies.push({
+                    manifest: manifest.id,
+                    filename: manifest.filename,
+                    ...dependency
+                  })
+                );
+              });
+          }
+        });
+      })
+      .catch(async (err) => {
+        if ((err instanceof TimedoutError || err instanceof LoadingError) && total > 1)
+          return (reducer = total / 2);
+        throw err;
       });
   }
 
-  return { dependencies, endCursor: variables.after, hasNextPage: variables.hasNextPage };
+  return { dependencies, endCursor, hasNextPage };
 };

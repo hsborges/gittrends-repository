@@ -21,13 +21,15 @@ module.exports = class Query {
     this._args = Object.assign({}, args);
   }
 
-  static withArgs(args) {
+  static create(args) {
     return new Query(args);
   }
 
-  compose(component) {
-    if (!(component instanceof Component)) throw new Error('Invalid component!');
-    this.components.push(component);
+  compose(...components) {
+    [...components].forEach((component) => {
+      if (!(component instanceof Component)) throw new Error('Invalid component!');
+      this.components.push(component);
+    });
     return this;
   }
 
@@ -79,8 +81,23 @@ module.exports = class Query {
       .trim();
   }
 
-  async run() {
-    const response = await client.post({ query: this.toString() });
-    return parser(get(response, 'data.data', null));
+  async run(interceptor) {
+    const query = interceptor ? interceptor(this.toString()) : this.toString();
+    return client
+      .post({ query })
+      .then((response) => parser(get(response, 'data.data', null)))
+      .catch((err) => {
+        console.error(err);
+        console.log(query);
+        process.exit(1);
+      });
+  }
+
+  then(...args) {
+    return this.run().then(...args);
+  }
+
+  catch(...args) {
+    return this.run().catch(...args);
   }
 };

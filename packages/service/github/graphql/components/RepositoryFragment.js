@@ -1,18 +1,18 @@
 const Fragment = require('../Fragment');
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./SimplifiedActorFragment');
 
 module.exports = class RepositoryFragment extends Fragment {
   static get code() {
     return 'repo';
   }
 
-  get dependencies() {
-    return [new ActorFragment(false)];
+  static get dependencies() {
+    return [ActorFragment];
   }
 
-  toString() {
+  static toString() {
     return `
-    fragment ${RepositoryFragment.code} on Repository {
+    fragment ${this.code} on Repository {
       assignableUsers { totalCount }
       codeOfConduct { name }
       createdAt

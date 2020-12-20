@@ -14,7 +14,16 @@ class DAO {
     this.model = model;
     this.chunkSize = chunkSize;
 
-    if (cacheSize > 0) this.cache = new LfuSet([], cacheSize);
+    if (cacheSize > 0) {
+      this.cache = new LfuSet([], cacheSize);
+      this.model
+        .query()
+        .select(this.model.idColumn)
+        .limit(cacheSize)
+        .stream((stream) => {
+          stream.on('data', (r) => this.cache.add(this._hash(r)));
+        });
+    }
 
     const ajv = new Ajv({
       allErrors: true,

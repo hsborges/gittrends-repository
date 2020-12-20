@@ -1,21 +1,17 @@
 module.exports = class Fragment {
-  constructor() {
-    this.full = false;
+  static $include(full, field) {
+    return full ? field : '';
   }
 
   static get code() {
     throw new Error('Fragment.code() must be override!');
   }
 
-  $include(field) {
-    return this.full ? field : '';
+  static get dependencies() {
+    throw new Error('Fragment.dependencies() must be override!');
   }
 
-  get dependencies() {
-    throw new Error('Fragment.dependencies must be override!');
-  }
-
-  toString() {
-    throw new Error(`${this.constructor.name}.toString() must be override!`);
+  static toString() {
+    throw new Error('Fragment.toString() must be override!');
   }
 };

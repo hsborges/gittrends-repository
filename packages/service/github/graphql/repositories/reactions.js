@@ -1,12 +1,11 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { get, chunk, isString } = require('lodash');
-
-const client = require('../graphql-client.js');
-const actorFragment = require('../fragments/actor.js');
-const parser = require('../parser.js');
+const { get, chain, chunk } = require('lodash');
 const { BadGatewayError } = require('../../../helpers/errors.js');
+
+const Query = require('../Query');
+const ReactionComponent = require('../components/ReactionComponent');
 
 /* eslint-disable no-param-reassign */
 module.exports = async function (reactables = []) {
@@ -19,76 +18,52 @@ module.exports = async function (reactables = []) {
       []
     );
 
-  const info = reactables.map((r) => (isString(r) ? { id: r } : r));
+  let components = reactables.map((id, index) =>
+    ReactionComponent.with({ id, name: `reactable_${index}` }).includeReactions()
+  );
 
-  const nodes = info
-    .map((_info, index) => {
-      if (_info.hasNextPage === false) return '';
-      const after = _info.endCursor ? `, after: "${_info.endCursor}"` : '';
-      return `
-      node_${index}:node(id: "${_info.id}") {
-        type:__typename
-        ... on Reactable {
-          reactions(first: $total, orderBy: { field: CREATED_AT, direction: ASC }${after}) {
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-            nodes {
-              content
-              createdAt
-              id
-              user { ...actor }
-            }
-          }
-        }
-      }
-    `;
-    })
-    .join(' ');
+  const reactions = [];
+  const users = [];
 
-  const query = `query($total:Int = 100) { ${nodes} } ${actorFragment}`;
+  for (; components.length > 0; ) {
+    await Query.create()
+      .compose(...components)
+      .then(({ data, users: _users = [] }) => {
+        users.push(..._users);
 
-  return client
-    .post({ query, variables: { total: 100 } })
-    .then(async ({ data }) => {
-      const reactions = info.map((_info, index) => {
-        const result = parser(get(data, `data.node_${index}`, {}));
-        const pageInfo = get(result, 'data.reactions.page_info', {});
+        components = components.filter((component) => {
+          const pageInfoPath = `${component.name}.reactions.page_info`;
 
-        return {
-          reactions: get(result, 'data.reactions.nodes', []),
-          users: result.users || [],
-          endCursor: pageInfo.end_cursor || _info.endCursor
-        };
-      });
+          const endCursor = get(data, `${pageInfoPath}.end_cursor`);
+          component.includeReactions(true, { after: endCursor });
 
-      const nextIteration = info.map((_info, index) => {
-        const page = get(data, `data.node_${index}.reactions.page_info`, {});
-        return {
-          id: _info.id,
-          endCursor: page.end_cursor || _info.endCursor,
-          hasNextPage: page.has_next_page || false
-        };
-      });
+          reactions.push(
+            ...get(data, `${component.name}.reactions.nodes`, []).map((reaction) => ({
+              reactable: component.id,
+              ...reaction
+            }))
+          );
 
-      if (nextIteration.reduce((a, m) => a || m.hasNextPage, false)) {
-        (await module.exports(nextIteration)).forEach((res, index) => {
-          reactions[index].reactions.push(...res.reactions);
-          reactions[index].users.push(...res.users);
-          reactions[index].endCursor = res.endCursor;
+          return get(data, `${pageInfoPath}.has_next_page`, false);
         });
-      }
+      })
+      .catch((error) => {
+        if (error instanceof BadGatewayError && reactables.length > 1) {
+          return Promise.mapSeries(
+            chunk(reactables, Math.ceil(reactables.length / 2)),
+            async (infoChunk) =>
+              module.exports(infoChunk).then((response) => {
+                reactions.push(...(response.reactions || []));
+                users.push(...(response.users || []));
+              })
+          );
+        }
+        throw error;
+      });
+  }
 
-      return reactions;
-    })
-    .catch((error) => {
-      if (error instanceof BadGatewayError && info.length > 1)
-        return Promise.reduce(
-          chunk(info, Math.ceil(info.length / 2)),
-          async (res, infoChunk) => res.concat(await module.exports(infoChunk)),
-          []
-        );
-      throw error;
-    });
+  return {
+    reactions,
+    users: chain(users).compact().uniqBy('id').value()
+  };
 };

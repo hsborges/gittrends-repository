@@ -8,7 +8,7 @@
     "run-migrations": "node -r @gittrends/env-config ./node_modules/.bin/knex migrate:latest"
   },
   "dependencies": {
-    "knex": "^0.21.13",
+    "knex": "^0.21.14",
     "pg": "^8.5.1",
     "pg-query-stream": "^4.0.0"
   },

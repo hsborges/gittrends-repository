@@ -1,10 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { get, cloneDeep, chain } = require('lodash');
-
-const client = require('../graphql-client.js');
-const parser = require('../parser.js');
+const get = require('lodash/get');
 const compact = require('../../../helpers/compact.js');
 
 const Query = require('../Query');
@@ -13,8 +10,9 @@ const RepositoryComponent = require('../components/RepositoryComponent');
 module.exports = async function (repositoryId) {
   if (!repositoryId) throw new TypeError('Repository ID is required!');
 
-  const component = RepositoryComponent.withID(repositoryId).includeLanguages().includeTopics();
-  const query = Query.withArgs({ total: 100 }).compose(component);
+  const component = RepositoryComponent.with({ id: repositoryId })
+    .includeLanguages()
+    .includeTopics();
 
   let repository = null;
 
@@ -23,26 +21,28 @@ module.exports = async function (repositoryId) {
   const topics = [];
 
   for (let hasNextPage = true; hasNextPage; ) {
-    component.includeDetails(repository === null);
+    hasNextPage = await Query.create()
+      .compose(component.includeDetails(repository === null))
+      .then(({ data, users: _users }) => {
+        if (repository === null) repository = data.repository;
 
-    hasNextPage = await client.post({ query: query.toString() }).then(({ data }) => {
-      const result = parser(get(data, 'data.repository', {}));
+        users.push(...(_users || []));
+        languages.push(...get(data, 'repository.languages.edges', []));
+        topics.push(...get(data, 'repository.repository_topics.nodes', []).map((t) => t.topic));
 
-      if (repository === null) repository = cloneDeep(result.data);
+        const hasLang = get(data, 'repository.languages.page_info.has_next_page');
+        const hasTopics = get(data, 'repository.repository_topics.page_info.has_next_page');
 
-      users.push(...(result.users || []));
-      languages.push(...get(result, 'data.languages.edges', []));
-      topics.push(...get(result, 'data.repository_topics.nodes', []).map((t) => t.topic));
+        component
+          .includeLanguages(hasLang, {
+            after: get(data, 'repository.languages.page_info.end_cursor')
+          })
+          .includeTopics(hasTopics, {
+            after: get(data, 'repository.repository_topics.page_info.end_cursor')
+          });
 
-      const hasLang = get(result, 'data.languages.page_info.has_next_page');
-      const hasTopics = get(result, 'data.repository_topics.page_info.has_next_page');
-
-      component
-        .includeLanguages(hasLang, get(result, 'data.languages.page_info.end_cursor'))
-        .includeTopics(hasTopics, get(result, 'data.repository_topics.page_info.end_cursor'));
-
-      return hasLang || hasTopics;
-    });
+        return hasLang || hasTopics;
+      });
   }
 
   return {
@@ -51,6 +51,6 @@ module.exports = async function (repositoryId) {
       languages,
       repository_topics: topics
     }),
-    users: chain(users).compact().uniqBy('id').value()
+    users
   };
 };

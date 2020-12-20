@@ -1,65 +1,61 @@
 const Fragment = require('../Fragment');
 
 module.exports = class ActorFragment extends Fragment {
-  constructor(full = false) {
-    super();
-    this.full = full;
-  }
-
   static get code() {
     return 'actor';
   }
 
-  get dependencies() {
+  static get dependencies() {
     return [];
   }
 
-  toString() {
+  static toString(full = true) {
     return `
-    fragment ${ActorFragment.code} on Actor {
+    fragment ${this.code} on Actor {
       avatarUrl login type:__typename
       ... on Node { id }
       ... on User {
-        ${super.$include('bio')}
-        ${super.$include('company')}
+        ${super.$include(full, 'bio')}
+        ${super.$include(full, 'company')}
         createdAt
         databaseId
         email
-        ${super.$include('followers { totalCount }')}
-        ${super.$include('following { totalCount }')}
-        ${super.$include('gists { totalCount }')}
-        ${super.$include('isBountyHunter')}
-        ${super.$include('isCampusExpert')}
-        ${super.$include('isDeveloperProgramMember')}
-        ${super.$include('isEmployee')}
-        ${super.$include('isHireable')}
-        ${super.$include('isSiteAdmin')}
+        ${super.$include(full, 'followers { totalCount }')}
+        ${super.$include(full, 'following { totalCount }')}
+        ${super.$include(full, 'gists { totalCount }')}
+        ${super.$include(full, 'isBountyHunter')}
+        ${super.$include(full, 'isCampusExpert')}
+        ${super.$include(full, 'isDeveloperProgramMember')}
+        ${super.$include(full, 'isEmployee')}
+        ${super.$include(full, 'isHireable')}
+        ${super.$include(full, 'isSiteAdmin')}
         location
         name
-        ${super.$include('projects { totalCount }')}
-        ${super.$include('projectsUrl')}
-        ${super.$include('repositories { totalCount }')}
-        ${super.$include('repositoriesContributedTo { totalCount }')}
-        ${super.$include('starredRepositories { totalCount }')}
+        ${super.$include(full, 'projects { totalCount }')}
+        ${super.$include(full, 'projectsUrl')}
+        ${super.$include(full, 'repositories { totalCount }')}
+        ${super.$include(full, 'repositoriesContributedTo { totalCount }')}
+        ${super.$include(full, 'starredRepositories { totalCount }')}
         ${super.$include(
+          full,
           'status { id createdAt emoji expiresAt indicatesLimitedAvailability message updatedAt }'
         )}
         twitterUsername
         updatedAt
-        ${super.$include('watching { totalCount }')}
+        ${super.$include(full, 'watching { totalCount }')}
         websiteUrl
       }
       ... on Organization {
         createdAt
         databaseId
-        ${super.$include('description')}
+        ${super.$include(full, 'description')}
         email
-        ${super.$include('isVerified')}
+        ${super.$include(full, 'isVerified')}
         location
-        ${super.$include('membersWithRole { totalCount }')}
+        ${super.$include(full, 'membersWithRole { totalCount }')}
         name
-        ${super.$include('repositories(privacy: PUBLIC) { totalCount }')}
-        ${super.$include('teams { totalCount }')}
+        ${super.$include(full, 'repositories(privacy: PUBLIC) { totalCount }')}
+        ${super.$include(full, 'teams { totalCount }')}
         twitterUsername
         updatedAt
         websiteUrl
