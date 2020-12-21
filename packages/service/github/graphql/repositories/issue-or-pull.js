@@ -15,7 +15,7 @@ module.exports = async function (id, type, { lastCursor } = {}) {
   if (!type || (type !== 'issue' && type !== 'pull'))
     throw new TypeError('Type must be "issue" or "pull"!');
 
-  const component = type === 'issue' ? IssueComponent : PullRequestComponent;
+  const component = (type === 'issue' ? IssueComponent : PullRequestComponent).with({ id });
 
   let ghObject = null;
 
@@ -47,19 +47,19 @@ module.exports = async function (id, type, { lastCursor } = {}) {
 
         if (!ghObject) ghObject = omit(data, ['timeline', 'assignees', 'labels', 'participants']);
 
-        labels.push(...get(data, 'labels.nodes', []).map((l) => l.name));
+        labels.items.push(...get(data, 'labels.nodes', []).map((l) => l.name));
         labels.hasNext = get(data, `labels.${hnpp}`, false);
         labels.endCursor = get(data, `labels.${ecp}`, labels.endCursor);
 
-        assignees.push(...get(data, 'assignees.nodes', []));
+        assignees.items.push(...get(data, 'assignees.nodes', []));
         assignees.hasNext = get(data, `assignees.${hnpp}`, false);
         assignees.endCursor = get(data, `assignees.${ecp}`, assignees.endCursor);
 
-        participants.push(...get(data, 'participants.nodes', []));
+        participants.items.push(...get(data, 'participants.nodes', []));
         participants.hasNext = get(data, `participants.${hnpp}`, false);
         participants.endCursor = get(data, `participants.${ecp}`, participants.endCursor);
 
-        timeline.push(
+        timeline.items.push(
           ...get(data, 'timeline.edges', []).map((edge) =>
             isString(edge.node)
               ? { ...commits.find((c) => c.id === edge.node), type: 'Commit' }

@@ -5,8 +5,8 @@ const CommitFragment = require('./CommitFragment');
 const RepositoryFragment = require('./RepositoryFragment');
 const ReleaseFragment = require('./ReleaseFragment');
 const TagFragment = require('./TagFragment');
-const IssueFragment = require('./IssueFragment');
-const PullRequestFragment = require('./PullRequestFragment');
+const IssueFragment = require('./IssueFragment').simplified;
+const PullRequestFragment = require('./PullRequestFragment').simplified;
 
 module.exports = class RepositoryComponent extends Component {
   constructor(id, name) {
@@ -36,8 +36,8 @@ module.exports = class RepositoryComponent extends Component {
     if (this._includeDetails) fragments.push(RepositoryFragment);
     if (this._includeReleases) fragments.push(ReleaseFragment);
     if (this._includeTags) fragments.push(CommitFragment, TagFragment);
-    if (this._includeIssues) fragments.push(IssueFragment.simplified);
-    if (this._includePullRequests) fragments.push(PullRequestFragment.simplified);
+    if (this._includeIssues) fragments.push(IssueFragment);
+    if (this._includePullRequests) fragments.push(PullRequestFragment);
 
     return fragments;
   }

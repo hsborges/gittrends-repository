@@ -16,6 +16,7 @@ module.exports = class IssueFragment extends Fragment {
     const fragment = new IssueFragment(false);
     fragment.code = 'sIssue';
     fragment.dependencies = [ActorFragment];
+    fragment.objectName = IssueFragment.objectName;
     fragment.toString = (extraFields) => IssueFragment.toString.bind(fragment)(false, extraFields);
     return fragment;
   }

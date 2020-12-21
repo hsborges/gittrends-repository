@@ -1,4 +1,4 @@
-const Fragment = require('../../Fragment');
+const Fragment = require('../Fragment');
 const ReactableFragment = require('./ReactableFragment');
 const CommentFragment = require('./CommentFragment');
 
