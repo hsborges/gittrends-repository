@@ -1,5 +1,5 @@
 const Fragment = require('../../Fragment');
-const ActorFragment = require('../ActorFragment');
+const ActorFragment = require('../ActorFragment').simplified;
 const DeploymentStatusFragment = require('../DeploymentStatusFragment');
 
 module.exports = class DeploymentEnvironmentChangedEvent extends Fragment {
@@ -8,7 +8,7 @@ module.exports = class DeploymentEnvironmentChangedEvent extends Fragment {
   }
 
   static get dependencies() {
-    return [ActorFragment.simplified, DeploymentStatusFragment];
+    return [ActorFragment, DeploymentStatusFragment];
   }
 
   static toString() {

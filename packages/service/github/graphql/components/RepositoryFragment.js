@@ -1,5 +1,5 @@
 const Fragment = require('../Fragment');
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./ActorFragment').simplified;
 
 module.exports = class RepositoryFragment extends Fragment {
   constructor(full = true) {
@@ -12,7 +12,7 @@ module.exports = class RepositoryFragment extends Fragment {
   }
 
   static get dependencies() {
-    return [ActorFragment.simplified];
+    return [ActorFragment];
   }
 
   static toString(full = true) {

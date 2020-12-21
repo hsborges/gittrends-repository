@@ -1,5 +1,5 @@
 const Fragment = require('../../Fragment');
-const ActorFragment = require('../ActorFragment');
+const ActorFragment = require('../ActorFragment').simplified;
 
 module.exports = class AddedToProjectEvent extends Fragment {
   static get code() {
@@ -7,7 +7,7 @@ module.exports = class AddedToProjectEvent extends Fragment {
   }
 
   static get dependencies() {
-    return [ActorFragment.simplified];
+    return [ActorFragment];
   }
 
   static toString() {

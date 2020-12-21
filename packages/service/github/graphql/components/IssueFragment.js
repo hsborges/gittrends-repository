@@ -1,14 +1,9 @@
 const Fragment = require('../Fragment');
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./ActorFragment').simplified;
 const ReactableFragment = require('./ReactableFragment');
 const MilestoneFragment = require('./MilestoneFragment');
 
 module.exports = class IssueFragment extends Fragment {
-  constructor(full) {
-    super();
-    this.toString = (extraFields) => IssueFragment.toString(full, extraFields);
-  }
-
   static get objectName() {
     return 'Issue';
   }
@@ -18,11 +13,15 @@ module.exports = class IssueFragment extends Fragment {
   }
 
   static get simplified() {
-    return new this.constructor(false);
+    const fragment = new IssueFragment(false);
+    fragment.code = 'sIssue';
+    fragment.dependencies = [ActorFragment];
+    fragment.toString = (extraFields) => IssueFragment.toString.bind(fragment)(false, extraFields);
+    return fragment;
   }
 
   static get dependencies() {
-    return [ActorFragment.simplified, ReactableFragment];
+    return [ActorFragment, ReactableFragment];
   }
 
   static toString(full = true, extraFields = '') {

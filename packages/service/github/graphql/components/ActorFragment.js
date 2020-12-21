@@ -1,11 +1,6 @@
 const Fragment = require('../Fragment');
 
 module.exports = class ActorFragment extends Fragment {
-  constructor(full) {
-    super();
-    this.toString = () => ActorFragment.toString(full);
-  }
-
   static get code() {
     return 'actor';
   }
@@ -15,7 +10,10 @@ module.exports = class ActorFragment extends Fragment {
   }
 
   static get simplified() {
-    return new ActorFragment(false);
+    const fragment = new ActorFragment(false);
+    fragment.code = 'sActor';
+    fragment.toString = () => ActorFragment.toString.bind(fragment)(false);
+    return fragment;
   }
 
   static toString(full = true) {

@@ -1,6 +1,6 @@
 const Component = require('../Component');
 
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./ActorFragment').simplified;
 const CommitFragment = require('./CommitFragment');
 const RepositoryFragment = require('./RepositoryFragment');
 const ReleaseFragment = require('./ReleaseFragment');
@@ -32,7 +32,7 @@ module.exports = class RepositoryComponent extends Component {
   get fragments() {
     const fragments = [];
 
-    if (this._includeStargazers || this._includeWatchers) fragments.push(ActorFragment.simplified);
+    if (this._includeStargazers || this._includeWatchers) fragments.push(ActorFragment);
     if (this._includeDetails) fragments.push(RepositoryFragment);
     if (this._includeReleases) fragments.push(ReleaseFragment);
     if (this._includeTags) fragments.push(CommitFragment, TagFragment);

@@ -1,5 +1,5 @@
 const IssueFragment = require('./IssueFragment');
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./ActorFragment').simplified;
 const CommitFragment = require('./CommitFragment');
 
 module.exports = class PullRequestFragment extends IssueFragment {
@@ -12,7 +12,15 @@ module.exports = class PullRequestFragment extends IssueFragment {
   }
 
   static get dependencies() {
-    return super.dependencies.concat([ActorFragment.simplified, CommitFragment]);
+    return super.dependencies.concat([ActorFragment, CommitFragment]);
+  }
+
+  static get simplified() {
+    const component = new PullRequestFragment();
+    component.code = 'sPull';
+    component.dependencies = [ActorFragment];
+    component.toString = (extraFields) => PullRequestFragment.toString.bind(component)(false);
+    return component;
   }
 
   static toString(full = true) {
