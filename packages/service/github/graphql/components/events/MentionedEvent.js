@@ -12,7 +12,7 @@ module.exports = class MentionedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on MentionedEvent {
+      fragment ${this.code || this.constructor.code} on MentionedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
       }

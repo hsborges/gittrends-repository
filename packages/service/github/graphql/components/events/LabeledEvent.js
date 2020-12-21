@@ -12,7 +12,7 @@ module.exports = class LabeledEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on LabeledEvent {
+      fragment ${this.code || this.constructor.code} on LabeledEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         label { name }

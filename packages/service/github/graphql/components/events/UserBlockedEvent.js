@@ -12,7 +12,7 @@ module.exports = class UserBlockedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on UserBlockedEvent {
+      fragment ${this.code || this.constructor.code} on UserBlockedEvent {
         actor { ...${ActorFragment.code} }
         blockDuration
         createdAt

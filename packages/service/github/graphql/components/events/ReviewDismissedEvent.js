@@ -13,7 +13,7 @@ module.exports = class ReviewDismissedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on ReviewDismissedEvent {
+      fragment ${this.code || this.constructor.code} on ReviewDismissedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         databaseId

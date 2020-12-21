@@ -13,7 +13,7 @@ module.exports = class HeadRefForcePushedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on HeadRefForcePushedEvent {
+      fragment ${this.code || this.constructor.code} on HeadRefForcePushedEvent {
         actor { ...${ActorFragment.code} }
         afterCommit { ...${CommitFragment.code} }
         beforeCommit { ...${CommitFragment.code} }

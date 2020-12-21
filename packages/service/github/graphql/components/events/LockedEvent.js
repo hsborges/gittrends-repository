@@ -12,7 +12,7 @@ module.exports = class LockedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on LockedEvent {
+      fragment ${this.code || this.constructor.code} on LockedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         lockReason

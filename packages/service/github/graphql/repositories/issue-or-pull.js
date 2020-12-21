@@ -60,10 +60,8 @@ module.exports = async function (id, type, { lastCursor } = {}) {
         participants.endCursor = get(data, `participants.${ecp}`, participants.endCursor);
 
         timeline.items.push(
-          ...get(data, 'timeline.edges', []).map((edge) =>
-            isString(edge.node)
-              ? { ...commits.find((c) => c.id === edge.node), type: 'Commit' }
-              : edge.node
+          ...get(data, 'timeline.nodes', []).map((node) =>
+            isString(node) ? { ...commits.find((c) => c.id === node), type: 'Commit' } : node
           ),
           ...get(data, 'comments', [])
         );
@@ -117,8 +115,14 @@ module.exports = async function (id, type, { lastCursor } = {}) {
   }
 
   return {
-    [type]: compact(merge(ghObject, { assignees, labels, participants })),
-    timeline: chain(timeline).compact().uniqBy('id').value() || [],
+    [type]: compact(
+      merge(ghObject, {
+        assignees: assignees.items,
+        labels: labels.items,
+        participants: participants.items
+      })
+    ),
+    timeline: chain(timeline.items).compact().uniqBy('id').value() || [],
     users: chain(users).compact().uniqBy('id').value() || [],
     commits: chain(commits).compact().uniqBy('id').value() || [],
     endCursor: timeline.endCursor

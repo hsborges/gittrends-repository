@@ -13,7 +13,7 @@ module.exports = class ClosedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on ClosedEvent {
+      fragment ${this.code || this.constructor.code} on ClosedEvent {
         actor { ...${ActorFragment.code} }
         closer {
           type:__typename

@@ -12,7 +12,7 @@ module.exports = class AutomaticBaseChangeSucceededEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on AutomaticBaseChangeSucceededEvent {
+      fragment ${this.code || this.constructor.code} on AutomaticBaseChangeSucceededEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         newBase

@@ -12,7 +12,7 @@ module.exports = class DisconnectedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on DisconnectedEvent {
+      fragment ${this.code || this.constructor.code} on DisconnectedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         isCrossRepository

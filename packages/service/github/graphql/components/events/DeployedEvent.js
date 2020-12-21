@@ -13,7 +13,7 @@ module.exports = class DeployedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on DeployedEvent {
+      fragment ${this.code || this.constructor.code} on DeployedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         databaseId

@@ -9,11 +9,6 @@ const dao = require('./helper/dao');
 const getIssueOrPull = require('../github/graphql/repositories/issue-or-pull.js');
 const getReactions = require('../github/graphql/repositories/reactions.js');
 
-async function saveReactions(reactions, users, { repository, issue, event, trx }) {
-  const rows = reactions.map((r) => ({ ...r, repository, issue, event }));
-  return Promise.all([dao.actors.insert(users, trx), dao.reactions.insert(rows, trx)]);
-}
-
 /* exports */
 module.exports = async function _get(id, resource) {
   if (!resource || (resource !== 'issue' && resource !== 'pull'))
@@ -50,15 +45,22 @@ module.exports = async function _get(id, resource) {
           dao.timeline.insert(timelineRows, trx)
         ]);
 
-        await getReactions(reactables).then((responses) =>
-          Promise.map(responses, (response, index) =>
-            saveReactions(response.reactions, response.users, {
-              repository: record.repository,
-              issue: id,
-              ...(reactables[index].event ? { event: reactables[index].id } : {}),
-              trx
-            })
-          )
+        await getReactions(reactables.map((r) => r.id)).then(
+          ({ reactions = [], users = [] } = {}) => {
+            const records = reactions.map((reaction) => {
+              const reactable = reactables.find((r) => r.id === reaction.reactable);
+              delete reaction.reactable;
+
+              return {
+                repository: record.repository,
+                issue: id,
+                ...(reactable.event ? { event: reactable.id } : {}),
+                ...reaction
+              };
+            });
+
+            return Promise.all([dao.actors.insert(users, trx), dao.reactions.insert(records, trx)]);
+          }
         );
 
         await dao.metadata.upsert([

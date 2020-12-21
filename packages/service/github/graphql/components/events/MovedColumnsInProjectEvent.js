@@ -12,7 +12,7 @@ module.exports = class MovedColumnsInProjectEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on MovedColumnsInProjectEvent {
+      fragment ${this.code || this.constructor.code} on MovedColumnsInProjectEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         previousProjectColumnName

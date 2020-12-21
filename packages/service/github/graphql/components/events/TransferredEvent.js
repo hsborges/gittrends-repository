@@ -12,7 +12,7 @@ module.exports = class TransferredEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on TransferredEvent {
+      fragment ${this.code || this.constructor.code} on TransferredEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         fromRepository { id nameWithOwner }

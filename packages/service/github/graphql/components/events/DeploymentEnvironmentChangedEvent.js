@@ -13,7 +13,7 @@ module.exports = class DeploymentEnvironmentChangedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on DeploymentEnvironmentChangedEvent {
+      fragment ${this.code || this.constructor.code} on DeploymentEnvironmentChangedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         deploymentStatus { ...${DeploymentStatusFragment.code} }

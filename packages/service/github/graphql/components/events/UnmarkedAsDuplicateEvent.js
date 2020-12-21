@@ -12,7 +12,7 @@ module.exports = class UnmarkedAsDuplicateEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on UnmarkedAsDuplicateEvent {
+      fragment ${this.code || this.constructor.code} on UnmarkedAsDuplicateEvent {
         actor { ...${ActorFragment.code} }
         createdAt
       }

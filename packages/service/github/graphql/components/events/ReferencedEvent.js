@@ -13,7 +13,7 @@ module.exports = class ReferencedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on ReferencedEvent {
+      fragment ${this.code || this.constructor.code} on ReferencedEvent {
         actor { ...${ActorFragment.code} }
         commit { ...${CommitFragment.code} }
         commitRepository { id }

@@ -12,7 +12,7 @@ module.exports = class UnassignedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on UnassignedEvent {
+      fragment ${this.code || this.constructor.code} on UnassignedEvent {
         actor { ...${ActorFragment.code} }
         assignee { ...${ActorFragment.code} }
         createdAt

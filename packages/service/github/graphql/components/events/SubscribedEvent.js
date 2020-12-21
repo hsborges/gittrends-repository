@@ -12,7 +12,7 @@ module.exports = class SubscribedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on SubscribedEvent {
+      fragment ${this.code || this.constructor.code} on SubscribedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
       }

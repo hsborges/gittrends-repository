@@ -34,17 +34,15 @@ module.exports = class Query {
   }
 
   get fragments() {
-    const fragments = new Set();
-    this.components.forEach((c) => c.fragments.forEach((f) => fragments.add(f)));
+    const fragments = (function recursive(_fragments) {
+      if (!_fragments || !_fragments.length) return {};
+      return {
+        ..._fragments.reduce((acc, f) => ({ ...acc, [f.code]: f }), {}),
+        ...recursive(_fragments.reduce((acc, f) => acc.concat(f.dependencies), []))
+      };
+    })(this.components.reduce((acc, c) => acc.concat(c.fragments), []));
 
-    (function recursive(_fragments) {
-      if (!_fragments.length) return;
-      const dependencies = _fragments.reduce((acc, f) => acc.concat(f.dependencies), []);
-      dependencies.map((f) => fragments.add(f));
-      return recursive(dependencies);
-    })([...fragments]);
-
-    return [...fragments];
+    return Object.values(fragments);
   }
 
   get args() {
@@ -83,14 +81,7 @@ module.exports = class Query {
 
   async run(interceptor) {
     const query = interceptor ? interceptor(this.toString()) : this.toString();
-    return client
-      .post({ query })
-      .then((response) => parser(get(response, 'data.data', null)))
-      .catch((err) => {
-        console.error(err);
-        console.log(query);
-        process.exit(1);
-      });
+    return client.post({ query }).then((response) => parser(get(response, 'data.data', null)));
   }
 
   then(...args) {

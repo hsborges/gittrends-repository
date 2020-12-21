@@ -12,7 +12,7 @@ module.exports = class CommentDeletedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on CommentDeletedEvent {
+      fragment ${this.code || this.constructor.code} on CommentDeletedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
       }

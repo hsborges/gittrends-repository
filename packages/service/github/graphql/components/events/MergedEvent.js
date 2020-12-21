@@ -13,7 +13,7 @@ module.exports = class MergedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on MergedEvent {
+      fragment ${this.code || this.constructor.code} on MergedEvent {
         actor { ...${ActorFragment.code} }
         commit { ...${CommitFragment.code} }
         createdAt

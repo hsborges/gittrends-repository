@@ -12,7 +12,7 @@ module.exports = class BaseRefChangedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on BaseRefChangedEvent {
+      fragment ${this.code || this.constructor.code} on BaseRefChangedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
       }

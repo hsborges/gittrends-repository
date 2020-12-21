@@ -12,7 +12,7 @@ module.exports = class ConvertToDraftEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on ConvertToDraftEvent {
+      fragment ${this.code || this.constructor.code} on ConvertToDraftEvent {
         actor { ...${ActorFragment.code} }
         createdAt
       }

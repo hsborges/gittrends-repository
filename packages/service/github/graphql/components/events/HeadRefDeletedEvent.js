@@ -12,7 +12,7 @@ module.exports = class HeadRefDeletedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on HeadRefDeletedEvent {
+      fragment ${this.code || this.constructor.code} on HeadRefDeletedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         headRef { name target { id } }

@@ -9,13 +9,21 @@ const ReactionComponent = require('../components/ReactionComponent');
 
 /* eslint-disable no-param-reassign */
 module.exports = async function (reactables = []) {
-  if (!reactables.length) return [];
+  if (!reactables) return {};
+
+  if (!Array.isArray(reactables)) module.exports([reactables]);
+  if (!reactables.length) return {};
 
   if (reactables.length > 100)
     return Promise.reduce(
       chunk(reactables, Math.min(100, Math.ceil(reactables.length / 2))),
-      async (res, infoChunk) => res.concat(await module.exports(infoChunk)),
-      []
+      async (res, infoChunk) => {
+        const partialResult = await module.exports(infoChunk);
+        res.reactions.concat(partialResult.reactions);
+        res.users = chain(res.users.concat(partialResult.users)).compact().uniqBy('id').value();
+        return res;
+      },
+      { reactions: [], users: [] }
     );
 
   let components = reactables.map((id, index) =>

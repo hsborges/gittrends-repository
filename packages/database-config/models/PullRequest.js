@@ -2,7 +2,7 @@ const Issue = require('./Issue');
 
 class PullRequest extends Issue {
   static get issueType() {
-    return 'PULL_REQUEST';
+    return 'PullRequest';
   }
 
   static get jsonSchema() {

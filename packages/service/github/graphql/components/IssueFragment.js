@@ -22,7 +22,7 @@ module.exports = class IssueFragment extends Fragment {
   }
 
   static get dependencies() {
-    return [ActorFragment, ReactableFragment];
+    return [ActorFragment, ReactableFragment, MilestoneFragment];
   }
 
   static toString(full = true, extraFields = '') {

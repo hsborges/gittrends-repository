@@ -12,7 +12,7 @@ module.exports = class RenamedTitleEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on RenamedTitleEvent {
+      fragment ${this.code || this.constructor.code} on RenamedTitleEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         currentTitle

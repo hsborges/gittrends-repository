@@ -2,13 +2,13 @@
  *  Author: Hudson S. Borges
  */
 exports.up = async (knex) => {
-  await knex.schema.raw("CREATE TYPE \"issue_type\" AS ENUM ('ISSUE', 'PULL_REQUEST')");
+  await knex.schema.raw("CREATE TYPE \"issue_type\" AS ENUM ('Issue', 'PullRequest')");
 
   return knex.schema.createTable('issues', (table) => {
     table.string('id').primary();
     table.string('repository').notNullable();
     table
-      .enu('type', ['ISSUE', 'PULL_REQUEST'], {
+      .enu('type', ['Issue', 'PullRequest'], {
         useNative: true,
         existingType: true,
         enumName: 'issue_type'

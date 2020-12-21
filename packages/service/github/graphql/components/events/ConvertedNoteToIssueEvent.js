@@ -12,7 +12,7 @@ module.exports = class ConvertedNoteToIssueEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on ConvertedNoteToIssueEvent {
+      fragment ${this.code || this.constructor.code} on ConvertedNoteToIssueEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         project { id }

@@ -153,7 +153,7 @@ module.exports = class IssueComponent extends Component {
       ? `
           timeline:timelineItems(${super.$argsToString({ first, after })}) {
             pageInfo { hasNextPage endCursor }
-            edges {
+            nodes {
               type:__typename
               ... on Node { id }
               ... on AddedToProjectEvent { ...${AddedToProjectEvent.code} }

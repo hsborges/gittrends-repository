@@ -10,7 +10,7 @@ class Issue extends Model {
   }
 
   static get issueType() {
-    return 'ISSUE';
+    return 'Issue';
   }
 
   static query(...args) {

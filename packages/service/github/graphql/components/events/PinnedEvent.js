@@ -12,7 +12,7 @@ module.exports = class PinnedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on PinnedEvent {
+      fragment ${this.code || this.constructor.code} on PinnedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
       }

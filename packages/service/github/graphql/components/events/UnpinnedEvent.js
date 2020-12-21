@@ -12,7 +12,7 @@ module.exports = class UnpinnedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on UnpinnedEvent {
+      fragment ${this.code || this.constructor.code} on UnpinnedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
       }

@@ -12,7 +12,7 @@ module.exports = class CrossReferencedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on CrossReferencedEvent {
+      fragment ${this.code || this.constructor.code} on CrossReferencedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         isCrossRepository

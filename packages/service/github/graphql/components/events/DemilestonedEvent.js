@@ -12,7 +12,7 @@ module.exports = class DemilestonedEvent extends Fragment {
 
   static toString() {
     return `
-      fragment ${this.code} on DemilestonedEvent {
+      fragment ${this.code || this.constructor.code} on DemilestonedEvent {
         actor { ...${ActorFragment.code} }
         createdAt
         milestoneTitle
