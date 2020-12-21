@@ -14,8 +14,6 @@ services:
       POSTGRES_USER: ${GITTRENDS_DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
       POSTGRES_DB: ${GITTRENDS_DATABASE_DB}
-    networks:
-      - gittrends
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -28,8 +26,6 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@gittrends.app
       PGADMIN_DEFAULT_PASSWORD: admin
-    networks:
-      - gittrends
 
   pgbackups:
     image: prodrigestivill/postgres-backup-local
@@ -49,8 +45,6 @@ services:
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=1
       - HEALTHCHECK_PORT=9999
-    networks:
-      - gittrends
 
   redis:
     image: redis:alpine
@@ -59,8 +53,6 @@ services:
     ports:
       - ${GITTRENDS_REDIS_PORT}:6379
     command: --maxmemory 50mb --maxmemory-policy allkeys-lru
-    networks:
-      - gittrends
 
   nginx:
     build:
@@ -70,6 +62,8 @@ services:
         GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
     container_name: nginx
     restart: always
+    ports:
+      - 80:80
     volumes:
       - ./data/nginx/development.conf:/app/data/nginx/default.conf:ro
     environment:
@@ -79,10 +73,8 @@ services:
       - .env
     depends_on:
       - postgres
-    ports:
-      - 80:80
-    networks:
-      - gittrends
+    links:
+      - postgres
 
 volumes:
   db:
@@ -90,8 +82,3 @@ volumes:
     name: gittrends.app
   pgadmin-db:
     name: pgadmin.gittrends.app
-
-networks:
-  gittrends:
-    external: true
-    name: gittrends.app

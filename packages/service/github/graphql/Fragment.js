@@ -3,6 +3,12 @@ module.exports = class Fragment {
     return full ? field : '';
   }
 
+  constructor() {
+    this.code = this.constructor.code;
+    this.dependencies = this.constructor.dependencies;
+    this.toString = this.constructor.toString;
+  }
+
   static get code() {
     throw new Error('Fragment.code() must be override!');
   }

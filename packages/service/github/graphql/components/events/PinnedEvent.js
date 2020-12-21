@@ -1,5 +1,5 @@
 const Fragment = require('../../Fragment');
-const ActorFragment = require('../SimplifiedActorFragment');
+const ActorFragment = require('../ActorFragment');
 
 module.exports = class PinnedEvent extends Fragment {
   static get code() {
@@ -7,7 +7,7 @@ module.exports = class PinnedEvent extends Fragment {
   }
 
   static get dependencies() {
-    return [ActorFragment];
+    return [ActorFragment.simplified];
   }
 
   static toString() {

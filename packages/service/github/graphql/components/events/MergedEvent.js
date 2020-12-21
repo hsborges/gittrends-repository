@@ -1,5 +1,5 @@
 const Fragment = require('../../Fragment');
-const ActorFragment = require('../SimplifiedActorFragment');
+const ActorFragment = require('../ActorFragment');
 const CommitFragment = require('../CommitFragment');
 
 module.exports = class MergedEvent extends Fragment {
@@ -8,7 +8,7 @@ module.exports = class MergedEvent extends Fragment {
   }
 
   static get dependencies() {
-    return [ActorFragment, CommitFragment];
+    return [ActorFragment.simplified, CommitFragment];
   }
 
   static toString() {

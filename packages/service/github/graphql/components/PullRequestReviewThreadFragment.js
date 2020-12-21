@@ -1,5 +1,5 @@
 const Fragment = require('../Fragment');
-const ActorFragment = require('./SimplifiedActorFragment');
+const ActorFragment = require('./ActorFragment');
 const PullRequestReviewCommentFragment = require('./PullRequestReviewCommentFragment');
 
 module.exports = class PullRequestReviewThreadFragment extends Fragment {
@@ -8,7 +8,7 @@ module.exports = class PullRequestReviewThreadFragment extends Fragment {
   }
 
   static get dependencies() {
-    return [ActorFragment];
+    return [ActorFragment.simplified];
   }
 
   static toString() {

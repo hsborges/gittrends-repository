@@ -1,5 +1,5 @@
 const Component = require('../Component');
-const ActorFragment = require('./SimplifiedActorFragment');
+const ActorFragment = require('./ActorFragment');
 
 module.exports = class ReactionComponent extends Component {
   constructor(id, name) {
@@ -11,7 +11,7 @@ module.exports = class ReactionComponent extends Component {
   }
 
   get fragments() {
-    return [ActorFragment];
+    return [ActorFragment.simplified];
   }
 
   get id() {

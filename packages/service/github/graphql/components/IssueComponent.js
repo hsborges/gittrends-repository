@@ -1,6 +1,6 @@
 const Component = require('../Component');
 const IssueFragment = require('./IssueFragment');
-const ActorFragment = require('./SimplifiedActorFragment');
+const ActorFragment = require('./ActorFragment');
 const IssueCommentFragment = require('./IssueCommentFragment');
 
 const AddedToProjectEvent = require('./events/AddedToProjectEvent');
@@ -56,7 +56,9 @@ module.exports = class IssueComponent extends Component {
     const fragments = [];
 
     if (this._includeDetails) fragments.push(IssueFragment);
-    if (this._includeAssignees || this._includeParticipants) fragments.push(ActorFragment);
+
+    if (this._includeAssignees || this._includeParticipants)
+      fragments.push(ActorFragment.simplified);
 
     if (this._includeTimeline)
       fragments.push(

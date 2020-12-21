@@ -1,5 +1,5 @@
 const IssueFragment = require('./IssueFragment');
-const ActorFragment = require('./SimplifiedActorFragment');
+const ActorFragment = require('./ActorFragment');
 const CommitFragment = require('./CommitFragment');
 
 module.exports = class PullRequestFragment extends IssueFragment {
@@ -12,7 +12,7 @@ module.exports = class PullRequestFragment extends IssueFragment {
   }
 
   static get dependencies() {
-    return super.dependencies.concat([ActorFragment, CommitFragment]);
+    return super.dependencies.concat([ActorFragment.simplified, CommitFragment]);
   }
 
   static toString(full = true) {
