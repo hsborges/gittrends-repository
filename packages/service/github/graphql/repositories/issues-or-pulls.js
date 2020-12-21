@@ -14,8 +14,7 @@ module.exports = async function (id, type, { lastCursor, max = Number.MAX_SAFE_I
   if (!type || (type !== 'issues' && type !== 'pulls'))
     throw new TypeError('Type must be "issues" or "pulls"!');
 
-  const name = type === 'pulls' ? 'pullRequests' : 'issues';
-  const component = RepositoryComponent.with({ id }).includeDetails(false);
+  const component = RepositoryComponent.with({ id, name: 'repository' }).includeDetails(false);
 
   let hasNextPage = true;
   let reduce = 0;
@@ -33,12 +32,13 @@ module.exports = async function (id, type, { lastCursor, max = Number.MAX_SAFE_I
     await Query.create()
       .compose(component)
       .then(({ data, users: _users = [] }) => {
-        users.push(..._users);
-        objects.push(...get(data, `repository.${name}.nodes`, []));
+        const path = `repository.${type === 'issues' ? 'issues' : 'pull_requests'}`;
 
-        reduce = 0;
-        hasNextPage = get(data, `repository.${name}.page_info.has_next_page`, false);
-        lastCursor = get(data, `repository.${name}.page_info.end_cursor`, lastCursor);
+        users.push(..._users);
+        objects.push(...get(data, `${path}.nodes`, []));
+
+        hasNextPage = get(data, `${path}.page_info.has_next_page`, false);
+        lastCursor = get(data, `${path}.page_info.end_cursor`, lastCursor);
       })
       .catch((err) => {
         if (err instanceof BadGatewayError && total > 1) return (reduce += Math.ceil(total / 2));

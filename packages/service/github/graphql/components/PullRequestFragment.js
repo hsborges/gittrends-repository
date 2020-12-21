@@ -11,16 +11,17 @@ module.exports = class PullRequestFragment extends IssueFragment {
     return 'pull';
   }
 
-  static get dependencies() {
-    return super.dependencies.concat([ActorFragment, CommitFragment]);
+  static get simplified() {
+    const fragment = new PullRequestFragment();
+    fragment.code = 'sPull';
+    fragment.dependencies = [ActorFragment];
+    fragment.objectName = PullRequestFragment.objectName;
+    fragment.toString = () => PullRequestFragment.toString.bind(fragment)(false);
+    return fragment;
   }
 
-  static get simplified() {
-    const component = new PullRequestFragment();
-    component.code = 'sPull';
-    component.dependencies = [ActorFragment];
-    component.toString = (extraFields) => PullRequestFragment.toString.bind(component)(false);
-    return component;
+  static get dependencies() {
+    return super.dependencies.concat([ActorFragment, CommitFragment]);
   }
 
   static toString(full = true) {
