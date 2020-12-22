@@ -1,27 +1,27 @@
 const IssueComponent = require('./IssueComponent');
 
-const IssueFragment = require('./IssueFragment');
-const PullRequestFragment = require('./PullRequestFragment');
+const IssueFragment = require('../fragments/IssueFragment');
+const PullRequestFragment = require('../fragments/PullRequestFragment');
 
-const AutomaticBaseChangeFailedEvent = require('./events/AutomaticBaseChangeFailedEvent');
-const AutomaticBaseChangeSucceededEvent = require('./events/AutomaticBaseChangeSucceededEvent');
-const BaseRefChangedEvent = require('./events/BaseRefChangedEvent');
-const BaseRefForcePushedEvent = require('./events/BaseRefForcePushedEvent');
-const ConvertToDraftEvent = require('./events/ConvertToDraftEvent');
-const DeployedEvent = require('./events/DeployedEvent');
-const DeploymentEnvironmentChangedEvent = require('./events/DeploymentEnvironmentChangedEvent');
-const HeadRefDeletedEvent = require('./events/HeadRefDeletedEvent');
-const HeadRefForcePushedEvent = require('./events/HeadRefForcePushedEvent');
-const HeadRefRestoredEvent = require('./events/HeadRefRestoredEvent');
-const MergedEvent = require('./events/MergedEvent');
-const PullRequestCommit = require('./PullRequestCommit');
-const PullRequestRevisionMarkerFragment = require('./PullRequestRevisionMarkerFragment');
-const ReadyForReviewEvent = require('./events/ReadyForReviewEvent');
-const ReviewDismissedEvent = require('./events/ReviewDismissedEvent');
-const ReviewRequestRemovedEvent = require('./events/ReviewRequestRemovedEvent');
-const ReviewRequestedEvent = require('./events/ReviewRequestedEvent');
-const PullRequestReviewFragment = require('./PullRequestReviewFragment');
-const PullRequestCommitCommentThreadFragment = require('./PullRequestCommitCommentThreadFragment');
+const AutomaticBaseChangeFailedEvent = require('../fragments/events/AutomaticBaseChangeFailedEvent');
+const AutomaticBaseChangeSucceededEvent = require('../fragments/events/AutomaticBaseChangeSucceededEvent');
+const BaseRefChangedEvent = require('../fragments/events/BaseRefChangedEvent');
+const BaseRefForcePushedEvent = require('../fragments/events/BaseRefForcePushedEvent');
+const ConvertToDraftEvent = require('../fragments/events/ConvertToDraftEvent');
+const DeployedEvent = require('../fragments/events/DeployedEvent');
+const DeploymentEnvironmentChangedEvent = require('../fragments/events/DeploymentEnvironmentChangedEvent');
+const HeadRefDeletedEvent = require('../fragments/events/HeadRefDeletedEvent');
+const HeadRefForcePushedEvent = require('../fragments/events/HeadRefForcePushedEvent');
+const HeadRefRestoredEvent = require('../fragments/events/HeadRefRestoredEvent');
+const MergedEvent = require('../fragments/events/MergedEvent');
+const PullRequestCommit = require('../fragments/PullRequestCommit');
+const PullRequestRevisionMarkerFragment = require('../fragments/PullRequestRevisionMarkerFragment');
+const ReadyForReviewEvent = require('../fragments/events/ReadyForReviewEvent');
+const ReviewDismissedEvent = require('../fragments/events/ReviewDismissedEvent');
+const ReviewRequestRemovedEvent = require('../fragments/events/ReviewRequestRemovedEvent');
+const ReviewRequestedEvent = require('../fragments/events/ReviewRequestedEvent');
+const PullRequestReviewFragment = require('../fragments/PullRequestReviewFragment');
+const PullRequestCommitCommentThreadFragment = require('../fragments/PullRequestCommitCommentThreadFragment');
 
 module.exports = class PullRequestComponent extends IssueComponent {
   constructor(id, name) {

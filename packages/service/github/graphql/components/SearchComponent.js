@@ -1,6 +1,6 @@
 const Component = require('../Component');
 
-const RepositoryFragment = require('./RepositoryFragment');
+const RepositoryFragment = require('../fragments/RepositoryFragment');
 
 module.exports = class RepositoryComponent extends Component {
   constructor(name = 'search') {

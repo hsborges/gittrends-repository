@@ -1,12 +1,12 @@
 const Component = require('../Component');
 
-const ActorFragment = require('./ActorFragment').simplified;
-const CommitFragment = require('./CommitFragment');
-const RepositoryFragment = require('./RepositoryFragment');
-const ReleaseFragment = require('./ReleaseFragment');
-const TagFragment = require('./TagFragment');
-const IssueFragment = require('./IssueFragment').simplified;
-const PullRequestFragment = require('./PullRequestFragment').simplified;
+const ActorFragment = require('../fragments/ActorFragment').simplified;
+const CommitFragment = require('../fragments/CommitFragment');
+const RepositoryFragment = require('../fragments/RepositoryFragment');
+const ReleaseFragment = require('../fragments/ReleaseFragment');
+const TagFragment = require('../fragments/TagFragment');
+const IssueFragment = require('../fragments/IssueFragment').simplified;
+const PullRequestFragment = require('../fragments/PullRequestFragment').simplified;
 
 module.exports = class RepositoryComponent extends Component {
   constructor(id, name) {
@@ -14,7 +14,7 @@ module.exports = class RepositoryComponent extends Component {
 
     super();
 
-    this._id = id;
+    this.id = id;
     this._name = name || 'repository';
 
     this._includeDetails = '';
@@ -105,10 +105,12 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includeReleases(include = true, { after, first = 100 } = {}) {
+  includeReleases(include = true, { after, first = 100, name = 'releases' } = {}) {
+    const args = super.$argsToString({ after, first });
+
     this._includeReleases = include
       ? `
-          releases(${super.$argsToString({ after, first })}) {
+          ${name}:releases(${args}, orderBy: { field: CREATED_AT, direction: ASC  }) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${ReleaseFragment.code} }
           }
@@ -125,12 +127,9 @@ module.exports = class RepositoryComponent extends Component {
       ? `
           tags:refs(refPrefix:"refs/tags/", ${args}, direction: ASC) {
             pageInfo { hasNextPage endCursor }
-            edges {
-              cursor
-              node {
-                id name
-                target { type:__typename id oid ...${CommitFragment.code} ...${TagFragment.code} }
-              }
+            nodes {
+              id name
+              target { type:__typename id oid ...${CommitFragment.code} ...${TagFragment.code} }
             }
           }
         `
@@ -184,7 +183,7 @@ module.exports = class RepositoryComponent extends Component {
 
   toString() {
     return `
-    ${this._name}:node(id: "${this._id}") {
+    ${this._name}:node(id: "${this.id}") {
       ${this._includeDetails}
       ... on Repository {
         ${this._includeLanguages}

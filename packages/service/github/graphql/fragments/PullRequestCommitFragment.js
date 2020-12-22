@@ -1,7 +1,7 @@
 const Fragment = require('../Fragment');
 const CommitFragment = require('./CommitFragment');
 
-module.exports = class PullRequestCommit extends Fragment {
+module.exports = class PullRequestCommitFragment extends Fragment {
   static get code() {
     return 'pullRequestCommit';
   }

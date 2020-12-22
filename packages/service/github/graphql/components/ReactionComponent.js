@@ -1,5 +1,5 @@
 const Component = require('../Component');
-const ActorFragment = require('./ActorFragment').simplified;
+const ActorFragment = require('../fragments/ActorFragment').simplified;
 
 module.exports = class ReactionComponent extends Component {
   constructor(id, name) {

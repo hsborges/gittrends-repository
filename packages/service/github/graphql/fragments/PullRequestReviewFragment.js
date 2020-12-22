@@ -1,5 +1,5 @@
 const Fragment = require('../Fragment');
-const ActorFragment = require('./ActorFragment');
+const ActorFragment = require('./ActorFragment').simplified;
 const PullRequestReviewCommentFragment = require('./PullRequestReviewCommentFragment');
 const CommitFragment = require('./CommitFragment');
 const ReactableFragment = require('./ReactableFragment');
