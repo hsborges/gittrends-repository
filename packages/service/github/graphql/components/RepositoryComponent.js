@@ -27,6 +27,7 @@ module.exports = class RepositoryComponent extends Component {
     this._includeDependencyGraphManifests = '';
     this._includeIssues = '';
     this._includePullRequests = '';
+    this._includeManifests = '';
   }
 
   get fragments() {
@@ -82,7 +83,7 @@ module.exports = class RepositoryComponent extends Component {
 
     this._includeStargazers = include
       ? `
-          stargazers(${args ? `${args}, ` : ''} orderBy: { direction: ASC, field: STARRED_AT }) {
+          _stargazers:stargazers(${args}, orderBy: { direction: ASC, field: STARRED_AT }) {
             pageInfo { hasNextPage endCursor }
             edges { starredAt user:node { ...${ActorFragment.code} } }
           }
@@ -95,7 +96,7 @@ module.exports = class RepositoryComponent extends Component {
   includeWatchers(include = true, { after, first = 100 } = {}) {
     this._includeWatchers = include
       ? `
-          watchers(${super.$argsToString({ after, first })}) {
+          _watchers:watchers(${super.$argsToString({ after, first })}) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${ActorFragment.code} }
           }
@@ -105,12 +106,12 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includeReleases(include = true, { after, first = 100, name = 'releases' } = {}) {
+  includeReleases(include = true, { after, first = 100 } = {}) {
     const args = super.$argsToString({ after, first });
 
     this._includeReleases = include
       ? `
-          ${name}:releases(${args}, orderBy: { field: CREATED_AT, direction: ASC  }) {
+          _releases:releases(${args}, orderBy: { field: CREATED_AT, direction: ASC  }) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${ReleaseFragment.code} }
           }
@@ -125,7 +126,7 @@ module.exports = class RepositoryComponent extends Component {
 
     this._includeTags = include
       ? `
-          tags:refs(refPrefix:"refs/tags/", ${args}, direction: ASC) {
+          _tags:refs(refPrefix:"refs/tags/", ${args}, direction: ASC) {
             pageInfo { hasNextPage endCursor }
             nodes {
               id name
@@ -138,16 +139,22 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includeDependencyGraphManifests(include = true, { after, first = 100 } = {}) {
+  includeDependencyManifests(include = true, { after, first = 100 } = {}) {
     this._includeDependencyGraphManifests = include
       ? `
           dependencyGraphManifests(${super.$argsToString({ after, first })}) {
             pageInfo { hasNextPage endCursor }
-            nodes { id filename }
+            nodes { dependenciesCount exceedsMaxSize filename id parseable }
           }
         `
       : '';
 
+    return this;
+  }
+
+  includeManifests(include = true, { components = [] } = {}) {
+    this._includeManifests =
+      include && components.length ? components.map((c) => c.toString()).join('\n') : '';
     return this;
   }
 
@@ -156,7 +163,7 @@ module.exports = class RepositoryComponent extends Component {
 
     this._includeIssues = include
       ? `
-          issues(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
+          _issues:issues(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${IssueFragment.code} }
           }
@@ -171,7 +178,7 @@ module.exports = class RepositoryComponent extends Component {
 
     this._includePullRequests = include
       ? `
-          pullRequests(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
+          _pullRequests:pullRequests(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${PullRequestFragment.code} }
           }
@@ -186,6 +193,7 @@ module.exports = class RepositoryComponent extends Component {
     ${this._name}:node(id: "${this.id}") {
       ${this._includeDetails}
       ... on Repository {
+        id
         ${this._includeLanguages}
         ${this._includeTopics}
         ${this._includeStargazers}
@@ -197,6 +205,7 @@ module.exports = class RepositoryComponent extends Component {
         ${this._includePullRequests}
       }
     }
+    ${this._includeManifests}
     `;
   }
 };

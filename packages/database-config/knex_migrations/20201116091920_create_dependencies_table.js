@@ -6,7 +6,6 @@ exports.up = (knex) =>
     table.string('repository').notNullable();
     table.string('manifest').notNullable();
     table.string('filename');
-    table.string('blob_path');
     table.boolean('has_dependencies');
     table.string('package_manager');
     table.string('package_name').notNullable();

@@ -6,8 +6,8 @@ module.exports = class DependencyGraphManifestComponent extends Component {
 
     super();
 
-    this._id = id;
-    this._name = name || 'manifest';
+    this.id = id;
+    this.name = name || 'manifest';
 
     this._includeDetails = '';
     this._includeDependencies = '';
@@ -60,7 +60,7 @@ module.exports = class DependencyGraphManifestComponent extends Component {
 
   toString() {
     return `
-      ${this._name}:node(id: "${this._id}") {
+      ${this.name}:node(id: "${this.id}") {
         type: __typename
         ${this._includeDetails}
         ${this._includeDependencies}

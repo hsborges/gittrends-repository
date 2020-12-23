@@ -1,8 +1,8 @@
 const { knex } = require('@gittrends/database-config');
 const { actors: ActorsDAO } = require('../updater/helper/dao');
 
-const RepositoryComponent = require('../github/graphql/components/RepositoryComponent');
 const Query = require('../github/graphql/Query');
+const RepositoryComponent = require('../github/graphql/components/RepositoryComponent');
 const DetailsHander = require('./repository/DetailsHandler');
 
 module.exports = class RepositoryUpdater {

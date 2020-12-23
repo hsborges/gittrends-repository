@@ -17,7 +17,6 @@ class Dependency extends Model {
         repository: { type: 'string' },
         manifest: { type: 'string' },
         filename: { type: 'string' },
-        blob_path: { type: 'string' },
         has_dependencies: { type: 'boolean' },
         package_manager: { type: 'string' },
         package_name: { type: 'string' },

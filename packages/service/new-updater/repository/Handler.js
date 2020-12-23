@@ -19,10 +19,6 @@ module.exports = class Handler {
     throw new Error('Handler.hasNextPage() must be override!');
   }
 
-  get data() {
-    throw new Error('Handler.data() must be override!');
-  }
-
   get done() {
     return !this.hasNextPage;
   }

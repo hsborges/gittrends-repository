@@ -10,6 +10,7 @@ module.exports = class RepositoryDetailsHander extends Handler {
     this.details = null;
     this.languages = { items: [], hasNextPage: true, endCursor: null };
     this.topics = { items: [], hasNextPage: true, endCursor: null };
+    this.meta = { id: this.component.id, resource: 'repository' };
   }
 
   async updateComponent() {
@@ -20,6 +21,8 @@ module.exports = class RepositoryDetailsHander extends Handler {
   }
 
   async updateDatabase(data, trx) {
+    if (this.done) return;
+
     if (data) {
       if (this.details === null)
         this.details = pick(data.repository, Object.keys(Repository.jsonSchema.properties));
@@ -42,12 +45,7 @@ module.exports = class RepositoryDetailsHander extends Handler {
         await Promise.all([
           this.dao.repositories.update(this.data, trx),
           this.dao.metadata.upsert(
-            {
-              id: this.component.id,
-              resource: 'repository',
-              key: 'updatedAt',
-              value: new Date().toISOString()
-            },
+            { ...this.meta, key: 'updatedAt', value: new Date().toISOString() },
             trx
           )
         ]);
