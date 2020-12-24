@@ -9,9 +9,6 @@ exports.up = (knex) =>
     table.string('type').notNullable();
     table.json('payload').notNullable();
 
-    table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
-    table.foreign('issue').references('id').inTable('issues').onDelete('CASCADE');
-
     table.index(['repository', 'issue']);
   });
 

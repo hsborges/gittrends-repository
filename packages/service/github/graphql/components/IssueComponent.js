@@ -34,12 +34,12 @@ const UnsubscribedEvent = require('../fragments/events/UnsubscribedEvent');
 const UserBlockedEvent = require('../fragments/events/UserBlockedEvent');
 
 module.exports = class IssueComponent extends Component {
-  constructor(id, name) {
+  constructor(id, alias) {
     if (!id) throw new Error('ID is mandatory!');
     super();
 
-    this._id = id;
-    this._name = name || 'issue';
+    this.id = id;
+    this.alias = alias || 'issue';
     this.componentName = 'Issue';
 
     this._includeDetails = '';
@@ -94,14 +94,6 @@ module.exports = class IssueComponent extends Component {
       );
 
     return fragments;
-  }
-
-  get id() {
-    return this._id;
-  }
-
-  get name() {
-    return this._name;
   }
 
   static with({ id, name }) {
@@ -196,7 +188,7 @@ module.exports = class IssueComponent extends Component {
 
   toString() {
     return `
-      ${this._name}:node(id: "${this._id}") {
+      ${this.alias}:node(id: "${this.id}") {
         type:__typename
         ... on ${this.componentName} {
           ${this._includeDetails}

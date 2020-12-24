@@ -1028,13 +1028,13 @@
     dotenv "^8.2.0"
     find-up "^5.0.0"
 
-"@hsborges/github-proxy-server@^2.4.1":
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-2.4.1.tgz#c8f493c9b4310a2b1c264ea27ee0673ab677fb5b"
-  integrity sha512-J/64Kj98lElc6HOdXKcO4R2WXoz4P913CnJ/BYo70yJS0N0GF3rGzpFqx6nFK3NBuqqRzAEJMoWWCTnf4BRkSg==
+"@hsborges/github-proxy-server@^2.4.3":
+  version "2.4.3"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-2.4.3.tgz#9ef4d2e54f8ed62dbd113041d072620631b1890e"
+  integrity sha512-CcpIZ2ZwoxPzVqEAGEs6W7GA+TBRvqDZ6XKYPMzxp+NSqjDLMIm/yERWd2+8gGWYZJkoUuNAkHtOWMAyOIk2kA==
   dependencies:
     async "^3.2.0"
-    axios "^0.21.0"
+    axios "^0.21.1"
     body-parser "^1.19.0"
     chalk "^4.1.0"
     commander "^6.2.1"
@@ -1620,10 +1620,10 @@
   dependencies:
     http-proxy-middleware "^1.0.6"
 
-"@nuxtjs/tailwindcss@^3.4.1":
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/@nuxtjs/tailwindcss/-/tailwindcss-3.4.1.tgz#d1e1e64c4df75ddfdef09441a9157019249e689e"
-  integrity sha512-DIBtYo77qb3hX+Y0DqGVAGp+H9Wpvi+2laEQFDpTw4GBvw/4BCZ52zUYiBsH5tGaVCNBqPenGoxmnZbO68r5qQ==
+"@nuxtjs/tailwindcss@^3.4.2":
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/@nuxtjs/tailwindcss/-/tailwindcss-3.4.2.tgz#2376877b7e3fff35c044e99828d5e7cacfec5621"
+  integrity sha512-Hv1b/4zYaffNc0JHss3jqKLZoPRQfG7upxGguP749Zx2VgMyFExeT3NMAxntLHctKvv/ohN+5kFGiewZGI5n2A==
   dependencies:
     "@nuxt/ufo" "^0.5.2"
     chalk "^4.1.0"
@@ -1631,7 +1631,7 @@
     consola "^2.15.0"
     defu "^3.2.2"
     fs-extra "^9.0.1"
-    tailwind-config-viewer "^1.3.1"
+    tailwind-config-viewer "^1.4.0"
     tailwindcss "^1.9.6"
 
 "@nuxtjs/youch@^4.2.3":
@@ -2850,6 +2850,13 @@ axios@^0.21.0:
   version "0.21.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.0.tgz#26df088803a2350dff2c27f96fef99fe49442aca"
   integrity sha512-fmkJBknJKoZwem3/IKSSLpkdNXZeBu5Q7GA/aRsr2btgrptmSCxi2oFjZHqGdK9DoTil9PIHlPIZw2EcRJXRvw==
+  dependencies:
+    follow-redirects "^1.10.0"
+
+axios@^0.21.1:
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
+  integrity sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
   dependencies:
     follow-redirects "^1.10.0"
 
@@ -5886,10 +5893,10 @@ fast-safe-stringify@^2.0.7:
   resolved "https://registry.yarnpkg.com/fast-safe-stringify/-/fast-safe-stringify-2.0.7.tgz#124aa885899261f68aedb42a7c080de9da608743"
   integrity sha512-Utm6CdzT+6xsDk2m8S6uL8VHxNwI6Jub+e9NYTcAms28T84pTa25GJQV9j0CY0N1rM8hK4x6grpF2BQf+2qwVA==
 
-fastify-autoload@^3.0.7:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/fastify-autoload/-/fastify-autoload-3.3.1.tgz#1dd520552a250114eaed6d514807e4cd47d732de"
-  integrity sha512-Rd3iEF54Rh8kOgXcM787SD28Op+CVSp+EFBdqxKWHvOV4zGc4++2vCQ7lSbVLiaQo56U8HHMB7CXGrjtcaUk/Q==
+fastify-autoload@^3.3.2:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/fastify-autoload/-/fastify-autoload-3.3.2.tgz#6496c45a8b9188167b16108cfaa7c805a916deb8"
+  integrity sha512-ACjZNiRkfDnaPi93EU8fT+zuy/AtnyHn1OSDcrjKO+n69CN2Ok4qpjeYZ5zSI1dFy6RtG9uX496es1JVurcepw==
   dependencies:
     pkg-up "^3.1.0"
     semver "^7.3.2"
@@ -12719,10 +12726,10 @@ table@^6.0.4:
     slice-ansi "^4.0.0"
     string-width "^4.2.0"
 
-tailwind-config-viewer@^1.3.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/tailwind-config-viewer/-/tailwind-config-viewer-1.3.1.tgz#41776f103f850ce612256bda0c3cb48a0a6c2d09"
-  integrity sha512-M0tCdkqazXKdca+Vs06oxMRpcPnH8H2dr48BnO/LXBPzrYWi7YzdJKLafDarDlmPBT9PkZsM7UtvIQCRE4fzrg==
+tailwind-config-viewer@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/tailwind-config-viewer/-/tailwind-config-viewer-1.4.0.tgz#a1c185b647181a4e51b5d6372a748e5904de35af"
+  integrity sha512-FM4cOxHiI1cW+096XVuDEkbRfJppIXERm58QAPJK/t7+85zRpndXLF++206iNQdmVL/gKw/OI7QOp1cSxgFRAw==
   dependencies:
     "@koa/router" "^9.0.1"
     commander "^6.0.0"

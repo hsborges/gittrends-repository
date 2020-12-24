@@ -26,7 +26,6 @@ module.exports = class CommitFragment extends Fragment {
       deletions
       id
       message
-      messageBody
       oid
       pushedDate
       repository { id }

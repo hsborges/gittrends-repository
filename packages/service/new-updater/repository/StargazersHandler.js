@@ -1,24 +1,21 @@
 const { get } = require('lodash');
 
-const Handler = require('./Handler');
+const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
 
-module.exports = class RepositoryStargazersHander extends Handler {
-  constructor(component) {
-    super();
-    this.component = component;
+module.exports = class RepositoryStargazersHander extends AbstractRepositoryHandler {
+  constructor(id, alias) {
+    super(id, alias);
     this.stargazers = { hasNextPage: true, endCursor: null };
     this.meta = { id: this.component.id, resource: 'stargazers' };
   }
 
   async updateComponent() {
     if (this.stargazers.endCursor === null) {
-      const { value } =
-        (await this.dao.metadata
-          .find({ ...this.meta, key: 'endCursor' })
-          .select('value')
-          .first()) || {};
-
-      this.stargazers.endCursor = value;
+      this.stargazers.endCursor = await this.dao.metadata
+        .find({ ...this.meta, key: 'endCursor' })
+        .select('value')
+        .first()
+        .then(({ value } = {}) => value);
     }
 
     this.component.includeStargazers(this.stargazers.hasNextPage, {
@@ -26,16 +23,18 @@ module.exports = class RepositoryStargazersHander extends Handler {
     });
   }
 
-  async updateDatabase(data, trx = null) {
+  async updateDatabase(response, trx = null) {
     if (this.done) return;
 
-    if (data) {
-      const stargazers = get(data, 'repository.stargazers.edges', []).map((star) => ({
+    if (response) {
+      const data = response[this.alias];
+
+      const stargazers = get(data, 'stargazers.edges', []).map((star) => ({
         repository: this.component.id,
         ...star
       }));
 
-      const pageInfo = 'repository.stargazers.page_info';
+      const pageInfo = 'stargazers.page_info';
       this.stargazers.hasNextPage = get(data, `${pageInfo}.has_next_page`);
       this.stargazers.endCursor = get(data, `${pageInfo}.end_cursor`, this.stargazers.endCursor);
 

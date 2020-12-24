@@ -27,7 +27,6 @@ class Commit extends Model {
         committer: { type: 'string', pattern: '^\\{.*\\}$' },
         deletions: { type: 'number' },
         message: { type: 'string' },
-        message_body: { type: 'string' },
         oid: { type: 'string' },
         pushed_date: { type: 'string', format: 'date-time' },
         signature: { type: 'string', pattern: '^\\{.*\\}$' },

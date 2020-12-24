@@ -16,13 +16,10 @@ exports.up = (knex) =>
     table.json('committer');
     table.integer('deletions');
     table.text('message');
-    table.text('message_body');
     table.string('oid').notNullable();
     table.timestamp('pushed_date', { useTz: true });
     table.json('signature');
     table.json('status');
-
-    table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
 
     table.index('repository');
   });

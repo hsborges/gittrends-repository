@@ -1,8 +1,12 @@
-const compact = require('../../helpers/compact.js');
-const dao = require('../../updater/helper/dao');
+const Component = require('../github/graphql/Component.js');
+const compact = require('../helpers/compact.js');
+const dao = require('../updater/helper/dao');
 
 module.exports = class Handler {
-  constructor() {
+  constructor(component) {
+    if (!component || !(component instanceof Component)) throw new Error('Component is mandatory!');
+
+    this.component = component;
     this.compact = compact;
     this.dao = dao;
   }

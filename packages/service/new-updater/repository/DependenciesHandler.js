@@ -1,12 +1,11 @@
 const { get } = require('lodash');
 
-const Handler = require('./Handler');
+const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
 const DependencyGraphManifestComponent = require('../../github/graphql/components/DependencyGraphManifestComponent');
 
-module.exports = class RepositoryDependenciesHander extends Handler {
-  constructor(component) {
-    super();
-    this.component = component;
+module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHandler {
+  constructor(id, alias) {
+    super(id, alias);
     this.manifests = { items: [], hasNextPage: true, endCursor: null };
     this.components = [];
     this.meta = { id: this.component.id, resource: 'dependencies' };
@@ -22,7 +21,7 @@ module.exports = class RepositoryDependenciesHander extends Handler {
         manifest,
         component: DependencyGraphManifestComponent.with({
           id: manifest.id,
-          name: `manifest_${index}`
+          name: `${this.alias}_manifest_${index}`
         })
           .includeDetails(false)
           .includeDependencies(),
@@ -32,19 +31,22 @@ module.exports = class RepositoryDependenciesHander extends Handler {
     }
 
     if (!this.manifests.hasNextPage && this.hasNextPage) {
-      this.component.includeManifests(true, {
-        components: this.validComponents.map((c) => c.component)
-      });
+      this.component.includeComponents(
+        true,
+        this.validComponents.map((c) => c.component)
+      );
     }
   }
 
-  async updateDatabase(data, trx = null) {
+  async updateDatabase(response, trx = null) {
     if (this.done) return;
 
-    if (data && this.manifests.hasNextPage) {
-      this.manifests.items.push(...get(data, 'repository.dependency_graph_manifests.nodes', []));
+    if (response && this.manifests.hasNextPage) {
+      const data = response[this.alias];
 
-      const pageInfo = 'repository.dependency_graph_manifests.page_info';
+      this.manifests.items.push(...get(data, 'dependency_graph_manifests.nodes', []));
+
+      const pageInfo = 'dependency_graph_manifests.page_info';
       this.manifests.hasNextPage = get(data, `${pageInfo}.has_next_page`);
       this.manifests.endCursor = get(data, `${pageInfo}.end_cursor`, this.manifests.endCursor);
 
@@ -53,20 +55,20 @@ module.exports = class RepositoryDependenciesHander extends Handler {
           [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
           trx
         );
-    } else if (data && !this.manifests.hasNextPage && this.hasNextPage) {
-      await Promise.map(this.validComponents, (component) => {
-        const dependencies = get(data, `${component.component.name}.dependencies.nodes`, []).map(
+    } else if (response && !this.manifests.hasNextPage && this.hasNextPage) {
+      await Promise.map(this.validComponents, (vComp) => {
+        const dependencies = get(response, `${vComp.component.name}.dependencies.nodes`, []).map(
           (dependency) => ({
             repository: this.component.id,
-            manifest: component.manifest.id,
-            filename: component.manifest.filename,
+            manifest: vComp.manifest.id,
+            filename: vComp.manifest.filename,
             ...dependency
           })
         );
 
-        const pageInfo = `${component.component.name}.dependencies.page_info`;
-        component.hasNextPage = get(data, `${pageInfo}.has_next_page`);
-        component.endCursor = get(data, `${pageInfo}.end_cursor`, component.endCursor);
+        const pageInfo = `${vComp.component.name}.dependencies.page_info`;
+        vComp.hasNextPage = get(response, `${pageInfo}.has_next_page`);
+        vComp.endCursor = get(response, `${pageInfo}.end_cursor`, vComp.endCursor);
 
         this.dao.dependencies.insert(dependencies, trx);
       });

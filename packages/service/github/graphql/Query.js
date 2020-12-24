@@ -85,9 +85,8 @@ module.exports = class Query {
       .post({ query })
       .then((response) => parser(get(response, 'data.data', null)))
       .catch((err) => {
-        console.error(err);
         console.log(query);
-        process.exit(1);
+        throw err;
       });
   }
 

@@ -43,7 +43,7 @@ module.exports = class IssueFragment extends Fragment {
         lastEditedAt
         locked
         ${super.$include(full, `milestone { ...${MilestoneFragment.code} }`)}
-        ${super.$include(full, 'number')}
+        number
         publishedAt
         ${super.$include(full, `...${ReactableFragment.code}`)}
         state

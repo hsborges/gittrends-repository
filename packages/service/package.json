@@ -16,7 +16,7 @@
     "ajv": "^7.0.2",
     "ajv-formats": "^1.5.1",
     "async": "^3.2.0",
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "bluebird": "^3.7.2",
     "bull": "^3.20.0",
     "bull-board": "^1.2.0",
@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^2.4.1",
+    "@hsborges/github-proxy-server": "^2.4.3",
     "@types/bull": "^3.14.4",
     "core-util-is": "^1.0.2",
     "pm2": "^4.5.1"

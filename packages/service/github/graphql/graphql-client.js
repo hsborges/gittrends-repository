@@ -77,7 +77,7 @@ module.exports.post = async function (parameters) {
       requestClient({ method: 'post', data: parameters })
         .then(resolve)
         .catch((err) => {
-          if (err.response && err.response.status === 502 && operation.retry(err)) return;
+          if (err.response && err.response.status === 500 && operation.retry(err)) return;
           return reject(operation.mainError() || err);
         })
     );

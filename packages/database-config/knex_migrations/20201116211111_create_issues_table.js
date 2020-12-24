@@ -65,12 +65,6 @@ exports.up = async (knex) => {
     table.string('permalink');
     table.string('potential_merge_commit');
 
-    table.foreign('repository').references('id').inTable('repositories').onDelete('CASCADE');
-    // table.foreign('head_repository_owner').references('id').inTable('actors');
-    // table.foreign('merged_by').references('id').inTable('actors');
-    // table.foreign('merge_commit').references('id').inTable('commits');
-    // table.foreign('potential_merge_commit').references('id').inTable('commits');
-
     table.index(['repository', 'type']);
   });
 };

@@ -9,36 +9,32 @@ const IssueFragment = require('../fragments/IssueFragment').simplified;
 const PullRequestFragment = require('../fragments/PullRequestFragment').simplified;
 
 module.exports = class RepositoryComponent extends Component {
-  constructor(id, name) {
+  constructor(id, alias) {
     if (!id) throw new Error('ID or name (owner/name) is mandatory!');
 
     super();
 
     this.id = id;
-    this._name = name || 'repository';
+    this.alias = alias || 'repository';
 
-    this._includeDetails = '';
-    this._includeLanguages = '';
-    this._includeTopics = '';
-    this._includeStargazers = '';
-    this._includeWatchers = '';
-    this._includeTags = '';
-    this._includeReleases = '';
-    this._includeDependencyGraphManifests = '';
-    this._includeIssues = '';
-    this._includePullRequests = '';
-    this._includeManifests = '';
+    this._includes = {};
+    this._components = [];
   }
 
   get fragments() {
     const fragments = [];
 
-    if (this._includeStargazers || this._includeWatchers) fragments.push(ActorFragment);
-    if (this._includeDetails) fragments.push(RepositoryFragment);
-    if (this._includeReleases) fragments.push(ReleaseFragment);
-    if (this._includeTags) fragments.push(CommitFragment, TagFragment);
-    if (this._includeIssues) fragments.push(IssueFragment);
-    if (this._includePullRequests) fragments.push(PullRequestFragment);
+    if (this._includes.stargazers || this._includes.watchers) fragments.push(ActorFragment);
+    if (this._includes.details) fragments.push(RepositoryFragment);
+    if (this._includes.releases) fragments.push(ReleaseFragment);
+    if (this._includes.tags) fragments.push(CommitFragment, TagFragment);
+    if (this._includes.issues) fragments.push(IssueFragment);
+    if (this._includes.pull_requests) fragments.push(PullRequestFragment);
+
+    if (this._components && this._components.length)
+      fragments.push(
+        ...this._components.reduce((acc, component) => acc.concat(component.fragments), [])
+      );
 
     return fragments;
   }
@@ -48,12 +44,12 @@ module.exports = class RepositoryComponent extends Component {
   }
 
   includeDetails(include = true) {
-    this._includeDetails = include ? `...${RepositoryFragment.code}` : '';
+    this._includes.details = include ? `...${RepositoryFragment.code}` : '';
     return this;
   }
 
   includeLanguages(include = true, { after, first = 100 } = {}) {
-    this._includeLanguages = include
+    this._includes.languages = include
       ? `
           languages(${super.$argsToString({ after, first })}) {
             pageInfo { hasNextPage endCursor }
@@ -66,7 +62,7 @@ module.exports = class RepositoryComponent extends Component {
   }
 
   includeTopics(include = true, { after, first = 100 } = {}) {
-    this._includeTopics = include
+    this._includes.topics = include
       ? `
           repositoryTopics(${super.$argsToString({ after, first })}) {
             pageInfo { hasNextPage endCursor }
@@ -78,12 +74,12 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includeStargazers(include = true, { after, first = 100 } = {}) {
+  includeStargazers(include = true, { after, first = 100, name = '_stargazers' } = {}) {
     const args = super.$argsToString({ after, first });
 
-    this._includeStargazers = include
+    this._includes.stargazers = include
       ? `
-          _stargazers:stargazers(${args}, orderBy: { direction: ASC, field: STARRED_AT }) {
+          ${name}:stargazers(${args}, orderBy: { direction: ASC, field: STARRED_AT }) {
             pageInfo { hasNextPage endCursor }
             edges { starredAt user:node { ...${ActorFragment.code} } }
           }
@@ -93,10 +89,10 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includeWatchers(include = true, { after, first = 100 } = {}) {
-    this._includeWatchers = include
+  includeWatchers(include = true, { after, first = 100, name = '_watchers' } = {}) {
+    this._includes.watchers = include
       ? `
-          _watchers:watchers(${super.$argsToString({ after, first })}) {
+          ${name}:watchers(${super.$argsToString({ after, first })}) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${ActorFragment.code} }
           }
@@ -106,12 +102,12 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includeReleases(include = true, { after, first = 100 } = {}) {
+  includeReleases(include = true, { after, first = 100, name = '_releases' } = {}) {
     const args = super.$argsToString({ after, first });
 
-    this._includeReleases = include
+    this._includes.releases = include
       ? `
-          _releases:releases(${args}, orderBy: { field: CREATED_AT, direction: ASC  }) {
+          ${name}:releases(${args}, orderBy: { field: CREATED_AT, direction: ASC  }) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${ReleaseFragment.code} }
           }
@@ -121,12 +117,12 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includeTags(include = true, { after, first = 100 } = {}) {
+  includeTags(include = true, { after, first = 100, name = '_tags' } = {}) {
     const args = super.$argsToString({ after, first });
 
-    this._includeTags = include
+    this._includes.tags = include
       ? `
-          _tags:refs(refPrefix:"refs/tags/", ${args}, direction: ASC) {
+          ${name}:refs(refPrefix:"refs/tags/", ${args}, direction: ASC) {
             pageInfo { hasNextPage endCursor }
             nodes {
               id name
@@ -140,7 +136,7 @@ module.exports = class RepositoryComponent extends Component {
   }
 
   includeDependencyManifests(include = true, { after, first = 100 } = {}) {
-    this._includeDependencyGraphManifests = include
+    this._includes.manifests = include
       ? `
           dependencyGraphManifests(${super.$argsToString({ after, first })}) {
             pageInfo { hasNextPage endCursor }
@@ -152,18 +148,17 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includeManifests(include = true, { components = [] } = {}) {
-    this._includeManifests =
-      include && components.length ? components.map((c) => c.toString()).join('\n') : '';
+  includeComponents(include = true, components = []) {
+    this._components = include && components.length ? components : [];
     return this;
   }
 
-  includeIssues(include = true, { after, first = 100 } = {}) {
+  includeIssues(include = true, { after, first = 100, name = '_issues' } = {}) {
     const args = super.$argsToString({ after, first });
 
-    this._includeIssues = include
+    this._includes.issues = include
       ? `
-          _issues:issues(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
+          ${name}:issues(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${IssueFragment.code} }
           }
@@ -173,12 +168,12 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
-  includePullRequests(include = true, { after, first = 100 } = {}) {
+  includePullRequests(include = true, { after, first = 100, name = '_pullRequests' } = {}) {
     const args = super.$argsToString({ after, first });
 
-    this._includePullRequests = include
+    this._includes.pull_requests = include
       ? `
-          _pullRequests:pullRequests(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
+          ${name}:pullRequests(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${PullRequestFragment.code} }
           }
@@ -188,24 +183,28 @@ module.exports = class RepositoryComponent extends Component {
     return this;
   }
 
+  get _repositoryFragment() {
+    return Object.values(this._includes).reduce((acc, include) => acc || !!include, false)
+      ? `
+        ... on Repository {
+          ${Object.values(this._includes).join('\n')}
+        }
+    `
+      : '';
+  }
+
   toString() {
     return `
-    ${this._name}:node(id: "${this.id}") {
-      ${this._includeDetails}
-      ... on Repository {
-        id
-        ${this._includeLanguages}
-        ${this._includeTopics}
-        ${this._includeStargazers}
-        ${this._includeWatchers}
-        ${this._includeTags}
-        ${this._includeReleases}
-        ${this._includeDependencyGraphManifests}
-        ${this._includeIssues}
-        ${this._includePullRequests}
-      }
+    ${
+      this._repositoryFragment
+        ? `
+          ${this.alias}:node(id: "${this.id}") {
+            ${this._repositoryFragment}
+          }
+        `
+        : ''
     }
-    ${this._includeManifests}
+    ${this._components.map((component) => component.toString()).join('\n')}
     `;
   }
 };

@@ -58,8 +58,6 @@ exports.up = async (knex) => {
     table.boolean('uses_custom_open_graph_image');
     table.integer('vulnerability_alerts_count').unsigned();
     table.integer('watchers_count').unsigned();
-
-    table.foreign('owner').references('id').inTable('actors');
   });
 };
 

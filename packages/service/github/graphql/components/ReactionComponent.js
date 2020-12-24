@@ -2,24 +2,16 @@ const Component = require('../Component');
 const ActorFragment = require('../fragments/ActorFragment').simplified;
 
 module.exports = class ReactionComponent extends Component {
-  constructor(id, name) {
+  constructor(id, alias) {
     if (!id) throw new Error('ID or name (owner/name) is mandatory!');
     super();
-    this._id = id;
-    this._name = name || 'reactable';
+    this.id = id;
+    this.alias = alias || 'reactable';
     this._includeReactions = '';
   }
 
   get fragments() {
     return [ActorFragment];
-  }
-
-  get id() {
-    return this._id;
-  }
-
-  get name() {
-    return this._name;
   }
 
   static with({ id, name }) {
@@ -44,7 +36,7 @@ module.exports = class ReactionComponent extends Component {
 
   toString() {
     return `
-      ${this._name}:node(id: "${this._id}") {
+      ${this.alias}:node(id: "${this.id}") {
         type:__typename
         ${this._includeReactions}
       }

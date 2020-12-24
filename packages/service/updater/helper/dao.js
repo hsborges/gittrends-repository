@@ -127,3 +127,5 @@ module.exports.stargazers = new DAO(db.Stargazer, defaultOptions);
 module.exports.tags = new DAO(db.Tag, defaultOptions);
 module.exports.timeline = new DAO(db.TimelineEvent, defaultOptions);
 module.exports.watchers = new DAO(db.Watcher, defaultOptions);
+// aliases
+module.exports.pull_requests = module.exports.pulls;

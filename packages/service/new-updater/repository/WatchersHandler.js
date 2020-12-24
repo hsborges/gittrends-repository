@@ -1,24 +1,21 @@
 const { get } = require('lodash');
 
-const Handler = require('./Handler');
+const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
 
-module.exports = class RepositoryWatchersHander extends Handler {
-  constructor(component) {
-    super();
-    this.component = component;
+module.exports = class RepositoryWatchersHander extends AbstractRepositoryHandler {
+  constructor(id, alias) {
+    super(id, alias);
     this.watchers = { hasNextPage: true, endCursor: null };
     this.meta = { id: this.component.id, resource: 'watchers' };
   }
 
   async updateComponent() {
     if (this.watchers.endCursor === null) {
-      const { value } =
-        (await this.dao.metadata
-          .find({ ...this.meta, key: 'endCursor' })
-          .select('value')
-          .first()) || {};
-
-      this.watchers.endCursor = value;
+      this.watchers.endCursor = await this.dao.metadata
+        .find({ ...this.meta, key: 'endCursor' })
+        .select('value')
+        .first()
+        .then(({ value } = {}) => value);
     }
 
     this.component.includeWatchers(this.watchers.hasNextPage, {
@@ -26,16 +23,18 @@ module.exports = class RepositoryWatchersHander extends Handler {
     });
   }
 
-  async updateDatabase(data, trx = null) {
+  async updateDatabase(response, trx = null) {
     if (this.done) return;
 
-    if (data) {
-      const watchers = get(data, 'repository.watchers.nodes', []).map((w) => ({
+    if (response) {
+      const data = response[this.alias];
+
+      const watchers = get(data, 'watchers.nodes', []).map((w) => ({
         repository: this.component.id,
         user: w
       }));
 
-      const pageInfo = 'repository.watchers.page_info';
+      const pageInfo = 'watchers.page_info';
       this.watchers.hasNextPage = get(data, `${pageInfo}.has_next_page`);
       this.watchers.endCursor = get(data, `${pageInfo}.end_cursor`, this.watchers.endCursor);
 
