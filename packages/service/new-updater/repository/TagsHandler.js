@@ -19,6 +19,7 @@ module.exports = class RepositoryTagsHander extends AbstractRepositoryHandler {
     }
 
     this.component.includeTags(this.tags.hasNextPage, {
+      first: this.batchSize,
       after: this.tags.endCursor || null
     });
   }
@@ -29,9 +30,9 @@ module.exports = class RepositoryTagsHander extends AbstractRepositoryHandler {
     if (response) {
       const data = response[this.alias];
 
-      const tags = get(data, 'tags.nodes', []).map((t) => ({
-        ...(t.target.type === 'Tag' ? omit(t.target, 'type') : t),
-        repository: this.component.id
+      const tags = get(data, 'tags.nodes', []).map((tag) => ({
+        repository: this.component.id,
+        ...(tag.target.type === 'Tag' ? omit(tag.target, 'type') : tag)
       }));
 
       const pageInfo = 'tags.page_info';

@@ -4,6 +4,11 @@ const RepositoryComponent = require('../../github/graphql/components/RepositoryC
 module.exports = class AbstractRepositoryHandler extends Handler {
   constructor(id, alias) {
     super(new RepositoryComponent(id, alias));
+    this.batchSize = this.defaultBatchSize = 100;
+  }
+
+  error(_err) {
+    throw new Error('AbstractRepositoryHandler.error() must be override!');
   }
 
   get repositoryId() {

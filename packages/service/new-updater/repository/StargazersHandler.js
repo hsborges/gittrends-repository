@@ -19,6 +19,7 @@ module.exports = class RepositoryStargazersHander extends AbstractRepositoryHand
     }
 
     this.component.includeStargazers(this.stargazers.hasNextPage, {
+      first: this.batchSize,
       after: this.stargazers.endCursor || null
     });
   }

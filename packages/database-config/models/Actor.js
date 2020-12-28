@@ -57,10 +57,7 @@ class Actor extends Model {
         repositories_count: { type: 'number' },
         twitter_username: { type: 'string' },
         updated_at: { type: 'string', format: 'date-time' },
-        website_url: { type: 'string' },
-
-        // local
-        _updated_at: { type: 'string', format: 'date-time' }
+        website_url: { type: 'string' }
       }
     };
   }

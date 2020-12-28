@@ -1,8 +1,7 @@
 const { snakeCase, pick } = require('lodash');
-const { knex } = require('@gittrends/database-config');
 
+const { knex } = require('@gittrends/database-config');
 const { actors: ActorsDAO, commits: CommitsDAO } = require('../updater/helper/dao');
-const { BadGatewayError } = require('../helpers/errors');
 
 const Updater = require('./Updater');
 const Query = require('../github/graphql/Query');
@@ -18,38 +17,40 @@ module.exports = class RepositoryUpdater extends Updater {
   }
 
   async $update(handlers) {
+    // prepare all handlers
+    await Promise.map(handlers, (handler) => handler.updateComponent());
+
+    // run queries and update handlers
     return await Query.create()
-      .compose(...handlers.filter((handler) => !handler.done).map((handler) => handler.component))
-      .then(({ data, users = [], commits = [] }) =>
+      .compose(...handlers.map((handler) => handler.component))
+      .then(({ data, actors = [], commits = [] }) =>
         knex.transaction((trx) =>
           Promise.all([
-            ActorsDAO.insert(users, trx),
+            ActorsDAO.insert(actors, trx),
             CommitsDAO.insert(commits, trx),
-            Promise.map(this.handlers, (handler) =>
+            Promise.map(handlers, (handler) =>
               handler.updateDatabase(pick(data, handler.alias), trx)
             )
           ])
         )
       )
-      .catch((err) => {
-        if (err instanceof BadGatewayError) {
-          if (handlers.length > 1)
-            return Promise.map(handlers, (handler) => this.$update([handler]));
-        }
-        throw err;
+      .catch(async (err) => {
+        if (handlers.length === 1) return handlers[0].error(err);
+        else return Promise.map(handlers, (handler) => this.$update([handler]));
       });
   }
 
   async update() {
     while (this.hasNextPage) {
-      // prepare all handlers
-      await Promise.map(this.handlers, (handler) => handler.updateComponent());
-      // run queries and update handlers
-      await this.$update(this.handlers);
+      await this.$update(this.pendingHandlers);
     }
   }
 
   get hasNextPage() {
-    return this.handlers.reduce((acc, h) => acc || h.hasNextPage, false);
+    return this.pendingHandlers.length > 0;
+  }
+
+  get pendingHandlers() {
+    return this.handlers.filter((handler) => handler.hasNextPage);
   }
 };

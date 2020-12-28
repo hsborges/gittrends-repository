@@ -1,52 +1,17 @@
 /*
  *  Author: Hudson S. Borges
  */
-const _ = require('lodash');
-const dayjs = require('dayjs');
 const axios = require('axios');
 const retry = require('retry');
 const UserAgent = require('user-agents');
-const compact = require('../../helpers/compact.js');
 const Errors = require('../../helpers/errors.js');
 
 const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL || 'http';
 const HOST = process.env.GITTRENDS_PROXY_HOST || 'localhost';
 const PORT = parseInt(process.env.GITTRENDS_PROXY_PORT || 3000, 10);
-const TIMEOUT = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT || 15000, 10);
+const TIMEOUT = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT || Number.MAX_SAFE_INTEGER, 10);
 const RETRIES = parseInt(process.env.GITTRENDS_PROXY_RETRIES || 5, 10);
 const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT || new UserAgent().random().toString();
-
-function normalize(object) {
-  if (_.isArray(object)) return object.map(normalize);
-  if (_.isPlainObject(object)) {
-    return _.reduce(
-      object,
-      (memo, value, key) => {
-        const _value = normalize(value);
-        const _key = _.snakeCase(key);
-        const _memo = { ...memo };
-
-        if (_value && _.has(_value, 'total_count')) {
-          _.set(_memo, `${_key}_count`, _value.total_count);
-        } else if (
-          _.endsWith(_key, '_at') ||
-          _.endsWith(_key, '_on') ||
-          _.endsWith(_key, '_date') ||
-          _key === 'date'
-        ) {
-          const m = dayjs(_value);
-          _memo[_key] = m.isValid() ? m.toDate() : _value;
-        } else {
-          _memo[_key] = _value;
-        }
-
-        return _memo;
-      },
-      {}
-    );
-  }
-  return object;
-}
 
 const requestClient = axios.create({
   baseURL: `${PROTOCOL}://${HOST}:${PORT}/graphql`,
@@ -77,7 +42,7 @@ module.exports.post = async function (parameters) {
       requestClient({ method: 'post', data: parameters })
         .then(resolve)
         .catch((err) => {
-          if (err.response && err.response.status === 500 && operation.retry(err)) return;
+          if (err.response && /500/g.test(err.response.status) && operation.retry(err)) return;
           return reject(operation.mainError() || err);
         })
     );
@@ -87,9 +52,12 @@ module.exports.post = async function (parameters) {
         const params = [err.message, err, parameters.variables, err.response.data];
         throw new Errors.BadGatewayError(...params);
       }
+      if (err.response && err.response.status === 408) {
+        const params = [err.message, err, parameters.variables, err.response.data];
+        throw new Errors.TimedoutError(...params);
+      }
       throw err;
     })
-    .then(({ data, headers }) => compact(normalize({ data, headers })))
     .then(async ({ data, headers }) => {
       if (data && data.errors && data.errors.length) {
         const errorsStr = JSON.stringify(data.errors, null, 2);
@@ -99,12 +67,16 @@ module.exports.post = async function (parameters) {
           throw new Errors.ForbiddenError(...params);
         if (data.errors.find((e) => e.type === 'NOT_FOUND'))
           throw new Errors.NotFoundError(...params);
+        if (data.errors.find((e) => e.type === 'MAX_NODE_LIMIT_EXCEEDED'))
+          throw new Errors.MaxNodeLimitExceededError(...params);
         if (data.errors.find((e) => e.type === 'SERVICE_UNAVAILABLE'))
           throw new Errors.ServiceUnavailableError(...params);
         if (data.errors.find((e) => e.message === 'timedout'))
           throw new Errors.TimedoutError(...params);
         if (data.errors.find((e) => e.message === 'loading'))
           throw new Errors.LoadingError(...params);
+        if (data.errors.find((e) => /^something.went.wrong.+/i.test(e.message)))
+          throw new Errors.SomethingWentWrongError(...params);
         throw new Errors.RequestError(...params);
       }
       return Promise.resolve({ data, headers });

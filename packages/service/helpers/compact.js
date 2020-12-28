@@ -1,16 +1,16 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { isArray, isPlainObject, isEqual, reduce } = require('lodash');
+const { isArray, isPlainObject, reduce, isEqual } = require('lodash');
 
-const valuesToRemove = [null, undefined, '', {}];
+const valuesToRemove = [null, undefined, '', {}, []];
 
 module.exports = function (object) {
   if (isArray(object)) {
     const _object = object
       .map(module.exports)
-      .filter((o) => valuesToRemove.findIndex((r) => isEqual(r, o)) < 0);
-    return _object.length === 0 ? null : _object;
+      .filter((o) => valuesToRemove.indexOf((r) => isEqual(r, o)) < 0);
+    return _object;
   }
 
   if (isPlainObject(object))
@@ -22,7 +22,7 @@ module.exports = function (object) {
           ? { ...acc, [key]: _value }
           : acc;
       },
-      null
+      {}
     );
 
   return object;

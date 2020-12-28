@@ -47,9 +47,6 @@ exports.up = (knex) =>
     table.string('twitter_username');
     table.timestamp('updated_at', { useTz: true });
     table.string('website_url');
-
-    // local
-    table.timestamp('_updated_at', { useTz: true });
   });
 
 exports.down = (knex) => knex.schema.dropTable('actors');

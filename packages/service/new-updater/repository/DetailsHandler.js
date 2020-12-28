@@ -29,7 +29,6 @@ module.exports = class RepositoryDetailsHander extends AbstractRepositoryHandler
         this.details = pick(data, Object.keys(Repository.jsonSchema.properties));
 
       this.languages.items.push(...get(data, 'languages.edges', []));
-
       this.topics.items.push(...get(data, 'repository_topics.nodes', []).map((t) => t.topic));
 
       const langPageInfo = 'languages.page_info';

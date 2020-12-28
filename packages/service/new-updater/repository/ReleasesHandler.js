@@ -19,6 +19,7 @@ module.exports = class RepositoryReleasesHander extends AbstractRepositoryHandle
     }
 
     this.component.includeReleases(this.releases.hasNextPage, {
+      first: this.batchSize,
       after: this.releases.endCursor || null
     });
   }
@@ -29,9 +30,9 @@ module.exports = class RepositoryReleasesHander extends AbstractRepositoryHandle
     if (response) {
       const data = response[this.alias];
 
-      const releases = get(data, 'releases.nodes', []).map((r) => ({
-        ...r,
-        repository: this.component.id
+      const releases = get(data, 'releases.nodes', []).map((release) => ({
+        repository: this.component.id,
+        ...release
       }));
 
       const pageInfo = 'releases.page_info';

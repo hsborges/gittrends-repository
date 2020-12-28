@@ -19,6 +19,7 @@ module.exports = class RepositoryWatchersHander extends AbstractRepositoryHandle
     }
 
     this.component.includeWatchers(this.watchers.hasNextPage, {
+      first: this.batchSize,
       after: this.watchers.endCursor || null
     });
   }
@@ -29,9 +30,9 @@ module.exports = class RepositoryWatchersHander extends AbstractRepositoryHandle
     if (response) {
       const data = response[this.alias];
 
-      const watchers = get(data, 'watchers.nodes', []).map((w) => ({
+      const watchers = get(data, 'watchers.nodes', []).map((watcher) => ({
         repository: this.component.id,
-        user: w
+        user: watcher
       }));
 
       const pageInfo = 'watchers.page_info';

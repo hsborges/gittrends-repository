@@ -1,27 +1,25 @@
 /*
  *  Author: Hudson S. Borges
  */
-const { get, set, snakeCase, size, reduce, omit } = require('lodash');
-const { isArray, assignWith, isPlainObject, uniqBy } = require('lodash');
+const { get, size, mapValues, omit } = require('lodash');
+const { isArray, isPlainObject, uniqBy } = require('lodash');
 
+const normalize = require('../../helpers/normalize.js');
 const compact = require('../../helpers/compact.js');
 
-module.exports = function (object) {
-  if (isArray(object))
-    return compact(
-      object
-        .map(module.exports)
-        .reduce((m, v) => assignWith(m, v, (_o, _s) => (_o || []).concat(_s)), {})
-    );
+module.exports = function (source) {
+  const actors = [];
+  const commits = [];
 
-  if (isPlainObject(object)) {
-    const _object = reduce(
-      object,
-      (m, v, k) => {
-        const _result = module.exports(v);
+  function recursive(object) {
+    if (isArray(object)) return object.map(recursive);
 
-        if (k === 'reaction_groups') {
-          _result.data = _result.data.reduce(
+    if (isPlainObject(object)) {
+      let _object = mapValues(object, (value, key) => {
+        let _result = recursive(value);
+
+        if (key === 'reaction_groups') {
+          _result = _result.reduce(
             (memo, r) => ({
               ...memo,
               ...(r.users_count > 0 ? { [r.content.toLowerCase()]: r.users_count } : {})
@@ -30,56 +28,50 @@ module.exports = function (object) {
           );
         }
 
-        if (isPlainObject(_result.data) && size(_result.data) === 1) {
-          if (_result.data.id) _result.data = _result.data.id;
-          if (_result.data.name) _result.data = _result.data.name;
-          if (_result.data.target) _result.data = _result.data.target;
+        if (isPlainObject(_result) && size(_result) === 1) {
+          if (_result.id) _result = _result.id;
+          if (_result.name) _result = _result.name;
+          if (_result.target) _result = _result.target;
         }
 
-        return {
-          ...assignWith(m, _result, (o, s) => (isArray(o) ? o.concat(s || []) : o)),
-          data: compact({ ...m.data, [k]: _result.data })
-        };
-      },
-      { data: {} }
-    );
+        return _result;
+      });
 
-    if (_object.data.type) {
-      switch (_object.data.type) {
-        case 'Actor':
-        case 'User':
-        case 'Organization':
-        case 'Mannequin':
-        case 'Bot':
-        case 'EnterpriseUserAccount':
-          _object.users = (_object.users || []).concat(_object.data);
-          return { ..._object, data: _object.data.id };
-        case 'Commit':
-          _object.commits = (_object.commits || []).concat(omit(_object.data, 'type'));
-          return { ..._object, data: _object.data.id };
-        case 'CommitCommentThread':
-        case 'PullRequestReview':
-        case 'PullRequestReviewThread': {
-          const comments = get(_object, 'data.comments.nodes', []).map((c) => ({
-            ...c,
-            [snakeCase(_object.data.type)]: _object.data.id
-          }));
-          const commentsIds = comments.map((c) => c.id);
-          _object.comments = (_object.comments || []).concat(comments);
-          set(_object, 'data.comments', commentsIds);
-          break;
+      if (_object.type) {
+        switch (_object.type) {
+          case 'Actor':
+          case 'User':
+          case 'Organization':
+          case 'Mannequin':
+          case 'Bot':
+          case 'EnterpriseUserAccount':
+            actors.push(_object);
+            _object = _object.id;
+            break;
+          case 'Commit':
+            commits.push(omit(_object, 'type'));
+            _object = _object.id;
+            break;
+          case 'CommitCommentThread':
+          case 'PullRequestReview':
+          case 'PullRequestReviewThread':
+            // TODO -- fit it latter
+            _object.comments = get(_object, 'comments.nodes', []);
+            break;
+          default:
+            break;
         }
-        default:
-          break;
       }
+
+      return _object;
     }
 
-    return {
-      ..._object,
-      users: uniqBy(_object.users || [], 'id'),
-      commits: uniqBy(_object.commits || [], 'id')
-    };
+    return object;
   }
 
-  return { data: object };
+  return compact({
+    data: recursive(normalize(source)),
+    actors: uniqBy(actors, 'id'),
+    commits: uniqBy(commits, 'id')
+  });
 };

@@ -1,6 +1,6 @@
 const Fragment = require('../../Fragment');
 const ActorFragment = require('../ActorFragment').simplified;
-const CommitFragment = require('../CommitFragment');
+const PullRequestCommitFragment = require('../PullRequestCommitFragment');
 
 module.exports = class ReviewDismissedEvent extends Fragment {
   static get code() {
@@ -8,7 +8,7 @@ module.exports = class ReviewDismissedEvent extends Fragment {
   }
 
   static get dependencies() {
-    return [ActorFragment];
+    return [ActorFragment, PullRequestCommitFragment];
   }
 
   static toString() {
@@ -19,7 +19,7 @@ module.exports = class ReviewDismissedEvent extends Fragment {
         databaseId
         dismissalMessage
         previousReviewState
-        pullRequestCommit { id commit { ...${CommitFragment.code} } url }
+        pullRequestCommit { ...${PullRequestCommitFragment.code} }
         review { id }
         url
       }

@@ -21,6 +21,7 @@ module.exports = class DeploymentStatusFragment extends Fragment {
         logUrl
         state
         updatedAt
+      }
     `;
   }
 };

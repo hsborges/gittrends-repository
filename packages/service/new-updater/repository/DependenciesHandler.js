@@ -13,6 +13,7 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
 
   async updateComponent() {
     this.component.includeDependencyManifests(this.manifests.hasNextPage, {
+      first: this.batchSize,
       after: this.manifests.endCursor || null
     });
 
@@ -49,14 +50,8 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
       const pageInfo = 'dependency_graph_manifests.page_info';
       this.manifests.hasNextPage = get(data, `${pageInfo}.has_next_page`);
       this.manifests.endCursor = get(data, `${pageInfo}.end_cursor`, this.manifests.endCursor);
-
-      if (!this.manifests.items.length && !this.manifests.hasNextPage)
-        await this.dao.metadata.upsert(
-          [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
-          trx
-        );
     } else if (response && !this.manifests.hasNextPage && this.hasNextPage) {
-      await Promise.map(this.validComponents, (vComp) => {
+      await Promise.map(this.validComponents, async (vComp) => {
         const dependencies = get(response, `${vComp.component.name}.dependencies.nodes`, []).map(
           (dependency) => ({
             repository: this.component.id,
@@ -70,16 +65,15 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
         vComp.hasNextPage = get(response, `${pageInfo}.has_next_page`);
         vComp.endCursor = get(response, `${pageInfo}.end_cursor`, vComp.endCursor);
 
-        this.dao.dependencies.insert(dependencies, trx);
+        await this.dao.dependencies.insert(dependencies, trx);
       });
     }
 
-    if (!this.hasNextPage) {
+    if (!this.manifests.hasNextPage)
       await this.dao.metadata.upsert(
         [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
         trx
       );
-    }
   }
 
   get validComponents() {

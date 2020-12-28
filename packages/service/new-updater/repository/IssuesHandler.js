@@ -1,74 +1,106 @@
 const { get, snakeCase, lowerCase, omit } = require('lodash');
 const compact = require('../../helpers/compact');
 
-const IssueComponent = require('../../github/graphql/components/IssueComponent');
 const ReactionComponent = require('../../github/graphql/components/ReactionComponent');
 const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
+
+const debug = require('debug')('updater:issues-handler');
+
+const {
+  BadGatewayError,
+  SomethingWentWrongError,
+  MaxNodeLimitExceededError,
+  TimedoutError
+} = require('../../helpers/errors');
 
 module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler {
   constructor(id, alias) {
     super(id, alias);
-    this.issues = { hasNextPage: true, endCursor: null };
+    this.batchSize = this.defaultBatchSize = 10;
     this.resource = snakeCase(lowerCase(this.constructor.type));
     this.meta = { id: this.component.id, resource: this.resource };
-    this.issuesMetadata = null;
-    this.reactionsMetadata = null;
+    this.issues = { hasNextPage: true, endCursor: null };
+    this.details = [];
+    this.reactions = [];
   }
 
   static get type() {
     return 'Issues';
   }
 
-  async updateComponent() {
-    if (!this.issues.endCursor) {
-      this.issues.endCursor = await this.dao.metadata
-        .find({ ...this.meta, key: 'endCursor' })
-        .select('value')
-        .first()
-        .then(({ value } = {}) => value);
-    }
+  static get IssueComponent() {
+    return require('../../github/graphql/components/IssueComponent');
+  }
 
-    this.component[`include${this.constructor.type}`](
-      this.issues.hasNextPage && !this.issuesMetadata && !this.reactionsMetadata,
-      {
-        first: 50,
+  async updateComponent() {
+    if (
+      this.issues.hasNextPage &&
+      !this.$hasNextPage(this.details) &&
+      !this.$hasNextPage(this.reactions)
+    ) {
+      if (!this.issues.endCursor) {
+        this.issues.endCursor = await this.dao.metadata
+          .find({ ...this.meta, key: 'endCursor' })
+          .select('value')
+          .first()
+          .then(({ value } = {}) => value);
+      }
+
+      this.component[`include${this.constructor.type}`](true, {
+        first: this.batchSize,
         after: this.issues.endCursor || null,
         name: `_${this.resource}`
-      }
-    );
+      });
+    }
 
-    if (this.issuesMetadata && this.pendingIssuesMetadata.length) {
-      this.pendingIssuesMetadata.forEach((metadata) => {
-        metadata.component
-          .includeDetails(metadata.details.hasNextPage)
-          .includeAssignees(metadata.assignees.hasNextPage, {
-            after: metadata.assignees.endCursor
+    if (this.$hasNextPage(this.details)) {
+      const batch = this.details.filter((issue) => issue.hasNextPage).slice(0, this.batchSize);
+
+      await Promise.each(batch, async (issue) => {
+        if (issue.timeline.endCursor === null) {
+          issue.timeline.endCursor = await this.dao.metadata
+            .find({ id: issue.data.id, resource: this.resource.slice(0, -1), key: 'endCursor' })
+            .select('value')
+            .first()
+            .then(({ value } = {}) => value);
+        }
+
+        issue.component
+          .includeDetails(issue.details.hasNextPage)
+          .includeAssignees(issue.assignees.hasNextPage, {
+            first: this.batchSize,
+            after: issue.assignees.endCursor
           })
-          .includeLabels(metadata.labels.hasNextPage, {
-            after: metadata.labels.endCursor
+          .includeLabels(issue.labels.hasNextPage, {
+            first: this.batchSize,
+            after: issue.labels.endCursor
           })
-          .includeParticipants(metadata.participants.hasNextPage, {
-            after: metadata.participants.endCursor
+          .includeParticipants(issue.participants.hasNextPage, {
+            first: this.batchSize,
+            after: issue.participants.endCursor
           })
-          .includeTimeline(metadata.timeline.hasNextPage, {
-            after: metadata.timeline.endCursor
+          .includeTimeline(issue.timeline.hasNextPage, {
+            first: this.batchSize,
+            after: issue.timeline.endCursor
           });
       });
 
       this.component.includeComponents(
         true,
-        this.pendingIssuesMetadata.map((metadata) => metadata.component)
+        batch.map((issue) => issue.component)
       );
     }
 
-    if (this.reactionsMetadata && this.pendingReactionsMetadata.length) {
-      this.pendingReactionsMetadata.forEach((metadata) => {
-        metadata.component.includeReactions(metadata.hasNextPage, { after: metadata.endCursor });
+    if (this.$hasNextPage(this.reactions)) {
+      const batch = this.reactions.filter((meta) => meta.hasNextPage).slice(0, this.batchSize);
+
+      batch.forEach((issue) => {
+        issue.component.includeReactions(issue.hasNextPage, { after: issue.endCursor });
       });
 
       this.component.includeComponents(
         true,
-        this.pendingReactionsMetadata.map((metadata) => metadata.component)
+        batch.map((issue) => issue.component)
       );
     }
   }
@@ -77,172 +109,236 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
     if (this.done) return;
 
     if (response) {
-      if (!this.issuesMetadata && !this.reactionsMetadata) {
+      if (!this.details.length) {
         const data = response[this.alias];
 
-        this.issuesMetadata = get(data, `${this.resource}.nodes`, [])
-          .map((issue) => ({ repository: this.component.id, ...issue }))
-          .map((issue) => ({
-            issue,
-            component: new IssueComponent(issue.id, `${this.alias}_${issue.number}`),
-            hasNextPage: true,
-            details: { hasNextPage: true },
-            assignees: { hasNextPage: true, endCursor: null },
-            labels: { hasNextPage: true, endCursor: null },
-            participants: { hasNextPage: true, endCursor: null },
-            timeline: { hasNextPage: true, endCursor: null }
-          }));
+        this.details = get(data, `${this.resource}.nodes`, []).map((issue) => ({
+          data: { repository: this.component.id, ...issue },
+          component: new this.constructor.IssueComponent(issue.id, `${this.alias}_${issue.number}`),
+          hasNextPage: true,
+          details: { hasNextPage: true },
+          assignees: { hasNextPage: true, endCursor: null },
+          labels: { hasNextPage: true, endCursor: null },
+          participants: { hasNextPage: true, endCursor: null },
+          timeline: { hasNextPage: true, endCursor: null }
+        }));
 
         const pageInfo = `${this.resource}.page_info`;
         this.issues.hasNextPage = get(data, `${pageInfo}.has_next_page`);
         this.issues.endCursor = get(data, `${pageInfo}.end_cursor`, this.issues.endCursor);
-      } else {
-        this.pendingIssuesMetadata.forEach((metadata) => {
-          const data = response[metadata.component.alias];
-          const omitFields = ['assignees', 'labels', 'participants', 'timeline'];
 
-          if (metadata.details.hasNextPage) {
-            metadata.issue = { ...metadata.issue, ...omit(data, omitFields) };
-            metadata.details.hasNextPage = false;
-            metadata.issue.assignees = [];
-            metadata.issue.labels = [];
-            metadata.issue.participants = [];
-            metadata.issue.timeline = [];
-          }
+        debug(`${this.details.length} ${this.resource} obtained from ${this.component.id} ...`);
 
-          metadata.issue.assignees.push(...get(data, 'assignees.nodes', []));
-          metadata.assignees.hasNextPage = get(data, 'assignees.page_info.has_next_page');
-          metadata.assignees.endCursor = get(data, 'assignees.page_info.end_cursor');
+        if (this.details.length) return;
+      }
 
-          metadata.issue.labels.push(...get(data, 'labels.nodes', []));
-          metadata.labels.hasNextPage = get(data, 'labels.page_info.has_next_page');
-          metadata.labels.endCursor = get(data, 'labels.page_info.end_cursor');
+      if (this.$hasNextPage(this.details)) {
+        this.details
+          .filter((issue) => issue.hasNextPage)
+          .slice(0, this.batchSize)
+          .forEach((issue) => {
+            const data = response[issue.component.alias];
+            const omitFields = ['assignees', 'labels', 'participants', 'timeline'];
 
-          metadata.issue.participants.push(...get(data, 'participants.nodes', []));
-          metadata.participants.hasNextPage = get(data, 'participants.page_info.has_next_page');
-          metadata.participants.endCursor = get(data, 'participants.page_info.end_cursor');
+            if (issue.details.hasNextPage) {
+              issue.details.hasNextPage = false;
+              issue.data = { ...issue.data, ...omit(data, omitFields) };
+              issue.data.assignees = [];
+              issue.data.labels = [];
+              issue.data.participants = [];
+              issue.data.timeline = [];
+            }
 
-          metadata.issue.timeline.push(...get(data, 'timeline.nodes', []));
-          metadata.timeline.hasNextPage = get(data, 'timeline.page_info.has_next_page');
-          metadata.timeline.endCursor = get(
-            data,
-            'timeline.page_info.end_cursor',
-            metadata.timeline.endCursor
-          );
+            issue.data.assignees.push(...get(data, 'assignees.nodes', []));
+            issue.assignees.hasNextPage = get(data, 'assignees.page_info.has_next_page');
+            issue.assignees.endCursor = get(data, 'assignees.page_info.end_cursor');
 
-          metadata.hasNextPage =
-            metadata.assignees.hasNextPage ||
-            metadata.labels.hasNextPage ||
-            metadata.participants.hasNextPage ||
-            metadata.timeline.hasNextPage;
-        });
+            issue.data.labels.push(...get(data, 'labels.nodes', []));
+            issue.labels.hasNextPage = get(data, 'labels.page_info.has_next_page');
+            issue.labels.endCursor = get(data, 'labels.page_info.end_cursor');
 
-        this.pendingReactionsMetadata.forEach((metadata) => {
-          const data = response[metadata.component.alias];
-          metadata.reactions.push(...get(data, 'reactions.nodes', []));
-          metadata.hasNextPage = get(data, 'reactions.page_info.has_next_page');
-          metadata.endCursor = get(data, 'reactions.page_info.end_cursor');
-        });
+            issue.data.participants.push(...get(data, 'participants.nodes', []));
+            issue.participants.hasNextPage = get(data, 'participants.page_info.has_next_page');
+            issue.participants.endCursor = get(data, 'participants.page_info.end_cursor');
 
-        if (!this.pendingIssuesMetadata.length && !this.reactionsMetadata) {
-          const reactables = this.issuesMetadata
-            .filter((meta) => meta.issue.reaction_groups)
-            .map((meta) => ({ repository: this.repositoryId, issue: meta.issue.id }))
-            .concat(
-              this.issuesMetadata.reduce((timeseries, meta) => {
-                return timeseries.concat(
-                  meta.issue.timeline
-                    .filter((event) => event.reaction_groups)
-                    .map((event) => ({
-                      repository: this.repositoryId,
-                      issue: meta.issue.id,
-                      event: event.id
-                    }))
-                );
-              }, [])
+            issue.data.timeline.push(...get(data, 'timeline.nodes', []));
+            issue.timeline.hasNextPage = get(data, 'timeline.page_info.has_next_page');
+            issue.timeline.endCursor = get(
+              data,
+              'timeline.page_info.end_cursor',
+              issue.timeline.endCursor
             );
 
-          this.reactionsMetadata = reactables.map((reactable, index) => ({
-            reactable,
-            component: new ReactionComponent(
-              reactable.event || reactable.issue,
-              `${this.alias}_reactable_${index}`
-            ),
-            reactions: [],
-            hasNextPage: true,
-            endCursor: null
-          }));
-        }
+            issue.hasNextPage =
+              issue.assignees.hasNextPage ||
+              issue.labels.hasNextPage ||
+              issue.participants.hasNextPage ||
+              issue.timeline.hasNextPage;
+          });
 
-        if (!this.pendingIssuesMetadata.length && !this.pendingReactionsMetadata.length) {
-          const issues = this.issuesMetadata.map((meta) =>
-            compact(omit({ repository: this.component.id, ...meta.issue }, 'timeline'))
-          );
-
-          const timeline = this.issuesMetadata.reduce(
-            (acc, meta) =>
-              acc.concat(
-                meta.issue.timeline.map((tl) =>
-                  compact({
-                    id: tl.id,
-                    repository: this.component.id,
-                    issue: meta.issue.id,
-                    type: tl.type,
-                    payload: omit(tl, ['id', 'type'])
-                  })
-                )
-              ),
-            []
-          );
-
-          const reactions = this.reactionsMetadata.reduce(
-            (reactions, metadata) =>
-              reactions.concat(
-                metadata.reactions.map((reaction) => ({ ...metadata.reactable, ...reaction }))
-              ),
-            []
-          );
-
-          await Promise.all([
-            this.dao[this.resource].insert(issues, trx),
-            this.dao.timeline.insert(timeline, trx),
-            this.dao.reactions.insert(reactions, trx),
-            this.dao.metadata.upsert(
-              [
-                { ...this.meta, key: 'endCursor', value: this.issues.endCursor },
-                { ...this.meta, key: 'updatedAt', value: new Date().toISOString() }
-              ],
-              trx
+        if (!this.$hasNextPage(this.details)) {
+          this.reactions = this.details
+            .filter((issue) => issue.data.reaction_groups)
+            .map((meta) => ({ repository: this.repositoryId, issue: meta.data.id }))
+            .concat(
+              this.details.reduce(
+                (timeseries, issue) =>
+                  timeseries.concat(
+                    issue.data.timeline
+                      .filter((event) => event.reaction_groups)
+                      .map((event) => ({
+                        repository: this.repositoryId,
+                        issue: issue.data.id,
+                        event: event.id
+                      }))
+                  ),
+                []
+              )
             )
-          ]);
-
-          this.issuesMetadata = null;
-          this.reactionsMetadata = null;
+            .map((reactable, index) => ({
+              reactable,
+              component: new ReactionComponent(
+                reactable.event || reactable.issue,
+                `${this.alias}_reactable_${index}`
+              ),
+              reactions: [],
+              hasNextPage: true,
+              endCursor: null
+            }));
         }
+      }
+
+      if (this.$hasNextPage(this.reactions)) {
+        this.reactions
+          .filter((meta) => meta.hasNextPage)
+          .slice(0, this.batchSize)
+          .forEach((meta) => {
+            const data = response[meta.component.alias];
+            meta.reactions.push(...get(data, 'reactions.nodes', []));
+            meta.hasNextPage = get(data, 'reactions.page_info.has_next_page');
+            meta.endCursor = get(data, 'reactions.page_info.end_cursor');
+          });
+
+        if (this.$hasNextPage(this.reactions)) return;
+      }
+
+      if (!this.$hasNextPage(this.details) && !this.$hasNextPage(this.reactions)) {
+        const issues = this.details.map((meta) => compact(omit(meta.data, 'timeline')));
+
+        const issuesMetadata = this.details.reduce((acc, issue) => {
+          const path = { id: issue.data.id, resource: this.resource.slice(0, -1) };
+          return acc.concat(
+            issue.error
+              ? [{ ...path, key: 'error', value: JSON.stringify(issue.error) }]
+              : [
+                  { ...path, key: 'updatedAt', value: new Date().toISOString() },
+                  { ...path, key: 'endCursor', value: issue.timeline.endCursor }
+                ]
+          );
+        }, []);
+
+        const timeline = this.details.reduce((acc, issue) => {
+          if (!issue.data.timeline) return acc;
+          return acc.concat(
+            issue.data.timeline.map((tl) =>
+              compact({
+                id: tl.id,
+                repository: this.component.id,
+                issue: issue.data.id,
+                type: tl.type,
+                payload: omit(tl, ['id', 'type'])
+              })
+            )
+          );
+        }, []);
+
+        const reactions = this.reactions.reduce(
+          (reactions, meta) =>
+            reactions.concat(
+              meta.reactions.map((reaction) => ({ ...meta.reactable, ...reaction }))
+            ),
+          []
+        );
+
+        debug(
+          `Persisting ${this.resource}=${issues.length}, timeline=${timeline.length}, and reactions=${reactions.length} ...`
+        );
+
+        await Promise.all([
+          this.dao[this.resource].insert(issues, trx),
+          this.dao.timeline.insert(timeline, trx),
+          this.dao.reactions.insert(reactions, trx),
+          this.dao.metadata.upsert(
+            [
+              { ...this.meta, key: 'updatedAt', value: new Date().toISOString() },
+              { ...this.meta, key: 'endCursor', value: this.issues.endCursor },
+              ...issuesMetadata
+            ],
+            trx
+          )
+        ]);
+
+        this.details = [];
+        this.reactions = [];
+        this.batchSize = this.defaultBatchSize;
       }
     }
   }
 
-  get pendingIssuesMetadata() {
-    return (this.issuesMetadata || []).filter((meta) => meta.hasNextPage);
+  async error(err) {
+    const reduceBatchSize = [
+      BadGatewayError,
+      SomethingWentWrongError,
+      MaxNodeLimitExceededError,
+      TimedoutError
+    ].reduce((acc, et) => acc || err instanceof et, false);
+
+    if (reduceBatchSize) {
+      debug(`An error was detected (${err.name || err.constructor.name}), reducing batch size ...`);
+      if (this.batchSize > 1) return (this.batchSize = Math.ceil(this.batchSize / 2));
+
+      const pendingIssues = this.details.filter((meta) => meta.hasNextPage);
+      const pendingReactions = this.reactions.filter((meta) => meta.hasNextPage);
+
+      if (pendingIssues.length) {
+        debug(`Disabling issue metadata updater for id=${pendingIssues[0].data.id}`);
+        pendingIssues[0].hasNextPage = false;
+        pendingIssues[0].error = err;
+      } else if (pendingReactions.length) {
+        debug(`Disabling reactions metadata updater`);
+        // TODO -- handle single reactables problems
+        pendingReactions.hasNextPage = false;
+        pendingReactions.error = err;
+      }
+
+      return (this.batchSize = this.defaultBatchSize);
+    }
+
+    throw err;
   }
 
-  get pendingReactionsMetadata() {
-    return (this.reactionsMetadata || []).filter((meta) => meta.hasNextPage);
+  $hasNextPage(array) {
+    return (array || []).reduce((acc, value) => acc || value.hasNextPage, false);
   }
 
   get alias() {
-    const alias = this.pendingIssuesMetadata.map((meta) => meta.component.alias);
+    const alias = this.details
+      .filter((meta) => meta.hasNextPage)
+      .map((meta) => meta.component.alias);
     alias.push(super.alias);
-    alias.push(...this.pendingReactionsMetadata.map((meta) => meta.component.alias));
+    alias.push(
+      ...(this.reactions || [])
+        .filter((meta) => meta.hasNextPage)
+        .map((meta) => meta.component.alias)
+    );
     return alias;
   }
 
   get hasNextPage() {
     return (
       this.issues.hasNextPage ||
-      this.pendingIssuesMetadata.length ||
-      this.pendingReactionsMetadata.length
+      this.$hasNextPage(this.details) ||
+      this.$hasNextPage(this.reactions)
     );
   }
 };
