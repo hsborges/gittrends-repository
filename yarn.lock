@@ -1018,7 +1018,7 @@
 "@gittrends/database-config@file:packages/database-config":
   version "1.0.0"
   dependencies:
-    knex "^0.21.14"
+    knex "^0.21.15"
     pg "^8.5.1"
     pg-query-stream "^4.0.0"
 
@@ -1028,10 +1028,10 @@
     dotenv "^8.2.0"
     find-up "^5.0.0"
 
-"@hsborges/github-proxy-server@^2.4.3":
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-2.4.3.tgz#9ef4d2e54f8ed62dbd113041d072620631b1890e"
-  integrity sha512-CcpIZ2ZwoxPzVqEAGEs6W7GA+TBRvqDZ6XKYPMzxp+NSqjDLMIm/yERWd2+8gGWYZJkoUuNAkHtOWMAyOIk2kA==
+"@hsborges/github-proxy-server@^2.4.4":
+  version "2.4.4"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-2.4.4.tgz#ca073aa9d57c1e024486cf7bc612ccfebf7eaed8"
+  integrity sha512-BVmEmZlq6NUrLVBW+shKLvU0Xyw+eeP0jQTofNu9rm6acTF4f1GNI5F0zXCPtBdQpQF8Y/aUrTOXhYXMD78gFA==
   dependencies:
     async "^3.2.0"
     axios "^0.21.1"
@@ -4632,6 +4632,11 @@ dayjs@^1.9.7:
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.9.7.tgz#4b260bb17dceed2d5f29038dfee03c65a6786fc0"
   integrity sha512-IC877KBdMhBrCfBfJXHQlo0G8keZ0Opy7YIIq5QKtUbCuHMzim8S4PyiVK4YmihI3iOF9lhfUBW4AQWHTR5WHA==
 
+dayjs@^1.9.8:
+  version "1.9.8"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.9.8.tgz#9a65fbdca037e3d5835f98672da6e796f757cd58"
+  integrity sha512-F42qBtJRa30FKF7XDnOQyNUTsaxDkuaZRj/i7BejSHC34LlLfPoIU4aeopvWfM+m1dJ6/DHKAWLg2ur+pLgq1w==
+
 dayjs@~1.8.24, dayjs@~1.8.25:
   version "1.8.36"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.8.36.tgz#be36e248467afabf8f5a86bae0de0cdceecced50"
@@ -5893,18 +5898,18 @@ fast-safe-stringify@^2.0.7:
   resolved "https://registry.yarnpkg.com/fast-safe-stringify/-/fast-safe-stringify-2.0.7.tgz#124aa885899261f68aedb42a7c080de9da608743"
   integrity sha512-Utm6CdzT+6xsDk2m8S6uL8VHxNwI6Jub+e9NYTcAms28T84pTa25GJQV9j0CY0N1rM8hK4x6grpF2BQf+2qwVA==
 
-fastify-autoload@^3.3.2:
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/fastify-autoload/-/fastify-autoload-3.3.2.tgz#6496c45a8b9188167b16108cfaa7c805a916deb8"
-  integrity sha512-ACjZNiRkfDnaPi93EU8fT+zuy/AtnyHn1OSDcrjKO+n69CN2Ok4qpjeYZ5zSI1dFy6RtG9uX496es1JVurcepw==
+fastify-autoload@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/fastify-autoload/-/fastify-autoload-3.4.0.tgz#7b8ae19678b2aec6c61db9d55298ab8c0c01e69e"
+  integrity sha512-kELt4cS7Fl5CQM8yzlGCrFC6fiz+CT+y0Uiw8I3LQXY+RWH3/BgNs9uGTzrNbd2gd/vh9AIF9FR1yQInDH/UKg==
   dependencies:
     pkg-up "^3.1.0"
     semver "^7.3.2"
 
-fastify-cli@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/fastify-cli/-/fastify-cli-2.6.0.tgz#45ccccc5e9d346220e75b1bb5d15574365cdfe60"
-  integrity sha512-5t3kfktavTkrHop1xQnzVM68PlZ60DZHbCz1A/mxQCzSHJPRkNb6uiG8jHak/5kYY6ifAZuazQ+9GpZ8GkPEHw==
+fastify-cli@^2.7.0:
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/fastify-cli/-/fastify-cli-2.7.0.tgz#9c1dc99a59ce102b84f65c223fe82dd0719e99b9"
+  integrity sha512-9mS9snGmrtmrkdGaed0s+EWYqRegnWrPhzLCveO3dUJiOTcJrIsMLeas8zjLdKIPFMWASGxzzWErxmB00nEONw==
   dependencies:
     blessed "^0.1.81"
     blessed-contrib "^4.8.18"
@@ -8237,10 +8242,10 @@ klona@^2.0.4:
   resolved "https://registry.yarnpkg.com/klona/-/klona-2.0.4.tgz#7bb1e3affb0cb8624547ef7e8f6708ea2e39dfc0"
   integrity sha512-ZRbnvdg/NxqzC7L9Uyqzf4psi1OM4Cuc+sJAkQPjO6XkQIJTNbfK2Rsmbw8fx1p2mkZdp2FZYo2+LwXYY/uwIA==
 
-knex@^0.21.14:
-  version "0.21.14"
-  resolved "https://registry.yarnpkg.com/knex/-/knex-0.21.14.tgz#ac1e0b51c599be9e65e77df682bbecefabad99ad"
-  integrity sha512-UKoRtSzeSlm4Fi/jcFZ+NNmwYPnLADKy3u7Wm8WFhhFlv/I9RXf6TrTHNeE9hjIK1hCUz2yn4PeXagvjArTPUg==
+knex@^0.21.15:
+  version "0.21.15"
+  resolved "https://registry.yarnpkg.com/knex/-/knex-0.21.15.tgz#4f5cb5c147ee354c93d3edbf3643ef248360e77f"
+  integrity sha512-STHnPIIkExZVz0X3zIDaWC/q9EcTAfuuRE5Rev7NpOhF1QVh24K5iT2FXD0nWoJ1BUSeDs5QdgdTaz9H8oEtfg==
   dependencies:
     colorette "1.2.1"
     commander "^6.2.0"
