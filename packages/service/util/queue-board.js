@@ -11,17 +11,20 @@ const app = require('express')();
 const consola = require('consola');
 const { router, setQueues, BullAdapter } = require('bull-board');
 
-setQueues([
-  new BullAdapter(
-    new Queue('updates', {
-      redis: {
-        host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
-        port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
-        db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
-      }
-    })
+setQueues(
+  ['repositories', 'users'].map(
+    (queue) =>
+      new BullAdapter(
+        new Queue(queue, {
+          redis: {
+            host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
+            port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
+            db: parseInt(process.env.GITTRENDS_REDIS_DB || 0, 10)
+          }
+        })
+      )
   )
-]);
+);
 
 app.use('/', router);
 

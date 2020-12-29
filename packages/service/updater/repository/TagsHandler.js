@@ -45,13 +45,17 @@ module.exports = class RepositoryTagsHander extends AbstractRepositoryHandler {
       await Promise.all([
         this.dao.tags.insert(tags, trx),
         this.dao.metadata.upsert(
-          [
-            { ...this.meta, key: 'updatedAt', value: new Date().toISOString() },
-            { ...this.meta, key: 'endCursor', value: this.tags.endCursor }
-          ],
+          [{ ...this.meta, key: 'endCursor', value: this.tags.endCursor }],
           trx
         )
       ]);
+    }
+
+    if (this.done) {
+      return this.dao.metadata.upsert(
+        [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
+        trx
+      );
     }
   }
 

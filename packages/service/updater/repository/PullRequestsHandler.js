@@ -6,9 +6,7 @@ const IssuesHandler = require('./IssuesHandler');
 module.exports = class RepositoryPullRequestsHander extends IssuesHandler {
   constructor(id, alias) {
     super(id, alias);
-    this.batchSize = this.defaultBatchSize = 15;
-    this.tlBatchSize = this.defaultTlBatchSize = 50;
-    this.reactionsBatchSize = this.defaultReactionsBatchSize = 50;
+    this.batchSize = this.defaultBatchSize = 10;
   }
 
   static get type() {

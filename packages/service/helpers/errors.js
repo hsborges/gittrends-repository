@@ -29,6 +29,7 @@ class RetryableError extends RequestError {}
 class BadGatewayError extends RetryableError {}
 class BlockedError extends RequestError {}
 class ForbiddenError extends RequestError {}
+class InternalError extends RetryableError {}
 class MaxNodeLimitExceededError extends RetryableError {}
 class NotFoundError extends RequestError {}
 class NotModifiedError extends RequestError {}
@@ -42,6 +43,7 @@ module.exports = {
   BadGatewayError,
   BlockedError,
   ForbiddenError,
+  InternalError,
   MaxNodeLimitExceededError,
   NotFoundError,
   NotModifiedError,

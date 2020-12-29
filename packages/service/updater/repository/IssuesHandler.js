@@ -266,11 +266,7 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
           this.dao.timeline.insert(timeline, trx),
           this.dao.reactions.insert(reactions, trx),
           this.dao.metadata.upsert(
-            [
-              { ...this.meta, key: 'updatedAt', value: new Date().toISOString() },
-              { ...this.meta, key: 'endCursor', value: this.issues.endCursor },
-              ...issuesMetadata
-            ],
+            [{ ...this.meta, key: 'endCursor', value: this.issues.endCursor }, ...issuesMetadata],
             trx
           )
         ]);
@@ -279,6 +275,13 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
         this.reactions = [];
         this.batchSize = this.defaultBatchSize;
       }
+    }
+
+    if (this.done) {
+      return this.dao.metadata.upsert(
+        [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
+        trx
+      );
     }
   }
 

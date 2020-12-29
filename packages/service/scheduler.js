@@ -77,7 +77,7 @@ const usersScheduler = async (queue, wait, limit = 100000) => {
   ).map((r) => r.id);
   // add to queue
   return Promise.all(
-    chunk(usersIds, 10).map((ids) => queue.add({ ids }, { jobId: `users@${ids[0]}+` }))
+    chunk(usersIds, 25).map((ids) => queue.add({ ids }, { jobId: `users@${ids[0]}+` }))
   ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
 

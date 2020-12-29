@@ -2,16 +2,19 @@
  *  Author: Hudson S. Borges
  */
 const { get } = require('lodash');
+const { RetryableError } = require('../../helpers/errors');
 
 const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
 const DependencyGraphManifestComponent = require('../../github/graphql/components/DependencyGraphManifestComponent');
+
+const debug = require('debug')('updater:dependencies-handler');
 
 module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHandler {
   constructor(id, alias) {
     super(id, alias);
     this.meta = { id: this.component.id, resource: 'dependencies' };
-    this.manifests = { items: [], hasNextPage: true, endCursor: null };
-    this.components = [];
+    this.manifests = { hasNextPage: true, endCursor: null };
+    this.manifestsComponents = [];
   }
 
   async updateComponent() {
@@ -20,24 +23,10 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
       after: this.manifests.endCursor || null
     });
 
-    if (!this.manifests.hasNextPage && !this.components.length) {
-      this.components = this.manifests.items.map((manifest, index) => ({
-        manifest,
-        component: DependencyGraphManifestComponent.create({
-          id: manifest.id,
-          alias: `${this.alias}_manifest_${index}`
-        })
-          .includeDetails(false)
-          .includeDependencies(true, { first: this.batchSize }),
-        hasNextPage: manifest.parseable,
-        endCursor: null
-      }));
-    }
-
     if (!this.manifests.hasNextPage && this.hasNextPage) {
-      const pendingComponents = this.getPendingComponents();
+      const pendingManifests = this.getPendingManifests();
 
-      pendingComponents.forEach((manifest) => {
+      pendingManifests.forEach((manifest) => {
         manifest.component.includeDependencies(manifest.hasNextPage, {
           first: this.batchSize,
           after: manifest.endCursor
@@ -46,7 +35,7 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
 
       this.component.includeComponents(
         true,
-        pendingComponents.map((c) => c.component)
+        pendingManifests.map((c) => c.component)
       );
     }
   }
@@ -57,34 +46,64 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
     if (response && this.manifests.hasNextPage) {
       const data = response[this.alias];
 
-      this.manifests.items.push(...get(data, 'dependency_graph_manifests.nodes', []));
+      this.manifestsComponents.push(
+        ...get(data, 'dependency_graph_manifests.nodes', []).map((manifest, index) => ({
+          data: manifest,
+          component: DependencyGraphManifestComponent.create({
+            id: manifest.id,
+            alias: `${this.alias}_manifest_${index}`
+          })
+            .includeDetails(false)
+            .includeDependencies(true, { first: this.batchSize }),
+          hasNextPage: manifest.parseable,
+          endCursor: null
+        }))
+      );
+
+      debug(
+        `List of ${this.manifestsComponents.length} manifests obtained from ${this.component.id} ...`
+      );
 
       const pageInfo = 'dependency_graph_manifests.page_info';
       this.manifests.hasNextPage = get(data, `${pageInfo}.has_next_page`);
       this.manifests.endCursor = get(data, `${pageInfo}.end_cursor`, this.manifests.endCursor);
+
+      if (this.hasNextPage)
+        return (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2));
     }
 
     if (response && !this.manifests.hasNextPage && this.hasNextPage) {
-      await Promise.map(this.getPendingComponents(), async (vComp) => {
-        const dependencies = get(response, `${vComp.component.name}.dependencies.nodes`, []).map(
-          (dependency) => ({
-            repository: this.component.id,
-            manifest: vComp.manifest.id,
-            filename: vComp.manifest.filename,
-            ...dependency
-          })
-        );
+      await Promise.reduce(
+        this.getPendingManifests(),
+        async (dependencies, manifest) => {
+          const pageInfo = `${manifest.component.alias}.dependencies.page_info`;
+          manifest.hasNextPage = get(response, `${pageInfo}.has_next_page`);
+          manifest.endCursor = get(response, `${pageInfo}.end_cursor`, manifest.endCursor);
 
-        const pageInfo = `${vComp.component.name}.dependencies.page_info`;
-        vComp.hasNextPage = get(response, `${pageInfo}.has_next_page`);
-        vComp.endCursor = get(response, `${pageInfo}.end_cursor`, vComp.endCursor);
-
-        await this.dao.dependencies.insert(dependencies, trx);
+          return dependencies.concat(
+            get(response, `${manifest.component.alias}.dependencies.nodes`, []).map(
+              (dependency) => ({
+                repository: this.component.id,
+                manifest: manifest.data.id,
+                filename: manifest.data.filename,
+                ...dependency
+              })
+            )
+          );
+        },
+        []
+      ).then((dependencies) => {
+        debug(`Inserting ${dependencies.length} dependencies from ${this.component.id} ...`);
+        return this.dao.dependencies.insert(dependencies, trx);
       });
+
+      if (this.hasNextPage)
+        return (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2));
     }
 
     if (this.done) {
-      await this.dao.metadata.upsert(
+      debug(`Dependencies from ${this.component.id} updated!`);
+      return this.dao.metadata.upsert(
         [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
         trx
       );
@@ -92,16 +111,33 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
   }
 
   error(err) {
+    if (err instanceof RetryableError) {
+      debug(`An error was detected (${err.constructor.name}). Reducing batch size ...`);
+
+      if (this.batchSize > 1) return (this.batchSize = Math.floor(this.batchSize / 2));
+
+      const pending = this.getPendingManifests();
+      pending.hasNextPage = false;
+
+      return this.dao.metadata.upsert([{ ...this.meta, key: 'error', value: err.message }]);
+    }
+
     throw err;
   }
 
-  getPendingComponents() {
-    return this.components
-      .filter((c) => c.manifest.parseable && !c.manifest.exceeds_max_size && c.hasNextPage)
+  getPendingManifests() {
+    return this.manifestsComponents
+      .filter((m) => m.data.parseable && !m.data.exceeds_max_size && m.hasNextPage)
       .slice(0, this.batchSize);
   }
 
+  get alias() {
+    return [super.alias].concat(
+      this.getPendingManifests().map((manifest) => manifest.component.alias)
+    );
+  }
+
   get hasNextPage() {
-    return this.manifests.hasNextPage || this.getPendingComponents().length;
+    return this.manifests.hasNextPage || this.getPendingManifests().length;
   }
 };

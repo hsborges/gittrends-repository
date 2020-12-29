@@ -45,13 +45,17 @@ module.exports = class RepositoryWatchersHander extends AbstractRepositoryHandle
       await Promise.all([
         this.dao.watchers.insert(watchers, trx),
         this.dao.metadata.upsert(
-          [
-            { ...this.meta, key: 'updatedAt', value: new Date().toISOString() },
-            { ...this.meta, key: 'endCursor', value: this.watchers.endCursor }
-          ],
+          [{ ...this.meta, key: 'endCursor', value: this.watchers.endCursor }],
           trx
         )
       ]);
+    }
+
+    if (this.done) {
+      return this.dao.metadata.upsert(
+        [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
+        trx
+      );
     }
   }
 

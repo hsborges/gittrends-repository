@@ -28,16 +28,7 @@ const { resources } = require('../package.json').config;
   // eslint-disable-next-line no-restricted-syntax, guard-for-in
   for (const resource of reposResources) {
     const updatedRepos = (
-      await Metadata.query()
-        .whereNotIn(
-          'id',
-          Metadata.query()
-            .where({ resource, key: 'pending' })
-            .andWhere('value', '<>', '0')
-            .select('id')
-        )
-        .where({ resource, key: 'updatedAt' })
-        .select('id')
+      await Metadata.query().where({ resource, key: 'updatedAt' }).select('id')
     ).map((m) => m.id);
 
     const updated = updatedRepos.length;

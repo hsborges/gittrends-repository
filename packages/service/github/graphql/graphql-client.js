@@ -43,18 +43,18 @@ module.exports.post = async function (parameters) {
         .then(resolve)
         .catch((err) => {
           if (err.code === 'ECONNABORTED' && operation.retry(err)) return;
+          if (err.code === 'ECONNREFUSED' && operation.retry(err)) return;
           if (err.response && /500/g.test(err.response.status) && operation.retry(err)) return;
           return reject(operation.mainError() || err);
         })
     );
   })
     .catch((err) => {
+      const params = [err.message, err, parameters.variables, err.response && err.response.data];
       if (err.response && err.response.status === 502) {
-        const params = [err.message, err, parameters.variables, err.response.data];
         throw new Errors.BadGatewayError(...params);
       }
-      if (err.response && err.response.status === 408) {
-        const params = [err.message, err, parameters.variables, err.response.data];
+      if ((err.response && err.response.status === 408) || err.code === 'ECONNABORTED') {
         throw new Errors.TimedoutError(...params);
       }
       throw err;
@@ -66,6 +66,8 @@ module.exports.post = async function (parameters) {
         const params = [message, null, parameters.variables, data];
         if (data.errors.find((e) => e.type === 'FORBIDDEN'))
           throw new Errors.ForbiddenError(...params);
+        if (data.errors.find((e) => e.type === 'INTERNAL'))
+          throw new Errors.InternalError(...params);
         if (data.errors.find((e) => e.type === 'NOT_FOUND'))
           throw new Errors.NotFoundError(...params);
         if (data.errors.find((e) => e.type === 'MAX_NODE_LIMIT_EXCEEDED'))

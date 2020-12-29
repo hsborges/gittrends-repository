@@ -6,7 +6,7 @@ const RepositoryComponent = require('../../github/graphql/components/RepositoryC
 
 module.exports = class AbstractRepositoryHandler extends Handler {
   constructor(id, alias) {
-    super(RepositoryComponent.create({ id, alias }));
+    super(RepositoryComponent.create({ id, alias }).includeDetails(false));
     this.batchSize = this.defaultBatchSize = 100;
   }
 
