@@ -1016,14 +1016,14 @@
     purgecss "^2.3.0"
 
 "@gittrends/database-config@file:packages/database-config":
-  version "1.0.0"
+  version "2.0.0"
   dependencies:
     knex "^0.21.15"
     pg "^8.5.1"
     pg-query-stream "^4.0.0"
 
 "@gittrends/env-config@file:packages/env-config":
-  version "1.0.0"
+  version "2.0.0"
   dependencies:
     dotenv "^8.2.0"
     find-up "^5.0.0"
