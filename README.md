@@ -48,9 +48,8 @@ yarn workspace @gittrends/database-config run-migrations
 You can also use docker containers:
 
 ```sh
-# create volumes and networks
+# create a volume
 docker volume create gittrends.app
-docker network create gittrends.app
 # run containers
 docker-compose up -d
 ```

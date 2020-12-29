@@ -16,10 +16,3 @@ services:
       REMOTE_HOST: ${GITTRENDS_DATABASE_HOST}
       LOCAL_PORT: 5432
       REMOTE_PORT: 5432
-    networks:
-      - gittrends
-
-networks:
-  gittrends:
-    external: true
-    name: gittrends.app
