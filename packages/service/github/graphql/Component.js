@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 module.exports = class Component {
   $argsToString(args) {
     return Object.keys(args)

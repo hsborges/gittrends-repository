@@ -45,13 +45,13 @@
   },
   "config": {
     "resources": [
-      "repos",
+      "repository",
       "stargazers",
       "watchers",
       "tags",
       "releases",
       "issues",
-      "pulls",
+      "pull_requests",
       "dependencies",
       "users"
     ]

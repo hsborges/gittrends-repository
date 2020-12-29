@@ -1,22 +1,20 @@
-const { get, snakeCase, lowerCase, omit } = require('lodash');
-const compact = require('../../helpers/compact');
-
+/*
+ *  Author: Hudson S. Borges
+ */
 const ReactionComponent = require('../../github/graphql/components/ReactionComponent');
 const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
 
-const debug = require('debug')('updater:issues-handler');
+const { get, snakeCase, lowerCase, omit } = require('lodash');
+const { RetryableError, ForbiddenError } = require('../../helpers/errors');
 
-const {
-  BadGatewayError,
-  SomethingWentWrongError,
-  MaxNodeLimitExceededError,
-  TimedoutError
-} = require('../../helpers/errors');
+const debug = require('debug')('updater:issues-handler');
 
 module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler {
   constructor(id, alias) {
     super(id, alias);
-    this.batchSize = this.defaultBatchSize = 10;
+    this.batchSize = this.defaultBatchSize = 25;
+    this.tlBatchSize = this.defaultTlBatchSize = 50;
+    this.reactionsBatchSize = this.defaultReactionsBatchSize = 50;
     this.resource = snakeCase(lowerCase(this.constructor.type));
     this.meta = { id: this.component.id, resource: this.resource };
     this.issues = { hasNextPage: true, endCursor: null };
@@ -68,19 +66,16 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
         issue.component
           .includeDetails(issue.details.hasNextPage)
           .includeAssignees(issue.assignees.hasNextPage, {
-            first: this.batchSize,
             after: issue.assignees.endCursor
           })
           .includeLabels(issue.labels.hasNextPage, {
-            first: this.batchSize,
             after: issue.labels.endCursor
           })
           .includeParticipants(issue.participants.hasNextPage, {
-            first: this.batchSize,
             after: issue.participants.endCursor
           })
           .includeTimeline(issue.timeline.hasNextPage, {
-            first: this.batchSize,
+            first: this.tlBatchSize,
             after: issue.timeline.endCursor
           });
       });
@@ -95,7 +90,10 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
       const batch = this.reactions.filter((meta) => meta.hasNextPage).slice(0, this.batchSize);
 
       batch.forEach((issue) => {
-        issue.component.includeReactions(issue.hasNextPage, { after: issue.endCursor });
+        issue.component.includeReactions(issue.hasNextPage, {
+          first: this.reactionsBatchSize,
+          after: issue.endCursor
+        });
       });
 
       this.component.includeComponents(
@@ -181,26 +179,25 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
             .filter((issue) => issue.data.reaction_groups)
             .map((meta) => ({ repository: this.repositoryId, issue: meta.data.id }))
             .concat(
-              this.details.reduce(
-                (timeseries, issue) =>
-                  timeseries.concat(
-                    issue.data.timeline
-                      .filter((event) => event.reaction_groups)
-                      .map((event) => ({
-                        repository: this.repositoryId,
-                        issue: issue.data.id,
-                        event: event.id
-                      }))
-                  ),
-                []
-              )
+              this.details.reduce((timeseries, issue) => {
+                if (!issue.data.timeline) return timeseries;
+                return timeseries.concat(
+                  issue.data.timeline
+                    .filter((event) => event.reaction_groups)
+                    .map((event) => ({
+                      repository: this.repositoryId,
+                      issue: issue.data.id,
+                      event: event.id
+                    }))
+                );
+              }, [])
             )
             .map((reactable, index) => ({
               reactable,
-              component: new ReactionComponent(
-                reactable.event || reactable.issue,
-                `${this.alias}_reactable_${index}`
-              ),
+              component: ReactionComponent.create({
+                id: reactable.event || reactable.issue,
+                alias: `${this.alias}_reactable_${index}`
+              }),
               reactions: [],
               hasNextPage: true,
               endCursor: null
@@ -223,7 +220,7 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
       }
 
       if (!this.$hasNextPage(this.details) && !this.$hasNextPage(this.reactions)) {
-        const issues = this.details.map((meta) => compact(omit(meta.data, 'timeline')));
+        const issues = this.details.map((meta) => this.compact(omit(meta.data, 'timeline')));
 
         const issuesMetadata = this.details.reduce((acc, issue) => {
           const path = { id: issue.data.id, resource: this.resource.slice(0, -1) };
@@ -241,7 +238,7 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
           if (!issue.data.timeline) return acc;
           return acc.concat(
             issue.data.timeline.map((tl) =>
-              compact({
+              this.compact({
                 id: tl.id,
                 repository: this.component.id,
                 issue: issue.data.id,
@@ -286,32 +283,35 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
   }
 
   async error(err) {
-    const reduceBatchSize = [
-      BadGatewayError,
-      SomethingWentWrongError,
-      MaxNodeLimitExceededError,
-      TimedoutError
-    ].reduce((acc, et) => acc || err instanceof et, false);
+    if (err instanceof RetryableError || err instanceof ForbiddenError) {
+      const errorName = err.name || err.constructor.name;
+      const currentValues = [this.batchSize, this.tlBatchSize, this.reactionsBatchSize].join(', ');
+      debug(`(${errorName}) reducing batch size (current: ${currentValues}) ...`);
 
-    if (reduceBatchSize) {
-      debug(`An error was detected (${err.name || err.constructor.name}), reducing batch size ...`);
-      if (this.batchSize > 1) return (this.batchSize = Math.ceil(this.batchSize / 2));
+      const hasNextDetails = this.$hasNextPage(this.details);
+      const hasNextReactions = this.$hasNextPage(this.reactions);
 
-      const pendingIssues = this.details.filter((meta) => meta.hasNextPage);
-      const pendingReactions = this.reactions.filter((meta) => meta.hasNextPage);
+      if (this.batchSize > 1)
+        if (this.batchSize > 1) return (this.batchSize = Math.floor(this.batchSize / 2));
 
-      if (pendingIssues.length) {
-        debug(`Disabling issue metadata updater for id=${pendingIssues[0].data.id}`);
-        pendingIssues[0].hasNextPage = false;
-        pendingIssues[0].error = err;
-      } else if (pendingReactions.length) {
+      if (hasNextDetails) {
+        const issue = this.details.filter((meta) => meta.hasNextPage)[0];
+        debug(`Disabling issue metadata updater for id=${issue.data.id}`);
+        issue.hasNextPage = false;
+        issue.error = err;
+      } else if (hasNextReactions) {
         debug(`Disabling reactions metadata updater`);
         // TODO -- handle single reactables problems
-        pendingReactions.hasNextPage = false;
-        pendingReactions.error = err;
+        const reaction = this.reactions.filter((meta) => meta.hasNextPage)[0];
+        reaction.hasNextPage = false;
+        reaction.error = err;
       }
 
-      return (this.batchSize = this.defaultBatchSize);
+      this.batchSize = this.defaultBatchSize;
+      this.tlBatchSize = this.defaultTlBatchSize;
+      this.reactionsBatchSize = this.defaultReactionsBatchSize;
+
+      return;
     }
 
     throw err;

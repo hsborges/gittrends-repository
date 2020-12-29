@@ -1,7 +1,9 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const { snakeCase, pick } = require('lodash');
-
 const { knex } = require('@gittrends/database-config');
-const { actors: ActorsDAO, commits: CommitsDAO } = require('../updater/helper/dao');
+const { actors: ActorsDAO, commits: CommitsDAO } = require('./dao');
 
 const Updater = require('./Updater');
 const Query = require('../github/graphql/Query');

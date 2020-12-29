@@ -1,27 +1,29 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const Component = require('../Component');
 const ActorFragment = require('../fragments/ActorFragment');
 
 module.exports = class ActorComponent extends Component {
-  constructor(id, name) {
+  constructor(id, alias) {
     if (!id) throw new Error('ID or name (owner/name) is mandatory!');
 
     super();
-
-    this._id = id;
-    this._name = name || 'actor';
+    this.id = id;
+    this.alias = alias || 'actor';
   }
 
   get fragments() {
     return [ActorFragment];
   }
 
-  static with({ id, name }) {
-    return new ActorComponent(id, name);
+  static create({ id, alias }) {
+    return new ActorComponent(id, alias);
   }
 
   toString() {
     return `
-      ${this._name}:node(id: "${this._id}") {
+      ${this.alias}:node(id: "${this.id}") {
         ...${ActorFragment.code}
       }
     `;

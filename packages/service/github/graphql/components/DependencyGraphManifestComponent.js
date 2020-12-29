@@ -1,14 +1,15 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const Component = require('../Component');
 
 module.exports = class DependencyGraphManifestComponent extends Component {
-  constructor(id, name) {
+  constructor(id, alias) {
     if (!id) throw new Error('ID or name (owner/name) is mandatory!');
 
     super();
-
     this.id = id;
-    this.name = name || 'manifest';
-
+    this.alias = alias || 'manifest';
     this._includeDetails = '';
     this._includeDependencies = '';
   }
@@ -17,8 +18,8 @@ module.exports = class DependencyGraphManifestComponent extends Component {
     return [];
   }
 
-  static with({ id, name }) {
-    return new DependencyGraphManifestComponent(id, name);
+  static create({ id, alias }) {
+    return new DependencyGraphManifestComponent(id, alias);
   }
 
   includeDetails(include = true) {
@@ -60,7 +61,7 @@ module.exports = class DependencyGraphManifestComponent extends Component {
 
   toString() {
     return `
-      ${this.name}:node(id: "${this.id}") {
+      ${this.alias}:node(id: "${this.id}") {
         type: __typename
         ${this._includeDetails}
         ${this._includeDependencies}

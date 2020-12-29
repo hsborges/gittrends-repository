@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const Fragment = require('../Fragment');
 const CommentFragment = require('./CommentFragment');
 const CommitFragment = require('./CommitFragment');

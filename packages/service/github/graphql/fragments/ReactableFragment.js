@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const Fragment = require('../Fragment');
 
 module.exports = class ReactableFragment extends Fragment {

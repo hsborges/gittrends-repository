@@ -1,6 +1,9 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const Component = require('../github/graphql/Component.js');
 const compact = require('../helpers/compact.js');
-const dao = require('../updater/helper/dao');
+const dao = require('./dao');
 
 module.exports = class Handler {
   constructor(component) {

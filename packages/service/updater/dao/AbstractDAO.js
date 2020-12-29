@@ -7,9 +7,7 @@ const ajvFormats = require('ajv-formats');
 
 const { pick, isArray, isObjectLike, mapValues, isDate, chunk } = require('lodash');
 
-const db = require('@gittrends/database-config');
-
-class DAO {
+module.exports = class AbstractDAO {
   constructor(model, { cacheSize = 0, chunkSize = 1000 } = {}) {
     this.model = model;
     this.chunkSize = chunkSize;
@@ -100,32 +98,4 @@ class DAO {
   delete(query, transaction) {
     return this.model.query(transaction).delete().where(query);
   }
-}
-
-// Disable cache by default
-const defaultOptions = {
-  cacheSize: 0,
-  chunkSize: parseInt(process.env.GITTRENDS_DAO_CHUNK_SIZE || 1000, 10)
 };
-
-const cacheEnabled = {
-  ...defaultOptions,
-  cacheSize: parseInt(process.env.GITTRENDS_DAO_CACHE_SIZE || 50000, 10)
-};
-
-// exports
-module.exports.actors = new DAO(db.Actor, cacheEnabled);
-module.exports.commits = new DAO(db.Commit, cacheEnabled);
-module.exports.dependencies = new DAO(db.Dependency, defaultOptions);
-module.exports.issues = new DAO(db.Issue, defaultOptions);
-module.exports.metadata = new DAO(db.Metadata, defaultOptions);
-module.exports.pulls = new DAO(db.PullRequest, defaultOptions);
-module.exports.reactions = new DAO(db.Reaction, defaultOptions);
-module.exports.releases = new DAO(db.Release, defaultOptions);
-module.exports.repositories = new DAO(db.Repository, defaultOptions);
-module.exports.stargazers = new DAO(db.Stargazer, defaultOptions);
-module.exports.tags = new DAO(db.Tag, defaultOptions);
-module.exports.timeline = new DAO(db.TimelineEvent, defaultOptions);
-module.exports.watchers = new DAO(db.Watcher, defaultOptions);
-// aliases
-module.exports.pull_requests = module.exports.pulls;

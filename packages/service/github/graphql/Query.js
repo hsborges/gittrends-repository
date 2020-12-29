@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const { get } = require('lodash');
 const parser = require('./parser.js');
 const client = require('./graphql-client.js');

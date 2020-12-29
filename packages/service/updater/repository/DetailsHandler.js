@@ -1,5 +1,8 @@
-const { Repository } = require('@gittrends/database-config');
+/*
+ *  Author: Hudson S. Borges
+ */
 const { get, pick } = require('lodash');
+const { Repository } = require('@gittrends/database-config');
 
 const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
 
@@ -39,7 +42,7 @@ module.exports = class RepositoryDetailsHander extends AbstractRepositoryHandler
       this.topics.hasNextPage = get(data, `${topicsPageInfo}.has_next_page`);
       this.topics.endCursor = get(data, `${topicsPageInfo}.end_cursor`, this.topics.endCursor);
 
-      if (this.done)
+      if (this.done) {
         await Promise.all([
           this.dao.repositories.update(this.data, trx),
           this.dao.metadata.upsert(
@@ -47,7 +50,12 @@ module.exports = class RepositoryDetailsHander extends AbstractRepositoryHandler
             trx
           )
         ]);
+      }
     }
+  }
+
+  error(err) {
+    throw err;
   }
 
   get hasNextPage() {

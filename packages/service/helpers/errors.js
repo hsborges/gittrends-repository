@@ -25,18 +25,20 @@ class RequestError extends CustomError {
   }
 }
 
-class BadGatewayError extends RequestError {}
+class RetryableError extends RequestError {}
+class BadGatewayError extends RetryableError {}
 class BlockedError extends RequestError {}
 class ForbiddenError extends RequestError {}
-class MaxNodeLimitExceededError extends RequestError {}
+class MaxNodeLimitExceededError extends RetryableError {}
 class NotFoundError extends RequestError {}
 class NotModifiedError extends RequestError {}
 class ServiceUnavailableError extends RequestError {}
-class TimedoutError extends RequestError {}
-class LoadingError extends RequestError {}
-class SomethingWentWrongError extends RequestError {}
+class TimedoutError extends RetryableError {}
+class LoadingError extends RetryableError {}
+class SomethingWentWrongError extends RetryableError {}
 
 module.exports = {
+  RetryableError,
   BadGatewayError,
   BlockedError,
   ForbiddenError,

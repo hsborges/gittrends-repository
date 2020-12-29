@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 module.exports = class Fragment {
   static $include(full, field) {
     return full ? field : '';

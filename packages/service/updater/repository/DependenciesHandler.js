@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const { get } = require('lodash');
 
 const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
@@ -6,9 +9,9 @@ const DependencyGraphManifestComponent = require('../../github/graphql/component
 module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHandler {
   constructor(id, alias) {
     super(id, alias);
+    this.meta = { id: this.component.id, resource: 'dependencies' };
     this.manifests = { items: [], hasNextPage: true, endCursor: null };
     this.components = [];
-    this.meta = { id: this.component.id, resource: 'dependencies' };
   }
 
   async updateComponent() {
@@ -20,21 +23,30 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
     if (!this.manifests.hasNextPage && !this.components.length) {
       this.components = this.manifests.items.map((manifest, index) => ({
         manifest,
-        component: DependencyGraphManifestComponent.with({
+        component: DependencyGraphManifestComponent.create({
           id: manifest.id,
-          name: `${this.alias}_manifest_${index}`
+          alias: `${this.alias}_manifest_${index}`
         })
           .includeDetails(false)
-          .includeDependencies(),
+          .includeDependencies(true, { first: this.batchSize }),
         hasNextPage: manifest.parseable,
         endCursor: null
       }));
     }
 
     if (!this.manifests.hasNextPage && this.hasNextPage) {
+      const pendingComponents = this.getPendingComponents();
+
+      pendingComponents.forEach((manifest) => {
+        manifest.component.includeDependencies(manifest.hasNextPage, {
+          first: this.batchSize,
+          after: manifest.endCursor
+        });
+      });
+
       this.component.includeComponents(
         true,
-        this.validComponents.map((c) => c.component)
+        pendingComponents.map((c) => c.component)
       );
     }
   }
@@ -50,8 +62,10 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
       const pageInfo = 'dependency_graph_manifests.page_info';
       this.manifests.hasNextPage = get(data, `${pageInfo}.has_next_page`);
       this.manifests.endCursor = get(data, `${pageInfo}.end_cursor`, this.manifests.endCursor);
-    } else if (response && !this.manifests.hasNextPage && this.hasNextPage) {
-      await Promise.map(this.validComponents, async (vComp) => {
+    }
+
+    if (response && !this.manifests.hasNextPage && this.hasNextPage) {
+      await Promise.map(this.getPendingComponents(), async (vComp) => {
         const dependencies = get(response, `${vComp.component.name}.dependencies.nodes`, []).map(
           (dependency) => ({
             repository: this.component.id,
@@ -69,23 +83,25 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
       });
     }
 
-    if (!this.manifests.hasNextPage)
+    if (this.done) {
       await this.dao.metadata.upsert(
         [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
         trx
       );
+    }
   }
 
-  get validComponents() {
-    return this.components.filter(
-      (c) => c.manifest.parseable && !c.manifest.exceeds_max_size && c.hasNextPage
-    );
+  error(err) {
+    throw err;
+  }
+
+  getPendingComponents() {
+    return this.components
+      .filter((c) => c.manifest.parseable && !c.manifest.exceeds_max_size && c.hasNextPage)
+      .slice(0, this.batchSize);
   }
 
   get hasNextPage() {
-    return (
-      this.manifests.hasNextPage ||
-      this.validComponents.reduce((acc, c) => acc || c.hasNextPage, false)
-    );
+    return this.manifests.hasNextPage || this.getPendingComponents().length;
   }
 };

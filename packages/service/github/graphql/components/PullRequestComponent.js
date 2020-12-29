@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const IssueComponent = require('./IssueComponent');
 
 const IssueFragment = require('../fragments/IssueFragment');
@@ -87,8 +90,8 @@ module.exports = class PullRequestComponent extends IssueComponent {
     return fragments;
   }
 
-  static with({ id, name }) {
-    return new PullRequestComponent(id, name);
+  static create({ id, alias }) {
+    return new PullRequestComponent(id, alias);
   }
 
   includeDetails(include) {

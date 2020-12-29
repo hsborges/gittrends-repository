@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const { get } = require('lodash');
 
 const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
@@ -50,6 +53,10 @@ module.exports = class RepositoryWatchersHander extends AbstractRepositoryHandle
         )
       ]);
     }
+  }
+
+  error(err) {
+    throw err;
   }
 
   get hasNextPage() {

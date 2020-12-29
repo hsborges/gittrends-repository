@@ -9,19 +9,44 @@ const consola = require('consola');
 const program = require('commander');
 const retry = require('retry');
 
-const worker = require('./updater-worker.js');
-
-const { Issue, PullRequest, Metadata } = require('@gittrends/database-config');
+const RepositoryUpdater = require('./updater/RepositoryUpdater');
 const { version } = require('./package.json');
 
-async function retriableWorker(...args) {
-  const options = { retries: 5, minTimeout: 1000, maxTimeout: 30000, randomize: true };
+async function retriableWorker(job) {
+  const options = { retries: 5, minTimeout: 1000, maxTimeout: 5000, randomize: true };
   const operation = retry.operation(options);
 
   return new Promise((resolve, reject) => {
+    const handlers = job.data.resources.map((resource) => {
+      switch (resource) {
+        case 'repository':
+          return require('./updater/repository/DetailsHandler');
+        case 'tags':
+          return require('./updater/repository/TagsHandler');
+        case 'releases':
+          return require('./updater/repository/ReleasesHandler');
+        case 'watchers':
+          return require('./updater/repository/WatchersHandler');
+        case 'stargazers':
+          return require('./updater/repository/StargazersHandler');
+        case 'issues':
+          return require('./updater/repository/IssuesHandler');
+        case 'pull_requests':
+          return require('./updater/repository/PullRequestsHandler');
+        case 'dependencies':
+          return require('./updater/repository/DependenciesHandler');
+        default:
+          throw new Error(`Invalid resource (${resource})`);
+      }
+    });
+
     operation.attempt(() => {
-      worker(...args)
-        .then(resolve)
+      new RepositoryUpdater(job.data.id, handlers)
+        .update()
+        .then(() => {
+          consola.success(`[${job.id}] finished!`);
+          resolve();
+        })
         .catch((err) => {
           if (err.message && /recovery.mode|rollback/gi.test(err.message) && operation.retry(err))
             return null;
@@ -35,11 +60,12 @@ async function retriableWorker(...args) {
 program
   .version(version)
   .description('Update repositories metadata')
+  .option('-t, --type [type]', 'Update "repositories" or "users"', 'repositories')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
   .action(async () => {
-    consola.info(`Updating resources using ${program.workers} workers`);
+    consola.info(`Updating ${program.type} using ${program.workers} workers`);
 
-    const queue = new Bull('updates', {
+    const queue = new Bull(program.type, {
       redis: {
         host: process.env.GITTRENDS_REDIS_HOST || 'localhost',
         port: parseInt(process.env.GITTRENDS_REDIS_PORT || 6379, 10),
@@ -52,53 +78,11 @@ program
     });
 
     const workersQueue = async.priorityQueue(async (job) => {
-      const [resource, id] = job.id.split('@');
-      const jobId = `${resource}@${(job.data && job.data.name) || id}`;
-
-      await retriableWorker({ id, resource, data: job.data }, 1)
-        .catch((err) => {
-          consola.error(`Error thrown by ${jobId}.`);
-          consola.error(err);
-          throw err;
-        })
-        .finally(async () => {
-          if (['issues', 'pulls'].indexOf(resource) >= 0) {
-            const Model = resource === 'issues' ? Issue : PullRequest;
-
-            await Model.query()
-              .where({ repository: id })
-              .leftJoin(
-                Metadata.query()
-                  .where({ id, resource: resource.slice(0, -1), key: 'updatedAt' })
-                  .as('metadata'),
-                'metadata.id',
-                `issues.id`
-              )
-              .select('issues.id')
-              .stream((stream) => {
-                let pending = 0;
-
-                stream.on('data', (record) => {
-                  pending += 1;
-                  workersQueue.push(
-                    { id: `${resource.slice(0, -1)}@${record.id}` },
-                    job.opts.priority - 0.1,
-                    (err) => {
-                      pending -= 1;
-                      if (err) consola.error(err);
-                      if (!pending) consola.success(`[${jobId}] finished!`);
-                    }
-                  );
-                });
-
-                stream.on('end', () => {
-                  if (!pending) consola.success(`[${jobId}] finished!`);
-                });
-              });
-          } else {
-            consola.success(`[${jobId}] finished!`);
-          }
-        });
+      await retriableWorker(job, 1).catch((err) => {
+        consola.error(`Error thrown by ${job.id}.`);
+        consola.error(err);
+        throw err;
+      });
 
       if (global.gc) global.gc();
     }, program.workers);

@@ -42,6 +42,7 @@ module.exports.post = async function (parameters) {
       requestClient({ method: 'post', data: parameters })
         .then(resolve)
         .catch((err) => {
+          if (err.code === 'ECONNABORTED' && operation.retry(err)) return;
           if (err.response && /500/g.test(err.response.status) && operation.retry(err)) return;
           return reject(operation.mainError() || err);
         })

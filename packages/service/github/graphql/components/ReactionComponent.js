@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 const Component = require('../Component');
 const ActorFragment = require('../fragments/ActorFragment').simplified;
 
@@ -14,8 +17,8 @@ module.exports = class ReactionComponent extends Component {
     return [ActorFragment];
   }
 
-  static with({ id, name }) {
-    return new ReactionComponent(id, name).includeReactions();
+  static create({ id, alias }) {
+    return new ReactionComponent(id, alias).includeReactions();
   }
 
   includeReactions(include = true, { first = 100, after } = {}) {
