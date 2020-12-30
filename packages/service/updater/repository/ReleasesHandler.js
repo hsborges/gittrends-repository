@@ -59,10 +59,6 @@ module.exports = class RepositoryReleasesHander extends AbstractRepositoryHandle
     }
   }
 
-  error(err) {
-    throw err;
-  }
-
   get hasNextPage() {
     return this.releases.hasNextPage;
   }

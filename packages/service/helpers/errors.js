@@ -16,7 +16,7 @@ class CustomError extends Error {
   }
 }
 
-class NotUpdatedError extends CustomError {}
+class ResourceUpdateError extends CustomError {}
 class RequestError extends CustomError {
   constructor(message, err, variables, response) {
     super(message, err);
@@ -47,7 +47,7 @@ module.exports = {
   MaxNodeLimitExceededError,
   NotFoundError,
   NotModifiedError,
-  NotUpdatedError,
+  ResourceUpdateError,
   RequestError,
   ServiceUnavailableError,
   TimedoutError,

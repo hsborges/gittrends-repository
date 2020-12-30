@@ -317,7 +317,7 @@ module.exports = class RepositoryIssuesHander extends AbstractRepositoryHandler 
       return;
     }
 
-    throw err;
+    super.error(err);
   }
 
   $hasNextPage(array) {

@@ -122,7 +122,7 @@ module.exports = class RepositoryDependenciesHander extends AbstractRepositoryHa
       return this.dao.metadata.upsert([{ ...this.meta, key: 'error', value: err.message }]);
     }
 
-    throw err;
+    super.error(err);
   }
 
   getPendingManifests() {

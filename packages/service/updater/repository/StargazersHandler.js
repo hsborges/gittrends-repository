@@ -2,6 +2,8 @@
  *  Author: Hudson S. Borges
  */
 const { get } = require('lodash');
+const { knex } = require('@gittrends/database-config');
+const { RetryableError, InternalError } = require('../../helpers/errors');
 
 const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
 
@@ -49,6 +51,8 @@ module.exports = class RepositoryStargazersHander extends AbstractRepositoryHand
           trx
         )
       ]);
+
+      this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
     }
 
     if (this.done) {
@@ -59,8 +63,37 @@ module.exports = class RepositoryStargazersHander extends AbstractRepositoryHand
     }
   }
 
-  error(err) {
-    throw err;
+  async error(err) {
+    if (err instanceof InternalError) {
+      const stargazers = get(err, `response.data.${this.alias}.stargazers.edges`, [])
+        .map((star) => ({ repository: this.component.id, ...star }))
+        .filter((s) => s.starred_at);
+
+      const actors = get(err, 'response.actors', []);
+
+      if (stargazers.length && actors.length) {
+        const pageInfo = get(err, `response.data.${this.alias}.stargazers.page_info`);
+        this.stargazers.hasNextPage = pageInfo.has_next_page;
+        this.stargazers.endCursor = pageInfo.end_cursor || this.stargazers.endCursor;
+
+        return knex.transaction((trx) =>
+          Promise.all([
+            this.dao.actors.insert(actors, trx),
+            this.dao.stargazers.insert(stargazers, trx),
+            this.dao.metadata.upsert(
+              [{ ...this.meta, key: 'endCursor', value: this.stargazers.endCursor }],
+              trx
+            )
+          ])
+        );
+      }
+    }
+
+    if (err instanceof RetryableError) {
+      if (this.batchSize > 1) return (this.batchSize = Math.floor(this.batchSize / 2));
+    }
+
+    super.error(err);
   }
 
   get hasNextPage() {

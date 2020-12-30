@@ -54,10 +54,6 @@ module.exports = class RepositoryDetailsHander extends AbstractRepositoryHandler
     }
   }
 
-  error(err) {
-    throw err;
-  }
-
   get hasNextPage() {
     return !this.details || this.languages.hasNextPage || this.topics.hasNextPage;
   }

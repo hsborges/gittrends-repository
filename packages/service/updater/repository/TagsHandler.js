@@ -2,8 +2,11 @@
  *  Author: Hudson S. Borges
  */
 const { get, omit } = require('lodash');
+const { RetryableError } = require('../../helpers/errors');
 
 const AbstractRepositoryHandler = require('./AbstractRepositoryHandler');
+
+const debug = require('debug')('updater:tags-handler');
 
 module.exports = class RepositoryTagsHander extends AbstractRepositoryHandler {
   constructor(id, alias) {
@@ -49,6 +52,8 @@ module.exports = class RepositoryTagsHander extends AbstractRepositoryHandler {
           trx
         )
       ]);
+
+      return (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2));
     }
 
     if (this.done) {
@@ -60,7 +65,12 @@ module.exports = class RepositoryTagsHander extends AbstractRepositoryHandler {
   }
 
   error(err) {
-    throw err;
+    if (err instanceof RetryableError) {
+      debug(`An error was detected (${err.constructor.name}). Reducing batch size ...`);
+      if (this.batchSize > 1) return (this.batchSize = Math.floor(this.batchSize / 2));
+    }
+
+    super.error(err);
   }
 
   get hasNextPage() {

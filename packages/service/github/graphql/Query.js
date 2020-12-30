@@ -84,7 +84,13 @@ module.exports = class Query {
 
   async run(interceptor) {
     const query = interceptor ? interceptor(this.toString()) : this.toString();
-    return client.post({ query }).then((response) => parser(get(response, 'data.data', null)));
+    return client
+      .post({ query })
+      .then((response) => parser(get(response, 'data.data', null)))
+      .catch((err) => {
+        if (err.response) err.response = parser(get(err, 'response.data', null));
+        throw err;
+      });
   }
 
   then(...args) {
