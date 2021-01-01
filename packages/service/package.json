@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "scripts": {
-    "proxy-server": "github-proxy-server --tokens ../../data/tokens.txt",
+    "proxy-server": "github-proxy-server --api graphql --tokens ../../data/tokens.txt",
     "add-repositories": "node -r @gittrends/env-config add-repositories.js",
     "add-repository": "node -r @gittrends/env-config add-repository.js",
     "schedule": "node -r @gittrends/env-config scheduler.js",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^2.4.4",
+    "@hsborges/github-proxy-server": "^3.0.2",
     "@types/bull": "^3.14.4",
     "core-util-is": "^1.0.2",
     "pm2": "^4.5.1"

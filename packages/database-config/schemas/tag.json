@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "required": ["id", "repository", "name"],
+  "properties": {
+    "id": { "type": "string" },
+    "repository": { "type": "string" },
+    "name": { "type": "string" },
+    "target": { "type": "string" },
+    "oid": { "type": "string" },
+    "message": { "type": "string" },
+    "tagger": { "type": "string", "pattern": "^\\{.*\\}$" }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": ["id", "repository", "issue", "type", "payload"],
+  "properties": {
+    "id": { "type": "string" },
+    "repository": { "type": "string" },
+    "issue": { "type": "string" },
+    "type": { "type": "string" },
+    "payload": { "type": "string" }
+  }
+}

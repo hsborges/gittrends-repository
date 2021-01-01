@@ -1,10 +1,13 @@
 {
   "name": "@gittrends/database-config",
   "version": "2.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "private": true,
   "scripts": {
+    "build": "yarn clean && yarn tsc",
+    "clean": "rm -rf dist",
     "run-migrations": "node -r @gittrends/env-config ./node_modules/.bin/knex migrate:latest"
   },
   "dependencies": {
@@ -13,6 +16,7 @@
     "pg-query-stream": "^4.0.0"
   },
   "devDependencies": {
-    "@gittrends/env-config": "file:../env-config"
+    "@gittrends/env-config": "*",
+    "@types/knex": "^0.16.1"
   }
 }

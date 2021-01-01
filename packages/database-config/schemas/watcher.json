@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "required": ["repository", "user"],
+  "properties": {
+    "repository": { "type": "string" },
+    "user": { "type": "string" }
+  }
+}
