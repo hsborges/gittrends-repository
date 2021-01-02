@@ -1,9 +1,0 @@
-{
-  "type": "object",
-  "required": ["repository", "user", "starred_at"],
-  "properties": {
-    "repository": { "type": "string" },
-    "user": { "type": "string" },
-    "starred_at": { "type": "string", "format": "date-time" }
-  }
-}

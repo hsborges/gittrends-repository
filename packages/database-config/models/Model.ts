@@ -1,23 +1,32 @@
+import Ajv from 'ajv';
 import Knex, { Transaction } from 'knex';
-
-type ModelID = string | string[];
-type ModeJsonSchema = Record<string, unknown>;
 
 export default abstract class Model {
   static knex: Knex;
 
-  readonly tableName: string;
-  readonly idColumn: ModelID;
-  readonly jsonSchema: ModeJsonSchema;
+  abstract get tableName(): string;
+  abstract get jsonSchema(): Record<string, unknown>;
 
-  constructor(tableName: string, idColumn: ModelID, jsonSchema: ModeJsonSchema) {
-    this.tableName = tableName;
-    this.idColumn = idColumn;
-    this.jsonSchema = jsonSchema;
+  private readonly _ajv: Ajv.Ajv = new Ajv({
+    allErrors: true,
+    removeAdditional: true,
+    coerceTypes: true,
+    useDefaults: true
+  });
+
+  private _validator: Ajv.ValidateFunction | undefined;
+
+  get idColumn(): string | string[] {
+    return 'id';
   }
 
   query(transaction?: Transaction): Knex.QueryBuilder {
     const table = Model.knex(this.tableName);
     return transaction != null ? table.transacting(transaction) : table;
+  }
+
+  validate(data: Record<string, unknown>): boolean {
+    if (this._validator === undefined) this._validator = this._ajv.compile(this.jsonSchema);
+    return !!this._validator(data);
   }
 }

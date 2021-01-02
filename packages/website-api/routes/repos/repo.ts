@@ -23,7 +23,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     return reply.send({
       ...repo,
       owner,
-      languages: repo.languages.reduce(
+      languages: repo.languages?.reduce(
         (m: Record<string, number>, lang) => ({ ...m, [lang.language]: lang.size }),
         {}
       ),

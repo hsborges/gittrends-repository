@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/stargazer.json';
+import schema from '../schemas.json';
 
-export default class Stargazer extends Model {
-  constructor() {
-    super('stargazers', ['repository', 'user', 'starred_at'], schema);
-  }
+class Stargazer extends Model {
+  tableName = 'stargazers';
+  jsonSchema = schema.definitions.IStargazer;
 }
+
+export default new Stargazer();

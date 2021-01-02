@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@gittrends/database-config": "file:../database-config",
-    "ajv": "^7.0.2",
+    "ajv": "^7.0.3",
     "ajv-formats": "^1.5.1",
     "async": "^3.2.0",
     "axios": "^0.21.1",
@@ -33,7 +33,7 @@
     "numeral": "^2.0.6",
     "redis": "^3.0.2",
     "retry": "^0.12.0",
-    "table": "^6.0.4",
+    "table": "^6.0.6",
     "user-agents": "^1.0.559"
   },
   "devDependencies": {

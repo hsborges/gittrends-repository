@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/commit.json';
+import schema from '../schemas.json';
 
-export default class Commit extends Model {
-  constructor() {
-    super('commits', 'id', schema);
-  }
+class Commit extends Model {
+  tableName = 'commits';
+  jsonSchema = schema.definitions.ICommit;
 }
+
+export default new Commit();

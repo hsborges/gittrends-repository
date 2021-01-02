@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/tag.json';
+import schema from '../schemas.json';
 
-export default class Tag extends Model {
-  constructor() {
-    super('tags', 'id', schema);
-  }
+class Tag extends Model {
+  tableName = 'tags';
+  jsonSchema = schema.definitions.ITag;
 }
+
+export default new Tag();

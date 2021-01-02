@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/metadata.json';
+import schema from '../schemas.json';
 
-export default class Reaction extends Model {
-  constructor() {
-    super('metadata', ['id', 'resource', 'key'], schema);
-  }
+class Metadata extends Model {
+  tableName = 'metadata';
+  jsonSchema = schema.definitions.IMetadata;
 }
+
+export default new Metadata();

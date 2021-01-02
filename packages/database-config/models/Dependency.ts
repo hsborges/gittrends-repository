@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/dependency.json';
+import schema from '../schemas.json';
 
-export default class Dependency extends Model {
-  constructor() {
-    super('dependencies', ['repository', 'manifest', 'package_name'], schema);
-  }
+class Dependency extends Model {
+  tableName = 'dependencies';
+  jsonSchema = schema.definitions.IDependency;
 }
+
+export default new Dependency();

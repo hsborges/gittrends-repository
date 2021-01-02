@@ -1,18 +1,14 @@
 import Model from './Model';
-import schema from '../schemas/issue.json';
+import schema from '../schemas.json';
 import Knex, { Transaction } from 'knex';
 
-export default class Issue extends Model {
-  readonly issueType: string = 'Issue';
-
-  constructor(additionalProperties?: Record<string, unknown>) {
-    super('issues', 'id', {
-      ...schema,
-      properties: { ...schema.properties, ...additionalProperties }
-    });
-  }
+class Issue extends Model {
+  tableName = 'issues';
+  jsonSchema = schema.definitions.IIssue;
 
   query(transaction?: Transaction): Knex.QueryBuilder {
-    return super.query(transaction).where('issues.type', this.issueType);
+    return super.query(transaction).where(`${this.tableName}.type`, '=', 'Issue');
   }
 }
+
+export default new Issue();

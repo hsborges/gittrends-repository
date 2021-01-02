@@ -1,10 +1,14 @@
-import Issue from './Issue';
-import schema from '../schemas/pull-request.json';
+import Model from './Model';
+import schema from '../schemas.json';
+import Knex, { Transaction } from 'knex';
 
-export default class PullRequest extends Issue {
-  readonly issueType: string = 'PullRequest';
+class PullRequest extends Model {
+  tableName = 'issues';
+  jsonSchema = schema.definitions.IPullRequest;
 
-  constructor() {
-    super(schema.properties);
+  query(transaction?: Transaction): Knex.QueryBuilder {
+    return super.query(transaction).where(`${this.tableName}.type`, '=', 'PullRequest');
   }
 }
+
+export default new PullRequest();

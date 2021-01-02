@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/reaction.json';
+import schema from '../schemas.json';
 
-export default class Reaction extends Model {
-  constructor() {
-    super('reactions', 'id', schema);
-  }
+class Reaction extends Model {
+  tableName = 'reactions';
+  jsonSchema = schema.definitions.IReaction;
 }
+
+export default new Reaction();

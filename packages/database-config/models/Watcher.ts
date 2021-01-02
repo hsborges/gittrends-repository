@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/watcher.json';
+import schema from '../schemas.json';
 
-export default class Watcher extends Model {
-  constructor() {
-    super('watchers', ['repository', 'user'], schema);
-  }
+class Watcher extends Model {
+  tableName = 'watchers';
+  jsonSchema = schema.definitions.IWatcher;
 }
+
+export default new Watcher();

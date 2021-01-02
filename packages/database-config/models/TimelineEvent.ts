@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/timeline-event.json';
+import schema from '../schemas.json';
 
-export default class TimelineEvent extends Model {
-  constructor() {
-    super('timeline', 'id', schema);
-  }
+class TimelineEvent extends Model {
+  tableName = 'timeline';
+  jsonSchema = schema.definitions.ITimelineEvent;
 }
+
+export default new TimelineEvent();

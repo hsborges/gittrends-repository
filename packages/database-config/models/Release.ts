@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/release.json';
+import schema from '../schemas.json';
 
-export default class Release extends Model {
-  constructor() {
-    super('releases', 'id', schema);
-  }
+class Release extends Model {
+  tableName = 'releases';
+  jsonSchema = schema.definitions.IRelease;
 }
+
+export default new Release();

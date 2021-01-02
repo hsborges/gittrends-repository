@@ -1,8 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/actor.json';
+import schema from '../schemas.json';
 
-export default class Actor extends Model {
-  constructor() {
-    super('actors', 'id', schema);
-  }
+class Actor extends Model {
+  tableName = 'actors';
+  jsonSchema = schema.definitions.IActor;
 }
+
+export default new Actor();

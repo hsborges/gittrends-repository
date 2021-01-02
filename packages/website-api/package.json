@@ -2,11 +2,12 @@
   "name": "@gittrends/website-api",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "start": "node -r @gittrends/env-config ./node_modules/.bin/fastify start -l info app.js",
+    "start": "yarn build && node -r @gittrends/env-config dist/index.js",
     "dev": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --respawn --transpile-only index.ts",
+    "build": "rm -rf dist && tsc",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix"
   },
   "keywords": [],
@@ -24,13 +25,12 @@
     "fastify-helmet": "^5.0.0",
     "fastify-plugin": "^3.0.0",
     "lodash": "^4.17.19",
-    "nodemailer": "^6.4.17",
-    "pino-pretty": "^4.3.0"
+    "nodemailer": "^6.4.17"
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@types/lodash": "^4.14.166",
-    "@types/node": "^14.14.17",
+    "@types/lodash": "^4.14.167",
+    "@types/node": "^14.14.19",
     "ts-node-dev": "^1.1.1",
     "tsconfig-paths": "^3.9.0"
   }

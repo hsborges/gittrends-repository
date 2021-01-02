@@ -1,10 +1,9 @@
 import Model from './Model';
-import schema from '../schemas/repository.json';
+import schema from '../schemas.json';
 
-export default class Repository extends Model {
-  constructor() {
-    super('repositories', 'id', schema);
-  }
+class Repository extends Model {
+  tableName = 'repositories';
+  jsonSchema = schema.definitions.IRepository;
 }
 
-module.exports = Repository;
+export default new Repository();
