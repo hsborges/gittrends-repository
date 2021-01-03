@@ -1,4 +1,4 @@
-export interface IRelease {
+export interface IRelease extends Record<string, unknown> {
   id: string;
   repository: string;
   author?: string;

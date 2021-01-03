@@ -1,6 +1,6 @@
-export interface IActor {
+export interface IActor extends Record<string, unknown> {
   id: string;
-  type: string;
+  type: 'User' | 'Organization' | 'Mannequin' | 'Bot' | 'EnterpriseUserAccount';
   login: string;
 
   // Shared properties

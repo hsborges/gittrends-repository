@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-export interface IIssue {
+export interface IIssue extends Record<string, unknown> {
   id: string;
   repository: string;
   type: 'Issue' | 'PullRequest';

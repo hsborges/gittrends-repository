@@ -1,4 +1,4 @@
-export interface IWatcher {
+export interface IWatcher extends Record<string, unknown> {
   repository: string;
   user: string;
 }

@@ -1,8 +1,9 @@
 import Model from './Model';
 import schema from '../schemas.json';
 import Knex, { Transaction } from 'knex';
+import { IIssue } from '../interfaces/IIssue';
 
-class Issue extends Model {
+class Issue extends Model<IIssue> {
   tableName = 'issues';
   jsonSchema = schema.definitions.IIssue;
 

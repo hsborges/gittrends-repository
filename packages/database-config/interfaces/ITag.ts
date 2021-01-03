@@ -1,4 +1,4 @@
-export interface ITag {
+export interface ITag extends Record<string, unknown> {
   id: string;
   repository: string;
   name: string;

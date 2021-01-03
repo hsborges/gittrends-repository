@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-export interface ICommit {
+export interface ICommit extends Record<string, unknown> {
   id: string;
   repository: string;
   additions?: number;

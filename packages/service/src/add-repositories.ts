@@ -1,0 +1,93 @@
+/*
+ *  Author: Hudson S. Borges
+ */
+import consola from 'consola';
+import { chain, get, differenceBy, min } from 'lodash';
+import knex, { Actor, Repository } from '@gittrends/database-config';
+import { program } from 'commander';
+import { version } from './package.json';
+import { BadGatewayError } from './helpers/errors';
+
+import Query from './github/Query';
+import SearchComponent from './github/components/SearchComponent';
+
+type IObject = Record<string, unknown>;
+
+async function search(limit = 1000, language?: string, name?: string) {
+  const repos: IObject[] = [];
+  const actors: IObject[] = [];
+
+  let after = undefined;
+  let total = Math.min(100, limit);
+  let maxStargazers = undefined;
+
+  do {
+    await Query.create()
+      .compose(SearchComponent.create('search', { maxStargazers, language, name }, after, total))
+      .run()
+      .then(({ data, actors: _actors = [] }) => {
+        actors.push(..._actors.map((actor) => Actor.validate(actor)));
+        repos.push(...differenceBy(get(data, 'search.nodes', []) as IObject[], repos, 'id'));
+
+        if (!repos.length) throw new Error('Repositories not found for the provided parameters.');
+
+        if (get(data, 'search.page_info.has_next_page')) {
+          after = get(data, 'search.page_info.end_cursor');
+        } else {
+          after = null;
+          maxStargazers = min(repos.map((r) => r.stargazers_count));
+        }
+      })
+      .then(() => (total = 100))
+      .catch((err) => {
+        if (err instanceof BadGatewayError) return (total = Math.ceil(total / 2));
+        throw err;
+      });
+  } while (name ? false : repos.length < limit);
+
+  return {
+    repositories: chain(repos).compact().sortBy('stargazers_count', 'desc').value(),
+    users: chain(actors).uniqBy('id').compact().value()
+  };
+}
+
+/* Script entry point */
+program
+  .version(version)
+  .option('--limit [number]', 'Maximun number of repositories', Number, 100)
+  .option('--language [string]', 'Major programming language')
+  .option('--repository-name [name]', 'Repository name to search')
+  .action(() => {
+    consola.info(
+      'Searching for the top-%s repositories with more stars on GitHub ...',
+      program.limit
+    );
+
+    search(program.limit, program.language, program.repositoryName)
+      .then((result) => {
+        const repositories = chain(result.repositories)
+          .uniqBy('id')
+          .orderBy('stargazers_count', 'desc')
+          .slice(0, program.limit)
+          .value();
+
+        const users = chain(result.users)
+          .uniqBy('id')
+          .intersectionWith(repositories, (u, r) => u.id === r.owner)
+          .value();
+
+        return [repositories, users];
+      })
+      .then(async ([repos, users]) => {
+        consola.info('Adding repositories to database ...');
+
+        return knex.transaction(async (trx) => {
+          await Actor.query(trx).insert(users).onConflict('id').ignore();
+          return Repository.query(trx).insert(repos).onConflict('id').ignore();
+        });
+      })
+      .then(() => consola.success('Repositories successfully added!'))
+      .catch((err) => consola.error(err))
+      .finally(() => knex.destroy());
+  })
+  .parse(process.argv);

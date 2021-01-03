@@ -1,4 +1,4 @@
-export interface IGithubToken {
+export interface IGithubToken extends Record<string, unknown> {
   token: string;
   type: string;
   scope: string;

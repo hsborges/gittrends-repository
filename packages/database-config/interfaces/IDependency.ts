@@ -1,4 +1,4 @@
-export interface IDependency {
+export interface IDependency extends Record<string, unknown> {
   repository: string;
   manifest: string;
   filename?: string;

@@ -8,6 +8,13 @@
           "type": "string"
         },
         "type": {
+          "enum": [
+            "Bot",
+            "EnterpriseUserAccount",
+            "Mannequin",
+            "Organization",
+            "User"
+          ],
           "type": "string"
         },
         "login": {
@@ -845,7 +852,11 @@
               "size": {
                 "type": "number"
               }
-            }
+            },
+            "required": [
+              "language",
+              "size"
+            ]
           }
         },
         "license_info": {
