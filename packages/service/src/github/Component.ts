@@ -4,10 +4,10 @@
 import Fragment from './Fragment';
 
 export default abstract class Component {
-  aliases: string[] | string;
+  alias: string;
 
   protected constructor(alias: string) {
-    this.aliases = alias;
+    this.alias = alias;
   }
 
   protected argsToString(args: Record<string, unknown>): string {
@@ -29,8 +29,8 @@ export default abstract class Component {
   abstract get fragments(): Fragment[];
   abstract toString(): string;
 
-  alias(alias: string[] | string): Component {
-    this.aliases = alias;
+  setAlias(alias: string): this {
+    this.alias = alias;
     return this;
   }
 }

@@ -33,7 +33,7 @@ export default class SearchComponent extends Component {
     const args = super.argsToString({ first: this.first, after: this.after, query });
 
     return `
-      ${this.aliases}:search(${args}, type: REPOSITORY) {
+      ${this.alias}:search(${args}, type: REPOSITORY) {
         pageInfo { hasNextPage endCursor }
         nodes { ...${SimplifiedRepositoryFragment.code} }
       }

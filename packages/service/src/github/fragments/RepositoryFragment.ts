@@ -12,7 +12,7 @@ class Repository extends Fragment {
     return [SimplifiedActorFragment];
   }
 
-  constructor(simplified = true) {
+  constructor(simplified = false) {
     super();
     if ((this.full = !simplified)) this.code = 'sRepo';
   }

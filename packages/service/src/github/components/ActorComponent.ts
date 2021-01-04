@@ -19,7 +19,7 @@ export default class ActorComponent extends Component {
 
   toString(): string {
     return `
-      ${this.aliases}:node(id: "${this.id}") {
+      ${this.alias}:node(id: "${this.id}") {
         ...${ActorFragment.code}
       }
     `;

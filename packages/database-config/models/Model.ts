@@ -1,17 +1,24 @@
 import Ajv, { ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
 import Knex, { Transaction } from 'knex';
-import { cloneDeep, mapValues } from 'lodash';
+import { cloneDeep, mapValues, pick, isArray, isObject } from 'lodash';
 
 type TObject = Record<string, unknown>;
 type TRecord = Record<string, string | number | boolean>;
 
-function preValidate(data: TObject): TObject {
+function preValidate(data: unknown): unknown {
+  if (data instanceof Date) return data.toISOString();
+  if (isArray(data)) return data.map((d) => preValidate(d));
+  if (isObject(data)) return mapValues(data, (value) => preValidate(value));
+  return data;
+}
+
+function postValidate(data: TObject): TRecord {
   return mapValues(data, (value) => {
-    if (value instanceof Date) return (value as Date).toISOString();
-    if (typeof value === 'object') return preValidate(value as TObject);
+    if (typeof value === 'string') return value.replace(/\u0000/g, '');
+    if (typeof value === 'object') return JSON.stringify(value).replace(/\u0000/g, '');
     return value;
-  });
+  }) as TRecord;
 }
 
 export default abstract class Model<T> {
@@ -42,17 +49,11 @@ export default abstract class Model<T> {
   validate(data: Record<string, unknown>): TRecord {
     if (this._validator === undefined) this._validator = this._ajv.compile<T>(this.jsonSchema);
 
-    let clone = preValidate(cloneDeep(data));
-
+    const clone = preValidate(cloneDeep(data)) as Record<string, unknown>;
     if (!this._validator(clone))
       throw new Error(JSON.stringify({ error: this._validator.errors, data: clone }));
 
-    clone = mapValues(clone, (value) => {
-      if (typeof value === 'object') return JSON.stringify(value);
-      return value;
-    });
-
-    return clone as TRecord;
+    return postValidate(clone);
   }
 
   async insert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
@@ -71,5 +72,15 @@ export default abstract class Model<T> {
       .insert(records)
       .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
       .merge();
+  }
+
+  async update(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
+    const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
+
+    await Promise.all(
+      records.map((record) =>
+        this.query(transaction).where(pick(record, this.idColumn)).update(record)
+      )
+    );
   }
 }

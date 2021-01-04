@@ -12,18 +12,22 @@ import { version } from './package.json';
 import { redisOptions } from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
 import Updater from './updater/Updater';
+import RepositoryUpdater from './updater/RepositoryUpdater';
 
 function getUpdater(job: Job, type: string): Updater {
   switch (type) {
     case 'users':
       return new ActorsUpdater(job.data.id || job.data.ids);
+    case 'repositories': {
+      return new RepositoryUpdater(job.data.id, job.data.resources, job);
+    }
     default:
       throw new Error(`Updater not avaliable for ${type}.`);
   }
 }
 
 async function retriableWorker(job: Job, type: string) {
-  const options = { retries: 5, minTimeout: 1000, maxTimeout: 5000, randomize: true };
+  const options = { retries: 0, minTimeout: 1000, maxTimeout: 5000, randomize: true };
   const operation = retry.operation(options);
 
   return new Promise((resolve, reject) => {

@@ -18,7 +18,7 @@ export default class ActorsUpdater implements Updater {
   }
 
   async $update(ids: string[]): Promise<void> {
-    const components = ids.map((id, index) => new ActorComponent(id).alias(`actor_${index}`));
+    const components = ids.map((id, index) => new ActorComponent(id).setAlias(`actor_${index}`));
 
     await Query.create()
       .compose(...components)

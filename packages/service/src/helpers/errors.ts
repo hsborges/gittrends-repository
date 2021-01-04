@@ -26,6 +26,7 @@ export class RequestError extends CustomError {
   }
 }
 
+export class ResourceUpdateError extends CustomError {}
 export class RetryableError extends RequestError {}
 export class BadGatewayError extends RetryableError {}
 export class BlockedError extends RequestError {}

@@ -76,8 +76,13 @@ export default class Query {
     return client({ query })
       .then((response) => parser(get(response, 'data.data', null)))
       .catch((err) => {
+        console.error(err);
         if (err.response) err.response = parser(get(err, 'response.data', null));
         throw err;
       });
+  }
+
+  async then(callback: (response: Response) => PromiseLike<void>): Promise<void> {
+    return this.run().then(callback);
   }
 }
