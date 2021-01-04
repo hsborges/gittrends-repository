@@ -4,6 +4,7 @@ import { IActor } from '../interfaces/IActor';
 
 class Actor extends Model<IActor> {
   tableName = 'actors';
+  idColumn = 'id';
   jsonSchema = schema.definitions.IActor;
 }
 

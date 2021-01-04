@@ -5,6 +5,7 @@ import { IIssue } from '../interfaces/IIssue';
 
 class Issue extends Model<IIssue> {
   tableName = 'issues';
+  idColumn = 'id';
   jsonSchema = schema.definitions.IIssue;
 
   query(transaction?: Transaction): Knex.QueryBuilder {

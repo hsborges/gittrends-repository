@@ -4,6 +4,7 @@ import { ITag } from '../interfaces/ITag';
 
 class Tag extends Model<ITag> {
   tableName = 'tags';
+  idColumn = 'id';
   jsonSchema = schema.definitions.ITag;
 }
 

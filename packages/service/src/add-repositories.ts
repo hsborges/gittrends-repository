@@ -2,20 +2,20 @@
  *  Author: Hudson S. Borges
  */
 import consola from 'consola';
-import { chain, get, differenceBy, min } from 'lodash';
-import knex, { Actor, Repository } from '@gittrends/database-config';
 import { program } from 'commander';
 import { version } from './package.json';
+import { chain, get, min } from 'lodash';
 import { BadGatewayError } from './helpers/errors';
+import knex, { Actor, Repository } from '@gittrends/database-config';
 
 import Query from './github/Query';
 import SearchComponent from './github/components/SearchComponent';
 
-type IObject = Record<string, unknown>;
+type TObject = Record<string, unknown>;
 
 async function search(limit = 1000, language?: string, name?: string) {
-  const repos: IObject[] = [];
-  const actors: IObject[] = [];
+  const repos: TObject[] = [];
+  const actors: TObject[] = [];
 
   let after = undefined;
   let total = Math.min(100, limit);
@@ -23,11 +23,11 @@ async function search(limit = 1000, language?: string, name?: string) {
 
   do {
     await Query.create()
-      .compose(SearchComponent.create('search', { maxStargazers, language, name }, after, total))
+      .compose(new SearchComponent({ maxStargazers, language, name }, after, total).alias('search'))
       .run()
       .then(({ data, actors: _actors = [] }) => {
-        actors.push(..._actors.map((actor) => Actor.validate(actor)));
-        repos.push(...differenceBy(get(data, 'search.nodes', []) as IObject[], repos, 'id'));
+        actors.push(..._actors);
+        repos.push(...get(data, 'search.nodes', []));
 
         if (!repos.length) throw new Error('Repositories not found for the provided parameters.');
 
@@ -82,8 +82,8 @@ program
         consola.info('Adding repositories to database ...');
 
         return knex.transaction(async (trx) => {
-          await Actor.query(trx).insert(users).onConflict('id').ignore();
-          return Repository.query(trx).insert(repos).onConflict('id').ignore();
+          await Actor.insert(users, trx);
+          return Repository.insert(repos, trx);
         });
       })
       .then(() => consola.success('Repositories successfully added!'))

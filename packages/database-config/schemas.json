@@ -1,6 +1,38 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "TStatus": {
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "indicates_limited_availability": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "updated_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "created_at"
+      ]
+    },
     "IActor": {
       "type": "object",
       "properties": {
@@ -100,7 +132,36 @@
           "type": "string"
         },
         "status": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "created_at": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "emoji": {
+              "type": "string"
+            },
+            "expires_at": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "indicates_limited_availability": {
+              "type": "boolean"
+            },
+            "message": {
+              "type": "string"
+            },
+            "updated_at": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "created_at"
+          ]
         },
         "watching_count": {
           "type": "number"

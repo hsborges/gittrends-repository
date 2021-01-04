@@ -4,6 +4,7 @@ import { ITimelineEvent } from '../interfaces/ITimelineEvent';
 
 class TimelineEvent extends Model<ITimelineEvent> {
   tableName = 'timeline';
+  idColumn = 'id';
   jsonSchema = schema.definitions.ITimelineEvent;
 }
 

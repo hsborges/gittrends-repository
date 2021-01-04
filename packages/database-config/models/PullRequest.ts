@@ -5,6 +5,7 @@ import IPullRequest from '../interfaces/IPullRequest';
 
 class PullRequest extends Model<IPullRequest> {
   tableName = 'issues';
+  idColumn = 'id';
   jsonSchema = schema.definitions.IPullRequest;
 
   query(transaction?: Transaction): Knex.QueryBuilder {

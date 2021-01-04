@@ -12,22 +12,17 @@ export default class SearchComponent extends Component {
   private first = 100;
   private query: Query = {};
 
-  constructor(alias = 'search') {
-    super(alias);
+  constructor(query?: Query, after?: string, first?: number) {
+    super('search');
+    this.query.maxStargazers = query?.maxStargazers;
+    this.query.language = query?.language;
+    this.query.name = query?.name;
+    this.after = after;
+    this.first = first || this.first;
   }
 
   get fragments(): Fragment[] {
     return [SimplifiedRepositoryFragment];
-  }
-
-  static create(name: string, query?: Query, after?: string, first?: number): SearchComponent {
-    const component = new SearchComponent(name);
-    component.query.maxStargazers = query?.maxStargazers;
-    component.query.language = query?.language;
-    component.query.name = query?.name;
-    component.after = after;
-    component.first = first || component.first;
-    return component;
   }
 
   toString(): string {
@@ -38,7 +33,7 @@ export default class SearchComponent extends Component {
     const args = super.argsToString({ first: this.first, after: this.after, query });
 
     return `
-      ${this.alias}:search(${args}, type: REPOSITORY) {
+      ${this.aliases}:search(${args}, type: REPOSITORY) {
         pageInfo { hasNextPage endCursor }
         nodes { ...${SimplifiedRepositoryFragment.code} }
       }

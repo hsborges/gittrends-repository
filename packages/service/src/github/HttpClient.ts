@@ -4,6 +4,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import retry from 'retry';
 import UserAgent from 'user-agents';
+import compact from '../helpers/compact';
 import * as Errors from '../helpers/errors';
 
 const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL || 'http';
@@ -66,6 +67,7 @@ export default async function (data: IObject): Promise<AxiosResponse> {
     })
     .then((response) => {
       const { data } = response;
+
       if (data && data.errors && data.errors.length) {
         const errorsStr = JSON.stringify(data.errors, null, 2);
         const message = `Github response contains ${data.errors.length} errors:\n${errorsStr}`;
@@ -87,6 +89,7 @@ export default async function (data: IObject): Promise<AxiosResponse> {
           throw new Errors.SomethingWentWrongError(message, null, data);
         throw new Errors.RequestError(message, null, data);
       }
-      return response;
+
+      return { ...response, data: compact(response.data) };
     });
 }

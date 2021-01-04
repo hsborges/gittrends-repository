@@ -1,3 +1,11 @@
+type TStatus = {
+  created_at: Date;
+  emoji?: string;
+  expires_at?: Date;
+  indicates_limited_availability?: boolean;
+  message?: string;
+  updated_at?: Date;
+};
 export interface IActor extends Record<string, unknown> {
   id: string;
   type: 'User' | 'Organization' | 'Mannequin' | 'Bot' | 'EnterpriseUserAccount';
@@ -31,7 +39,7 @@ export interface IActor extends Record<string, unknown> {
   projects_url?: string;
   repositories_contributed_to_count?: number;
   starred_repositories_count?: string;
-  status?: string;
+  status?: TStatus;
   watching_count?: number;
 
   // Organization

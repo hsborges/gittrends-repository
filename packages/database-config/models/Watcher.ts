@@ -4,6 +4,7 @@ import { IWatcher } from '../interfaces/IWatcher';
 
 class Watcher extends Model<IWatcher> {
   tableName = 'watchers';
+  idColumn = ['repository', 'user'];
   jsonSchema = schema.definitions.IWatcher;
 }
 

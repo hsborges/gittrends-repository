@@ -4,6 +4,7 @@ import { IMetadata } from '../interfaces';
 
 class Metadata extends Model<IMetadata> {
   tableName = 'metadata';
+  idColumn = ['id', 'resource', 'key'];
   jsonSchema = schema.definitions.IMetadata;
 }
 

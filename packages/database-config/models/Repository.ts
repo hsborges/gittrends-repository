@@ -4,6 +4,7 @@ import { IRepository } from '../interfaces';
 
 class Repository extends Model<IRepository> {
   tableName = 'repositories';
+  idColumn = 'id';
   jsonSchema = schema.definitions.IRepository;
 }
 

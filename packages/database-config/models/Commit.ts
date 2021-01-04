@@ -4,6 +4,7 @@ import { ICommit } from '../interfaces/ICommit';
 
 class Commit extends Model<ICommit> {
   tableName = 'commits';
+  idColumn = 'id';
   jsonSchema = schema.definitions.ICommit;
 }
 

@@ -4,6 +4,7 @@ import { IStargazer } from '../interfaces';
 
 class Stargazer extends Model<IStargazer> {
   tableName = 'stargazers';
+  idColumn = ['repository', 'user', 'starred_at'];
   jsonSchema = schema.definitions.IStargazer;
 }
 
