@@ -3,7 +3,7 @@ import { Transaction } from 'knex';
 import knex, { Metadata, IMetadata, Stargazer, Actor } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
-import { InternalError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
+import { InternalError, RetryableError } from '../../helpers/errors';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
@@ -32,7 +32,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
   async update(response: TObject, trx: Transaction): Promise<void> {
     if (this.done) return;
 
-    const data = response[this.alias];
+    const data = response[this.alias as string];
 
     const stargazers = get(data, 'stargazers.edges', []).map(
       (stargazer: { user: string; starred_at: Date }) => ({
@@ -88,7 +88,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
       }
     }
 
-    throw new ResourceUpdateError(err.message, err);
+    super.error(err);
   }
 
   get hasNextPage(): boolean {

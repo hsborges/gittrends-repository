@@ -3,6 +3,7 @@
  */
 import Handler from '../Handler';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
+import { ResourceUpdateError } from '../../helpers/errors';
 
 export default abstract class AbstractRepositoryHandler extends Handler<RepositoryComponent> {
   readonly id: string;
@@ -18,5 +19,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     this.batchSize = this.defaultBatchSize = 100;
   }
 
-  abstract error(err: Error): Promise<void>;
+  async error(err: Error): Promise<void> {
+    throw new ResourceUpdateError(err.message, err);
+  }
 }

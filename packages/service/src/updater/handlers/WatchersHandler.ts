@@ -3,7 +3,6 @@ import { Transaction } from 'knex';
 import { Metadata, IMetadata, Watcher } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
-import { ResourceUpdateError } from '../../helpers/errors';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default class WatchersHandler extends AbstractRepositoryHandler {
@@ -32,7 +31,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
   async update(response: TObject, trx: Transaction): Promise<void> {
     if (this.done) return;
 
-    const data = response[this.alias];
+    const data = response[this.alias as string];
 
     const watchers = get(data, 'watchers.nodes', []).map((watcher: string) => ({
       repository: this.id,
@@ -51,10 +50,6 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     if (this.done) {
       await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });
     }
-  }
-
-  async error(err: Error): Promise<void> {
-    throw new ResourceUpdateError(err.message, err);
   }
 
   get hasNextPage(): boolean {

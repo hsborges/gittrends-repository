@@ -322,8 +322,23 @@
           "type": "string"
         },
         "target_repository": {
-          "description": "Construct a type with a set of properties K of type T",
-          "$ref": "#/definitions/Record<string,unknown>"
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "database_id": {
+              "type": "number"
+            },
+            "name_with_owner": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "database_id",
+            "id",
+            "name_with_owner"
+          ]
         },
         "requirements": {
           "type": "string"
@@ -1121,10 +1136,6 @@
         "repository",
         "user"
       ]
-    },
-    "Record<string,unknown>": {
-      "description": "Construct a type with a set of properties K of type T",
-      "type": "object"
     }
   }
 }

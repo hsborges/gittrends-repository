@@ -3,7 +3,6 @@
  */
 import Debug from 'debug';
 import { Job } from 'bull';
-import { pick } from 'lodash';
 import knex, { Actor, Commit } from '@gittrends/database-config';
 
 import Cache from './Cache';
@@ -16,8 +15,10 @@ import WatchersHandler from './handlers/WatchersHandler';
 import TagsHandler from './handlers/TagsHandler';
 import { ValidationError } from '@gittrends/database-config/dist/models/Model';
 import ReleasesHandler from './handlers/ReleasesHandler';
+import Component from '../github/Component';
+import DependenciesHander from './handlers/DependenciesHandler';
 
-type THandler = 'repository' | 'releases' | 'stargazers' | 'tags' | 'watchers';
+type THandler = 'dependencies' | 'repository' | 'releases' | 'stargazers' | 'tags' | 'watchers';
 type TOptions = { job?: Job; cache?: Cache };
 
 const debug = Debug('updater:repository-updater');
@@ -32,6 +33,7 @@ export default class RepositoryUpdater implements Updater {
     this.id = repositoryId;
     this.job = opts?.job;
     this.cache = opts?.cache;
+    if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHander(this.id));
     if (handlers.includes('repository')) this.handlers.push(new RepositoryDetailsHander(this.id));
     if (handlers.includes('releases')) this.handlers.push(new ReleasesHandler(this.id));
     if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));
@@ -41,7 +43,10 @@ export default class RepositoryUpdater implements Updater {
 
   private async _update(handlers: AbstractRepositoryHandler[]): Promise<void> {
     // get components
-    const components = await Promise.all(handlers.map((handler) => handler.component()));
+    const components = (await Promise.all(handlers.map((handler) => handler.component()))).reduce(
+      (acc: Component[], result) => acc.concat(result),
+      []
+    );
 
     // run queries and update handlers
     await Query.create()
@@ -57,7 +62,7 @@ export default class RepositoryUpdater implements Updater {
           Promise.all([
             Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
             Commit.insert(commits, trx).then(() => this.cache?.add(actors)),
-            Promise.all(handlers.map((handler) => handler.update(pick(data, handler.alias), trx)))
+            Promise.all(handlers.map((handler) => handler.update(data as TObject, trx)))
           ])
         );
 

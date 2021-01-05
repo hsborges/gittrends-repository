@@ -39,7 +39,7 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
   async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
     if (this.done) return;
 
-    const data = response[this.alias] as TObject;
+    const data = response[this.alias as string] as TObject;
 
     if (this.details === undefined) this.details = data;
 
@@ -69,10 +69,6 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
         Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() }, trx)
       ]);
     }
-  }
-
-  async error(error: Error): Promise<void> {
-    throw error;
   }
 
   get hasNextPage(): boolean {

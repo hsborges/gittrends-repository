@@ -5,6 +5,10 @@ export interface IDependency extends Record<string, unknown> {
   has_dependencies?: boolean;
   package_manager?: string;
   package_name: string;
-  target_repository?: Record<string, unknown>;
+  target_repository?: {
+    id: string;
+    database_id: number;
+    name_with_owner: string;
+  };
   requirements?: string;
 }

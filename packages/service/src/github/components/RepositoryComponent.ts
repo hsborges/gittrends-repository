@@ -21,6 +21,7 @@ export default class RepositoryComponent extends Component {
     this.id = id;
 
     this.includes = {
+      dependencies: { include: false, textFragment: '' },
       details: { include: false, textFragment: '' },
       languages: { include: false, textFragment: '' },
       releases: { include: false, textFragment: '' },
@@ -45,53 +46,56 @@ export default class RepositoryComponent extends Component {
 
   includeDetails(include = true): this {
     this.includes.details.include = include;
-    if (include) this.includes.details.textFragment = `...${RepositoryFragment.code}`;
+    this.includes.details.textFragment = include ? `...${RepositoryFragment.code}` : '';
     return this;
   }
 
   includeLanguages(include = true, { first, after, alias = 'languages' }: TIncludeOpts): this {
     this.includes.languages.include = include;
-    if (include)
-      this.includes.languages.textFragment = `
+    this.includes.languages.textFragment = include
+      ? `
         ${alias}:languages(${super.argsToString({ first, after })}) {
           pageInfo { hasNextPage endCursor }
           edges { language:node { name } size }
         }
-      `;
+      `
+      : '';
     return this;
   }
 
   includeTopics(include = true, { first, after, alias = 'repositoryTopics' }: TIncludeOpts): this {
     this.includes.topics.include = include;
-    if (include)
-      this.includes.topics.textFragment = `
+    this.includes.topics.textFragment = include
+      ? `
         ${alias}:repositoryTopics(${super.argsToString({ first, after })}) {
           pageInfo { hasNextPage endCursor }
           nodes { topic { name } }
         }
-      `;
+      `
+      : '';
     return this;
   }
 
   includeReleases(include = true, { first, after, alias = 'releases' }: TIncludeOpts): this {
+    const args = super.argsToString({ first, after });
     this.includes.releases.include = include;
-    if (include) {
-      const args = super.argsToString({ first, after });
-      this.includes.releases.textFragment = `
+    this.includes.releases.textFragment = include
+      ? `
         ${alias}:releases(${args}, orderBy: { field: CREATED_AT, direction: ASC  }) {
           pageInfo { hasNextPage endCursor }
           nodes { ...${ReleaseFragment.code} }
         }
-      `;
-    }
+      `
+      : '';
+
     return this;
   }
 
   includeTags(include = true, { first, after, alias = 'tags' }: TIncludeOpts): this {
+    const args = super.argsToString({ first, after });
     this.includes.tags.include = include;
-    if (include) {
-      const args = super.argsToString({ first, after });
-      this.includes.tags.textFragment = `
+    this.includes.tags.textFragment = include
+      ? `
         ${alias}:refs(refPrefix:"refs/tags/", ${args}, direction: ASC) {
           pageInfo { hasNextPage endCursor }
           nodes {
@@ -99,35 +103,55 @@ export default class RepositoryComponent extends Component {
             target { type:__typename id oid ...${CommitFragment.code} ...${TagFragment.code} }
           }
         }
-      `;
-    }
+      `
+      : '';
+
     return this;
   }
 
   includeStargazers(include = true, { first, after, alias = 'stargazers' }: TIncludeOpts): this {
+    const args = super.argsToString({ first, after });
     this.includes.stargazers.include = include;
-    if (include) {
-      const args = super.argsToString({ first, after });
-      this.includes.stargazers.textFragment = `
+    this.includes.stargazers.textFragment = include
+      ? `
         ${alias}:stargazers(${args}, orderBy: { direction: ASC, field: STARRED_AT }) {
             pageInfo { hasNextPage endCursor }
             edges { starredAt user:node { ...${SimplifiedActorFragment.code} } }
           }
-      `;
-    }
+      `
+      : '';
+
     return this;
   }
 
   includeWatchers(include = true, { first, after, alias = 'watchers' }: TIncludeOpts): this {
     this.includes.watchers.include = include;
-    if (include) {
-      this.includes.watchers.textFragment = `
+    this.includes.watchers.textFragment = include
+      ? `
         ${alias}:watchers(${super.argsToString({ first, after })}) {
             pageInfo { hasNextPage endCursor }
             nodes { ...${SimplifiedActorFragment.code} }
           }
-      `;
-    }
+      `
+      : '';
+
+    return this;
+  }
+
+  includeDependencyManifests(
+    include = true,
+    { first, after, alias = 'dependencyGraphManifests' }: TIncludeOpts
+  ): this {
+    this.includes.dependencies.include = include;
+    this.includes.dependencies.textFragment = include
+      ? `
+        ${alias}:dependencyGraphManifests(${super.argsToString({ after, first })}) {
+          pageInfo { hasNextPage endCursor }
+          nodes { dependenciesCount exceedsMaxSize filename id parseable }
+        }
+      `
+      : '';
+
     return this;
   }
 
