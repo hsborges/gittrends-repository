@@ -7,6 +7,7 @@ import { Repository, Metadata } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import compact from '../../helpers/compact';
+import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 type TObject = Record<string, unknown>;
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
@@ -22,8 +23,8 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
     this.topics = { items: [], hasNextPage: true };
   }
 
-  async updateComponent(): Promise<void> {
-    this.component
+  async component(): Promise<RepositoryComponent> {
+    return this._component
       .includeDetails(this.details === undefined)
       .includeLanguages(this.languages.hasNextPage, {
         first: this.batchSize,
@@ -35,7 +36,7 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
       });
   }
 
-  async updateDatabase(response: Record<string, unknown>, trx: Transaction): Promise<void> {
+  async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
     if (this.done) return;
 
     const data = response[this.alias] as TObject;

@@ -4,6 +4,7 @@ import { Metadata, IMetadata, Watcher } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import { ResourceUpdateError } from '../../helpers/errors';
+import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default class WatchersHandler extends AbstractRepositoryHandler {
   watchers: { hasNextPage: boolean; endCursor?: string };
@@ -13,7 +14,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     this.watchers = { hasNextPage: true };
   }
 
-  async updateComponent(): Promise<void> {
+  async component(): Promise<RepositoryComponent> {
     if (!this.watchers.endCursor) {
       this.watchers.endCursor = await Metadata.query()
         .where({ ...this.meta, key: 'endCursor' })
@@ -21,20 +22,20 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
         .then((result) => result && result.value);
     }
 
-    this.component.includeWatchers(this.watchers.hasNextPage, {
+    return this._component.includeWatchers(this.watchers.hasNextPage, {
       first: this.batchSize,
       after: this.watchers.endCursor,
       alias: 'watchers'
     });
   }
 
-  async updateDatabase(response: TObject, trx: Transaction): Promise<void> {
+  async update(response: TObject, trx: Transaction): Promise<void> {
     if (this.done) return;
 
     const data = response[this.alias];
 
     const watchers = get(data, 'watchers.nodes', []).map((watcher: string) => ({
-      repository: this.component.id,
+      repository: this.id,
       user: watcher
     }));
 

@@ -4,6 +4,7 @@ import knex, { Metadata, IMetadata, Stargazer, Actor } from '@gittrends/database
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import { InternalError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
+import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
   stargazers: { hasNextPage: boolean; endCursor?: string };
@@ -13,7 +14,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     this.stargazers = { hasNextPage: true };
   }
 
-  async updateComponent(): Promise<void> {
+  async component(): Promise<RepositoryComponent> {
     if (!this.stargazers.endCursor) {
       this.stargazers.endCursor = await Metadata.query()
         .where({ ...this.meta, key: 'endCursor' })
@@ -21,21 +22,21 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
         .then((result) => result && result.value);
     }
 
-    this.component.includeStargazers(this.stargazers.hasNextPage, {
+    return this._component.includeStargazers(this.stargazers.hasNextPage, {
       first: this.batchSize,
       after: this.stargazers.endCursor,
       alias: 'stargazers'
     });
   }
 
-  async updateDatabase(response: TObject, trx: Transaction): Promise<void> {
+  async update(response: TObject, trx: Transaction): Promise<void> {
     if (this.done) return;
 
     const data = response[this.alias];
 
     const stargazers = get(data, 'stargazers.edges', []).map(
       (stargazer: { user: string; starred_at: Date }) => ({
-        repository: this.component.id,
+        repository: this.id,
         ...stargazer
       })
     );
@@ -57,7 +58,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
   async error(err: Error): Promise<void> {
     if (err instanceof InternalError) {
       const stargazers = get(err, `response.data.${this.alias}.stargazers.edges`, [])
-        .map((star: TObject) => ({ repository: this.component.id, ...star }))
+        .map((star: TObject) => ({ repository: this.id, ...star }))
         .filter((star: TObject) => star.starred_at);
 
       if (stargazers.length) {

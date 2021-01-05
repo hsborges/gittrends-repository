@@ -15,8 +15,9 @@ import StargazersHandler from './handlers/StargazersHandler';
 import WatchersHandler from './handlers/WatchersHandler';
 import TagsHandler from './handlers/TagsHandler';
 import { ValidationError } from '@gittrends/database-config/dist/models/Model';
+import ReleasesHandler from './handlers/ReleasesHandler';
 
-type THandler = 'repository' | 'stargazers' | 'tags' | 'watchers';
+type THandler = 'repository' | 'releases' | 'stargazers' | 'tags' | 'watchers';
 type TOptions = { job?: Job; cache?: Cache };
 
 const debug = Debug('updater:repository-updater');
@@ -32,18 +33,19 @@ export default class RepositoryUpdater implements Updater {
     this.job = opts?.job;
     this.cache = opts?.cache;
     if (handlers.includes('repository')) this.handlers.push(new RepositoryDetailsHander(this.id));
+    if (handlers.includes('releases')) this.handlers.push(new ReleasesHandler(this.id));
     if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));
     if (handlers.includes('tags')) this.handlers.push(new TagsHandler(this.id));
     if (handlers.includes('watchers')) this.handlers.push(new WatchersHandler(this.id));
   }
 
   private async _update(handlers: AbstractRepositoryHandler[]): Promise<void> {
-    // prepare all handlers
-    await Promise.all(handlers.map((handler) => handler.updateComponent()));
+    // get components
+    const components = await Promise.all(handlers.map((handler) => handler.component()));
 
     // run queries and update handlers
     await Query.create()
-      .compose(...handlers.map((handler) => handler.component))
+      .compose(...components)
       .then(async ({ data, actors = [], commits = [] }) => {
         actors = actors.filter((actor) => !this.cache?.has(actor));
         commits = commits.filter((commit) => !this.cache?.has(commit));
@@ -55,9 +57,7 @@ export default class RepositoryUpdater implements Updater {
           Promise.all([
             Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
             Commit.insert(commits, trx).then(() => this.cache?.add(actors)),
-            Promise.all(
-              handlers.map((handler) => handler.updateDatabase(pick(data, handler.alias), trx))
-            )
+            Promise.all(handlers.map((handler) => handler.update(pick(data, handler.alias), trx)))
           ])
         );
 

@@ -1,31 +1,31 @@
 import { get } from 'lodash';
 import { Transaction } from 'knex';
-import { Metadata, IMetadata, Tag } from '@gittrends/database-config';
+import { Metadata, IMetadata, Release } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import { ResourceUpdateError } from '../../helpers/errors';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 
-export default class TagsHandler extends AbstractRepositoryHandler {
-  tags: { hasNextPage: boolean; endCursor?: string };
+export default class ReleasesHandler extends AbstractRepositoryHandler {
+  releases: { hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
-    super(id, alias, 'tags');
-    this.tags = { hasNextPage: true };
+    super(id, alias, 'releases');
+    this.releases = { hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent> {
-    if (!this.tags.endCursor) {
-      this.tags.endCursor = await Metadata.query()
+    if (!this.releases.endCursor) {
+      this.releases.endCursor = await Metadata.query()
         .where({ ...this.meta, key: 'endCursor' })
         .first<IMetadata>()
         .then((result) => result && result.value);
     }
 
-    return this._component.includeTags(this.tags.hasNextPage, {
+    return this._component.includeReleases(this.releases.hasNextPage, {
       first: this.batchSize,
-      after: this.tags.endCursor,
-      alias: 'tags'
+      after: this.releases.endCursor,
+      alias: 'releases'
     });
   }
 
@@ -34,18 +34,18 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias];
 
-    const tags = get(data, 'tags.nodes', []).map((tag: TObject) => ({
+    const releases = get(data, 'releases.nodes', []).map((release: TObject) => ({
       repository: this.id,
-      ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as TObject)
+      ...release
     }));
 
-    const pageInfo = get(data, 'tags.page_info', {});
-    this.tags.hasNextPage = pageInfo.has_next_page || false;
-    this.tags.endCursor = pageInfo.end_cursor || this.tags.endCursor;
+    const pageInfo = get(data, 'releases.page_info', {});
+    this.releases.hasNextPage = pageInfo.has_next_page || false;
+    this.releases.endCursor = pageInfo.end_cursor || this.releases.endCursor;
 
     await Promise.all([
-      Tag.insert(tags, trx),
-      Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.tags.endCursor })
+      Release.insert(releases, trx),
+      Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.releases.endCursor })
     ]);
 
     if (this.done) {
@@ -58,6 +58,6 @@ export default class TagsHandler extends AbstractRepositoryHandler {
   }
 
   get hasNextPage(): boolean {
-    return this.tags.hasNextPage;
+    return this.releases.hasNextPage;
   }
 }
