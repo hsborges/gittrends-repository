@@ -5,7 +5,7 @@ import knex, { Metadata, IMetadata, Stargazer, Actor } from '@gittrends/database
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import { InternalError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
 
-export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
+export default class StargazersHandler extends AbstractRepositoryHandler {
   stargazers: { hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {

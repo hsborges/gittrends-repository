@@ -11,8 +11,9 @@ import Query from '../github/Query';
 import RepositoryDetailsHander from './handlers/RepositoryHandler';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
 import StargazersHandler from './handlers/StargazersHandler';
+import WatchersHandler from './handlers/WatchersHandler';
 
-type THandler = 'repository' | 'stargazers';
+type THandler = 'repository' | 'stargazers' | 'watchers';
 type TOptions = { job?: Job; cache?: Cache };
 
 export default class RepositoryUpdater implements Updater {
@@ -27,6 +28,7 @@ export default class RepositoryUpdater implements Updater {
     this.cache = opts?.cache;
     if (handlers.includes('repository')) this.handlers.push(new RepositoryDetailsHander(this.id));
     if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));
+    if (handlers.includes('watchers')) this.handlers.push(new WatchersHandler(this.id));
   }
 
   private async _update(handlers: AbstractRepositoryHandler[]): Promise<void> {

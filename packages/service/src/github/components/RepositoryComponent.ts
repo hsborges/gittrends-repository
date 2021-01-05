@@ -21,7 +21,8 @@ export default class RepositoryComponent extends Component {
       details: { include: false, textFragment: '' },
       languages: { include: false, textFragment: '' },
       topics: { include: false, textFragment: '' },
-      stargazers: { include: false, textFragment: '' }
+      stargazers: { include: false, textFragment: '' },
+      watchers: { include: false, textFragment: '' }
     };
   }
 
@@ -30,6 +31,7 @@ export default class RepositoryComponent extends Component {
 
     if (this.includes.details.include) fragments.push(RepositoryFragment);
     if (this.includes.stargazers.include) fragments.push(SimplifiedActorFragment);
+    if (this.includes.watchers.include) fragments.push(SimplifiedActorFragment);
 
     return fragments;
   }
@@ -72,6 +74,19 @@ export default class RepositoryComponent extends Component {
         ${alias}:stargazers(${args}, orderBy: { direction: ASC, field: STARRED_AT }) {
             pageInfo { hasNextPage endCursor }
             edges { starredAt user:node { ...${SimplifiedActorFragment.code} } }
+          }
+      `;
+    }
+    return this;
+  }
+
+  includeWatchers(include = true, { first, after, alias = 'watchers' }: TIncludeOpts): this {
+    this.includes.watchers.include = include;
+    if (include) {
+      this.includes.watchers.textFragment = `
+        ${alias}:watchers(${super.argsToString({ first, after })}) {
+            pageInfo { hasNextPage endCursor }
+            nodes { ...${SimplifiedActorFragment.code} }
           }
       `;
     }
