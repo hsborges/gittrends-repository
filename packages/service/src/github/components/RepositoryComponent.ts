@@ -4,6 +4,7 @@
 import Component from '../Component';
 import Fragment from '../Fragment';
 import RepositoryFragment from '../fragments/RepositoryFragment';
+import { SimplifiedActorFragment } from '../fragments/ActorFragment';
 
 type TIncludes = Record<string, { include: boolean; textFragment: string }>;
 type TIncludeOpts = { first: number; after?: string; alias?: string };
@@ -19,7 +20,8 @@ export default class RepositoryComponent extends Component {
     this.includes = {
       details: { include: false, textFragment: '' },
       languages: { include: false, textFragment: '' },
-      topics: { include: false, textFragment: '' }
+      topics: { include: false, textFragment: '' },
+      stargazers: { include: false, textFragment: '' }
     };
   }
 
@@ -27,6 +29,7 @@ export default class RepositoryComponent extends Component {
     const fragments: Fragment[] = [];
 
     if (this.includes.details.include) fragments.push(RepositoryFragment);
+    if (this.includes.stargazers.include) fragments.push(SimplifiedActorFragment);
 
     return fragments;
   }
@@ -58,6 +61,20 @@ export default class RepositoryComponent extends Component {
           nodes { topic { name } }
         }
       `;
+    return this;
+  }
+
+  includeStargazers(include = true, { first, after, alias = 'stargazers' }: TIncludeOpts): this {
+    this.includes.stargazers.include = include;
+    if (include) {
+      const args = super.argsToString({ first, after });
+      this.includes.stargazers.textFragment = `
+        ${alias}:stargazers(${args}, orderBy: { direction: ASC, field: STARRED_AT }) {
+            pageInfo { hasNextPage endCursor }
+            edges { starredAt user:node { ...${SimplifiedActorFragment.code} } }
+          }
+      `;
+    }
     return this;
   }
 

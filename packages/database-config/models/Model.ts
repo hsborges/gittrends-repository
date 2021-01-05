@@ -21,7 +21,7 @@ function postValidate(data: TObject): TRecord {
   }) as TRecord;
 }
 
-export default abstract class Model<T> {
+export default abstract class Model<T = void> {
   static knex: Knex;
 
   abstract get tableName(): string;

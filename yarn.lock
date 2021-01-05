@@ -1812,6 +1812,11 @@
   dependencies:
     "@types/ioredis" "*"
 
+"@types/collections@^5.1.0":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@types/collections/-/collections-5.1.0.tgz#84892f58c1b98b07063f0d450ae2b83fbd571258"
+  integrity sha512-4uPJ+dIGUCd4LcGm2MZINkZPG7VfvBNqeRVoNfmhktdX+KteGcf3pqJEEFltRCwnHZW1HMbeBHQUhm8aoX1lbw==
+
 "@types/connect@*":
   version "3.4.33"
   resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.33.tgz"
@@ -1984,6 +1989,11 @@
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.0.tgz"
   integrity sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
+
+"@types/object-hash@^1.3.4":
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/@types/object-hash/-/object-hash-1.3.4.tgz#079ba142be65833293673254831b5e3e847fe58b"
+  integrity sha512-xFdpkAkikBgqBdG9vIlsqffDV8GpvnPEzs0IUtr1v3BEB97ijsFQ4RXVbUZwjFThhB4MDSTUfvmxUD5PGx0wXA==
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
@@ -6910,6 +6920,11 @@ growly@^1.3.0:
   resolved "https://registry.yarnpkg.com/growly/-/growly-1.3.0.tgz#f10748cbe76af964b7c96c93c6bcc28af120c081"
   integrity sha1-8QdIy+dq+WS3yWyTxrzCivEgwIE=
 
+guild@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/guild/-/guild-1.2.2.tgz#92b77e648ef8806865ff56aff4c58f7a99d236c5"
+  integrity sha1-krd+ZI74gGhl/1av9MWPepnSNsU=
+
 gzip-size@^5.0.0:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/gzip-size/-/gzip-size-5.1.1.tgz"
@@ -9686,6 +9701,11 @@ object-hash@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-2.0.3.tgz"
   integrity sha512-JPKn0GMu+Fa3zt3Bmr66JhokJU5BaNBIh4ZeTlaCBzrBsOeXzwcKKAK1tbLiPKgvwmPXsDvvLHoWh5Bm7ofIYg==
+
+object-hash@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-2.1.1.tgz#9447d0279b4fcf80cff3259bf66a1dc73afabe09"
+  integrity sha512-VOJmgmS+7wvXf8CjbQmimtCnEx3IAoLxI3fp2fbWehxrWBcAQFbk+vcwb6vzR0VZv/eNCJ/27j151ZTwqW/JeQ==
 
 object-inspect@^1.8.0:
   version "1.8.0"
@@ -13445,6 +13465,11 @@ tr46@^2.0.2:
   dependencies:
     punycode "^2.1.1"
 
+transitory@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/transitory/-/transitory-2.1.1.tgz#02c9e29948a6f9f7657cbf3f4127d2d9054a5dcf"
+  integrity sha512-5bPHVmrmlupFw4iJLb7IgzUtIutcP6spscpc5PfhUngFd5K/B07ttguTGP1Vyob/9KG7uhs1pdyrE2HAF1839g==
+
 tree-kill@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/tree-kill/-/tree-kill-1.2.2.tgz#4ca09a9092c88b73a7cdc5e8a01b507b0790a0cc"
@@ -13628,6 +13653,11 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
+
+typescript-collections@^1.3.3:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/typescript-collections/-/typescript-collections-1.3.3.tgz#62d50d93c018c094d425eabee649f00ec5cc0fea"
+  integrity sha512-7sI4e/bZijOzyURng88oOFZCISQPTHozfE2sUu5AviFYk5QV7fYGb6YiDl+vKjF/pICA354JImBImL9XJWUvdQ==
 
 typescript-json-schema@^0.47.0:
   version "0.47.0"

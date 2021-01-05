@@ -1,26 +1,32 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { Job } from 'bull';
+import { pick } from 'lodash';
 import knex, { Actor, Commit } from '@gittrends/database-config';
 
+import Cache from './Cache';
 import Updater from './Updater';
 import Query from '../github/Query';
 import RepositoryDetailsHander from './handlers/RepositoryHandler';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
-import { pick } from 'lodash';
-import { Job } from 'bull';
+import StargazersHandler from './handlers/StargazersHandler';
 
-type THandler = 'repository' | 'stargazers' | 'watcher';
+type THandler = 'repository' | 'stargazers';
+type TOptions = { job?: Job; cache?: Cache };
 
 export default class RepositoryUpdater implements Updater {
   readonly id: string;
-  readonly job: Job;
+  readonly job?: Job;
+  readonly cache?: Cache;
   readonly handlers: AbstractRepositoryHandler[] = [];
 
-  constructor(repositoryId: string, handlers: THandler[], job: Job) {
+  constructor(repositoryId: string, handlers: THandler[], opts?: TOptions) {
     this.id = repositoryId;
-    this.job = job;
+    this.job = opts?.job;
+    this.cache = opts?.cache;
     if (handlers.includes('repository')) this.handlers.push(new RepositoryDetailsHander(this.id));
+    if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));
   }
 
   private async _update(handlers: AbstractRepositoryHandler[]): Promise<void> {
@@ -31,10 +37,13 @@ export default class RepositoryUpdater implements Updater {
     await Query.create()
       .compose(...handlers.map((handler) => handler.component))
       .then(async ({ data, actors = [], commits = [] }) => {
+        actors = actors.filter((actor) => !this.cache?.has(actor));
+        commits = commits.filter((commit) => !this.cache?.has(commit));
+
         await knex.transaction((trx) =>
           Promise.all([
-            Actor.insert(actors, trx),
-            Commit.insert(commits, trx),
+            Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
+            Commit.insert(commits, trx).then(() => this.cache?.add(actors)),
             Promise.all(
               handlers.map((handler) => handler.updateDatabase(pick(data, handler.alias), trx))
             )

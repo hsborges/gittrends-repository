@@ -65,15 +65,7 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
           }) as TObject,
           trx
         ),
-        Metadata.upsert(
-          {
-            id: this.component.id,
-            resource: 'repository',
-            key: 'updatedAt',
-            value: new Date().toISOString()
-          },
-          trx
-        )
+        Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() }, trx)
       ]);
     }
   }

@@ -15,7 +15,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     super(new RepositoryComponent(id).setAlias(alias));
     this.id = id;
     this.meta = { id, resource };
-    this.batchSize = this.defaultBatchSize = 50;
+    this.batchSize = this.defaultBatchSize = 100;
   }
 
   abstract error(err: Error): Promise<void>;

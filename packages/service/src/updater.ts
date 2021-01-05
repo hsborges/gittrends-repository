@@ -8,31 +8,27 @@ import program from 'commander';
 import retry from 'retry';
 
 import { version } from './package.json';
-
 import { redisOptions } from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
 import Updater from './updater/Updater';
 import RepositoryUpdater from './updater/RepositoryUpdater';
+import Cache from './updater/Cache';
 
-function getUpdater(job: Job, type: string): Updater {
-  switch (type) {
-    case 'users':
-      return new ActorsUpdater(job.data.id || job.data.ids);
-    case 'repositories': {
-      return new RepositoryUpdater(job.data.id, job.data.resources, job);
-    }
-    default:
-      throw new Error(`Updater not avaliable for ${type}.`);
-  }
-}
-
-async function retriableWorker(job: Job, type: string) {
-  const options = { retries: 0, minTimeout: 1000, maxTimeout: 5000, randomize: true };
+async function retriableWorker(job: Job, type: string, cache?: Cache) {
+  const options = { retries: 3, minTimeout: 1000, maxTimeout: 5000, randomize: true };
   const operation = retry.operation(options);
 
   return new Promise((resolve, reject) => {
+    let updater: Updater;
+
+    if (type === 'users') {
+      updater = new ActorsUpdater(job.data.id || job.data.ids);
+    } else if (type === 'repositories') {
+      updater = new RepositoryUpdater(job.data.id, job.data.resources, { job, cache });
+    }
+
     operation.attempt(() =>
-      getUpdater(job, type)
+      updater
         .update()
         .then(() => resolve(null))
         .catch((err) => {
@@ -58,6 +54,7 @@ program
   .action(async () => {
     consola.info(`Updating ${program.type} using ${program.workers} workers`);
 
+    const cache = new Cache(process.env.GITTRENDS_CACHE_SIZE || 25000);
     const queue = new Bull(program.type, {
       redis: redisOptions,
       defaultJobOptions: {
@@ -67,7 +64,7 @@ program
     });
 
     const workersQueue = async.priorityQueue<Job>(async (job) => {
-      await retriableWorker(job, program.type).catch((err) => {
+      await retriableWorker(job, program.type, cache).catch((err) => {
         consola.error(`Error thrown by ${job.id}.`);
         consola.error(err);
         throw err;

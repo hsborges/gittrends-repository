@@ -11,9 +11,12 @@ declare global {
       GITTRENDS_REDIS_HOST?: string;
       GITTRENDS_REDIS_PORT?: number;
       GITTRENDS_REDIS_DB?: number;
+      GITTRENDS_CACHE_SIZE?: number;
       PORT?: number;
     }
   }
+
+  type TObject = Record<string, unknown>;
 }
 
 // If this file has no import/export statements (i.e. is a script)
