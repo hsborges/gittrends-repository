@@ -6,7 +6,7 @@ export interface ICommit extends Record<string, unknown> {
   author?: {
     date: Date;
     email?: string;
-    name: string;
+    name?: string;
     user?: string;
   };
   authored_by_committer?: boolean;
@@ -18,7 +18,7 @@ export interface ICommit extends Record<string, unknown> {
   committer?: {
     date: Date;
     email?: string;
-    name: string;
+    name?: string;
     user?: string;
   };
   deletions?: number;

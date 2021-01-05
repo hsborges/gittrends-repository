@@ -222,8 +222,7 @@
             }
           },
           "required": [
-            "date",
-            "name"
+            "date"
           ]
         },
         "authored_by_committer": {
@@ -267,8 +266,7 @@
             }
           },
           "required": [
-            "date",
-            "name"
+            "date"
           ]
         },
         "deletions": {
@@ -502,8 +500,7 @@
       "required": [
         "id",
         "key",
-        "resource",
-        "value"
+        "resource"
       ]
     },
     "IPullRequest": {

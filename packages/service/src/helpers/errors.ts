@@ -1,10 +1,8 @@
 /*
  *  Author: Hudson S. Borges
  */
-class CustomError extends Error {
-  readonly cause: Error | undefined;
-
-  constructor(message: string, err?: Error | null) {
+class ExtendedError extends Error {
+  constructor(message: string) {
     super(message);
     this.name = this.constructor.name;
     this.message = message;
@@ -13,16 +11,28 @@ class CustomError extends Error {
     } else {
       this.stack = new Error(message).stack;
     }
-    if (err && err instanceof Error) this.cause = err;
+  }
+}
+class CustomError extends ExtendedError {
+  readonly cause?: Error;
+
+  constructor(message: string, err?: Error) {
+    super(message);
+    if (err && err instanceof Error) {
+      this.cause = err;
+      this.stack += '\nFrom previous ' + this.cause?.stack;
+    }
   }
 }
 
 export class RequestError extends CustomError {
-  readonly response: string | undefined;
+  readonly response?: string;
+  readonly query?: TObject | string;
 
-  constructor(message: string, err?: Error | null, response?: string) {
-    super(message, err);
+  constructor(message: string, err?: Error | null, response?: string, query?: TObject | string) {
+    super(`${message}\nQuery: ${JSON.stringify(query)}`, err || undefined);
     this.response = response;
+    this.query = query;
   }
 }
 

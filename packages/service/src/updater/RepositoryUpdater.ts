@@ -1,6 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
+import Debug from 'debug';
 import { Job } from 'bull';
 import { pick } from 'lodash';
 import knex, { Actor, Commit } from '@gittrends/database-config';
@@ -12,9 +13,13 @@ import RepositoryDetailsHander from './handlers/RepositoryHandler';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
 import StargazersHandler from './handlers/StargazersHandler';
 import WatchersHandler from './handlers/WatchersHandler';
+import TagsHandler from './handlers/TagsHandler';
+import { ValidationError } from '@gittrends/database-config/dist/models/Model';
 
-type THandler = 'repository' | 'stargazers' | 'watchers';
+type THandler = 'repository' | 'stargazers' | 'tags' | 'watchers';
 type TOptions = { job?: Job; cache?: Cache };
+
+const debug = Debug('updater:repository-updater');
 
 export default class RepositoryUpdater implements Updater {
   readonly id: string;
@@ -28,6 +33,7 @@ export default class RepositoryUpdater implements Updater {
     this.cache = opts?.cache;
     if (handlers.includes('repository')) this.handlers.push(new RepositoryDetailsHander(this.id));
     if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));
+    if (handlers.includes('tags')) this.handlers.push(new TagsHandler(this.id));
     if (handlers.includes('watchers')) this.handlers.push(new WatchersHandler(this.id));
   }
 
@@ -42,6 +48,9 @@ export default class RepositoryUpdater implements Updater {
         actors = actors.filter((actor) => !this.cache?.has(actor));
         commits = commits.filter((commit) => !this.cache?.has(commit));
 
+        debug(
+          `Updating db (actors=${actors.length}; commits=${commits.length}) and ${handlers.length} handlers ...`
+        );
         await knex.transaction((trx) =>
           Promise.all([
             Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
@@ -65,6 +74,8 @@ export default class RepositoryUpdater implements Updater {
         });
       })
       .catch(async (err) => {
+        debug(`Error: ${err.message}`);
+        if (err instanceof ValidationError) throw err;
         if (handlers.length === 1) return handlers[0].error(err);
         else return Promise.all(handlers.map((handler) => this._update([handler])));
       });

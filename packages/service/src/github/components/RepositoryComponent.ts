@@ -5,6 +5,9 @@ import Component from '../Component';
 import Fragment from '../Fragment';
 import RepositoryFragment from '../fragments/RepositoryFragment';
 import { SimplifiedActorFragment } from '../fragments/ActorFragment';
+import CommitFragment from '../fragments/CommitFragment';
+import TagFragment from '../fragments/TagFragment';
+import ReleaseFragment from '../fragments/ReleaseFragment';
 
 type TIncludes = Record<string, { include: boolean; textFragment: string }>;
 type TIncludeOpts = { first: number; after?: string; alias?: string };
@@ -20,6 +23,8 @@ export default class RepositoryComponent extends Component {
     this.includes = {
       details: { include: false, textFragment: '' },
       languages: { include: false, textFragment: '' },
+      releases: { include: false, textFragment: '' },
+      tags: { include: false, textFragment: '' },
       topics: { include: false, textFragment: '' },
       stargazers: { include: false, textFragment: '' },
       watchers: { include: false, textFragment: '' }
@@ -27,13 +32,15 @@ export default class RepositoryComponent extends Component {
   }
 
   get fragments(): Fragment[] {
-    const fragments: Fragment[] = [];
+    const fragments: Set<Fragment> = new Set();
 
-    if (this.includes.details.include) fragments.push(RepositoryFragment);
-    if (this.includes.stargazers.include) fragments.push(SimplifiedActorFragment);
-    if (this.includes.watchers.include) fragments.push(SimplifiedActorFragment);
+    if (this.includes.details.include) fragments.add(RepositoryFragment);
+    if (this.includes.releases.include) fragments.add(ReleaseFragment);
+    if (this.includes.stargazers.include) fragments.add(SimplifiedActorFragment);
+    if (this.includes.tags.include) fragments.add(CommitFragment).add(TagFragment);
+    if (this.includes.watchers.include) fragments.add(SimplifiedActorFragment);
 
-    return fragments;
+    return [...fragments];
   }
 
   includeDetails(include = true): this {
@@ -63,6 +70,37 @@ export default class RepositoryComponent extends Component {
           nodes { topic { name } }
         }
       `;
+    return this;
+  }
+
+  includeReleases(include = true, { first, after, alias = 'releases' }: TIncludeOpts): this {
+    this.includes.releases.include = include;
+    if (include) {
+      const args = super.argsToString({ first, after });
+      this.includes.releases.textFragment = `
+        ${alias}:releases(${args}, orderBy: { field: CREATED_AT, direction: ASC  }) {
+          pageInfo { hasNextPage endCursor }
+          nodes { ...${ReleaseFragment.code} }
+        }
+      `;
+    }
+    return this;
+  }
+
+  includeTags(include = true, { first, after, alias = 'tags' }: TIncludeOpts): this {
+    this.includes.tags.include = include;
+    if (include) {
+      const args = super.argsToString({ first, after });
+      this.includes.tags.textFragment = `
+        ${alias}:refs(refPrefix:"refs/tags/", ${args}, direction: ASC) {
+          pageInfo { hasNextPage endCursor }
+          nodes {
+            id name
+            target { type:__typename id oid ...${CommitFragment.code} ...${TagFragment.code} }
+          }
+        }
+      `;
+    }
     return this;
   }
 

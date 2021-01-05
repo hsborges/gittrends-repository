@@ -1,4 +1,4 @@
-import Ajv, { ValidateFunction } from 'ajv';
+import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import Knex, { Transaction } from 'knex';
 import { cloneDeep, mapValues, pick, isArray, isObject } from 'lodash';
@@ -19,6 +19,17 @@ function postValidate(data: TObject): TRecord {
     if (typeof value === 'object') return JSON.stringify(value).replace(/\u0000/g, '');
     return value;
   }) as TRecord;
+}
+
+export class ValidationError extends Error {
+  readonly object: TObject;
+  readonly errorObject: ErrorObject[];
+
+  constructor(object: TObject, error: ErrorObject[]) {
+    super(JSON.stringify({ error, object }));
+    this.object = object;
+    this.errorObject = error;
+  }
 }
 
 export default abstract class Model<T = void> {
@@ -51,7 +62,7 @@ export default abstract class Model<T = void> {
 
     const clone = preValidate(cloneDeep(data)) as Record<string, unknown>;
     if (!this._validator(clone))
-      throw new Error(JSON.stringify({ error: this._validator.errors, data: clone }));
+      throw new ValidationError(clone, this._validator.errors as ErrorObject[]);
 
     return postValidate(clone);
   }
