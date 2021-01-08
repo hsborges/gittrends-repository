@@ -12,7 +12,9 @@
     "update": "node -r @gittrends/env-config --expose-gc updater.js",
     "dev:schedule": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --transpile-only src/scheduler.ts",
     "dev:add-repositories": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --transpile-only src/add-repositories.ts",
-    "dev:update": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --transpile-only src/updater.ts"
+    "dev:update": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --transpile-only src/updater.ts",
+    "dev:queue-board": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --transpile-only src/extra/queue-board.ts",
+    "dev:repos-stats": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --transpile-only src/extra/repos-stats.ts"
   },
   "dependencies": {
     "@gittrends/database-config": "file:../database-config",
