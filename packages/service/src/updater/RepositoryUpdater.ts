@@ -17,8 +17,17 @@ import { ValidationError } from '@gittrends/database-config/dist/models/Model';
 import ReleasesHandler from './handlers/ReleasesHandler';
 import Component from '../github/Component';
 import DependenciesHander from './handlers/DependenciesHandler';
+import IssuesHander from './handlers/IssueHandler';
 
-type THandler = 'dependencies' | 'repository' | 'releases' | 'stargazers' | 'tags' | 'watchers';
+type THandler =
+  | 'dependencies'
+  | 'issues'
+  | 'repository'
+  | 'releases'
+  | 'stargazers'
+  | 'tags'
+  | 'watchers';
+
 type TOptions = { job?: Job; cache?: Cache };
 
 const debug = Debug('updater:repository-updater');
@@ -34,6 +43,7 @@ export default class RepositoryUpdater implements Updater {
     this.job = opts?.job;
     this.cache = opts?.cache;
     if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHander(this.id));
+    if (handlers.includes('issues')) this.handlers.push(new IssuesHander(this.id, 'issues'));
     if (handlers.includes('repository')) this.handlers.push(new RepositoryDetailsHander(this.id));
     if (handlers.includes('releases')) this.handlers.push(new ReleasesHandler(this.id));
     if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));

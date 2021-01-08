@@ -8,6 +8,8 @@ import { SimplifiedActorFragment } from '../fragments/ActorFragment';
 import CommitFragment from '../fragments/CommitFragment';
 import TagFragment from '../fragments/TagFragment';
 import ReleaseFragment from '../fragments/ReleaseFragment';
+import { SimplifiedIssueFragment } from '../fragments/IssueFragment';
+import { SimplifiedPullRequest } from '../fragments/PullRequestFragment';
 
 type TIncludes = Record<string, { include: boolean; textFragment: string }>;
 type TIncludeOpts = { first: number; after?: string; alias?: string };
@@ -28,7 +30,9 @@ export default class RepositoryComponent extends Component {
       tags: { include: false, textFragment: '' },
       topics: { include: false, textFragment: '' },
       stargazers: { include: false, textFragment: '' },
-      watchers: { include: false, textFragment: '' }
+      watchers: { include: false, textFragment: '' },
+      issues: { include: false, textFragment: '' },
+      pull_requests: { include: false, textFragment: '' }
     };
   }
 
@@ -40,6 +44,8 @@ export default class RepositoryComponent extends Component {
     if (this.includes.stargazers.include) fragments.add(SimplifiedActorFragment);
     if (this.includes.tags.include) fragments.add(CommitFragment).add(TagFragment);
     if (this.includes.watchers.include) fragments.add(SimplifiedActorFragment);
+    if (this.includes.issues.include) fragments.add(SimplifiedIssueFragment);
+    if (this.includes.pull_requests.include) fragments.add(SimplifiedPullRequest);
 
     return [...fragments];
   }
@@ -150,6 +156,39 @@ export default class RepositoryComponent extends Component {
           nodes { dependenciesCount exceedsMaxSize filename id parseable }
         }
       `
+      : '';
+
+    return this;
+  }
+
+  includeIssues(include = true, { after, first = 100, alias = '_issues' }: TIncludeOpts): this {
+    const args = super.argsToString({ after, first });
+    this.includes.issues.include = include;
+    this.includes.issues.textFragment = include
+      ? `
+          ${alias}:issues(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
+            pageInfo { hasNextPage endCursor }
+            nodes { ...${SimplifiedIssueFragment.code} }
+          }
+        `
+      : '';
+
+    return this;
+  }
+
+  includePullRequests(
+    include = true,
+    { after, first = 100, alias = '_pullRequests' }: TIncludeOpts
+  ): this {
+    const args = super.argsToString({ after, first });
+    this.includes.pull_requests.include = include;
+    this.includes.pull_requests.textFragment = include
+      ? `
+          ${alias}:pullRequests(${args}, orderBy: { field: UPDATED_AT, direction: ASC }) {
+            pageInfo { hasNextPage endCursor }
+            nodes { ...${SimplifiedPullRequest.code} }
+          }
+        `
       : '';
 
     return this;
