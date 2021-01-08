@@ -11,6 +11,7 @@ declare global {
       GITTRENDS_REDIS_HOST?: string;
       GITTRENDS_REDIS_PORT?: number;
       GITTRENDS_REDIS_DB?: number;
+      GITTRENDS_QUEUE_BOARD_PORT?: number;
       GITTRENDS_CACHE_SIZE?: number;
       PORT?: number;
     }
