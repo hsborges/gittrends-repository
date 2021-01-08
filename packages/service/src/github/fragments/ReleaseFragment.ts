@@ -4,7 +4,7 @@
 import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from './ActorFragment';
 
-class ReleaseFragment extends Fragment {
+export class ReleaseFragment extends Fragment {
   code = 'release';
 
   get dependencies(): Fragment[] {

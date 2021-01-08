@@ -1,6 +1,6 @@
 import Model from './Model';
 import schema from '../schemas.json';
-import { IRelease } from '../interfaces/IRelease';
+import IRelease from '../interfaces/IRelease';
 
 class Release extends Model<IRelease> {
   tableName = 'releases';

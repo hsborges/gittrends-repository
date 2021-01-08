@@ -27,7 +27,7 @@ exports.up = async (knex) => {
     table.boolean('includes_created_edit');
     table.timestamp('last_edited_at', { useTz: true });
     table.boolean('locked');
-    table.json('milestone');
+    table.string('milestone');
     table.integer('number');
     table.timestamp('published_at', { useTz: true });
     table.string('state');

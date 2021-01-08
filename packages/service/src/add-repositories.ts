@@ -23,7 +23,9 @@ async function search(limit = 1000, language?: string, name?: string) {
 
   do {
     await Query.create()
-      .compose(new SearchComponent({ maxStargazers, language, name }, after, total).alias('search'))
+      .compose(
+        new SearchComponent({ maxStargazers, language, name }, after, total).setAlias('search')
+      )
       .run()
       .then(({ data, actors: _actors = [] }) => {
         actors.push(..._actors);

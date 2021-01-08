@@ -9,11 +9,18 @@ import compact from '../helpers/compact';
 
 type IObject = Record<string, unknown>;
 type Source = IObject | Array<unknown> | unknown;
-export type Response = { data: Source; actors: Array<IObject>; commits: Array<IObject> };
+
+export type Response = {
+  data: Source;
+  actors: Array<IObject>;
+  commits: Array<IObject>;
+  milestones: Array<IObject>;
+};
 
 export default function (source: Source): Response {
   const actors: Array<IObject> = [];
   const commits: Array<IObject> = [];
+  const milestones: Array<IObject> = [];
 
   function recursive(object: Source): Source {
     if (isArray(object)) return object.map(recursive);
@@ -32,15 +39,14 @@ export default function (source: Source): Response {
           );
         }
 
-        if (isPlainObject(_result) && size(_result as IObject) === 1) {
-          const __result: IObject = { ...(_result as IObject) };
-          if (__result.id) _result = __result.id;
-          if (__result.name) _result = __result.name;
-          if (__result.target) _result = __result.target;
-        }
-
         return _result;
       });
+
+      if (size(_object as IObject) === 1) {
+        if (_object.id) return _object.id;
+        if (_object.name) return _object.name;
+        if (_object.target) return _object.target;
+      }
 
       if (_object.type) {
         switch (_object.type) {
@@ -54,6 +60,9 @@ export default function (source: Source): Response {
             return _object.id;
           case 'Commit':
             commits.push(omit(_object, 'type'));
+            return _object.id;
+          case 'Milestone':
+            milestones.push(omit(_object, 'type'));
             return _object.id;
           case 'CommitCommentThread':
           case 'PullRequestReview':
@@ -75,6 +84,7 @@ export default function (source: Source): Response {
   return {
     data: compact(recursive(normalize(source))),
     actors: uniqBy(actors, 'id'),
-    commits: uniqBy(commits, 'id')
+    commits: uniqBy(commits, 'id'),
+    milestones: uniqBy(milestones, 'id')
   };
 }

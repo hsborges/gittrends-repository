@@ -3,7 +3,7 @@
  */
 import Debug from 'debug';
 import { Job } from 'bull';
-import knex, { Actor, Commit } from '@gittrends/database-config';
+import knex, { Actor, Commit, Milestone } from '@gittrends/database-config';
 
 import Cache from './Cache';
 import Updater from './Updater';
@@ -22,6 +22,7 @@ import IssuesHander from './handlers/IssueHandler';
 type THandler =
   | 'dependencies'
   | 'issues'
+  | 'pull_requests'
   | 'repository'
   | 'releases'
   | 'stargazers'
@@ -43,7 +44,10 @@ export default class RepositoryUpdater implements Updater {
     this.job = opts?.job;
     this.cache = opts?.cache;
     if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHander(this.id));
-    if (handlers.includes('issues')) this.handlers.push(new IssuesHander(this.id, 'issues'));
+    if (handlers.includes('issues'))
+      this.handlers.push(new IssuesHander(this.id, undefined, 'issues'));
+    if (handlers.includes('pull_requests'))
+      this.handlers.push(new IssuesHander(this.id, undefined, 'pull_requests'));
     if (handlers.includes('repository')) this.handlers.push(new RepositoryDetailsHander(this.id));
     if (handlers.includes('releases')) this.handlers.push(new ReleasesHandler(this.id));
     if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));
@@ -61,17 +65,20 @@ export default class RepositoryUpdater implements Updater {
     // run queries and update handlers
     await Query.create()
       .compose(...components)
-      .then(async ({ data, actors = [], commits = [] }) => {
+      .then(async ({ data, actors = [], commits = [], milestones = [] }) => {
         actors = actors.filter((actor) => !this.cache?.has(actor));
         commits = commits.filter((commit) => !this.cache?.has(commit));
+        milestones = milestones.filter((milestone) => !this.cache?.has(milestone));
 
         debug(
-          `Updating db (actors=${actors.length}; commits=${commits.length}) and ${handlers.length} handlers ...`
+          `Updating db (actors=${actors.length}; commits=${commits.length}; milestones=${milestones.length}) and ${handlers.length} handlers ...`
         );
+
         await knex.transaction((trx) =>
           Promise.all([
             Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
             Commit.insert(commits, trx).then(() => this.cache?.add(actors)),
+            Milestone.upsert(milestones, trx).then(() => this.cache?.add(milestones)),
             Promise.all(handlers.map((handler) => handler.update(data as TObject, trx)))
           ])
         );

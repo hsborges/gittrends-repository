@@ -8,6 +8,7 @@ import Dependency from './Dependency';
 import GithubToken from './GithubToken';
 import Issue from './Issue';
 import Metadata from './Metadata';
+import Milestone from './Milestone';
 import PullRequest from './PullRequest';
 import Reaction from './Reaction';
 import Release from './Release';
@@ -26,6 +27,7 @@ export {
   GithubToken,
   Issue,
   Metadata,
+  Milestone,
   PullRequest,
   Reaction,
   Release,

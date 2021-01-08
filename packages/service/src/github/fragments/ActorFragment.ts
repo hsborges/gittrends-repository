@@ -3,7 +3,7 @@
  */
 import Fragment from '../Fragment';
 
-class Actor extends Fragment {
+export class Actor extends Fragment {
   code = 'actor';
   full = true;
 
@@ -15,7 +15,7 @@ class Actor extends Fragment {
     }
   }
 
-  toString() {
+  toString(): string {
     return `
     fragment ${this.code} on Actor {
       avatarUrl login type:__typename

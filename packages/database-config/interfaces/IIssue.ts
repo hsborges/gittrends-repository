@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-export interface IIssue extends Record<string, unknown> {
+export default interface IIssue extends Record<string, unknown> {
   id: string;
   repository: string;
   type: 'Issue' | 'PullRequest';
@@ -16,7 +16,7 @@ export interface IIssue extends Record<string, unknown> {
   includes_created_edit?: boolean;
   last_edited_at?: Date;
   locked?: boolean;
-  milestone?: object;
+  milestone?: string;
   number?: number;
   published_at?: Date;
   state?: string;
@@ -25,5 +25,5 @@ export interface IIssue extends Record<string, unknown> {
   assignees?: string[];
   labels?: string[];
   participants?: string[];
-  reaction_groups?: object;
+  reaction_groups?: string;
 }

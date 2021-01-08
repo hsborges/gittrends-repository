@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { IIssue } from './IIssue';
+import IIssue from './IIssue';
 
 export default interface IPullRequest extends IIssue {
   suggested_reviewers?: string[];
   additions?: number;
-  base_ref?: object;
+  base_ref?: { name?: string; target?: string };
   base_ref_name?: string;
   base_ref_oid?: string;
   base_repository?: string;
   can_be_rebased?: boolean;
   changed_files?: number;
   deletions?: number;
-  head_ref?: object;
+  head_ref?: { name?: string; target?: string };
   head_ref_name?: string;
   head_ref_oid?: string;
   head_repository?: string;

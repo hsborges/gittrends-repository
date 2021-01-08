@@ -6,7 +6,7 @@ type TStatus = {
   message?: string;
   updated_at?: Date;
 };
-export interface IActor extends Record<string, unknown> {
+export default interface IActor extends Record<string, unknown> {
   id: string;
   type: 'User' | 'Organization' | 'Mannequin' | 'Bot' | 'EnterpriseUserAccount';
   login: string;

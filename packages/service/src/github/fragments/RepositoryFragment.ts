@@ -4,7 +4,7 @@
 import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from './ActorFragment';
 
-class Repository extends Fragment {
+export class Repository extends Fragment {
   code = 'repo';
   full = true;
 
@@ -17,7 +17,7 @@ class Repository extends Fragment {
     if ((this.full = !simplified)) this.code = 'sRepo';
   }
 
-  toString() {
+  toString(): string {
     return `
     fragment ${this.code} on Repository {
       ${Fragment.include(this.full, 'assignableUsers { totalCount }')}

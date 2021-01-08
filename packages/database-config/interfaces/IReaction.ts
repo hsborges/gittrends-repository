@@ -1,4 +1,4 @@
-export interface IReaction extends Record<string, unknown> {
+export default interface IReaction extends Record<string, unknown> {
   id: string;
   repository: string;
   issue: string;

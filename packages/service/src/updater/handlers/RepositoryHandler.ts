@@ -5,9 +5,9 @@ import { get } from 'lodash';
 import { Transaction } from 'knex';
 import { Repository, Metadata } from '@gittrends/database-config';
 
+import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import compact from '../../helpers/compact';
-import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 type TObject = Record<string, unknown>;
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };

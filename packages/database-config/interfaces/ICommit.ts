@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-export interface ICommit extends Record<string, unknown> {
+export default interface ICommit extends Record<string, unknown> {
   id: string;
   repository: string;
   additions?: number;
@@ -25,6 +25,16 @@ export interface ICommit extends Record<string, unknown> {
   message?: string;
   oid: string;
   pushed_date?: Date;
-  signature?: object;
-  status?: object;
+  signature?: {
+    email?: string;
+    isValid?: boolean;
+    signer?: string;
+    state?: string;
+    wasSignedByGitHub?: boolean;
+  };
+  status?: {
+    id: string;
+    contexts?: Array<{ context: string; description?: string; createdAt?: Date }>;
+    state?: string;
+  };
 }

@@ -5,7 +5,7 @@ import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from './ActorFragment';
 import CommitFragment from './CommitFragment';
 
-class TagFragment extends Fragment {
+export class TagFragment extends Fragment {
   code = 'tag';
 
   get dependencies(): Fragment[] {

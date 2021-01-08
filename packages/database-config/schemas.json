@@ -285,13 +285,59 @@
         },
         "signature": {
           "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "properties": {
+            "email": {
+              "type": "string"
+            },
+            "isValid": {
+              "type": "boolean"
+            },
+            "signer": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "wasSignedByGitHub": {
+              "type": "boolean"
+            }
+          }
         },
         "status": {
           "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "contexts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "context": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "description": "Enables basic storage and retrieval of dates and times.",
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "context"
+                ]
+              }
+            },
+            "state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ]
         }
       },
       "required": [
@@ -443,9 +489,7 @@
           "type": "boolean"
         },
         "milestone": {
-          "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "type": "string"
         },
         "number": {
           "type": "number"
@@ -485,9 +529,7 @@
           }
         },
         "reaction_groups": {
-          "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "type": "string"
         }
       },
       "required": [
@@ -518,6 +560,42 @@
         "resource"
       ]
     },
+    "IMilestone": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "dueOn": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "number": {
+          "type": "number"
+        },
+        "state": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "creator",
+        "id",
+        "repository"
+      ]
+    },
     "IPullRequest": {
       "type": "object",
       "properties": {
@@ -532,8 +610,14 @@
         },
         "base_ref": {
           "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
         },
         "base_ref_name": {
           "type": "string"
@@ -555,8 +639,14 @@
         },
         "head_ref": {
           "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
         },
         "head_ref_name": {
           "type": "string"
@@ -664,9 +754,7 @@
           "type": "boolean"
         },
         "milestone": {
-          "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "type": "string"
         },
         "number": {
           "type": "number"
@@ -706,9 +794,7 @@
           }
         },
         "reaction_groups": {
-          "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "type": "string"
         }
       },
       "required": [
@@ -1109,9 +1195,7 @@
           "type": "string"
         },
         "payload": {
-          "type": "object",
-          "properties": {},
-          "additionalProperties": true
+          "type": "string"
         }
       },
       "required": [

@@ -1,4 +1,4 @@
-export interface IRepository extends Record<string, unknown> {
+export default interface IRepository extends Record<string, unknown> {
   id: string;
   assignable_users_count?: number;
   code_of_conduct?: string;

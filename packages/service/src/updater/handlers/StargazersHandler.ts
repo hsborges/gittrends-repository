@@ -1,10 +1,13 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import { get } from 'lodash';
 import { Transaction } from 'knex';
-import knex, { Metadata, IMetadata, Stargazer, Actor } from '@gittrends/database-config';
+import knex, { Metadata, Stargazer, Actor } from '@gittrends/database-config';
 
+import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import { InternalError, RetryableError } from '../../helpers/errors';
-import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
   stargazers: { hasNextPage: boolean; endCursor?: string };
@@ -18,7 +21,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     if (!this.stargazers.endCursor) {
       this.stargazers.endCursor = await Metadata.query()
         .where({ ...this.meta, key: 'endCursor' })
-        .first<IMetadata>()
+        .first()
         .then((result) => result && result.value);
     }
 

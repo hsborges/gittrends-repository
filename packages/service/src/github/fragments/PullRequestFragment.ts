@@ -16,9 +16,13 @@ export class PullRequestFragment extends IssueFragment {
     return super.dependencies;
   }
 
+  get objectName(): string {
+    return 'PullRequest';
+  }
+
   get additionalProperties(): string {
     return `
-    baseRefName
+      baseRefName
       isCrossRepository
       merged
       mergedAt

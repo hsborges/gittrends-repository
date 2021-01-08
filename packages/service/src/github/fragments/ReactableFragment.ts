@@ -3,7 +3,7 @@
  */
 import Fragment from '../Fragment';
 
-class ReactableFragment extends Fragment {
+export class ReactableFragment extends Fragment {
   code = 'reactable';
 
   toString(): string {

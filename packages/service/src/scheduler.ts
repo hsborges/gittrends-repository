@@ -8,7 +8,6 @@ import consola from 'consola';
 import { each } from 'bluebird';
 import { program } from 'commander';
 import { difference, chunk, intersection } from 'lodash';
-import { IActor, IRepository, IMetadata } from '@gittrends/database-config';
 import { Actor, Repository, Metadata } from '@gittrends/database-config';
 
 import { redisOptions } from './redis';
@@ -29,17 +28,21 @@ const repositoriesScheduler = async (queue: Bull.Queue, resources: string[], wai
 
   return each(
     Repository.query().select(['id', 'updated_at', 'name_with_owner']),
-    async (data: IRepository) => {
+    async (data: TObject) => {
       const exclude: string[] = (await Metadata.query().where({ id: data.id, key: 'updatedAt' }))
-        .filter((data: IMetadata) => dayjs().subtract(wait, 'hour').isBefore(data.value))
-        .map((data: IMetadata) => data.resource);
+        .filter((data: TObject) =>
+          dayjs()
+            .subtract(wait, 'hour')
+            .isBefore(data.value as Date)
+        )
+        .map((data: TObject) => data.resource);
 
       const _resources = difference(resources, exclude);
 
       if (_resources.length) {
         await queue.add(
           { id: data.id, resources: _resources },
-          { jobId: data.name_with_owner.toLowerCase() }
+          { jobId: (data.name_with_owner as string).toLowerCase() }
         );
         count += 1;
       }
@@ -76,7 +79,7 @@ const usersScheduler = async (queue: Bull.Queue, wait = 24, limit = 100000) => {
       )
       .select('actors.id')
       .limit(limit)
-  ).map((r: IActor) => r.id);
+  ).map((r: TObject) => r.id);
   // add to queue
   return Promise.all(
     chunk(usersIds, 25).map((ids) => queue.add({ ids }, { jobId: `users@${ids[0]}+` }))

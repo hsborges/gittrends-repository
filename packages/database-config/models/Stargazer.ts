@@ -1,6 +1,6 @@
 import Model from './Model';
 import schema from '../schemas.json';
-import { IStargazer } from '../interfaces';
+import IStargazer from '../interfaces/IStargazer';
 
 class Stargazer extends Model<IStargazer> {
   tableName = 'stargazers';

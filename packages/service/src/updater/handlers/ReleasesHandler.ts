@@ -1,6 +1,9 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import { get } from 'lodash';
 import { Transaction } from 'knex';
-import { Metadata, IMetadata, Release } from '@gittrends/database-config';
+import { Metadata, Release } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
@@ -17,7 +20,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     if (!this.releases.endCursor) {
       this.releases.endCursor = await Metadata.query()
         .where({ ...this.meta, key: 'endCursor' })
-        .first<IMetadata>()
+        .first()
         .then((result) => result && result.value);
     }
 

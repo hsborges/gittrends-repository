@@ -4,7 +4,7 @@
 import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from './ActorFragment';
 
-class MilestoneFragment extends Fragment {
+export class MilestoneFragment extends Fragment {
   code = 'milestone';
 
   get dependencies(): Fragment[] {
@@ -14,6 +14,8 @@ class MilestoneFragment extends Fragment {
   toString(): string {
     return `
       fragment ${this.code} on Milestone {
+        type:__typename
+        repository { id }
         creator { ...${SimplifiedActorFragment.code} }
         description
         dueOn
@@ -21,7 +23,6 @@ class MilestoneFragment extends Fragment {
         number
         state
         title
-        url
       }
     `;
   }
