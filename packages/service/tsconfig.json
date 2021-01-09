@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist",
     "paths": {
       /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
-      "@gittrends/*": ["packages/*/src"]
+      "@gittrends/*": ["packages/*"]
     },
     "resolveJsonModule": true
   }

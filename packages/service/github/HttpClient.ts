@@ -64,14 +64,18 @@ export default async function (query: IObject): Promise<AxiosResponse> {
       if (err.response && err.response.status === 502) {
         throw new Errors.BadGatewayError(err.message, err, err.response && err.response.data);
       }
-      if ((err.response && err.response.status === 408) || err.code === 'ECONNABORTED') {
+      if (
+        (err.response && err.response.status === 408) ||
+        err.code === 'ECONNABORTED' ||
+        err.code === 'ECONNRESET'
+      ) {
         throw new Errors.TimedoutError(err.message, err, err.response && err.response.data);
       }
       console.log(err);
       throw new Errors.RequestError(
         err.message,
         err,
-        JSON.stringify(err.response),
+        JSON.stringify(err.response.data),
         JSON.stringify(query)
       );
     })

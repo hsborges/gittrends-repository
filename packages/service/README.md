@@ -2,41 +2,38 @@
 
 ## Getting Started
 
+This package is responsible for collecting the github data and store on database.
+
 ## Usage
 
-1. Start github proxy server
+1. Compile the source code
+
+```sh
+yarn build
+```
+
+2. Start github proxy server
 
 ```sh
 yarn proxy-server
 ```
 
-2. Add repositories to database
+3. Add repositories to database
 
 ```sh
 yarn add-repositories --limit <number> --language <language>
 ```
 
-3. Schedule activities
+4. Schedule activities
 
 ```sh
 # Available resources:
-# repos, tags, releases, watchers, stargazers, issues, pulls, or users
+# repository, tags, releases, watchers, stargazers, issues, pull_requests, or users
 yarn schedule <resource|all>
 ```
 
-4. Start collecting information
+5. Start collecting information
 
 ```sh
-yarn update <resource> --workers <workers>
+yarn update --type <repositories|users> --workers <workers>
 ```
-
-### PM2
-
-Use pm2 to manage the update process:
-
-```sh
-npx pm2 start pm2-ecosystem.yml
-npx pm2 logs
-```
-
-<sub>\* Update pm2-ecosystem.yml file before starting</sub>

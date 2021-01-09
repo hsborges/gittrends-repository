@@ -103,7 +103,7 @@ program
           redis: redisOptions,
           settings: { maxStalledCount: 5 },
           defaultJobOptions: {
-            attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS || '3', 10),
+            attempts: process.env.GITTRENDS_QUEUE_ATTEMPS ?? 3,
             removeOnComplete: true,
             removeOnFail: true
           }

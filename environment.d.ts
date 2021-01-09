@@ -2,6 +2,13 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       NODE_ENV: 'development' | 'production';
+      GITTRENDS_DATABASE_HOST?: string;
+      GITTRENDS_DATABASE_PORT?: number;
+      GITTRENDS_DATABASE_DB?: string;
+      GITTRENDS_DATABASE_USERNAME?: string;
+      GITTRENDS_DATABASE_PASSWORD?: string;
+      GITTRENDS_DATABASE_POOL_MIN?: string;
+      GITTRENDS_DATABASE_POOL_MAX?: string;
       GITTRENDS_PROXY_PROTOCOL?: string;
       GITTRENDS_PROXY_HOST?: string;
       GITTRENDS_PROXY_PORT?: number;
@@ -11,6 +18,7 @@ declare global {
       GITTRENDS_REDIS_HOST?: string;
       GITTRENDS_REDIS_PORT?: number;
       GITTRENDS_REDIS_DB?: number;
+      GITTRENDS_QUEUE_ATTEMPS?: number;
       GITTRENDS_QUEUE_BOARD_PORT?: number;
       GITTRENDS_CACHE_SIZE?: number;
       PORT?: number;

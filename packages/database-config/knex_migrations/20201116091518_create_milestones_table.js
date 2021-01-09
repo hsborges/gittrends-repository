@@ -6,11 +6,11 @@ exports.up = (knex) =>
     table.string('id').primary();
     table.string('repository').notNullable();
     table.string('creator');
-    table.string('description');
+    table.text('description');
     table.timestamp('dueOn', { useTz: true });
     table.integer('number');
     table.string('state');
-    table.string('title');
+    table.text('title');
 
     table.index('repository');
   });

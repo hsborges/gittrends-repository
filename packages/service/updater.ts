@@ -22,7 +22,7 @@ async function retriableWorker(job: Job, type: string, cache?: Cache) {
     let updater: Updater;
 
     if (type === 'users') {
-      updater = new ActorsUpdater(job.data.id || job.data.ids);
+      updater = new ActorsUpdater(job.data.id ?? job.data.ids);
     } else if (type === 'repositories') {
       updater = new RepositoryUpdater(job.data.id, job.data.resources, { job, cache });
     }
@@ -34,7 +34,7 @@ async function retriableWorker(job: Job, type: string, cache?: Cache) {
         .catch((err) => {
           if (err.message && /recovery.mode|rollback/gi.test(err.message) && operation.retry(err))
             return null;
-          else reject(operation.mainError() || err);
+          else reject(operation.mainError() ?? err);
         })
     );
   })
@@ -54,27 +54,22 @@ program
   .action(async () => {
     consola.info(`Updating ${program.type} using ${program.workers} workers`);
 
-    const cache = new Cache(process.env.GITTRENDS_CACHE_SIZE || 25000);
-    const queue = new Bull(program.type, {
-      redis: redisOptions,
-      defaultJobOptions: {
-        removeOnComplete: true,
-        removeOnFail: true
-      }
-    });
+    const cache = new Cache(process.env.GITTRENDS_CACHE_SIZE ?? 25000);
+    const queue = new Bull(program.type, { redis: redisOptions });
 
-    const workersQueue = async.priorityQueue<Job>(async (job) => {
-      await retriableWorker(job, program.type, cache).catch((err) => {
-        consola.error(`Error thrown by ${job.id}.`);
-        consola.error(err);
-        throw err;
-      });
-
-      if (global.gc) global.gc();
+    const workersQueue = async.priorityQueue<Job>((job, callback) => {
+      retriableWorker(job, program.type, cache)
+        .then(() => callback())
+        .catch((err) => {
+          consola.error(`Error thrown by ${job.id}.`);
+          consola.error(err);
+          callback(err);
+        })
+        .finally(() => (global.gc ? global.gc() : null));
     }, program.workers);
 
     queue.process('*', program.workers, (job, done) =>
-      workersQueue.push(job, job.opts.priority || 1, done)
+      workersQueue.push(job, job.opts.priority ?? 1, done)
     );
 
     let timeout: NodeJS.Timeout;
