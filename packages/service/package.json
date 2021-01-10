@@ -30,7 +30,7 @@
     "collections": "^5.1.12",
     "commander": "^6.2.1",
     "consola": "^2.15.0",
-    "dayjs": "^1.10.2",
+    "dayjs": "^1.10.3",
     "debug": "^4.3.1",
     "express": "^4.17.1",
     "guild": "^1.2.2",
@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^3.0.8",
+    "@hsborges/github-proxy-server": "^3.0.9",
     "@types/async": "^3.2.5",
     "@types/bluebird": "^3.5.33",
     "@types/bull": "^3.14.4",

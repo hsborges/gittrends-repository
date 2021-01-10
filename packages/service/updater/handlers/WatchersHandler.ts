@@ -36,19 +36,21 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias as string];
 
-    const watchers = get(data, 'watchers.nodes', []).map((watcher: string) => ({
+    const watchers: TObject[] = get(data, 'watchers.nodes', []).map((watcher: string) => ({
       repository: this.id,
       user: watcher
     }));
 
     const pageInfo = get(data, 'watchers.page_info', {});
-    this.watchers.hasNextPage = pageInfo.has_next_page || false;
-    this.watchers.endCursor = pageInfo.end_cursor || this.watchers.endCursor;
+    this.watchers.hasNextPage = pageInfo.has_next_page ?? false;
+    this.watchers.endCursor = pageInfo.end_cursor ?? this.watchers.endCursor;
 
-    await Promise.all([
-      Watcher.insert(watchers, trx),
-      Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.watchers.endCursor })
-    ]);
+    if (watchers.length > 0) {
+      await Promise.all([
+        Watcher.insert(watchers, trx),
+        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.watchers.endCursor })
+      ]);
+    }
 
     if (this.done) {
       await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });

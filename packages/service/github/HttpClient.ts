@@ -39,8 +39,8 @@ async function retriableRequest(data: IObject): Promise<AxiosResponse> {
     const operation = retry.operation({
       retries: RETRIES,
       randomize: true,
-      minTimeout: 100,
-      maxTimeout: 500
+      minTimeout: 500,
+      maxTimeout: 2000
     });
 
     operation.attempt((currentAttempt) => {
@@ -71,7 +71,6 @@ export default async function (query: IObject): Promise<AxiosResponse> {
       ) {
         throw new Errors.TimedoutError(err.message, err, err.response && err.response.data);
       }
-      console.log(err);
       throw new Errors.RequestError(
         err.message,
         err,

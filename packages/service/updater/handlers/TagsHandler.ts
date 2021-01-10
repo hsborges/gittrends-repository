@@ -36,19 +36,21 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias as string];
 
-    const tags = get(data, 'tags.nodes', []).map((tag: TObject) => ({
+    const tags: TObject[] = get(data, 'tags.nodes', []).map((tag: TObject) => ({
       repository: this.id,
       ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as TObject)
     }));
 
     const pageInfo = get(data, 'tags.page_info', {});
-    this.tags.hasNextPage = pageInfo.has_next_page || false;
-    this.tags.endCursor = pageInfo.end_cursor || this.tags.endCursor;
+    this.tags.hasNextPage = pageInfo.has_next_page ?? false;
+    this.tags.endCursor = pageInfo.end_cursor ?? this.tags.endCursor;
 
-    await Promise.all([
-      Tag.insert(tags, trx),
-      Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.tags.endCursor })
-    ]);
+    if (tags.length > 0) {
+      await Promise.all([
+        Tag.insert(tags, trx),
+        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.tags.endCursor })
+      ]);
+    }
 
     if (this.done) {
       await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });

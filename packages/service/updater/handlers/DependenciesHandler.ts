@@ -101,7 +101,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
         []
       );
 
-      await Dependency.insert(dependencies, trx);
+      if (dependencies.length > 0) await Dependency.insert(dependencies, trx);
 
       if (this.hasNextPage) {
         this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
@@ -110,10 +110,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     }
 
     if (this.done) {
-      return Metadata.upsert(
-        [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
-        trx
-      );
+      return Metadata.upsert([{ ...this.meta, key: 'updatedAt', value: new Date() }], trx);
     }
   }
 

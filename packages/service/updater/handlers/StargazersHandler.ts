@@ -37,7 +37,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias as string];
 
-    const stargazers = get(data, 'stargazers.edges', []).map(
+    const stargazers: TObject[] = get(data, 'stargazers.edges', []).map(
       (stargazer: { user: string; starred_at: Date }) => ({
         repository: this.id,
         ...stargazer
@@ -45,13 +45,15 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     );
 
     const pageInfo = get(data, 'stargazers.page_info', {});
-    this.stargazers.hasNextPage = pageInfo.has_next_page || false;
-    this.stargazers.endCursor = pageInfo.end_cursor || this.stargazers.endCursor;
+    this.stargazers.hasNextPage = pageInfo.has_next_page ?? false;
+    this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
-    await Promise.all([
-      Stargazer.insert(stargazers, trx),
-      Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.stargazers.endCursor })
-    ]);
+    if (stargazers.length > 0) {
+      await Promise.all([
+        Stargazer.insert(stargazers, trx),
+        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.stargazers.endCursor })
+      ]);
+    }
 
     if (this.done) {
       await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });

@@ -145,9 +145,9 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         timeline: { hasNextPage: true }
       }));
 
-      const pageInfo = get(data, `${this.resource}.page_info`);
-      this.issues.hasNextPage = pageInfo.has_next_page || false;
-      this.issues.endCursor = pageInfo.end_cursor || this.issues.endCursor;
+      const pageInfo = get(data, `${this.resource}.page_info`, {});
+      this.issues.hasNextPage = pageInfo.has_next_page ?? false;
+      this.issues.endCursor = pageInfo.end_cursor ?? this.issues.endCursor;
 
       if (this.issues.items.length) return;
     }
@@ -155,38 +155,37 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     const pendingItems = this.getPendingItems();
     if (pendingItems.length > 0) {
       pendingItems.forEach((item) => {
-        const data = response[item.component.alias] as TObject;
+        const data = response[item.component.alias];
         const omitFields = ['assignees', 'labels', 'participants', 'timeline'];
 
         if (item.details.hasNextPage) {
           item.details.hasNextPage = false;
-          item.data = { ...item.data, ...omit(data, omitFields) };
+          item.data = { ...item.data, ...omit(data as TObject, omitFields) };
           item.data.assignees = [];
           item.data.labels = [];
           item.data.participants = [];
           item.data.timeline = [];
         }
 
-        const aPageInfo = get(data, 'assignees.page_info', {}) as TObject;
+        const aPageInfo = get(data, 'assignees.page_info', {});
         (item.data.assignees as []).push(...(get(data, 'assignees.nodes', []) as []));
-        item.assignees.hasNextPage = aPageInfo.has_next_page as boolean;
-        item.assignees.endCursor = (aPageInfo.end_cursor as string) || item.assignees.endCursor;
+        item.assignees.hasNextPage = aPageInfo.has_next_page ?? false;
+        item.assignees.endCursor = aPageInfo.end_cursor ?? item.assignees.endCursor;
 
-        const lPageInfo = get(data, 'labels.page_info', {}) as TObject;
+        const lPageInfo = get(data, 'labels.page_info', {});
         (item.data.labels as []).push(...(get(data, 'labels.nodes', []) as []));
-        item.labels.hasNextPage = lPageInfo.has_next_page as boolean;
-        item.labels.endCursor = (lPageInfo.end_cursor as string) || item.labels.endCursor;
+        item.labels.hasNextPage = lPageInfo.has_next_page ?? false;
+        item.labels.endCursor = lPageInfo.end_cursor ?? item.labels.endCursor;
 
-        const pPageInfo = get(data, 'participants.page_info', {}) as TObject;
+        const pPageInfo = get(data, 'participants.page_info', {});
         (item.data.participants as []).push(...(get(data, 'participants.nodes', []) as []));
-        item.participants.hasNextPage = pPageInfo.has_next_page as boolean;
-        item.participants.endCursor =
-          (pPageInfo.end_cursor as string) || item.participants.endCursor;
+        item.participants.hasNextPage = pPageInfo.has_next_page ?? false;
+        item.participants.endCursor = pPageInfo.end_cursor ?? item.participants.endCursor;
 
-        const tPageInfo = get(data, 'timeline.page_info', {}) as TObject;
+        const tPageInfo = get(data, 'timeline.page_info', {});
         (item.data.timeline as []).push(...(get(data, 'timeline.nodes', []) as []));
-        item.timeline.hasNextPage = tPageInfo.has_next_page as boolean;
-        item.timeline.endCursor = (tPageInfo.end_cursor as string) || item.timeline.endCursor;
+        item.timeline.hasNextPage = tPageInfo.has_next_page ?? false;
+        item.timeline.endCursor = tPageInfo.end_cursor ?? item.timeline.endCursor;
       });
 
       if (this.getPendingItems().length > 0) return;

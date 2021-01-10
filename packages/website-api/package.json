@@ -16,7 +16,7 @@
   "dependencies": {
     "@gittrends/database-config": "file:../database-config",
     "axios": "^0.21.1",
-    "dayjs": "^1.10.2",
+    "dayjs": "^1.10.3",
     "faker": "^5.1.0",
     "fastify": "^3.9.2",
     "fastify-autoload": "^3.4.0",

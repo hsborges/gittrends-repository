@@ -39,22 +39,22 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
   async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
     if (this.done) return;
 
-    const data = response[this.alias as string] as TObject;
+    const data = response[this.alias as string];
 
-    if (this.details === undefined) this.details = data;
+    if (!this.details) this.details = data as TObject;
 
     this.languages.items.push(...(get(data, 'languages.edges', []) as []));
     this.topics.items.push(
       ...(get(data, 'repository_topics.nodes', []) as []).map((t: TObject) => t.topic)
     );
 
-    const langPageInfo = 'languages.page_info';
-    this.languages.hasNextPage = get(data, `${langPageInfo}.has_next_page`, false) as boolean;
-    this.languages.endCursor = get(data, `${langPageInfo}.end_cursor`) as string | undefined;
+    const langPageInfo = get(data, 'languages.page_info', {});
+    this.languages.hasNextPage = langPageInfo.has_next_page ?? false;
+    this.languages.endCursor = langPageInfo.end_cursor ?? this.languages.endCursor;
 
-    const topicsPageInfo = 'repository_topics.page_info';
-    this.topics.hasNextPage = get(data, `${topicsPageInfo}.has_next_page`, false) as boolean;
-    this.topics.endCursor = get(data, `${topicsPageInfo}.end_cursor`) as string | undefined;
+    const topicsPageInfo = get(data, 'repository_topics.page_info', {});
+    this.topics.hasNextPage = topicsPageInfo.has_next_page ?? false;
+    this.topics.endCursor = topicsPageInfo.end_cursor ?? this.topics.endCursor;
 
     if (this.done) {
       await Promise.all([

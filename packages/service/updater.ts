@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import Bull, { Job } from 'bull';
-import async from 'async';
 import consola from 'consola';
 import program from 'commander';
 import retry from 'retry';
@@ -37,12 +36,7 @@ async function retriableWorker(job: Job, type: string, cache?: Cache) {
           else reject(operation.mainError() ?? err);
         })
     );
-  })
-    .then(() => consola.success(`[${job.id}] finished!`))
-    .catch((err) => {
-      consola.error(err);
-      throw err;
-    });
+  });
 }
 
 /* execute */
@@ -57,19 +51,14 @@ program
     const cache = new Cache(process.env.GITTRENDS_CACHE_SIZE ?? 25000);
     const queue = new Bull(program.type, { redis: redisOptions });
 
-    const workersQueue = async.priorityQueue<Job>((job, callback) => {
+    queue.process('*', program.workers, (job) =>
       retriableWorker(job, program.type, cache)
-        .then(() => callback())
+        .then(() => consola.success(`[${job.id}] finished!`))
         .catch((err) => {
-          consola.error(`Error thrown by ${job.id}.`);
-          consola.error(err);
-          callback(err);
+          consola.error(`Error thrown by ${job.id}.`, err);
+          throw err;
         })
-        .finally(() => (global.gc ? global.gc() : null));
-    }, program.workers);
-
-    queue.process('*', program.workers, (job, done) =>
-      workersQueue.push(job, job.opts.priority ?? 1, done)
+        .finally(() => (global.gc ? global.gc() : null))
     );
 
     let timeout: NodeJS.Timeout;

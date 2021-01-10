@@ -11,18 +11,13 @@ export default abstract class Component {
   }
 
   protected argsToString(args: Record<string, unknown>): string {
-    return Object.keys(args)
-      .map((key) => {
-        switch (typeof args[key]) {
-          case 'number':
-            return `${key}: ${args[key]}`;
-          case 'string':
-            return `${key}: "${args[key]}"`;
-          default:
-            return '';
-        }
+    return Object.entries(args)
+      .filter(([, value]) => value)
+      .map(([key, value]) => {
+        if (typeof value === 'number') return `${key}: ${value}`;
+        if (typeof value === 'string') return `${key}: "${value}"`;
+        throw new Error(`Unknown key/value type (${key}:${args[key]})!`);
       })
-      .filter((v) => v)
       .join(', ');
   }
 

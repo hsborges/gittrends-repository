@@ -104,12 +104,14 @@ export default class RepositoryUpdater implements Updater {
   }
 
   async update(): Promise<void> {
-    while (this.hasNextPage()) {
-      await this._update(this.handlers.filter((handler) => handler.hasNextPage));
-    }
+    while (this.hasNextPage) await this._update(this.pendingHandlers);
   }
 
-  hasNextPage(): boolean {
+  get pendingHandlers(): AbstractRepositoryHandler[] {
+    return this.handlers.filter((handler) => handler.hasNextPage);
+  }
+
+  get hasNextPage(): boolean {
     return this.handlers.reduce((acc: boolean, handler) => acc || handler.hasNextPage, false);
   }
 }
