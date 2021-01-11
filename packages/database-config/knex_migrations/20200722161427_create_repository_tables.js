@@ -6,7 +6,7 @@ exports.up = async (knex) => {
     table.string('id').primary();
     table.integer('assignable_users_count').unsigned();
     table.string('code_of_conduct');
-    table.timestamp('created_at', { useTz: true });
+    table.timestamp('created_at');
     table.integer('database_id').unsigned();
     table.string('default_branch');
     table.boolean('delete_branch_on_merge');
@@ -45,7 +45,7 @@ exports.up = async (knex) => {
     table.string('owner').notNullable();
     table.string('parent');
     table.string('primary_language');
-    table.timestamp('pushed_at', { useTz: true });
+    table.timestamp('pushed_at');
     table.integer('pull_requests_count').unsigned();
     table.boolean('rebase_merge_allowed');
     table.integer('releases_count').unsigned();
@@ -53,7 +53,7 @@ exports.up = async (knex) => {
     table.boolean('squash_merge_allowed');
     table.integer('stargazers_count').unsigned();
     table.string('template_repository');
-    table.timestamp('updated_at', { useTz: true });
+    table.timestamp('updated_at');
     table.string('url');
     table.boolean('uses_custom_open_graph_image');
     table.integer('vulnerability_alerts_count').unsigned();

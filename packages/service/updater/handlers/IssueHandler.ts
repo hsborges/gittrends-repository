@@ -49,7 +49,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
     this.resource = type;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 50 : 25;
+    this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 15;
     this.issues = { items: [], hasNextPage: true };
   }
 
@@ -127,7 +127,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
-    if (this.done) return;
+    if (this.isDone()) return;
 
     if (this.issues.items.length === 0) {
       const data = response[super.alias as string];
@@ -290,7 +290,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       this.batchSize = this.defaultBatchSize;
     }
 
-    if (this.done) {
+    if (this.isDone()) {
       return Metadata.upsert([{ ...this.meta, key: 'updatedAt', value: new Date() }], trx);
     }
   }
@@ -348,7 +348,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     return alias;
   }
 
-  get hasNextPage(): boolean {
+  hasNextPage(): boolean {
     return (
       this.issues.hasNextPage ||
       this.getPendingItems().length > 0 ||

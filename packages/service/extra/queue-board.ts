@@ -1,15 +1,15 @@
 /*
  *  Author: Hudson S. Borges
  */
-import Queue from 'bull';
+import { Queue } from 'bullmq';
 import express from 'express';
 import consola from 'consola';
 import { redisOptions } from '../redis';
-import { router, setQueues, BullAdapter } from 'bull-board';
+import { router, setQueues, BullMQAdapter } from 'bull-board';
 
 setQueues(
   ['repositories', 'users'].map(
-    (queue) => new BullAdapter(new Queue(queue, { redis: redisOptions }))
+    (queue) => new BullMQAdapter(new Queue(queue, { connection: redisOptions }))
   )
 );
 

@@ -48,7 +48,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
-    if (this.done) return;
+    if (this.isDone()) return;
 
     if (response && this.manifests.hasNextPage) {
       const data = response[this.alias[0]];
@@ -72,7 +72,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
       this.manifests.hasNextPage = get(data, `${pageInfo}.has_next_page`);
       this.manifests.endCursor = get(data, `${pageInfo}.end_cursor`, this.manifests.endCursor);
 
-      if (this.hasNextPage) {
+      if (this.hasNextPage()) {
         this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
         return;
       }
@@ -103,13 +103,13 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
 
       if (dependencies.length > 0) await Dependency.insert(dependencies, trx);
 
-      if (this.hasNextPage) {
+      if (this.hasNextPage()) {
         this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
         return;
       }
     }
 
-    if (this.done) {
+    if (this.isDone()) {
       return Metadata.upsert([{ ...this.meta, key: 'updatedAt', value: new Date() }], trx);
     }
   }
@@ -142,7 +142,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     );
   }
 
-  get hasNextPage(): boolean {
+  hasNextPage(): boolean {
     return this.manifests.hasNextPage || this.getPendingManifests().length > 0;
   }
 }

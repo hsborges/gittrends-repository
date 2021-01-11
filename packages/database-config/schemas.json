@@ -559,7 +559,6 @@
         }
       },
       "required": [
-        "creator",
         "id",
         "repository"
       ]

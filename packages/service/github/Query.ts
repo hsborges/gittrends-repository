@@ -60,13 +60,10 @@ export default class Query {
 
     return `
     query${_args} {
-      ${this.components.map((component) => component.toString()).join('\n')}
-    }\n
-    ${[...this.fragments].map((fragment) => fragment.toString()).join('\n')}
+      ${this.components.map((component) => component.toString())}
+    }
+    ${[...this.fragments].map((fragment) => fragment.toString())}
     `
-      .split(/[\n\r]/g)
-      .filter((r) => r.trim().length)
-      .join('\n')
       .replace(/\s+/g, ' ')
       .trim();
   }

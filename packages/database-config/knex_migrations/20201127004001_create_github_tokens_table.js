@@ -8,7 +8,7 @@ exports.up = (knex) =>
     table.string('scope');
     table.string('login');
     table.string('email');
-    table.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
+    table.timestamp('created_at').defaultTo(knex.fn.now());
   });
 
 exports.down = (knex) => knex.schema.dropTable('github_tokens');

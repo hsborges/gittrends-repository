@@ -38,14 +38,14 @@ exports.up = (knex) =>
     table.string('user');
 
     // Common
-    table.timestamp('created_at', { useTz: true });
+    table.timestamp('created_at');
     table.integer('database_id');
     table.string('email');
     table.string('location');
     table.string('name');
     table.integer('repositories_count').unsigned();
     table.string('twitter_username');
-    table.timestamp('updated_at', { useTz: true });
+    table.timestamp('updated_at');
     table.string('website_url');
   });
 

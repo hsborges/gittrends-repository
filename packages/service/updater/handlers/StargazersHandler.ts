@@ -33,7 +33,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, trx: Transaction): Promise<void> {
-    if (this.done) return;
+    if (this.isDone()) return;
 
     const data = response[this.alias as string];
 
@@ -55,7 +55,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
       ]);
     }
 
-    if (this.done) {
+    if (this.isDone()) {
       await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });
     }
   }
@@ -96,7 +96,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     super.error(err);
   }
 
-  get hasNextPage(): boolean {
+  hasNextPage(): boolean {
     return this.stargazers.hasNextPage;
   }
 }

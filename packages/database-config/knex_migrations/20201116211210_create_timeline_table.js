@@ -3,7 +3,7 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('timeline', (table) => {
-    table.text('id').primary();
+    table.string('id').primary();
     table.string('repository').notNullable();
     table.string('issue').notNullable();
     table.string('type').notNullable();

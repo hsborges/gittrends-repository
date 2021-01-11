@@ -32,7 +32,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, trx: Transaction): Promise<void> {
-    if (this.done) return;
+    if (this.isDone()) return;
 
     const data = response[this.alias as string];
 
@@ -52,12 +52,12 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
       ]);
     }
 
-    if (this.done) {
+    if (this.isDone()) {
       await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });
     }
   }
 
-  get hasNextPage(): boolean {
+  hasNextPage(): boolean {
     return this.watchers.hasNextPage;
   }
 }

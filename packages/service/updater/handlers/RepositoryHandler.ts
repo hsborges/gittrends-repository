@@ -12,7 +12,7 @@ import compact from '../../helpers/compact';
 type TObject = Record<string, unknown>;
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
 
-export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
+export default class RepositoryHander extends AbstractRepositoryHandler {
   details?: TObject;
   languages: TMetadata;
   topics: TMetadata;
@@ -25,7 +25,7 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     return this._component
-      .includeDetails(this.details === undefined)
+      .includeDetails(!this.details)
       .includeLanguages(this.languages.hasNextPage, {
         first: this.batchSize,
         after: this.languages?.endCursor
@@ -37,7 +37,7 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
   }
 
   async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
-    if (this.done) return;
+    if (this.isDone()) return;
 
     const data = response[this.alias as string];
 
@@ -56,7 +56,7 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
     this.topics.hasNextPage = topicsPageInfo.has_next_page ?? false;
     this.topics.endCursor = topicsPageInfo.end_cursor ?? this.topics.endCursor;
 
-    if (this.done) {
+    if (this.isDone()) {
       await Promise.all([
         Repository.update(
           compact({
@@ -71,7 +71,7 @@ export default class RepositoryDetailsHander extends AbstractRepositoryHandler {
     }
   }
 
-  get hasNextPage(): boolean {
+  hasNextPage(): boolean {
     return !this.details || this.languages.hasNextPage || this.topics.hasNextPage;
   }
 }

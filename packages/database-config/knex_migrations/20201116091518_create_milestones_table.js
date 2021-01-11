@@ -7,7 +7,7 @@ exports.up = (knex) =>
     table.string('repository').notNullable();
     table.string('creator');
     table.text('description');
-    table.timestamp('dueOn', { useTz: true });
+    table.timestamp('dueOn');
     table.integer('number');
     table.string('state');
     table.text('title');

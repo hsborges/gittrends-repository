@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import Bull from 'bull';
+import { Queue } from 'bullmq';
 import dayjs from 'dayjs';
 import consola from 'consola';
 
@@ -22,7 +22,7 @@ function resourcesParser(resources: string[]): string[] {
   throw new Error("Invalid 'resources' argument values!");
 }
 
-const repositoriesScheduler = async (queue: Bull.Queue, resources: string[], wait = 24) => {
+const repositoriesScheduler = async (queue: Queue, resources: string[], wait = 24) => {
   // find and save jobs on queue
   let count = 0;
 
@@ -41,6 +41,7 @@ const repositoriesScheduler = async (queue: Bull.Queue, resources: string[], wai
 
       if (_resources.length) {
         await queue.add(
+          'update',
           { id: data.id, resources: _resources },
           { jobId: (data.name_with_owner as string).toLowerCase() }
         );
@@ -50,10 +51,10 @@ const repositoriesScheduler = async (queue: Bull.Queue, resources: string[], wai
   ).then(async () => consola.success(`Number of repositories scheduled: ${count}`));
 };
 
-const usersScheduler = async (queue: Bull.Queue, wait = 24, limit = 100000) => {
+const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
   // get jobs on queue
   const waiting = await queue
-    .getJobs(['waiting'], 0, Number.MAX_SAFE_INTEGER)
+    .getJobs('waiting', 0, Number.MAX_SAFE_INTEGER)
     .then((jobs) =>
       jobs
         .filter(({ id }) => /users@.+/i.test(id as string))
@@ -82,7 +83,7 @@ const usersScheduler = async (queue: Bull.Queue, wait = 24, limit = 100000) => {
   ).map((r: TObject) => r.id);
   // add to queue
   return Promise.all(
-    chunk(usersIds, 25).map((ids) => queue.add({ ids }, { jobId: `users@${ids[0]}+` }))
+    chunk(usersIds, 25).map((id) => queue.add('update', { id }, { jobId: `users@${id[0]}+` }))
   ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
 
@@ -99,20 +100,18 @@ program
       const resources = resourcesParser([resource, ...other]);
 
       async function prepareQueue<T>(name: string) {
-        const queue = new Bull<T>(name, {
-          redis: redisOptions,
-          settings: { maxStalledCount: 5 },
+        const queue = new Queue<T>(name, {
+          connection: redisOptions,
           defaultJobOptions: {
             attempts: process.env.GITTRENDS_QUEUE_ATTEMPS ?? 3,
-            removeOnComplete: true,
-            removeOnFail: true
+            removeOnComplete: true
           }
         });
 
-        await queue.clean(1000 * 60 * 60 * program.wait, 'completed');
-        await queue.clean(0, 'failed');
+        await queue.clean(1000 * 60 * 60 * program.wait, Number.MAX_SAFE_INTEGER, 'completed');
+        await queue.clean(0, Number.MAX_SAFE_INTEGER, 'failed');
 
-        if (program.destroyQueue) await queue.empty();
+        if (program.destroyQueue) await queue.drain();
 
         return queue;
       }

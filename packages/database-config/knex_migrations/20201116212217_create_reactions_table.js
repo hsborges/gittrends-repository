@@ -8,7 +8,7 @@ exports.up = (knex) =>
     table.string('issue').notNullable();
     table.string('event');
     table.string('content').notNullable();
-    table.timestamp('created_at', { useTz: true }).notNullable();
+    table.timestamp('created_at').notNullable();
     table.string('user').notNullable();
 
     table.index(['repository', 'issue']);

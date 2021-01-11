@@ -5,7 +5,7 @@ exports.up = (knex) =>
   knex.schema.createTable('stargazers', (table) => {
     table.string('repository').notNullable();
     table.string('user').notNullable();
-    table.timestamp('starred_at', { useTz: true }).notNullable();
+    table.timestamp('starred_at').notNullable();
 
     table.primary(['repository', 'user', 'starred_at']);
     table.index('repository');

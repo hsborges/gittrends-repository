@@ -1,50 +1,32 @@
 version: '3.7'
 
 services:
-  postgres:
-    image: postgres:alpine
-    container_name: postgres
+  mysql:
+    image: mysql:latest
+    container_name: mysql
     restart: always
-    command: -N 500
+    command: --default-time-zone=+00:00 --max-connections=500 --default-authentication-plugin=mysql_native_password
     ports:
-      - ${GITTRENDS_DATABASE_PORT}:5432
+      - ${GITTRENDS_DATABASE_PORT}:3306
     volumes:
-      - 'db:/var/lib/postgresql/data'
+      - 'db:/var/lib/mysql'
     environment:
-      POSTGRES_USER: ${GITTRENDS_DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
-      POSTGRES_DB: ${GITTRENDS_DATABASE_DB}
+      MYSQL_ROOT_PASSWORD: NYI4jsei5N4P
+      MYSQL_USER: ${GITTRENDS_DATABASE_USERNAME}
+      MYSQL_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
+      MYSQL_DATABASE: ${GITTRENDS_DATABASE_DB}
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
     restart: always
+    links:
+      - mysql:db
     ports:
       - ${GITTRENDS_PGADMIN_PORT}:80
-    volumes:
-      - 'pgadmin-db:/var/lib/pgadmin'
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@gittrends.app
-      PGADMIN_DEFAULT_PASSWORD: admin
-
-  pgbackups:
-    image: prodrigestivill/postgres-backup-local
-    container_name: pgbackups
-    restart: always
-    volumes:
-      - /backups:/backups
-    environment:
-      - POSTGRES_HOST=${GITTRENDS_DATABASE_HOST}
-      - POSTGRES_PORT=${GITTRENDS_DATABASE_PORT}
-      - POSTGRES_DB=${GITTRENDS_DATABASE_DB}
-      - POSTGRES_USER=${GITTRENDS_DATABASE_USERNAME}
-      - POSTGRES_PASSWORD=${GITTRENDS_DATABASE_PASSWORD}
-      - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
-      - SCHEDULE=@weekly
-      - BACKUP_KEEP_DAYS=7
-      - BACKUP_KEEP_WEEKS=4
-      - BACKUP_KEEP_MONTHS=1
-      - HEALTHCHECK_PORT=9999
+      PMA_USER: ${GITTRENDS_DATABASE_USERNAME}
+      PMA_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
 
   redis:
     image: redis:alpine
@@ -67,14 +49,14 @@ services:
     volumes:
       - ./data/nginx/development.conf:/app/data/nginx/default.conf:ro
     environment:
-      GITTRENDS_DATABASE_HOST: postgres
-      GITTRENDS_DATABASE_PORT: 5432
+      GITTRENDS_DATABASE_HOST: mysql
+      GITTRENDS_DATABASE_PORT: 3306
     env_file:
       - .env
     depends_on:
-      - postgres
+      - mysql
     links:
-      - postgres
+      - mysql
 
 volumes:
   db:

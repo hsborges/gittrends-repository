@@ -71,12 +71,7 @@ export default async function (query: IObject): Promise<AxiosResponse> {
       ) {
         throw new Errors.TimedoutError(err.message, err, err.response && err.response.data);
       }
-      throw new Errors.RequestError(
-        err.message,
-        err,
-        JSON.stringify(err.response.data),
-        JSON.stringify(query)
-      );
+      throw new Errors.RequestError(err.message, err, JSON.stringify(err.response.data), query);
     })
     .then((response) => {
       const { data } = response;
@@ -84,22 +79,22 @@ export default async function (query: IObject): Promise<AxiosResponse> {
       if (data && data.errors && data.errors.length) {
         const message = `Response errors (${data.errors.length}): ${JSON.stringify(data.errors)}`;
         if (data.errors.find((e: IObject) => e.type === 'FORBIDDEN'))
-          throw new Errors.ForbiddenError(message, null, data, JSON.stringify(query));
+          throw new Errors.ForbiddenError(message, null, data, query);
         if (data.errors.find((e: IObject) => e.type === 'INTERNAL'))
-          throw new Errors.InternalError(message, null, data, JSON.stringify(query));
+          throw new Errors.InternalError(message, null, data, query);
         if (data.errors.find((e: IObject) => e.type === 'NOT_FOUND'))
-          throw new Errors.NotFoundError(message, null, data, JSON.stringify(query));
+          throw new Errors.NotFoundError(message, null, data, query);
         if (data.errors.find((e: IObject) => e.type === 'MAX_NODE_LIMIT_EXCEEDED'))
-          throw new Errors.MaxNodeLimitExceededError(message, null, data, JSON.stringify(query));
+          throw new Errors.MaxNodeLimitExceededError(message, null, data, query);
         if (data.errors.find((e: IObject) => e.type === 'SERVICE_UNAVAILABLE'))
-          throw new Errors.ServiceUnavailableError(message, null, data, JSON.stringify(query));
+          throw new Errors.ServiceUnavailableError(message, null, data, query);
         if (data.errors.find((e: IObject) => e.message === 'timedout'))
-          throw new Errors.TimedoutError(message, null, data, JSON.stringify(query));
+          throw new Errors.TimedoutError(message, null, data, query);
         if (data.errors.find((e: IObject) => e.message === 'loading'))
-          throw new Errors.LoadingError(message, null, data, JSON.stringify(query));
+          throw new Errors.LoadingError(message, null, data, query);
         if (data.errors.find((e: IObject) => /^something.went.wrong.+/i.test(e.message as string)))
-          throw new Errors.SomethingWentWrongError(message, null, data, JSON.stringify(query));
-        throw new Errors.RequestError(message, null, data, JSON.stringify(query));
+          throw new Errors.SomethingWentWrongError(message, null, data, query);
+        throw new Errors.RequestError(message, null, data, query);
       }
 
       return { ...response, data: compact(response.data) };

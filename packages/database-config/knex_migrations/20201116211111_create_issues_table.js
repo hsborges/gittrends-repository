@@ -2,37 +2,29 @@
  *  Author: Hudson S. Borges
  */
 exports.up = async (knex) => {
-  await knex.schema.raw("CREATE TYPE \"issue_type\" AS ENUM ('Issue', 'PullRequest')");
-
   return knex.schema.createTable('issues', (table) => {
     table.string('id').primary();
     table.string('repository').notNullable();
-    table
-      .enu('type', ['Issue', 'PullRequest'], {
-        useNative: true,
-        existingType: true,
-        enumName: 'issue_type'
-      })
-      .notNullable();
+    table.enu('type', ['Issue', 'PullRequest']).notNullable();
     table.string('active_lock_reason');
     table.string('author');
     table.string('author_association');
     table.text('body');
     table.boolean('closed');
-    table.timestamp('closed_at', { useTz: true });
-    table.timestamp('created_at', { useTz: true });
+    table.timestamp('closed_at');
+    table.timestamp('created_at');
     table.boolean('created_via_email');
     table.integer('database_id');
     table.string('editor');
     table.boolean('includes_created_edit');
-    table.timestamp('last_edited_at', { useTz: true });
+    table.timestamp('last_edited_at');
     table.boolean('locked');
     table.string('milestone');
     table.integer('number');
-    table.timestamp('published_at', { useTz: true });
+    table.timestamp('published_at');
     table.string('state');
     table.text('title');
-    table.timestamp('updated_at', { useTz: true });
+    table.timestamp('updated_at');
     // connections
     table.json('assignees');
     table.json('labels');
@@ -60,7 +52,7 @@ exports.up = async (knex) => {
     table.string('merge_state_status');
     table.string('mergeable');
     table.boolean('merged');
-    table.timestamp('merged_at', { useTz: true });
+    table.timestamp('merged_at');
     table.string('merged_by');
     table.string('permalink');
     table.string('potential_merge_commit');
