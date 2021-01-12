@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import Knex, { Transaction } from 'knex';
@@ -16,8 +15,8 @@ function preValidate(data: unknown): unknown {
 
 function postValidate(data: TObject): TRecord {
   return mapValues(data, (value) => {
-    if (typeof value === 'object') return JSON.stringify(value);
-    if (typeof value === 'string' && dayjs(value).isValid()) return dayjs(value).toDate();
+    if (typeof value === 'string') return value.replace(/\x00/g, '');
+    if (typeof value === 'object') return JSON.stringify(value).replace(/\x00/g, '');
     return value;
   }) as TRecord;
 }

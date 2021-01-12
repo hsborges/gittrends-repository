@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^3.0.9",
+    "@hsborges/github-proxy-server": "^3.0.10",
     "@types/async": "^3.2.5",
     "@types/bluebird": "^3.5.33",
     "@types/bull": "^3.14.4",

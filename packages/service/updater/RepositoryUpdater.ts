@@ -2,6 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import Debug from 'debug';
+import { each, map } from 'bluebird';
 import { Job } from 'bullmq';
 import knex, { Actor, Commit, Milestone } from '@gittrends/database-config';
 
@@ -58,7 +59,7 @@ export default class RepositoryUpdater implements Updater {
 
   private async _update(handlers: AbstractRepositoryHandler[]): Promise<void> {
     // get components
-    const components = (await Promise.all(handlers.map((handler) => handler.component()))).reduce(
+    const components = (await map(handlers, (handler) => handler.component())).reduce(
       (acc: Component[], result) => acc.concat(result),
       []
     );
@@ -80,18 +81,33 @@ export default class RepositoryUpdater implements Updater {
             Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
             Commit.insert(commits, trx).then(() => this.cache?.add(actors)),
             Milestone.upsert(milestones, trx).then(() => this.cache?.add(milestones)),
-            Promise.all(handlers.map((handler) => handler.update(data as TObject, trx)))
+            map(handlers, (handler) => handler.update(data as TObject, trx))
           ])
         );
+
+        const doneHandlers = handlers.filter((handler) => {
+          if (this.job && handler.isDone()) {
+            this.job.update({
+              ...this.job.data,
+              resources: this.job.data.resources.filter((r: string) => r !== handler.meta.resource),
+              done: [...(this.job.data.done || []), handler.meta.resource]
+            });
+            return true;
+          }
+        });
+
+        if (this.job && doneHandlers.length) {
+          const totalDone = this.handlers.reduce((acc: number, h) => acc + (h.isDone() ? 1 : 0), 0);
+          this.job.updateProgress(Math.ceil((totalDone / this.handlers.length) * 100));
+        }
       })
       .catch(async (err) => {
         debug(`Error: ${err.message}`);
         if (err instanceof ValidationError) throw err;
         if (handlers.length === 1) return handlers[0].error(err);
-        return Promise.all(
-          handlers
-            .filter((handler) => handler.hasNextPage())
-            .map((handler) => this._update([handler]))
+        return each(
+          handlers.filter((handler) => handler.hasNextPage()),
+          (handler) => this._update([handler])
         );
       });
   }

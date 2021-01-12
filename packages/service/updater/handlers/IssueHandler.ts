@@ -94,19 +94,19 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           return issue.component
             .includeDetails(issue.details.hasNextPage)
             .includeAssignees(issue.assignees.hasNextPage, {
-              first: this.defaultBatchSize,
+              first: 50,
               after: issue.assignees.endCursor
             })
             .includeLabels(issue.labels.hasNextPage, {
-              first: this.defaultBatchSize,
+              first: 50,
               after: issue.labels.endCursor
             })
             .includeParticipants(issue.participants.hasNextPage, {
-              first: this.defaultBatchSize,
+              first: 50,
               after: issue.participants.endCursor
             })
             .includeTimeline(issue.timeline.hasNextPage, {
-              first: this.defaultBatchSize,
+              first: 50,
               after: issue.timeline.endCursor
             });
         })
@@ -117,7 +117,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     if (pendingReactables.length > 0) {
       return pendingReactables.map((issue) =>
         issue.component.includeReactions(issue.hasNextPage, {
-          first: this.defaultBatchSize,
+          first: 50,
           after: issue.endCursor
         })
       );
@@ -287,7 +287,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
       this.issues.items = [];
       this.reactions = [];
-      this.batchSize = this.defaultBatchSize;
+      this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
     }
 
     if (this.isDone()) {
@@ -317,7 +317,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         reaction.error = err;
       }
 
-      this.batchSize = this.defaultBatchSize;
+      this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
 
       return;
     }

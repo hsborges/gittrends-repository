@@ -13,7 +13,6 @@ exports.up = (knex) =>
     table.string('requirements');
 
     table.primary(['repository', 'manifest', 'package_name']);
-    table.index('repository');
   });
 
 exports.down = (knex) => knex.schema.dropTable('dependencies');

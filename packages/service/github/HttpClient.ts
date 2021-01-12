@@ -50,6 +50,7 @@ async function retriableRequest(data: IObject): Promise<AxiosResponse> {
           debug(`Error (attempt ${currentAttempt}): ${err.message} - %o`, data);
           if (err.code === 'ECONNABORTED' && operation.retry(err)) return;
           if (err.code === 'ECONNREFUSED' && operation.retry(err)) return;
+          if (err.response && err.response.status === 408 && operation.retry(err)) return;
           if (err.response && /500/g.test(err.response.status) && operation.retry(err)) return;
           return reject(operation.mainError() || err);
         });

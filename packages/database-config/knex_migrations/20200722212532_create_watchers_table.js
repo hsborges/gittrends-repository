@@ -7,7 +7,6 @@ exports.up = (knex) =>
     table.string('user').notNullable();
 
     table.primary(['repository', 'user']);
-    table.index('repository');
   });
 
 exports.down = (knex) => knex.schema.dropTable('watchers');

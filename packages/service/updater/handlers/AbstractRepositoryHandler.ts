@@ -9,8 +9,8 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   readonly id: string;
   readonly meta: { id: string; resource: string };
 
-  defaultBatchSize: number;
   batchSize: number;
+  defaultBatchSize: number;
 
   protected constructor(id: string, alias = 'repository', resource: string) {
     super(new RepositoryComponent(id).setAlias(alias));

@@ -10,10 +10,10 @@ export default class UpdaterCache {
 
   add(object: TObject | TObject[]): void {
     if (Array.isArray(object)) object.map((o) => this.add(o));
-    else this.cache.set(MD5(object), new Date());
+    else this.cache.set(MD5(object.id || object), new Date());
   }
 
   has(object: TObject): boolean {
-    return this.cache.has(MD5(object));
+    return this.cache.has(MD5(object.id || object));
   }
 }

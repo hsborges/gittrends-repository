@@ -8,7 +8,6 @@ exports.up = (knex) =>
     table.timestamp('starred_at').notNullable();
 
     table.primary(['repository', 'user', 'starred_at']);
-    table.index('repository');
   });
 
 exports.down = (knex) => knex.schema.dropTable('stargazers');

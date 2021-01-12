@@ -3,7 +3,7 @@ declare global {
     interface ProcessEnv {
       NODE_ENV: 'development' | 'production';
       GITTRENDS_DATABASE_HOST?: string;
-      GITTRENDS_DATABASE_PORT?: number;
+      GITTRENDS_DATABASE_PORT?: string;
       GITTRENDS_DATABASE_DB?: string;
       GITTRENDS_DATABASE_USERNAME?: string;
       GITTRENDS_DATABASE_PASSWORD?: string;
@@ -21,6 +21,7 @@ declare global {
       GITTRENDS_QUEUE_ATTEMPS?: number;
       GITTRENDS_QUEUE_BOARD_PORT?: number;
       GITTRENDS_CACHE_SIZE?: number;
+      GITTRENDS_WRITE_BATCH_SIZE?: number;
       PORT?: number;
     }
   }

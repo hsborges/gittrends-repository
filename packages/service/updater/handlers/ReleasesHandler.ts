@@ -36,7 +36,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias as string];
 
-    const releases: TObject[] = get(data, 'releases.nodes', []).map((release: TObject) => ({
+    const releases = get(data, 'releases.nodes', []).map((release: TObject) => ({
       repository: this.id,
       ...release
     }));
@@ -45,7 +45,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     this.releases.hasNextPage = pageInfo.has_next_page ?? false;
     this.releases.endCursor = pageInfo.end_cursor ?? this.releases.endCursor;
 
-    if (releases.length > 0) {
+    if (releases.length) {
       await Promise.all([
         Release.insert(releases, trx),
         Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.releases.endCursor })

@@ -45,7 +45,7 @@ export class InternalError extends RetryableError {}
 export class MaxNodeLimitExceededError extends RetryableError {}
 export class NotFoundError extends RequestError {}
 export class NotModifiedError extends RequestError {}
-export class ServiceUnavailableError extends RequestError {}
+export class ServiceUnavailableError extends RetryableError {}
 export class TimedoutError extends RetryableError {}
 export class LoadingError extends RetryableError {}
 export class SomethingWentWrongError extends RetryableError {}

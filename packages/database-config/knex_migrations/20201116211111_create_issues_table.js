@@ -61,5 +61,4 @@ exports.up = async (knex) => {
   });
 };
 
-exports.down = (knex) =>
-  knex.schema.dropTable('issues').then(() => knex.schema.raw('DROP TYPE "issue_type"'));
+exports.down = (knex) => knex.schema.dropTable('issues');
