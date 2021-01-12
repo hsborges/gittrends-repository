@@ -6,7 +6,7 @@ import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 import { FastifyInstance } from 'fastify';
-import knex from '@gittrends/database-config';
+import knex, { IGithubToken } from '@gittrends/database-config';
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   const env = _.capitalize(process.env.NODE_ENV || 'development');
@@ -56,13 +56,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         })
       : null;
 
-    const insertPromise = knex('github_tokens').insert({
-      token,
-      type,
-      scope,
+    const data: IGithubToken = {
+      token: token as string,
+      type: type as string,
+      scope: scope as string,
       login: uInfo.login,
-      email: uInfo.email
-    });
+      email: uInfo.email,
+      created_at: new Date()
+    };
+
+    const insertPromise = knex('github_tokens').insert(data);
 
     await Promise.all([mailPromise, insertPromise]);
 

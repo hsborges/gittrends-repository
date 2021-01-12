@@ -3,7 +3,7 @@
  */
 import { chunk } from 'lodash';
 import { mapSeries } from 'bluebird';
-import { RetryableError } from '../helpers/errors';
+import { NotFoundError, RetryableError } from '../helpers/errors';
 import knex, { Actor, Metadata } from '@gittrends/database-config';
 
 import Updater from './Updater';
@@ -22,13 +22,12 @@ export default class ActorsUpdater implements Updater {
 
     await Query.create()
       .compose(...components)
-      .run()
-      .then((response) =>
-        knex.transaction((trx) =>
+      .then(async ({ actors }) => {
+        await knex.transaction((trx) =>
           Promise.all([
-            Actor.upsert(response.actors, trx),
+            Actor.upsert(actors, trx),
             Metadata.upsert(
-              response.actors.map((actor) => ({
+              actors.map((actor) => ({
                 id: actor.id,
                 resource: 'actor',
                 key: 'updatedAt',
@@ -37,10 +36,10 @@ export default class ActorsUpdater implements Updater {
               trx
             )
           ])
-        )
-      )
+        );
+      })
       .catch(async (err) => {
-        if (err instanceof RetryableError) {
+        if (err instanceof RetryableError || err instanceof NotFoundError) {
           if (ids.length > 1) {
             return mapSeries(chunk(ids, Math.ceil(ids.length / 2)), (_ids) => this.$update(_ids));
           }

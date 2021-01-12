@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { Actor, Metadata, Repository } from '@gittrends/database-config';
+import knex, { Actor, Metadata, Repository } from '@gittrends/database-config';
 import { IActor, IMetadata, IRepository } from '@gittrends/database-config';
 
 interface IParams {
@@ -10,7 +10,11 @@ interface IParams {
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: IParams }>('/:owner/:name', async function (request, reply) {
     const repo: IRepository = await Repository.query()
-      .where('name_with_owner', 'ilike', `${request.params.owner}/${request.params.name}`)
+      .where(
+        knex.raw('lower(name_with_owner)'),
+        'like',
+        `${request.params.owner}/${request.params.name}`
+      )
       .first('*');
 
     if (!repo) return reply.callNotFound();

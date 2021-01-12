@@ -30,7 +30,7 @@ export default interface IActor extends Record<string, unknown> {
   projects_count?: number;
   projects_url?: string;
   repositories_contributed_to_count?: number;
-  starred_repositories_count?: string;
+  starred_repositories_count?: number;
   status?: {
     created_at: Date;
     emoji?: string;

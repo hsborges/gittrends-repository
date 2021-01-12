@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { IRepository, Repository } from '@gittrends/database-config';
+import knex, { IRepository, Repository } from '@gittrends/database-config';
 
 const schema = {
   querystring: {
@@ -44,9 +44,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Querystring: IQuerystring }>('/repos', { schema }, async function (request, reply) {
     const repositories: Array<IRepository> = await Repository.query()
       .where((builder) => {
-        builder.where('name_with_owner', 'ilike', `%${request.query.query}%`);
+        builder.where(knex.raw('lower(name_with_owner)'), 'like', `%${request.query.query}%`);
         if (request.query.language)
-          builder.where('primary_language', 'ilike', request.query.language);
+          builder.where(knex.raw('lower(primary_language)'), 'like', request.query.language);
       })
       .orderByRaw(
         request.query.sortBy === 'random'
@@ -59,9 +59,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
     const [{ count }] = await Repository.query()
       .where((builder) => {
-        builder.where('name_with_owner', 'ilike', `%${request.query.query}%`);
+        builder.where(knex.raw('lower(name_with_owner)'), 'like', `%${request.query.query}%`);
         if (request.query.language)
-          builder.where('primary_language', 'ilike', request.query.language);
+          builder.where(knex.raw('lower(primary_language)'), 'like', request.query.language);
       })
       .count('id', { as: 'count' });
 
@@ -69,9 +69,9 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       .select('primary_language as language')
       .count('*', { as: 'count' })
       .where((builder) => {
-        builder.where('name_with_owner', 'ilike', `%${request.query.query}%`);
+        builder.where(knex.raw('lower(name_with_owner)'), 'like', `%${request.query.query}%`);
         if (request.query.language)
-          builder.where('primary_language', 'ilike', request.query.language);
+          builder.where(knex.raw('lower(primary_language)'), 'like', request.query.language);
       })
       .groupBy('primary_language')
       .orderBy('count', 'desc');

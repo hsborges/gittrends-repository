@@ -5,14 +5,13 @@ import { resolve } from 'path';
 import { Config } from 'knex';
 
 const options: Config = {
-  client: 'pg',
+  client: 'mysql2',
   connection: {
     host: process.env.GITTRENDS_DATABASE_HOST,
     port: parseInt(process.env.GITTRENDS_DATABASE_PORT ?? '5432', 10),
     database: process.env.GITTRENDS_DATABASE_DB,
     user: process.env.GITTRENDS_DATABASE_USERNAME,
     password: process.env.GITTRENDS_DATABASE_PASSWORD,
-    timezone: 'UTC',
     compress: true
   },
   pool: {
@@ -22,7 +21,7 @@ const options: Config = {
       conn: { query: (arg0: string, arg1: (err: Error) => unknown) => void },
       callback: (arg0: Error, arg1: unknown) => unknown
     ): void {
-      conn.query('SET timezone="UTC";', (err: Error) => callback(err, conn));
+      conn.query('SET time_zone = "+00:00";', (err: Error) => callback(err, conn));
     }
   },
   migrations: {

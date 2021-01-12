@@ -15,8 +15,8 @@ function preValidate(data: unknown): unknown {
 
 function postValidate(data: TObject): TRecord {
   return mapValues(data, (value) => {
-    if (typeof value === 'string') return value.replace(/\x00/g, '');
-    if (typeof value === 'object') return JSON.stringify(value).replace(/\x00/g, '');
+    if (typeof value === 'string' && !isNaN(Date.parse(value))) return new Date(value);
+    if (typeof value === 'object') return JSON.stringify(value);
     return value;
   }) as TRecord;
 }

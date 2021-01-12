@@ -1,7 +1,6 @@
 /*
  *  Author: Hudson S. Borges
  */
-import Debug from 'debug';
 import { each, map } from 'bluebird';
 import { Job } from 'bullmq';
 import knex, { Actor, Commit, Milestone } from '@gittrends/database-config';
@@ -19,6 +18,7 @@ import ReleasesHandler from './handlers/ReleasesHandler';
 import Component from '../github/Component';
 import DependenciesHander from './handlers/DependenciesHandler';
 import IssuesHander from './handlers/IssueHandler';
+import { ResourceUpdateError } from '../helpers/errors';
 
 export type THandler =
   | 'dependencies'
@@ -30,16 +30,15 @@ export type THandler =
   | 'tags'
   | 'watchers';
 
-type TJob = { id: string | string[]; resources: string[]; done: string[] };
+type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
 type TOptions = { job?: Job<TJob>; cache?: Cache };
-
-const debug = Debug('updater:repository-updater');
 
 export default class RepositoryUpdater implements Updater {
   readonly id: string;
   readonly job?: Job<TJob>;
   readonly cache?: Cache;
   readonly handlers: AbstractRepositoryHandler[] = [];
+  readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
 
   constructor(repositoryId: string, handlers: THandler[], opts?: TOptions) {
     this.id = repositoryId;
@@ -72,10 +71,6 @@ export default class RepositoryUpdater implements Updater {
         commits = commits.filter((commit) => !this.cache?.has(commit));
         milestones = milestones.filter((milestone) => !this.cache?.has(milestone));
 
-        debug(
-          `Updating db (actors=${actors.length}; commits=${commits.length}; milestones=${milestones.length}) and ${handlers.length} handlers ...`
-        );
-
         await knex.transaction((trx) =>
           Promise.all([
             Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
@@ -89,7 +84,7 @@ export default class RepositoryUpdater implements Updater {
           if (this.job && handler.isDone()) {
             this.job.update({
               ...this.job.data,
-              resources: this.job.data.resources.filter((r: string) => r !== handler.meta.resource),
+              resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
               done: [...(this.job.data.done || []), handler.meta.resource]
             });
             return true;
@@ -102,22 +97,41 @@ export default class RepositoryUpdater implements Updater {
         }
       })
       .catch(async (err) => {
-        debug(`Error: ${err.message}`);
         if (err instanceof ValidationError) throw err;
         if (handlers.length === 1) return handlers[0].error(err);
         return each(
           handlers.filter((handler) => handler.hasNextPage()),
           (handler) => this._update([handler])
         );
+      })
+      .catch(async (err) => {
+        if (handlers.length === 1) {
+          this.errors.push({ handler: handlers[0], error: err });
+          this.job?.update({
+            ...this.job.data,
+            resources: this.job.data.resources.filter((r) => r !== handlers[0].meta.resource),
+            errors: [...(this.job.data.errors || []), handlers[0].meta.resource]
+          });
+          return;
+        }
+        throw err;
       });
   }
 
   async update(): Promise<void> {
-    while (this.hasNextPage())
-      await this._update(this.handlers.filter((handler) => handler.hasNextPage()));
+    while (this.hasNextPage()) await this._update(this.pendingHandlers());
+
+    if (this.errors.length)
+      throw new ResourceUpdateError(this.errors.map((e) => e.error.message).join(', '));
+  }
+
+  pendingHandlers(): AbstractRepositoryHandler[] {
+    return this.handlers.filter(
+      (handler) => handler.hasNextPage() && this.errors.findIndex((e) => e.handler === handler) < 0
+    );
   }
 
   hasNextPage(): boolean {
-    return this.handlers.reduce((acc: boolean, handler) => acc || handler.hasNextPage(), false);
+    return this.pendingHandlers().length > 0;
   }
 }

@@ -1,39 +1,19 @@
 /*
  *  Author: Hudson S. Borges
  */
-import knex from '../knex';
-import Actor from './Actor';
-import Commit from './Commit';
-import Dependency from './Dependency';
-import GithubToken from './GithubToken';
-import Issue from './Issue';
-import Metadata from './Metadata';
-import Milestone from './Milestone';
-import PullRequest from './PullRequest';
-import Reaction from './Reaction';
-import Release from './Release';
-import Repository from './Repository';
-import Stargazer from './Stargazer';
-import Tag from './Tag';
-import TimelineEvent from './TimelineEvent';
-import Watcher from './Watcher';
-
-export default knex;
-
-export {
-  Actor,
-  Commit,
-  Dependency,
-  GithubToken,
-  Issue,
-  Metadata,
-  Milestone,
-  PullRequest,
-  Reaction,
-  Release,
-  Repository,
-  Stargazer,
-  Tag,
-  TimelineEvent,
-  Watcher
-};
+export { default } from '../knex';
+export { default as Actor } from './Actor';
+export { default as Commit } from './Commit';
+export { default as Dependency } from './Dependency';
+export { default as GithubToken } from './GithubToken';
+export { default as Issue } from './Issue';
+export { default as Metadata } from './Metadata';
+export { default as Milestone } from './Milestone';
+export { default as PullRequest } from './PullRequest';
+export { default as Reaction } from './Reaction';
+export { default as Release } from './Release';
+export { default as Repository } from './Repository';
+export { default as Stargazer } from './Stargazer';
+export { default as Tag } from './Tag';
+export { default as TimelineEvent } from './TimelineEvent';
+export { default as Watcher } from './Watcher';

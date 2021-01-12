@@ -1,11 +1,11 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { QueueScheduler, Worker, Job } from 'bullmq';
 import consola from 'consola';
 import program from 'commander';
 import retry from 'retry';
 import { bold } from 'chalk';
+import { QueueScheduler, Worker, Job } from 'bullmq';
 
 import { version } from './package.json';
 import { redisOptions } from './redis';
@@ -14,7 +14,7 @@ import Updater from './updater/Updater';
 import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
 
-type TJob = { id: string | string[]; resources: string[]; done: string[] };
+type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
 
 async function retriableWorker(job: Job<TJob>, type: string, cache?: Cache) {
   const options = { retries: 3, minTimeout: 1000, maxTimeout: 5000, randomize: true };
@@ -61,14 +61,13 @@ program
 
     const queue = new Worker(
       program.type,
-      async (job: Job) => {
-        return retriableWorker(job, program.type, cache)
+      (job: Job) =>
+        retriableWorker(job, program.type, cache)
           .catch((err) => {
             consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
             throw err;
           })
-          .finally(() => (global.gc ? global.gc() : null));
-      },
+          .finally(() => (global.gc ? global.gc() : null)),
       { connection: redisOptions, concurrency: program.workers }
     );
 
@@ -82,7 +81,7 @@ program
     process.on('SIGTERM', async () => {
       consola.warn('Signal received: closing queues');
       if (!timeout) {
-        await Promise.all([queue.close(), queueScheduler.close()]).then(() => process.exit(0));
+        Promise.all([queue.close(), queueScheduler.close()]).then(() => process.exit(0));
         timeout = setTimeout(() => process.exit(1), 10 * 1000);
       }
     });

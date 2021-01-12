@@ -97,7 +97,7 @@
           "type": "number"
         },
         "starred_repositories_count": {
-          "type": "string"
+          "type": "number"
         },
         "status": {
           "type": "object",

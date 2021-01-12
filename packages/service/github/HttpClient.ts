@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import retry from 'retry';
-import Debug from 'debug';
 import UserAgent from 'user-agents';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import compact from '../helpers/compact';
@@ -11,11 +10,9 @@ import * as Errors from '../helpers/errors';
 const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL || 'http';
 const HOST = process.env.GITTRENDS_PROXY_HOST || 'localhost';
 const PORT = process.env.GITTRENDS_PROXY_PORT || 8888;
-const TIMEOUT = process.env.GITTRENDS_PROXY_TIMEOUT || Number.MAX_SAFE_INTEGER;
+const TIMEOUT = process.env.GITTRENDS_PROXY_TIMEOUT || undefined;
 const RETRIES = process.env.GITTRENDS_PROXY_RETRIES || 5;
 const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT || new UserAgent().random().toString();
-
-const debug = Debug('github:http-client');
 
 const requestClient: AxiosInstance = axios.create({
   baseURL: `${PROTOCOL}://${HOST}:${PORT}/graphql`,
@@ -43,11 +40,10 @@ async function retriableRequest(data: IObject): Promise<AxiosResponse> {
       maxTimeout: 2000
     });
 
-    operation.attempt((currentAttempt) => {
+    operation.attempt(() => {
       requestClient({ method: 'post', data: data })
         .then(resolve)
         .catch((err) => {
-          debug(`Error (attempt ${currentAttempt}): ${err.message} - %o`, data);
           if (err.code === 'ECONNABORTED' && operation.retry(err)) return;
           if (err.code === 'ECONNREFUSED' && operation.retry(err)) return;
           if (err.response && err.response.status === 408 && operation.retry(err)) return;
@@ -62,17 +58,13 @@ async function retriableRequest(data: IObject): Promise<AxiosResponse> {
 export default async function (query: IObject): Promise<AxiosResponse> {
   return retriableRequest(query)
     .catch((err) => {
-      if (err.response && err.response.status === 502) {
+      if (err.response && err.response.status === 500)
+        throw new Errors.InternalServerError(err.message, err, err.response && err.response.data);
+      if (err.response && err.response.status === 502)
         throw new Errors.BadGatewayError(err.message, err, err.response && err.response.data);
-      }
-      if (
-        (err.response && err.response.status === 408) ||
-        err.code === 'ECONNABORTED' ||
-        err.code === 'ECONNRESET'
-      ) {
+      if (err.response && err.response.status === 408)
         throw new Errors.TimedoutError(err.message, err, err.response && err.response.data);
-      }
-      throw new Errors.RequestError(err.message, err, JSON.stringify(err.response.data), query);
+      throw new Errors.RequestError(err.message, err, JSON.stringify(err.response?.data), query);
     })
     .then((response) => {
       const { data } = response;

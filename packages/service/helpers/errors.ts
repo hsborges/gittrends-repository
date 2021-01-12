@@ -30,7 +30,7 @@ export class RequestError extends CustomError {
   readonly query?: TObject | string;
 
   constructor(message: string, err?: Error | null, response?: string, query?: TObject | string) {
-    super(`${message}\nQuery: ${JSON.stringify(query)}`, err || undefined);
+    super(`${message}\nQuery: ${JSON.stringify(query)}\nResponse: ${response}`, err || undefined);
     this.response = response;
     this.query = query;
   }
@@ -42,6 +42,7 @@ export class BadGatewayError extends RetryableError {}
 export class BlockedError extends RequestError {}
 export class ForbiddenError extends RequestError {}
 export class InternalError extends RetryableError {}
+export class InternalServerError extends RetryableError {}
 export class MaxNodeLimitExceededError extends RetryableError {}
 export class NotFoundError extends RequestError {}
 export class NotModifiedError extends RequestError {}

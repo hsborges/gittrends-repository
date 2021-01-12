@@ -29,17 +29,17 @@ Host mysql-tunnel # You can use any name
 ```
 version: '3'
 services:
-  postgres:
+  mysql:
     image: hsborges/docker-autossh-tunnel:0.0.2
     volumes:
       - $HOME/.ssh:/root/ssh:ro
     environment:
-      TUNNEL_HOST: postgres-tunnel
+      TUNNEL_HOST: mysql-tunnel
       REMOTE_HOST: tunneled-sql.corporate.internal.tld
-      LOCAL_PORT: 5432
-      REMOTE_PORT: 5432
+      LOCAL_PORT: 3306
+      REMOTE_PORT: 3306
 ```
 
 5. Run `docker-compose up -d`
 
-After you start up docker containers, any container in the same network will be able to access to tunneled postgres instance using `tcp://postgres:5432`. Of course you can also expose port 5432 to be able to access to tunneled resource from your host machine.
+After you start up docker containers, any container in the same network will be able to access to tunneled mysql instance using `tcp://mysql:3306`. Of course you can also expose port 3306 to be able to access to tunneled resource from your host machine.
