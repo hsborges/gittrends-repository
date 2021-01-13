@@ -1,7 +1,7 @@
 apps:
   - name: queue-board
     cwd: packages/service
-    script: util/queue-board.js
+    script: dist/extra/queue-board.js
 
   - name: proxy-server
     cwd: packages/service
@@ -13,7 +13,7 @@ apps:
   - name: scheduler
     cwd: packages/service
     interpreter_args: -r @gittrends/env-config
-    script: scheduler.js
+    script: dist/scheduler.js
     args: all
     instance_var: INSTANCE_ID
     cron_restart: '0 */4 * * *'
@@ -22,7 +22,7 @@ apps:
   - name: updater
     cwd: packages/service
     interpreter_args: -r @gittrends/env-config
-    script: updater.js
+    script: dist/updater.js
     args: --workers 1
     instances: 1
     instance_var: INSTANCE_ID

@@ -1,31 +1,17 @@
-FROM node:alpine AS env-config
-
-WORKDIR /app/env-config
-COPY /packages/env-config/package.json .
-RUN yarn install
-COPY /packages/env-config/. .
-
-FROM node:alpine AS database-config
-
-WORKDIR /app
-COPY --from=env-config /app/env-config env-config
-WORKDIR /app/database-config
-COPY /packages/database-config/package.json .
-RUN yarn install
-COPY /packages/database-config/. .
-
-
 FROM node:alpine
 
 WORKDIR /app
-COPY --from=env-config /app/env-config env-config
-COPY --from=database-config /app/database-config database-config
-
-WORKDIR /app/service
-COPY /packages/service/package.json .
+COPY . .
+RUN rm -rf packages/website packages/website-api packages/docker-autossh-tunnel
 RUN yarn install
-COPY /packages/service/. .
 
-VOLUME [ "/app/service/" ]
+WORKDIR /app/packages/env-config
+RUN yarn build
 
-CMD [ "node", "util/repos-stats.js" ]
+WORKDIR /app/packages/database-config
+RUN yarn build
+
+WORKDIR /app/packages/service
+RUN yarn install --force && yarn build
+
+CMD [ "yarn", "repos-stats" ]

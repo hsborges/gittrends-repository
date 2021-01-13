@@ -1,18 +1,18 @@
 version: '3.7'
 
 services:
-  postgres:
+  mysql:
     build:
       context: ./packages/docker-autossh-tunnel/
       dockerfile: ./Dockerfile
-    container_name: postgres
+    container_name: mysql
     restart: always
     volumes:
       - $HOME/.ssh:/root/ssh:ro
     ports:
-      - ${GITTRENDS_DATABASE_PORT}:5432
+      - ${GITTRENDS_DATABASE_PORT}:3306
     environment:
       TUNNEL_HOST: ${GITTRENDS_DATABASE_TUNEL_HOST}
       REMOTE_HOST: ${GITTRENDS_DATABASE_HOST}
-      LOCAL_PORT: 5432
-      REMOTE_PORT: 5432
+      LOCAL_PORT: 3306
+      REMOTE_PORT: 3306

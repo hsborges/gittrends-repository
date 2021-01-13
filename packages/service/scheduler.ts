@@ -58,7 +58,7 @@ const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
     .then((jobs) =>
       jobs
         .filter(({ id }) => /users@.+/i.test(id as string))
-        .reduce((acc, j) => acc.concat(j.data.ids), [])
+        .reduce((acc, j) => acc.concat(j.data.id || []), [])
     );
 
   // find and save jobs on queue
@@ -66,6 +66,7 @@ const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
   // get metadata
   const usersIds = (
     await Actor.query()
+      .select('actors.id')
       .leftJoin(
         Metadata.query()
           .where({ resource: 'actor', key: 'updatedAt' })

@@ -49,7 +49,7 @@ services:
       - ./data/nginx/development.conf:/app/data/nginx/default.conf:ro
     environment:
       GITTRENDS_DATABASE_HOST: mysql
-      GITTRENDS_DATABASE_PORT: 5432
+      GITTRENDS_DATABASE_PORT: 3306
     env_file:
       - .env
     depends_on:

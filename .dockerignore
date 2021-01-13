@@ -1,8 +1,8 @@
 /backups
 /docs
-/packages/service
 /packages/docker-autossh-tunnel
 **/node_modules
+**/dist
 npm-debug.log
 .env
 .env.example

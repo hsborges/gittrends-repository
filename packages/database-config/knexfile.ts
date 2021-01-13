@@ -8,7 +8,7 @@ const options: Config = {
   client: 'mysql2',
   connection: {
     host: process.env.GITTRENDS_DATABASE_HOST,
-    port: parseInt(process.env.GITTRENDS_DATABASE_PORT ?? '5432', 10),
+    port: parseInt(process.env.GITTRENDS_DATABASE_PORT ?? '3306', 10),
     database: process.env.GITTRENDS_DATABASE_DB,
     user: process.env.GITTRENDS_DATABASE_USERNAME,
     password: process.env.GITTRENDS_DATABASE_PASSWORD,
