@@ -61,5 +61,3 @@ volumes:
   db:
     external: true
     name: gittrends.app
-  pgadmin-db:
-    name: pgadmin.gittrends.app

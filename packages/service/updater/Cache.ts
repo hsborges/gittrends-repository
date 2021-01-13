@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import { newCache, Cache } from 'transitory';
 import { MD5 } from 'object-hash';
 

@@ -1,17 +1,14 @@
 apps:
   - name: queue-board
-    cwd: packages/service
     script: dist/extra/queue-board.js
 
   - name: proxy-server
-    cwd: packages/service
     script: node_modules/.bin/github-proxy-server
-    args: --request-interval 100 --tokens ../../data/tokens.txt
+    args: --request-interval 100 --tokens ../../data/tokens.txt --silent
     env:
-      PORT: 3000
+      PORT: '3000'
 
   - name: scheduler
-    cwd: packages/service
     interpreter_args: -r @gittrends/env-config
     script: dist/scheduler.js
     args: all
@@ -19,12 +16,20 @@ apps:
     cron_restart: '0 */4 * * *'
     autorestart: false
 
-  - name: updater
-    cwd: packages/service
+  - name: repositories-updater
     interpreter_args: -r @gittrends/env-config
     script: dist/updater.js
-    args: --workers 1
+    args: --type repositories --workers 1
     instances: 1
     instance_var: INSTANCE_ID
     env:
-      GITTRENDS_PROXY_PORT: 3000
+      GITTRENDS_PROXY_PORT: '3000'
+
+  - name: users-updater
+    interpreter_args: -r @gittrends/env-config
+    script: dist/updater.js
+    args: --type users --workers 1
+    instances: 1
+    instance_var: INSTANCE_ID
+    env:
+      GITTRENDS_PROXY_PORT: '3000'

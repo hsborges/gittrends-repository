@@ -50,7 +50,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       })
       .orderByRaw(
         request.query.sortBy === 'random'
-          ? 'random()'
+          ? 'rand()'
           : `${request.query.sortBy} ${request.query.order}`
       )
       // TODO - limit the fields returned with .select(...)
@@ -69,7 +69,8 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       .select('primary_language as language')
       .count('*', { as: 'count' })
       .where((builder) => {
-        builder.where(knex.raw('lower(name_with_owner)'), 'like', `%${request.query.query}%`);
+        if (request.query.query)
+          builder.where(knex.raw('lower(name_with_owner)'), 'like', `%${request.query.query}%`);
         if (request.query.language)
           builder.where(knex.raw('lower(primary_language)'), 'like', request.query.language);
       })

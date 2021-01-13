@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import dayjs from 'dayjs';
 import { isArray, isPlainObject, snakeCase, reduce, has, size } from 'lodash';
 

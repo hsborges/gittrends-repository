@@ -14,4 +14,7 @@ RUN yarn build
 WORKDIR /app/packages/service
 RUN yarn install --force && yarn build
 
-CMD [ "yarn", "repos-stats" ]
+EXPOSE 3000
+EXPOSE 8000-8010
+
+CMD [ "pm2-runtime", "pm2-ecosystem.yml" ]

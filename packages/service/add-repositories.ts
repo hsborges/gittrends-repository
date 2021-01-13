@@ -11,8 +11,6 @@ import knex, { Actor, Repository } from '@gittrends/database-config';
 import Query from './github/Query';
 import SearchComponent from './github/components/SearchComponent';
 
-type TObject = Record<string, unknown>;
-
 async function search(limit = 1000, language?: string, name?: string) {
   const repos: TObject[] = [];
   const actors: TObject[] = [];

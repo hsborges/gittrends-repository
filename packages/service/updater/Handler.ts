@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import Component from '../github/Component';
 import { Transaction } from 'knex';
 
