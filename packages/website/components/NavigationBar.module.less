@@ -1,0 +1,52 @@
+.navigation-bar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background-color: @primary-color;
+  box-shadow: 2px 0 2px 0 #888888;
+  position: sticky;
+  top: 0;
+
+  header {
+    padding: 2.5em 0;
+  }
+
+  section.menu {
+    flex-grow: 1;
+
+    .item:first-child {
+      border-top: 1px solid white;
+    }
+
+    .item {
+      display: block;
+      color: white;
+      font-size: 1.35em;
+      padding: 0.75em 0;
+      padding-left: 10px;
+      border-bottom: 1px solid white;
+      cursor: pointer;
+    }
+
+    .item.active {
+      background-color: white;
+      color: @primary-color;
+    }
+  }
+
+  footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    color: white;
+    font-weight: bolder;
+    font-size: 1.5em;
+    padding: 5px 0;
+
+    .icon {
+      padding: 0 15px;
+      color: white;
+    }
+  }
+}

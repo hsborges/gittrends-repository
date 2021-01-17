@@ -1,0 +1,110 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+
+  header {
+    width: 100%;
+    padding: 5vh 0 10vh 0;
+    text-align: center;
+    font-size: 3em;
+    color: @primary-color;
+  }
+
+  section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    font-size: 1.25em;
+    width: 100%;
+
+    & > span {
+      padding: 25px;
+    }
+
+    & > span:first-child {
+      padding: 0 0 25px 0;
+    }
+
+    .search-box {
+      width: 50%;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error .ant-result {
+      padding: 15px;
+    }
+
+    .project-samples {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      flex-wrap: wrap;
+      flex-grow: 1;
+      max-width: 80%;
+      margin-bottom: 5vh;
+
+      .card {
+        width: 200px;
+        height: 200px;
+        margin: 10px;
+        cursor: pointer;
+
+        .stats {
+          .ant-statistic-content {
+            font-size: 0.9em;
+            color: @text-color-secondary;
+            text-align: center;
+          }
+        }
+
+        .ant-card {
+          margin: 0px;
+        }
+
+        .views {
+          display: flex;
+          justify-content: center;
+          align-content: center;
+          padding-top: 15px;
+        }
+
+        .ant-card-meta-title {
+          color: @text-color;
+          font-weight: bolder;
+        }
+
+        .ant-card-body {
+          padding: 15px;
+        }
+
+        .ant-card-meta-title {
+          font-size: 0.85rem;
+          line-height: 1.5rem;
+          padding-bottom: 10px;
+        }
+
+        .ant-avatar {
+          width: 24px;
+          height: 24px;
+        }
+
+        .ant-divider {
+          margin: 5px 0;
+        }
+
+        .plot {
+          margin-left: -30px;
+        }
+
+        .languagesPlot {
+          margin-left: -30px;
+        }
+      }
+    }
+  }
+}
