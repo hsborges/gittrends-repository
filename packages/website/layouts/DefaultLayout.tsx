@@ -8,10 +8,10 @@ const { Sider, Content, Footer } = Layout;
 
 import './DefaultLayout.module.less';
 
-export default function DefaultLayout(props: { children: React.ReactNode }): JSX.Element {
+export default function DefaultLayout(props: { children?: React.ReactNode }): JSX.Element {
   return (
     <Layout className="defaultLayout">
-      <Sider>
+      <Sider width={225} theme="light">
         <NavigationBar />
       </Sider>
       <Layout>

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faThLarge, faHome, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
-import { faGithub, faTwitter } from '@fortawesome/free-brands-svg-icons';
+import { faGithub, faTwitter, faHubspot } from '@fortawesome/free-brands-svg-icons';
 
 import Logo from './Logo';
 import BetaBadge from '../components/BetaBadge';
@@ -19,6 +19,7 @@ export default function NavigationBar(): JSX.Element {
   const links: TMenu = [
     { title: 'Home', link: '/', icon: faHome },
     { title: 'Explorer', link: '/explorer', icon: faThLarge },
+    { title: 'Topic Graph', link: '/topics', icon: faHubspot },
     { title: 'About', link: '/about', icon: faQuestionCircle }
   ];
 
