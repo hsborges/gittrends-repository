@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-export { default } from '../knex';
+export { default } from './Model';
 export { default as Actor } from './Actor';
 export { default as Commit } from './Commit';
 export { default as Dependency } from './Dependency';

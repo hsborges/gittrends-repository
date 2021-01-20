@@ -19,6 +19,7 @@ import Component from '../github/Component';
 import DependenciesHander from './handlers/DependenciesHandler';
 import IssuesHander from './handlers/IssueHandler';
 import { ResourceUpdateError } from '../helpers/errors';
+import WriterQueue, { WriterQueueArguments } from './WriterQueue';
 
 export type THandler =
   | 'dependencies'
@@ -31,12 +32,13 @@ export type THandler =
   | 'watchers';
 
 type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
-type TOptions = { job?: Job<TJob>; cache?: Cache };
+type TOptions = { job?: Job<TJob>; cache?: Cache; writerQueue?: WriterQueue };
 
 export default class RepositoryUpdater implements Updater {
   readonly id: string;
   readonly job?: Job<TJob>;
   readonly cache?: Cache;
+  readonly writerQueue?: WriterQueue;
   readonly handlers: AbstractRepositoryHandler[] = [];
   readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
 
@@ -44,6 +46,7 @@ export default class RepositoryUpdater implements Updater {
     this.id = repositoryId;
     this.job = opts?.job;
     this.cache = opts?.cache;
+    this.writerQueue = opts?.writerQueue;
     if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHander(this.id));
     if (handlers.includes('issues'))
       this.handlers.push(new IssuesHander(this.id, undefined, 'issues'));
@@ -71,11 +74,17 @@ export default class RepositoryUpdater implements Updater {
         commits = commits.filter((commit) => !this.cache?.has(commit));
         milestones = milestones.filter((milestone) => !this.cache?.has(milestone));
 
+        const baseWriter = (opts: WriterQueueArguments) =>
+          (this.writerQueue
+            ? this.writerQueue.push(opts)
+            : opts.model[opts.operation ?? 'insert'](opts.data, opts.transaction)
+          ).then(() => this.cache?.add(opts.data));
+
         await knex.transaction((trx) =>
           Promise.all([
-            Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
-            Commit.insert(commits, trx).then(() => this.cache?.add(actors)),
-            Milestone.upsert(milestones, trx).then(() => this.cache?.add(milestones)),
+            baseWriter({ model: Actor, data: actors, transaction: trx }),
+            baseWriter({ model: Commit, data: commits, transaction: trx }),
+            baseWriter({ model: Milestone, data: milestones, transaction: trx }),
             map(handlers, (handler) => handler.update(data as TObject, trx))
           ])
         );

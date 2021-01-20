@@ -9,11 +9,11 @@ import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default class ReleasesHandler extends AbstractRepositoryHandler {
-  releases: { hasNextPage: boolean; endCursor?: string };
+  releases: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
     super(id, alias, 'releases');
-    this.releases = { hasNextPage: true };
+    this.releases = { items: [], hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent> {
@@ -36,20 +36,23 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias as string];
 
-    const releases = get(data, 'releases.nodes', []).map((release: TObject) => ({
-      repository: this.id,
-      ...release
-    }));
+    this.releases.items.push(
+      ...get(data, 'releases.nodes', []).map((release: TObject) => ({
+        repository: this.id,
+        ...release
+      }))
+    );
 
     const pageInfo = get(data, 'releases.page_info', {});
     this.releases.hasNextPage = pageInfo.has_next_page ?? false;
     this.releases.endCursor = pageInfo.end_cursor ?? this.releases.endCursor;
 
-    if (releases.length) {
+    if (this.releases.items.length >= this.writeBatchSize || this.isDone()) {
       await Promise.all([
-        Release.insert(releases, trx),
-        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.releases.endCursor })
+        Release.insert(this.releases.items, trx),
+        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.releases.endCursor }, trx)
       ]);
+      this.releases.items = [];
     }
 
     if (this.isDone()) {

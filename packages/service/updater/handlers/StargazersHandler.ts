@@ -10,11 +10,11 @@ import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import { InternalError, RetryableError } from '../../helpers/errors';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
-  stargazers: { hasNextPage: boolean; endCursor?: string };
+  stargazers: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
     super(id, alias, 'stargazers');
-    this.stargazers = { hasNextPage: true };
+    this.stargazers = { items: [], hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent> {
@@ -37,22 +37,23 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias as string];
 
-    const stargazers = get(data, 'stargazers.edges', []).map(
-      (stargazer: { user: string; starred_at: Date }) => ({
+    this.stargazers.items.push(
+      ...get(data, 'stargazers.edges', []).map((stargazer: { user: string; starred_at: Date }) => ({
         repository: this.id,
         ...stargazer
-      })
+      }))
     );
 
     const pageInfo = get(data, 'stargazers.page_info', {});
     this.stargazers.hasNextPage = pageInfo.has_next_page ?? false;
     this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
-    if (stargazers.length) {
+    if (this.stargazers.items.length >= this.writeBatchSize || this.isDone()) {
       await Promise.all([
-        Stargazer.insert(stargazers, trx),
-        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.stargazers.endCursor })
+        Stargazer.insert(this.stargazers.items, trx),
+        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.stargazers.endCursor }, trx)
       ]);
+      this.stargazers.items = [];
     }
 
     if (this.isDone()) {

@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@gittrends/database-config": "file:../database-config",
+    "async": "^3.2.0",
     "axios": "^0.21.1",
     "bluebird": "^3.7.2",
     "bull-board": "^1.2.0",
@@ -43,6 +44,7 @@
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
     "@hsborges/github-proxy-server": "^3.2.0",
+    "@types/async": "^3.2.5",
     "@types/bluebird": "^3.5.33",
     "@types/debug": "^4.1.5",
     "@types/express": "^4.17.11",

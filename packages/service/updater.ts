@@ -13,10 +13,16 @@ import ActorsUpdater from './updater/ActorUpdater';
 import Updater from './updater/Updater';
 import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
+import WriterQueue from './updater/WriterQueue';
 
 type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
 
-async function retriableWorker(job: Job<TJob>, type: string, cache?: Cache) {
+async function retriableWorker(
+  job: Job<TJob>,
+  type: string,
+  cache?: Cache,
+  writerQueue?: WriterQueue
+) {
   const options = { retries: 3, minTimeout: 1000, maxTimeout: 5000, randomize: true };
   const operation = retry.operation(options);
 
@@ -28,7 +34,7 @@ async function retriableWorker(job: Job<TJob>, type: string, cache?: Cache) {
     } else if (type === 'repositories') {
       const id = job.data.id as string;
       const resources = job.data.resources as THandler[];
-      updater = new RepositoryUpdater(id, resources, { job, cache });
+      updater = new RepositoryUpdater(id, resources, { job, cache, writerQueue });
     }
 
     operation.attempt(() =>
@@ -54,6 +60,7 @@ program
     consola.info(`Updating ${program.type} using ${program.workers} workers`);
 
     const cache = new Cache(process.env.GITTRENDS_CACHE_SIZE ?? 25000);
+    const writerQueue = new WriterQueue();
     const queueScheduler = new QueueScheduler(program.type, {
       connection: redisOptions,
       maxStalledCount: Number.MAX_SAFE_INTEGER
@@ -62,7 +69,7 @@ program
     const queue = new Worker(
       program.type,
       (job: Job) =>
-        retriableWorker(job, program.type, cache)
+        retriableWorker(job, program.type, cache, writerQueue)
           .catch((err) => {
             consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
             throw err;

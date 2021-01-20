@@ -9,11 +9,11 @@ import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default class WatchersHandler extends AbstractRepositoryHandler {
-  watchers: { hasNextPage: boolean; endCursor?: string };
+  watchers: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
     super(id, alias, 'watchers');
-    this.watchers = { hasNextPage: true };
+    this.watchers = { items: [], hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent> {
@@ -36,20 +36,23 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias as string];
 
-    const watchers = get(data, 'watchers.nodes', []).map((watcher: string) => ({
-      repository: this.id,
-      user: watcher
-    }));
+    this.watchers.items.push(
+      ...get(data, 'watchers.nodes', []).map((watcher: string) => ({
+        repository: this.id,
+        user: watcher
+      }))
+    );
 
     const pageInfo = get(data, 'watchers.page_info', {});
     this.watchers.hasNextPage = pageInfo.has_next_page ?? false;
     this.watchers.endCursor = pageInfo.end_cursor ?? this.watchers.endCursor;
 
-    if (watchers.length) {
+    if (this.watchers.items.length >= this.writeBatchSize || this.isDone()) {
       await Promise.all([
-        Watcher.insert(watchers, trx),
-        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.watchers.endCursor })
+        Watcher.insert(this.watchers.items, trx),
+        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.watchers.endCursor }, trx)
       ]);
+      this.watchers.items = [];
     }
 
     if (this.isDone()) {

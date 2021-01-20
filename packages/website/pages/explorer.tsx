@@ -4,12 +4,13 @@ import pickBy from 'lodash/pickBy';
 import uniqBy from 'lodash/uniqBy';
 import isEqual from 'lodash/isEqual';
 import DefaultLayout from '../layouts/DefaultLayout';
+import ServerError from '../components/ServerError';
 import Search from '../components/Search';
 import Card from '../components/RepositoryCard';
 import fetchProjects, { ISearch } from '../hooks/useSearch';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSync } from '@fortawesome/free-solid-svg-icons';
-import { Affix, Button, Layout, Select, Statistic, Empty } from 'antd';
+import { Affix, Button, Layout, Select, Statistic, Empty, Skeleton } from 'antd';
 const { Header, Content } = Layout;
 
 import './explorer.module.less';
@@ -20,7 +21,7 @@ function Explorer(props: ISearch): JSX.Element {
   const [repos, setRepos] = useState<any[]>([]);
   const [meta, setMeta] = useState<{ languages_count?: number; repositories_count?: number }>({});
 
-  const { data, isLoading } = fetchProjects(query);
+  const { data, isLoading, isError } = fetchProjects(query);
 
   useEffect(() => {
     setRepos(uniqBy([...repos, ...(data?.repositories ?? [])], 'id'));
@@ -58,7 +59,14 @@ function Explorer(props: ISearch): JSX.Element {
                 >{`${entry[0]} (${entry[1]})`}</Select.Option>
               ))}
             </Select>
-            <Statistic title="Total Repositories" value={meta?.repositories_count} />
+            <Skeleton
+              loading={isLoading}
+              title={false}
+              paragraph={{ rows: 1 }}
+              className="statistic"
+            >
+              <Statistic title="Total Repositories" value={meta?.repositories_count} />
+            </Skeleton>
             <Search
               className="search"
               defaultValue={query.query}
@@ -66,12 +74,19 @@ function Explorer(props: ISearch): JSX.Element {
             />
           </Header>
         </Affix>
-        <Content className="content">
-          {meta?.repositories_count > 0 ? (
-            repos.map((repo) => <Card key={repo.id} repository={repo} />)
-          ) : (
-            <Empty style={{ fontSize: '1.5em' }} />
-          )}
+        <Content
+          className="content"
+          hidden={meta?.repositories_count === 0 || isLoading || isError}
+        >
+          {repos.map((repo) => (
+            <Card key={repo.id} repository={repo} />
+          ))}
+        </Content>
+        <Content className="content" hidden={meta?.repositories_count > 0 || isLoading || isError}>
+          <Empty style={{ fontSize: '1.5em' }} />
+        </Content>
+        <Content className="content" hidden={!isError}>
+          <ServerError style={{ fontSize: '1.5em' }} />
         </Content>
         <Footer className="footer">
           <Button
@@ -80,7 +95,7 @@ function Explorer(props: ISearch): JSX.Element {
             icon={<FontAwesomeIcon icon={faSync} className="icon" />}
             loading={isLoading}
             onClick={() => updateQuery({ offset: (query?.offset ?? 0) + 24 }, true)}
-            hidden={repos.length === meta?.repositories_count}
+            hidden={repos.length === meta?.repositories_count || isError}
           >
             Load more
           </Button>

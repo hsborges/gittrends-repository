@@ -1,6 +1,6 @@
 import React from 'react';
 import Router from 'next/router';
-import { Result } from 'antd';
+import ServerError from '../components/ServerError';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
@@ -31,16 +31,14 @@ export default function Home(): JSX.Element {
             />
           </div>
           <span>or explore the popular ones</span>
-          <div className="project-samples">
+          <div className="project-samples" hidden={isError}>
             <FontAwesomeIcon icon={faSpinner} spin className={isLoading ? '' : 'hidden'} />
-            <Result
-              status="error"
-              subTitle="Sorry, something went wrong when retrieving samples from server."
-              className={isError ? 'error' : 'hidden'}
-            />
             {data?.repositories.map((sample) => (
               <ProjectCard key={sample.id} repository={sample} />
             ))}
+          </div>
+          <div hidden={!isError}>
+            <ServerError />
           </div>
         </section>
       </section>

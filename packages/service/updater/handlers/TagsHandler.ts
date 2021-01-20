@@ -9,11 +9,11 @@ import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default class TagsHandler extends AbstractRepositoryHandler {
-  tags: { hasNextPage: boolean; endCursor?: string };
+  tags: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
     super(id, alias, 'tags');
-    this.tags = { hasNextPage: true };
+    this.tags = { items: [], hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent> {
@@ -36,20 +36,23 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
     const data = response[this.alias as string];
 
-    const tags = get(data, 'tags.nodes', []).map((tag: TObject) => ({
-      repository: this.id,
-      ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as TObject)
-    }));
+    this.tags.items.push(
+      ...get(data, 'tags.nodes', []).map((tag: TObject) => ({
+        repository: this.id,
+        ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as TObject)
+      }))
+    );
 
     const pageInfo = get(data, 'tags.page_info', {});
     this.tags.hasNextPage = pageInfo.has_next_page ?? false;
     this.tags.endCursor = pageInfo.end_cursor ?? this.tags.endCursor;
 
-    if (tags.length) {
+    if (this.tags.items.length >= this.writeBatchSize || this.isDone()) {
       await Promise.all([
-        Tag.insert(tags, trx),
-        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.tags.endCursor })
+        Tag.insert(this.tags.items, trx),
+        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.tags.endCursor }, trx)
       ]);
+      this.tags.items = [];
     }
 
     if (this.isDone()) {
