@@ -1,0 +1,30 @@
+.gittrends-repository-popularity-section {
+  .plot-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .controls {
+      display: block;
+      padding: 10px 0;
+
+      .control {
+        display: inline;
+
+        span.label {
+          color: @primary-color;
+          font-weight: bolder;
+          padding-right: 5px;
+        }
+
+        .select {
+          width: 125px;
+        }
+      }
+
+      .control:not(last-child) {
+        padding-right: 10px;
+      }
+    }
+  }
+}

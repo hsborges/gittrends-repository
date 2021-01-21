@@ -34,7 +34,7 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
   });
 
   return (
-    <Card {...props} className={`gittrends-repository-card ${props.className}`}>
+    <Card {...props} className={`gittrends-repository-card ${props.className ?? ''}`}>
       <Link href={`/explorer/${props.repository.name_with_owner}`} passHref>
         <a>
           <Card.Meta

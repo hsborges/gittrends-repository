@@ -8,7 +8,7 @@ interface UnderConstructionAttributes extends React.HTMLAttributes<HTMLElement> 
 
 export default function Topics(props: UnderConstructionAttributes): JSX.Element {
   return (
-    <section className="gittrends-under-construction">
+    <section className={`gittrends-under-construction ${props.className ?? ''}`}>
       <Result
         icon={
           <Progress

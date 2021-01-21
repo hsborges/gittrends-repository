@@ -32,7 +32,7 @@ export default function NavigationBar(props: React.HTMLAttributes<HTMLElement>):
   }
 
   return (
-    <section {...props} className={`gittrends-navigation-bar ${props.className}`}>
+    <section {...props} className={`gittrends-navigation-bar ${props.className ?? ''}`}>
       <BetaBadge />
       <header>
         <Logo />

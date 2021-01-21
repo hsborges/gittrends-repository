@@ -1,11 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { Avatar } from 'antd';
-import Layout from '../../layouts/DefaultLayout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons';
 
-import './index.module.less';
+import Layout from '../../layouts/DefaultLayout';
+import MadeWithLove from '../../components/MadeWithLove';
 
 const references: Record<string, string>[] = [
   {
@@ -39,7 +39,7 @@ const references: Record<string, string>[] = [
 export default function Info(): JSX.Element {
   return (
     <Layout>
-      <section className="about">
+      <section className="gittrends-about-page">
         <article>
           <h1>What is GitTrends.app?</h1>
           <p>
@@ -114,6 +114,7 @@ export default function Info(): JSX.Element {
           </dl>
         </article>
       </section>
+      <MadeWithLove />
     </Layout>
   );
 }

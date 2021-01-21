@@ -1,44 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import Router from 'next/router';
 import pickBy from 'lodash/pickBy';
-import uniqBy from 'lodash/uniqBy';
 import isEqual from 'lodash/isEqual';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import ServerError from '../../components/ServerError';
 import Search from '../../components/Search';
 import Card from '../../components/RepositoryCard';
+import MadeWithLove from '../../components/MadeWithLove';
 import fetchProjects, { ISearch } from '../../hooks/useSearch';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSync } from '@fortawesome/free-solid-svg-icons';
-import { Button, Select, Statistic, Empty, Skeleton } from 'antd';
-
-import './index.module.less';
+import { Select, Statistic, Empty, Skeleton, Pagination } from 'antd';
 
 function Explorer(props: ISearch): JSX.Element {
-  const [query, setQuery] = useState<ISearch>({ limit: 24, ...props });
-  const [repos, setRepos] = useState<any[]>([]);
-  const [meta, setMeta] = useState<{ languages_count?: number; repositories_count?: number }>({});
+  const container = React.createRef<HTMLElement>();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(24);
+  const [query, setQuery] = useState<ISearch>({ limit: pageSize, ...props });
 
   const { data, isLoading, isError } = fetchProjects(query);
 
   useEffect(() => {
-    setRepos(uniqBy([...repos, ...(data?.repositories ?? [])], 'id'));
-    setMeta(data?.meta);
+    setQuery({ ...query, offset: (page - 1) * pageSize, limit: pageSize });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [page, pageSize]);
 
   useEffect(() => {
-    Router.push({ query: pickBy(query, (v, k) => ['query', 'language'].indexOf(k) >= 0 && v) });
+    Router.push({
+      query: pickBy(query, (v) => v)
+    });
   }, [query]);
 
   const updateQuery = (data, concat = false) => {
     if (isEqual({ ...query, ...data }, query)) return;
-    if (!concat) setRepos([]);
     setQuery({ ...query, offset: concat ? query.offset : 0, ...data });
   };
 
   return (
-    <DefaultLayout className="explorer">
+    <DefaultLayout className="gittrends-explorer-page">
       <header className="header">
         <Select
           className="select"
@@ -48,7 +45,7 @@ function Explorer(props: ISearch): JSX.Element {
           onSelect={(value) => updateQuery({ language: value })}
           onClear={() => updateQuery({ language: undefined })}
         >
-          {Object.entries(meta?.languages_count ?? {}).map((entry) => (
+          {Object.entries(data?.meta.languages_count ?? {}).map((entry) => (
             <Select.Option
               key={entry[0]}
               value={entry[0]}
@@ -56,7 +53,7 @@ function Explorer(props: ISearch): JSX.Element {
           ))}
         </Select>
         <Skeleton loading={isLoading} title={false} paragraph={{ rows: 1 }} className="statistic">
-          <Statistic title="Total Repositories" value={meta?.repositories_count} />
+          <Statistic title="Total Repositories" value={data?.meta.repositories_count} />
         </Skeleton>
         <Search
           className="search"
@@ -64,28 +61,42 @@ function Explorer(props: ISearch): JSX.Element {
           onSearch={(value: string) => updateQuery({ query: value })}
         />
       </header>
-      <section className="content" hidden={meta?.repositories_count === 0 || isLoading || isError}>
-        {repos.map((repo) => (
+      <section
+        className="content"
+        hidden={data?.meta.repositories_count === 0 || isLoading || isError}
+        ref={container}
+      >
+        {data?.repositories.map((repo) => (
           <Card key={repo.id} repository={repo} className="card" />
         ))}
       </section>
-      <section className="content" hidden={meta?.repositories_count > 0 || isLoading || isError}>
+      <section
+        className="content"
+        hidden={data?.meta.repositories_count > 0 || isLoading || isError}
+      >
         <Empty style={{ fontSize: '1.5em' }} />
       </section>
       <section className="content" hidden={!isError}>
         <ServerError style={{ fontSize: '1.5em' }} />
       </section>
       <footer className="footer">
-        <Button
-          type="primary"
-          size="large"
-          icon={<FontAwesomeIcon icon={faSync} className="icon" />}
-          loading={isLoading}
-          onClick={() => updateQuery({ offset: (query?.offset ?? 0) + 24 }, true)}
-          hidden={repos.length === meta?.repositories_count || isError}
-        >
-          Load more
-        </Button>
+        <Pagination
+          current={page}
+          pageSize={pageSize ?? 24}
+          hideOnSinglePage
+          pageSizeOptions={['24', '48', '96']}
+          responsive
+          showLessItems
+          total={data?.meta.repositories_count || 0}
+          onChange={(page, pageSize) => {
+            setPage(page);
+            setPageSize(pageSize);
+            container.current.scrollTo(0, 0);
+          }}
+        />
+      </footer>
+      <footer>
+        <MadeWithLove />
       </footer>
     </DefaultLayout>
   );

@@ -17,7 +17,7 @@ export default function DonateAlert(props: HTMLAttributes<HTMLElement>): JSX.Ele
   }, [hidden, cookie]);
 
   return (
-    <div {...props} className={`gittrends-donate ${props.className}`} hidden={hidden}>
+    <div {...props} className={`gittrends-donate ${props.className ?? ''}`} hidden={hidden}>
       <FontAwesomeIcon icon={faBullhorn} className="icon" />
       <span>
         Hey, we need your support to expand our database. Click here to donate a GitHub access token

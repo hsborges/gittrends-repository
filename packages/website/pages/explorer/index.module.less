@@ -1,12 +1,12 @@
 @import '../../styles/less/antd-custom.less';
 
-.explorer {
-  min-height: 100%;
+.gittrends-explorer-page {
+  display: flex;
+  flex-direction: column;
 
   .header {
     min-height: 65px;
     max-height: 65px;
-    margin-right: 1em;
     padding: 0 25px;
     display: flex;
     flex-direction: row;
@@ -18,7 +18,8 @@
     z-index: 1;
     background-color: white;
 
-    .select {
+    .select,
+    .search {
       width: 300px;
     }
 
@@ -37,16 +38,13 @@
       text-align: center;
       font-weight: bolder;
     }
-
-    .search {
-      width: 300px;
-    }
   }
 
   .content {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    flex-grow: 1;
     justify-content: center;
     margin: 5vw 5vw 0 5vw;
 
@@ -68,5 +66,9 @@
         margin-right: 10px;
       }
     }
+  }
+
+  footer {
+    margin-top: 25px;
   }
 }

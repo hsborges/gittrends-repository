@@ -10,12 +10,6 @@ class MyApp extends App {
     const { Component, pageProps } = this.props;
     return <Component {...pageProps} />;
   }
-
-  componentDidMount() {
-    const element = document.getElementById('__next');
-    element.style.height = '100vh';
-    element.style.width = '100vw';
-  }
 }
 
 export default MyApp;

@@ -1,15 +1,13 @@
 section.default-layout {
   display: flex;
   flex-direction: row;
-  width: 100%;
-  min-height: 100%;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 
   & > .navigation-bar {
-    min-width: 225px;
     max-width: 225px;
-    width: 225px;
-    position: absolute;
-    top: 0;
+    min-width: 225px;
     z-index: 999;
   }
 
@@ -17,10 +15,7 @@ section.default-layout {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    margin-left: 225px;
-
-    & > .main-container-content {
-      flex-grow: 1;
-    }
+    overflow-y: auto;
+    scroll-behavior: smooth;
   }
 }
