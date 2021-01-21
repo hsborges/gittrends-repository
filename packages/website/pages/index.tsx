@@ -34,7 +34,7 @@ export default function Home(): JSX.Element {
           <div className="project-samples" hidden={isError}>
             <FontAwesomeIcon icon={faSpinner} spin className={isLoading ? '' : 'hidden'} />
             {data?.repositories.map((sample) => (
-              <ProjectCard key={sample.id} repository={sample} />
+              <ProjectCard key={sample.id} repository={sample} className="card" />
             ))}
           </div>
           <div hidden={!isError}>

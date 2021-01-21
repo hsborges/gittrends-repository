@@ -1,20 +1,13 @@
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/no-var-requires */
-const withCSS = require('@zeit/next-css');
-const withLess = require('@zeit/next-less');
+/* eslint-disable */
 const withSass = require('@zeit/next-sass');
-const lessToJS = require('less-vars-to-js');
-const fs = require('fs');
-const path = require('path');
+const withLess = require('@zeit/next-less');
+const withCSS = require('@zeit/next-css');
 
-// Where your antd-custom.less file lives
-const themeVariables = lessToJS(
-  fs.readFileSync(path.resolve(__dirname, './styles/antd-custom.less'), 'utf8')
-);
+const isProd = process.env.NODE_ENV === 'production';
 
 // fix: prevents error when .less files are required by node
 if (typeof require !== 'undefined') {
-  require.extensions['.less'] = () => {};
+  require.extensions['.less'] = (file) => {};
 }
 
 module.exports = withCSS({
@@ -26,9 +19,7 @@ module.exports = withCSS({
   ...withLess(
     withSass({
       lessLoaderOptions: {
-        javascriptEnabled: true,
-        modifyVars: themeVariables,
-        importLoaders: 0
+        javascriptEnabled: true
       }
     })
   )

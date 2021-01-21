@@ -10,17 +10,28 @@ export type WriterQueueArguments = {
 };
 
 export default class WriterQueue {
-  readonly queue: QueueObject<WriterQueueArguments>;
+  readonly queue: Record<string, QueueObject<WriterQueueArguments>>;
+  readonly concurrency: number;
 
   constructor(concurrency = 1) {
-    this.queue = queue(({ model, data, operation = 'insert', transaction }, callback) => {
-      model[operation](data, transaction)
-        .then(() => callback())
-        .catch(callback);
-    }, concurrency);
+    this.concurrency = concurrency;
+    this.queue = {};
   }
 
   push(opts: WriterQueueArguments): Promise<void> {
-    return this.queue.pushAsync(opts);
+    const queueName = opts.model.constructor.name;
+
+    if (!this.queue[queueName]) {
+      this.queue[queueName] = queue(
+        ({ model, data, operation = 'insert', transaction }, callback) => {
+          model[operation](data, transaction)
+            .then(() => callback())
+            .catch(callback);
+        },
+        this.concurrency
+      );
+    }
+
+    return this.queue[queueName].pushAsync(opts);
   }
 }

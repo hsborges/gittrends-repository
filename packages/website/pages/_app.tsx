@@ -3,8 +3,7 @@ import React from 'react';
 import App from 'next/app';
 
 import '../styles/globals.css';
-import '../styles/antd.less';
-import '../styles/react-vis.less';
+import '../styles/less/index.less';
 
 class MyApp extends App {
   render() {

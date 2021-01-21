@@ -1,25 +1,18 @@
 import React from 'react';
-import { Layout } from 'antd';
 
 import NavigationBar from '../components/NavigationBar';
 import MadeWithLove from '../components/MadeWithLove';
 
-const { Sider, Content, Footer } = Layout;
-
-import './DefaultLayout.module.less';
-
-export default function DefaultLayout(props: { children?: React.ReactNode }): JSX.Element {
+export default function DefaultLayout(props: React.HTMLProps<HTMLElement>): JSX.Element {
   return (
-    <Layout className="defaultLayout">
-      <Sider width={225} theme="light">
-        <NavigationBar />
-      </Sider>
-      <Layout>
-        <Content>{props.children}</Content>
-        <Footer>
-          <MadeWithLove />
-        </Footer>
-      </Layout>
-    </Layout>
+    <section className="default-layout">
+      <NavigationBar className="navigation-bar" />
+      <section className="main-container">
+        <section {...props} className={`main-container-content ${props.className}`}>
+          {props.children}
+        </section>
+        <MadeWithLove className="main-container-footer" />
+      </section>
+    </section>
   );
 }

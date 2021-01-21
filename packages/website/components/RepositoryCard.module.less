@@ -1,4 +1,4 @@
-.card {
+.gittrends-repository-card {
   width: 225px;
   height: 225px;
   cursor: pointer;
@@ -55,23 +55,32 @@
       width: 0px;
       opacity: 0;
 
-      .plot {
-        margin-left: -35px;
+      .not-available {
+        font-size: 0.9em;
+        .ant-empty-image {
+          height: 75px;
+        }
       }
+    }
+
+    .plot {
+      margin-left: -35px;
     }
   }
 
-  &:hover {
-    .description {
-      height: 0px;
-      width: 0px;
-      opacity: 0;
-    }
-    .extra {
-      height: 100%;
-      width: 100%;
-      opacity: 1;
-      transition: none;
+  .views.has-extra {
+    &:hover {
+      .description {
+        height: 0px;
+        width: 0px;
+        opacity: 0;
+      }
+      .extra {
+        height: 100%;
+        width: 100%;
+        opacity: 1;
+        transition: none;
+      }
     }
   }
 

@@ -6,14 +6,12 @@ import { faEnvelope, faThLarge, faHome, faQuestionCircle } from '@fortawesome/fr
 import { faGithub, faTwitter, faHubspot } from '@fortawesome/free-brands-svg-icons';
 
 import Logo from './Logo';
-import BetaBadge from '../components/BetaBadge';
-
-import './NavigationBar.module.less';
+import BetaBadge from './BetaBadge';
 
 type TMenuItem = { title: string; link: string; icon: any };
 type TMenu = Array<TMenuItem>;
 
-export default function NavigationBar(): JSX.Element {
+export default function NavigationBar(props: React.HTMLAttributes<HTMLElement>): JSX.Element {
   const router = useRouter();
 
   const links: TMenu = [
@@ -34,7 +32,7 @@ export default function NavigationBar(): JSX.Element {
   }
 
   return (
-    <section className="navigation-bar">
+    <section {...props} className={`gittrends-navigation-bar ${props.className}`}>
       <BetaBadge />
       <header>
         <Logo />

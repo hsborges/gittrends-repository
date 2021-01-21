@@ -1,12 +1,20 @@
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import utc from 'dayjs/plugin/utc';
 
 import { FastifyInstance } from 'fastify';
-import knex, { Repository, IRepository, Stargazer, IStargazer } from '@gittrends/database-config';
+import knex, {
+  Repository,
+  IRepository,
+  Stargazer,
+  IStargazer,
+  Metadata
+} from '@gittrends/database-config';
 
-dayjs.extend(utc);
+dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
+dayjs.extend(utc);
 
 interface IParams {
   owner: string;
@@ -14,15 +22,6 @@ interface IParams {
 }
 
 type TimeSeries = Array<{ week: number; year: number; stargazers_count: number }>;
-
-function getDateOfWeek(w: number, y: number): Date {
-  const simple = new Date(y, 0, 1 + (w - 1) * 7);
-  const dow = simple.getDay();
-  const ISOweekStart = simple;
-  if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-  else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-  return ISOweekStart;
-}
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: IParams }>('/:owner/:name/stargazers', async function (request, reply) {
@@ -36,18 +35,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
     if (!repo) return reply.callNotFound();
 
-    const timeseries: TimeSeries = await Stargazer.query()
+    const updated = await Metadata.query()
+      .where({ id: repo.id, resource: 'stargazers', key: 'updatedAt' })
+      .count({ count: 'id' })
+      .first();
+
+    if (!updated || !updated.count) return reply.callNotFound();
+
+    const timeseries = await Stargazer.query()
       .select(
-        knex.raw('weekofyear(starred_at) as week'),
-        knex.raw('year(starred_at) as year'),
+        knex.raw('yearweek(starred_at) as yearweek'),
         knex.raw('count(*) as stargazers_count')
       )
       .where({ repository: repo.id })
-      .groupBy('year', 'week')
-      .orderBy('year', 'asc')
-      .orderBy('week', 'asc');
+      .groupBy('yearweek')
+      .orderBy('yearweek', 'asc');
 
-    if (timeseries.length === 0) reply.send({ timeseries });
+    if (timeseries.length === 0) reply.send({ timeseries, first: null, last: null });
 
     const [first, last]: [IStargazer, IStargazer] = await Promise.all([
       Stargazer.query()
@@ -65,10 +69,14 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
     return reply.send({
       timeseries: timeseries.reduce(
-        (timeseries, record) => ({
+        (timeseries: TimeSeries, record: { yearweek: string; stargazers_count: number }) => ({
           ...timeseries,
-          [dayjs(getDateOfWeek(record.week, record.year))
-            .endOf('isoWeek')
+          [dayjs
+            // .utc(getDateOfWeek(record.week, record.year))
+            .utc()
+            .year(parseInt(`${record.yearweek}`.slice(0, 4), 10))
+            .week(parseInt(`${record.yearweek}`.slice(-2), 10))
+            .endOf('week')
             .format('YYYY-MM-DD')]: record.stargazers_count
         }),
         {}

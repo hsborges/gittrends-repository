@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, HTMLAttributes } from 'react';
 import Cookie from 'universal-cookie';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBullhorn, faTimes } from '@fortawesome/free-solid-svg-icons';
 
-import './DonateAlert.module.less';
-
-export default function DonateAlert(): JSX.Element {
+export default function DonateAlert(props: HTMLAttributes<HTMLElement>): JSX.Element {
   const cookie: Cookie = useMemo(() => new Cookie(), []);
   const [hidden, setHidden] = useState(true);
 
@@ -19,7 +17,7 @@ export default function DonateAlert(): JSX.Element {
   }, [hidden, cookie]);
 
   return (
-    <div className="donate" style={{ display: hidden ? 'none' : 'flex' }}>
+    <div {...props} className={`gittrends-donate ${props.className}`} hidden={hidden}>
       <FontAwesomeIcon icon={faBullhorn} className="icon" />
       <span>
         Hey, we need your support to expand our database. Click here to donate a GitHub access token

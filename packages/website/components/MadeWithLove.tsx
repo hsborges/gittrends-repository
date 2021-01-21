@@ -2,11 +2,9 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart } from '@fortawesome/free-solid-svg-icons';
 
-import './MadeWithLove.module.less';
-
-export default function MadeWithLove(): JSX.Element {
+export default function MadeWithLove(props: React.HTMLAttributes<HTMLElement>): JSX.Element {
   return (
-    <footer className="love">
+    <footer {...props} className={`gittrends-love ${props.className}`}>
       made with <FontAwesomeIcon icon={faHeart} className="heart" /> by
       <a href="https://github.com/hsborges" target="_blank" rel="noreferrer">
         hsborges

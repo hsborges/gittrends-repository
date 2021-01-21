@@ -1,13 +1,18 @@
 import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import Knex, { Transaction } from 'knex';
+import dayjs from 'dayjs';
+import customParserForamt from 'dayjs/plugin/customParseFormat';
 import { cloneDeep, mapValues, pick, isArray, isObject } from 'lodash';
 
 type TObject = Record<string, unknown>;
 type TRecord = Record<string, string | number | boolean>;
 
+dayjs.extend(customParserForamt);
+const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
+
 function preValidate(data: unknown): unknown {
-  if (data instanceof Date) return data.toISOString();
+  if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
   if (isArray(data)) return data.map((d) => preValidate(d));
   if (isObject(data)) return mapValues(data, (value) => preValidate(value));
   return data;
@@ -15,7 +20,10 @@ function preValidate(data: unknown): unknown {
 
 function postValidate(data: TObject): TRecord {
   return mapValues(data, (value) => {
-    if (typeof value === 'string' && !isNaN(Date.parse(value))) return new Date(value);
+    if (typeof value === 'string') {
+      const dayjsInstance = dayjs(value, DATE_FORMAT);
+      if (dayjsInstance.isValid()) return dayjsInstance.toDate();
+    }
     if (typeof value === 'object') return JSON.stringify(value);
     return value;
   }) as TRecord;

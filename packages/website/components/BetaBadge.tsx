@@ -1,7 +1,9 @@
 import React from 'react';
 
-import './BetaBadge.module.less';
-
-export default function BetaBadge(): JSX.Element {
-  return <span className="beta">BETA</span>;
+export default function BetaBadge(props: React.HTMLAttributes<HTMLElement>): JSX.Element {
+  return (
+    <span {...props} className={`gittrends-beta-badge ${props.className}`}>
+      BETA
+    </span>
+  );
 }

@@ -1,11 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { Avatar } from 'antd';
-import Layout from '../layouts/DefaultLayout';
+import Layout from '../../layouts/DefaultLayout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons';
 
-import './about.module.less';
+import './index.module.less';
 
 const references: Record<string, string>[] = [
   {
