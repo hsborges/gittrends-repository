@@ -9,7 +9,8 @@ import knex, {
   IRepository,
   Stargazer,
   IStargazer,
-  Metadata
+  Metadata,
+  Actor
 } from '@gittrends/database-config';
 
 dayjs.extend(weekOfYear);
@@ -53,7 +54,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
     if (timeseries.length === 0) reply.send({ timeseries, first: null, last: null });
 
-    const [first, last]: [IStargazer, IStargazer] = await Promise.all([
+    let [first, last]: [IStargazer, IStargazer] = await Promise.all([
       Stargazer.query()
         .where({ repository: repo.id })
         .orderBy('starred_at', 'asc')
@@ -66,6 +67,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         .first('user', 'starred_at')
         .select('user', 'starred_at')
     ]);
+
+    [first, last] = await Promise.all(
+      [first, last].map((data) =>
+        Actor.query()
+          .where({ id: data.user })
+          .first()
+          .then((result) => ({ ...data, user: result }))
+      )
+    );
 
     return reply.send({
       timeseries: timeseries.reduce(

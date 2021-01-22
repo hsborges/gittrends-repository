@@ -5,22 +5,25 @@
 }
 
 .project-explorer {
-  min-height: 200%;
   width: 95%;
   margin: auto;
   margin-top: 15px;
-  overflow-y: auto;
-  scroll-behavior: smooth;
 
   header {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    position: absolute;
+    width: calc(100vw - 315px);
 
     .breadcrumb {
       font-size: 1em;
       .icon {
         margin-right: 5px;
+      }
+
+      &.hidden {
+        visibility: hidden;
       }
     }
   }
@@ -28,10 +31,12 @@
   & > .content {
     width: 75%;
     margin: auto;
+    margin-top: 75px;
 
     & > .divider {
-      margin-top: 2.5em;
+      margin-top: 2em;
       margin-bottom: 2em;
+      font-size: 1.75em;
     }
 
     & > .title {
@@ -39,7 +44,7 @@
       flex-direction: column;
       align-items: center;
       margin: auto;
-      margin-top: 10px;
+      margin-top: -15px;
       text-align: center;
 
       div {
@@ -50,6 +55,11 @@
         .ant-avatar {
           margin-right: 15px;
         }
+      }
+
+      .topics .topic {
+        margin-top: 10px;
+        margin-bottom: 5px;
       }
     }
 
@@ -75,4 +85,8 @@
       margin: 50px 0;
     }
   }
+}
+
+#project-explorer footer {
+  margin-top: 50px;
 }

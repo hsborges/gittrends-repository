@@ -14,8 +14,8 @@
   section.menu {
     flex-grow: 1;
 
-    .item:first-child {
-      border-top: 1px solid white;
+    .item:last-child {
+      border-bottom: 1px solid white;
     }
 
     .item {
@@ -24,8 +24,12 @@
       font-size: 1.35em;
       padding: 0.75em 0;
       padding-left: 10px;
-      border-bottom: 1px solid white;
+      border-top: 1px solid white;
       cursor: pointer;
+    }
+
+    .search-area {
+      padding: 0.75em 10px;
     }
 
     .item.active {

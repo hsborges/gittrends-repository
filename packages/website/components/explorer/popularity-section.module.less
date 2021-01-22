@@ -1,4 +1,34 @@
 .gittrends-repository-popularity-section {
+  .statistics {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding-bottom: 25px;
+
+    .card {
+      max-width: 225px;
+
+      .card-title {
+        a {
+          color: inherit;
+        }
+
+        .icon {
+          color: @primary-color;
+        }
+      }
+
+      .avatar-icon {
+        color: @primary-color;
+        font-size: 1.5em;
+      }
+    }
+
+    .card:not(last-child) {
+      margin-right: 10px;
+    }
+  }
+
   .plot-area {
     display: flex;
     flex-direction: column;

@@ -22,6 +22,13 @@ export default function OverviewSection(props: OverviewSectionAttributes): JSX.E
 
   const overviewInfo = [
     {
+      label: 'Homepage',
+      icon: FontAwesomeSolidIcons.faHome,
+      value: repository?.homepage_url,
+      span: 2,
+      link: true
+    },
+    {
       label: 'Stargazers',
       icon: FontAwesomeSolidIcons.faStar,
       value: repository && numeral(repository.stargazers_count).format('0,0')
@@ -37,13 +44,6 @@ export default function OverviewSection(props: OverviewSectionAttributes): JSX.E
       value: repository && numeral(repository.forks_count).format('0,0')
     },
     { label: 'Language', icon: FontAwesomeSolidIcons.faCode, value: repository?.primary_language },
-    {
-      label: 'Homepage',
-      icon: FontAwesomeSolidIcons.faHome,
-      value: repository?.homepage_url,
-      span: 2,
-      link: true
-    },
     {
       label: 'Default Branch',
       icon: FontAwesomeSolidIcons.faCodeBranch,
@@ -99,7 +99,7 @@ export default function OverviewSection(props: OverviewSectionAttributes): JSX.E
 
   return (
     <section {...props}>
-      <Descriptions layout="vertical" bordered colon={false} column={4}>
+      <Descriptions layout="vertical" bordered colon={false} column={4} size="small">
         {overviewInfo
           .filter((info) => info.value)
           .map((info, index) => (

@@ -1,11 +1,17 @@
 import React from 'react';
 import NavigationBar from '../components/NavigationBar';
 
-export default function DefaultLayout(props: React.HTMLProps<HTMLElement>): JSX.Element {
+interface DefaultLayoutAttributes extends React.HTMLProps<HTMLElement> {
+  showSearch?: boolean;
+}
+
+export default function DefaultLayout(props: DefaultLayoutAttributes): JSX.Element {
+  const sectionProps = { ...props, showSearch: undefined };
+
   return (
     <section className="default-layout">
-      <NavigationBar className="navigation-bar" />
-      <section {...props} className={`main-container ${props.className ?? ''}`}>
+      <NavigationBar showSearch={props.showSearch ?? false} className="navigation-bar" />
+      <section {...sectionProps} className={`main-container ${props.className ?? ''}`}>
         {props.children}
       </section>
     </section>

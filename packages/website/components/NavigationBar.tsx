@@ -1,17 +1,22 @@
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import Router, { useRouter } from 'next/router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faThLarge, faHome, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 import { faGithub, faTwitter, faHubspot } from '@fortawesome/free-brands-svg-icons';
 
 import Logo from './Logo';
+import Search from './Search';
 import BetaBadge from './BetaBadge';
 
 type TMenuItem = { title: string; link: string; icon: any };
 type TMenu = Array<TMenuItem>;
 
-export default function NavigationBar(props: React.HTMLAttributes<HTMLElement>): JSX.Element {
+interface NavigationBarAttributes extends React.HTMLAttributes<HTMLElement> {
+  showSearch: boolean;
+}
+
+export default function NavigationBar(props: NavigationBarAttributes): JSX.Element {
   const router = useRouter();
 
   const links: TMenu = [
@@ -22,9 +27,12 @@ export default function NavigationBar(props: React.HTMLAttributes<HTMLElement>):
   ];
 
   function renderMenuItem(item: TMenuItem): JSX.Element {
+    const active =
+      item.link === '/' ? router.pathname === item.link : router.pathname.startsWith(item.link);
+
     return (
       <Link key={item.title} href={item.link} passHref>
-        <a className={`item ${router.pathname === item.link ? 'active' : ''}`}>
+        <a className={`item ${active ? 'active' : ''}`}>
           <FontAwesomeIcon icon={item.icon} className="icon" /> {item.title}
         </a>
       </Link>
@@ -37,7 +45,15 @@ export default function NavigationBar(props: React.HTMLAttributes<HTMLElement>):
       <header>
         <Logo />
       </header>
-      <section className="menu">{links.map((item) => renderMenuItem(item))}</section>
+      <section className="menu">
+        <div className="item search-area" hidden={!props.showSearch}>
+          <Search
+            placeholder="Search"
+            onSearch={(query) => Router.push({ pathname: '/explorer', query: { query } })}
+          />
+        </div>
+        {links.map((item) => renderMenuItem(item))}
+      </section>
       <footer>
         <a href="https://github.com/hsborges" className="icon" target="_blank" rel="noreferrer">
           <FontAwesomeIcon icon={faGithub} />

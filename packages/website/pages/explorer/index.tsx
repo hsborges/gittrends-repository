@@ -12,8 +12,8 @@ import { Select, Statistic, Empty, Skeleton, Pagination } from 'antd';
 
 function Explorer(props: ISearch): JSX.Element {
   const container = React.createRef<HTMLElement>();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(24);
+  const [pageSize, setPageSize] = useState<number>(props.limit ?? 24);
+  const [page, setPage] = useState(props.offset / props.limit + 1);
   const [query, setQuery] = useState<ISearch>({ limit: pageSize, ...props });
 
   const { data, isLoading, isError } = fetchProjects(query);
@@ -103,7 +103,7 @@ function Explorer(props: ISearch): JSX.Element {
 }
 
 Explorer.getInitialProps = ({ query }): ISearch => {
-  return { query: query.query, language: query.language };
+  return { query: query.query, language: query.language, limit: query.limit, offset: query.offset };
 };
 
 export default Explorer;
