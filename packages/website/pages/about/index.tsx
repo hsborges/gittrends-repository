@@ -1,11 +1,11 @@
 import React from 'react';
-import Link from 'next/link';
 import { Avatar } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons';
 
 import Layout from '../../layouts/DefaultLayout';
-import MadeWithLove from '../../components/MadeWithLove';
+
+import './index.module.less';
 
 const references: Record<string, string>[] = [
   {
@@ -64,10 +64,7 @@ export default function Info(): JSX.Element {
             As GitHub limits the number of requests to their servers, we need as many as possible
             GitHub access tokens to keep our services running and our website aways updated. Thus,
             if you liked this project, please consider donating an access token by
-            <Link href="/authorization" passHref>
-              <a> cliking here</a>
-            </Link>
-            .
+            <a> cliking here</a>.
           </p>
         </article>
         <article>
@@ -75,15 +72,13 @@ export default function Info(): JSX.Element {
           <p>
             Although GitHub hosts millions of repositories, GitTrends only monitor popular
             repositories (i.e., those ones with a large number of stars). If your repository is not
-            indexed, you can
-            <a className=""> click here </a>
-            or send an email to us requesting its inclusion (please, tell us why it would be useful
-            for you).
+            indexed, you can <a> click here </a> or send an email to us requesting its inclusion
+            (please, tell us why it would be useful for you).
           </p>
         </article>
         <article>
           <h1>Who is maintaining this tool?</h1>
-          <p className="me flex flex-col md:flex-row py-8 min-h-32 md:h-56">
+          <section className="me flex flex-col md:flex-row py-8 min-h-32 md:h-56">
             <div className="picture">
               <Avatar shape="square" size={196} src="/images/hudson.jpg" alt="" />
             </div>
@@ -96,7 +91,7 @@ export default function Info(): JSX.Element {
               </span>
               <span> Email: hsborges [a] facom.ufms.br </span>
             </div>
-          </p>
+          </section>
         </article>
         <article id="references">
           <h1>Academic Publications</h1>
@@ -114,7 +109,6 @@ export default function Info(): JSX.Element {
           </dl>
         </article>
       </section>
-      <MadeWithLove />
     </Layout>
   );
 }

@@ -49,12 +49,35 @@
       flex-wrap: wrap;
       flex-grow: 1;
       max-width: 90%;
-      margin-bottom: 5vh;
       font-weight: normal;
 
       .card {
         margin: 10px;
         text-overflow: clip;
+      }
+    }
+
+    .db-statistics {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      flex-grow: 1;
+      padding: 50px;
+      width: 75%;
+      margin: auto;
+
+      .db-stats {
+        .ant-statistic-title {
+          font-size: 1.25em;
+        }
+
+        .ant-statistic-content-value {
+          color: @text-color;
+        }
+
+        .ant-statistic-content-prefix {
+          color: @primary-color;
+        }
       }
     }
   }

@@ -1,11 +1,7 @@
 import useSWR from 'swr';
-import axios from 'axios';
+import axios from './axiosClient';
 
-interface StargazersTimeseriesArguments {
-  name_with_owner: string;
-}
-
-interface StargazersTimeseriesResult {
+interface StargazersResult {
   timeseries?: Record<string, number>;
   first?: { user: string; starred_at: Date };
   last?: { user: string; starred_at: Date };
@@ -14,13 +10,8 @@ interface StargazersTimeseriesResult {
   isError: boolean;
 }
 
-export default function FetchStargazersTimeseries(
-  args: StargazersTimeseriesArguments
-): StargazersTimeseriesResult {
-  const { data, error } = useSWR(
-    `http://127.0.0.1:8888/repos/${args.name_with_owner}/stargazers`,
-    axios
-  );
+export default function FetchStargazers(args: { name_with_owner: string }): StargazersResult {
+  const { data, error } = useSWR(`/repos/${args.name_with_owner}/stargazers`, axios);
 
   return {
     timeseries: data?.data.timeseries,

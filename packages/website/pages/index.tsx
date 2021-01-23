@@ -1,18 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Router from 'next/router';
+import { Statistic } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGithub } from '@fortawesome/free-brands-svg-icons';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faGithub, faGithubAlt } from '@fortawesome/free-brands-svg-icons';
+import { faSpinner, faStar, faTag, faUser } from '@fortawesome/free-solid-svg-icons';
 
 import ServerError from '../components/ServerError';
-import MadeWithLove from '../components/MadeWithLove';
 import ProjectCard from '../components/RepositoryCard';
 import Search from '../components/Search';
 import Layout from '../layouts/DefaultLayout';
-import fetchProjects from '../hooks/useSearch';
+import fetchProjects from '../hooks/searchProjects';
+import fetchStatistics from '../hooks/fetchStatistics';
+
+import './index.module.less';
 
 export default function Home(): JSX.Element {
+  const { data: sData } = fetchStatistics();
   const { data, isError, isLoading } = fetchProjects({ limit: 8, sortBy: 'random' });
+
+  const [statistics, setStatistics] = useState([]);
+
+  useEffect(() => {
+    setStatistics([
+      { title: 'Projects', icon: faGithubAlt, value: sData?.repositories },
+      { title: 'Users', icon: faUser, value: sData?.users },
+      { title: 'Stargazers', icon: faStar, value: sData?.stargazers },
+      { title: 'Tags', icon: faTag, value: sData?.tags }
+    ]);
+  }, [sData]);
 
   return (
     <Layout className="github-index-page">
@@ -35,12 +50,21 @@ export default function Home(): JSX.Element {
             <ProjectCard key={sample.id} repository={sample} className="card" />
           ))}
         </div>
+        <div className="db-statistics">
+          {statistics.map((stats) => (
+            <Statistic
+              key={stats.title}
+              title={stats.title}
+              value={stats.value}
+              prefix={<FontAwesomeIcon icon={stats.icon} />}
+              className="db-stats"
+            />
+          ))}
+        </div>
         <div hidden={!isError}>
           <ServerError />
         </div>
       </section>
-
-      <MadeWithLove />
     </Layout>
   );
 }

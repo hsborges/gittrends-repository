@@ -104,7 +104,6 @@ export default function OverviewSection(props: OverviewSectionAttributes): JSX.E
           .filter((info) => info.value)
           .map((info, index) => (
             <Descriptions.Item
-              labelStyle={{ margin: '0px' }}
               key={index}
               span={info.span}
               label={

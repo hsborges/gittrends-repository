@@ -1,7 +1,7 @@
 import useSWR from 'swr';
-import axios from 'axios';
+import axios from './axiosClient';
 
-interface SampleResult {
+interface FetchProjectsResult {
   data: Record<string, any>;
   isLoading: boolean;
   isError: boolean;
@@ -17,7 +17,7 @@ export interface ISearch {
   order?: 'asc' | 'desc';
 }
 
-export default function FetchProjects(args?: ISearch): SampleResult {
+export default function FetchProjects(args?: ISearch): FetchProjectsResult {
   const queryString = [
     args?.query && `query=${args.query}`,
     args?.language && `language=${args.language}`,
@@ -29,7 +29,7 @@ export default function FetchProjects(args?: ISearch): SampleResult {
     .filter((q) => q)
     .join('&');
 
-  const { data, error } = useSWR(`http://127.0.0.1:8888/search/repos?${queryString}`, axios);
+  const { data, error } = useSWR(`/search/repos?${queryString}`, axios);
 
   return {
     data: data?.data,

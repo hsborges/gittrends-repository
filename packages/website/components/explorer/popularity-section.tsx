@@ -5,10 +5,10 @@ import utc from 'dayjs/plugin/utc';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import * as ReactVis from 'react-vis';
-import { Card, Select } from 'antd';
+import { Card, Select, Switch } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
-import { faArrowAltCircleUp, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faArrowAltCircleUp, faStar, faTag } from '@fortawesome/free-solid-svg-icons';
 import Avatar from 'antd/lib/avatar/avatar';
 import Link from 'next/link';
 
@@ -20,9 +20,12 @@ interface PopularitySectionAttributes extends React.HTMLAttributes<HTMLElement> 
   timeseries: Record<string, number>;
   first: Record<string, any>;
   last: Record<string, any>;
+  tags?: Array<any>;
 }
 
 export default function PopularitySection(props: PopularitySectionAttributes): JSX.Element {
+  const [tags, setTags] = useState([]);
+  const [showTags, setShowTags] = useState(false);
   const [timeseries, setTimeseries] = useState([]);
   const [seriesType, setSeriesType] = useState('weekly');
   const [scaleType, setScaleType] = useState('linear');
@@ -55,8 +58,31 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
         []
       )
     );
+
+    console.log(tags);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seriesType, scaleType, props.timeseries]);
+
+  useEffect(() => {
+    const data: Record<string, []> = props.tags?.reduce((acc, tag) => {
+      const week = dayjs.utc(tag.committed_date).endOf('week').startOf('day').toDate().getTime();
+      if (!acc[`${week}`]) acc[`${week}`] = [];
+      acc[`${week}`].push(tag.name);
+      return acc;
+    }, {});
+
+    setTags(
+      Object.entries(data || {})
+        .map((entry) => ({
+          x: parseInt(entry[0], 10),
+          y: timeseries.find((v) => v.x == parseInt(entry[0], 10))?.y,
+          names: entry[1]
+        }))
+        .filter((d) => d.y)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seriesType, scaleType, timeseries, props.tags]);
 
   return (
     <section className={`gittrends-repository-popularity-section ${props.className ?? ''}`}>
@@ -127,6 +153,18 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
             tickLabelAngle={-20}
           />
           <ReactVis.LineSeries data={timeseries} />
+          {showTags &&
+            tags.map((tag, index) => (
+              <ReactVis.Hint
+                key={`tag_${index}`}
+                value={{ x: tag.x, y: tag.y }}
+                align={{ vertical: 'top' }}
+                className="hint"
+              >
+                <FontAwesomeIcon icon={faTag} rotation={270} color="gray" />
+                <span className="tooltip">{tag.names.join(', ')}</span>
+              </ReactVis.Hint>
+            ))}
         </ReactVis.FlexibleWidthXYPlot>
         <div className="controls">
           <div className="control">
@@ -153,6 +191,14 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
               <Select.Option value="log">Logarithm</Select.Option>
             </Select>
           </div>
+          {tags && tags.length ? (
+            <div className="control">
+              <span className="label">Show tags</span>
+              <Switch size="small" onChange={(checked) => setShowTags(checked)} />
+            </div>
+          ) : (
+            ''
+          )}
         </div>
       </div>
     </section>

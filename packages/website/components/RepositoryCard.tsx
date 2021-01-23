@@ -1,12 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
-import dayjs from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Card, Avatar, Divider, Statistic, Row, Col, Empty } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faCodeBranch } from '@fortawesome/free-solid-svg-icons';
 import { XYPlot, XAxis, LineSeries } from 'react-vis';
-import fetchStargazers from '../hooks/useStargazers';
+
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+dayjs.extend(customParseFormat);
+
+import fetchStargazers from '../hooks/fetchStargazers';
 
 interface IRepository extends Record<string, any> {
   description: string;
@@ -16,8 +19,6 @@ interface IRepository extends Record<string, any> {
   stargazers_count: number;
   forks_count: number;
 }
-
-dayjs.extend(customParseFormat);
 
 const stats: { field: string; icon: any }[] = [
   { field: 'stargazers_count', icon: faStar },
@@ -29,17 +30,19 @@ interface RepositoryCardProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export default function RepositoryCard(props: RepositoryCardProps): JSX.Element {
+  const { repository, ...cardProps } = props;
+
   const { timeseries, isLoading, isError } = fetchStargazers({
-    name_with_owner: props.repository.name_with_owner
+    name_with_owner: repository.name_with_owner
   });
 
   return (
-    <Card {...props} className={`gittrends-repository-card ${props.className ?? ''}`}>
-      <Link href={`/explorer/${props.repository.name_with_owner}`} passHref>
+    <Card {...cardProps} className={`gittrends-repository-card ${cardProps.className ?? ''}`}>
+      <Link href={`/explorer/${repository.name_with_owner}`} passHref>
         <a>
           <Card.Meta
-            avatar={<Avatar src={props.repository.open_graph_image_url} />}
-            title={props.repository.name}
+            avatar={<Avatar src={repository.open_graph_image_url} />}
+            title={repository.name}
             className="card-header"
           />
           <Divider plain></Divider>
@@ -47,17 +50,17 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
             {stats.map((stat) => (
               <Col key={stat.field} className="stat">
                 <Statistic
-                  value={props.repository[stat.field]}
+                  value={repository[stat.field]}
                   prefix={<FontAwesomeIcon icon={stat.icon} />}
                 />
               </Col>
             ))}
           </Row>
           <Divider plain></Divider>
-          <Row className={`views ${!isLoading && 'has-extra'}`}>
+          <Row className={`views ${!isLoading ? 'has-extra' : ''}`}>
             <Col span={24} className="description">
-              {(props.repository.description || '').slice(0, 100) +
-                ((props.repository.description || '').length > 100 ? ' ...' : '')}
+              {(repository.description || '').slice(0, 100) +
+                ((repository.description || '').length > 100 ? ' ...' : '')}
             </Col>
             <Col span={24} className="extra" hidden={isError}>
               <XYPlot height={125} width={225} className="plot">

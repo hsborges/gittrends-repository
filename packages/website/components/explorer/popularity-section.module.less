@@ -1,9 +1,11 @@
+@import '../../styles/less/antd-custom.less';
+
 .gittrends-repository-popularity-section {
   .statistics {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    padding-bottom: 25px;
+    padding-bottom: 40px;
 
     .card {
       max-width: 225px;
@@ -33,6 +35,33 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    .rv-crosshair,
+    .rv-hint {
+      pointer-events: auto;
+    }
+
+    .hint {
+      .tooltip {
+        display: none;
+        color: white;
+        background-color: @primary-color;
+        font-weight: bolder;
+        cursor: pointer;
+        padding: 5px 10px;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+      }
+
+      &:hover {
+        .tooltip {
+          position: absolute;
+          top: 0;
+          display: initial;
+          z-index: 1;
+        }
+      }
+    }
 
     .controls {
       display: block;

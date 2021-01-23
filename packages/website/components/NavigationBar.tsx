@@ -12,11 +12,9 @@ import BetaBadge from './BetaBadge';
 type TMenuItem = { title: string; link: string; icon: any };
 type TMenu = Array<TMenuItem>;
 
-interface NavigationBarAttributes extends React.HTMLAttributes<HTMLElement> {
-  showSearch: boolean;
-}
-
-export default function NavigationBar(props: NavigationBarAttributes): JSX.Element {
+export default function NavigationBar(
+  props: { showSearch: boolean } & React.HTMLAttributes<HTMLElement>
+): JSX.Element {
   const router = useRouter();
 
   const links: TMenu = [
@@ -39,14 +37,16 @@ export default function NavigationBar(props: NavigationBarAttributes): JSX.Eleme
     );
   }
 
+  const { showSearch, ...sectionProps } = props;
+
   return (
-    <section {...props} className={`gittrends-navigation-bar ${props.className ?? ''}`}>
+    <section {...sectionProps} className={`gittrends-navigation-bar ${props.className ?? ''}`}>
       <BetaBadge />
       <header>
         <Logo />
       </header>
       <section className="menu">
-        <div className="item search-area" hidden={!props.showSearch}>
+        <div className="item search-area" hidden={!showSearch}>
           <Search
             placeholder="Search"
             onSearch={(query) => Router.push({ pathname: '/explorer', query: { query } })}

@@ -1,30 +1,23 @@
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { Anchor, Avatar, Breadcrumb, Tag } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome } from '@fortawesome/free-solid-svg-icons';
 
-import DefaultLayout from '../../layouts/DefaultLayout';
-import fetchRepository from '../../hooks/useRepository';
-import fetchStargazers from '../../hooks/useStargazers';
-import Divider from '../../components/explorer/divider';
-import OverviewSection from '../../components/explorer/overview-section';
-import PopularitySection from '../../components/explorer/popularity-section';
-import MadeWithLove from '../../components/MadeWithLove';
+import DefaultLayout from '../../../layouts/DefaultLayout';
+import fetchTags from '../../../hooks/fetchTags';
+import fetchRepository from '../../../hooks/fetchProject';
+import fetchStargazers from '../../../hooks/fetchStargazers';
+import Divider from '../../../components/explorer/divider';
+import OverviewSection from '../../../components/explorer/overview-section';
+import PopularitySection from '../../../components/explorer/popularity-section';
 
-import './[...params].module.less';
+import './[name].module.less';
 
-export default function ProjectDetails(): JSX.Element {
-  const router = useRouter();
-
-  const nameWithOwner = (Array.isArray(router.query.params)
-    ? router.query.params
-    : [router.query.params]
-  ).join('/');
-
-  const { repository } = fetchRepository({ name_with_owner: nameWithOwner });
-  const { timeseries, first, last } = fetchStargazers({ name_with_owner: nameWithOwner });
+function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
+  const { repository } = fetchRepository({ name_with_owner: props.name_with_owner });
+  const { timeseries, first, last } = fetchStargazers({ name_with_owner: props.name_with_owner });
+  const { tags } = fetchTags({ name_with_owner: props.name_with_owner });
 
   return (
     <DefaultLayout id="project-explorer" className="overflow-hidden" showSearch>
@@ -88,12 +81,17 @@ export default function ProjectDetails(): JSX.Element {
           <OverviewSection repository={repository} />
 
           {timeseries && <Divider id="popularity" title="Popularity" className="divider" />}
-          {timeseries && <PopularitySection timeseries={timeseries} first={first} last={last} />}
+          {timeseries && (
+            <PopularitySection timeseries={timeseries} first={first} last={last} tags={tags} />
+          )}
         </section>
       </section>
-      <footer>
-        <MadeWithLove />
-      </footer>
     </DefaultLayout>
   );
 }
+
+ProjectDetails.getInitialProps = ({ query }): { name_with_owner: string } => {
+  return { name_with_owner: `${query.owner}/${query.name}` };
+};
+
+export default ProjectDetails;
