@@ -10,6 +10,7 @@ services:
       - ${GITTRENDS_DATABASE_PORT}:3306
     volumes:
       - db:/var/lib/mysql
+      - ./data/mysql:/etc/mysql/conf.d
     environment:
       MYSQL_ROOT_PASSWORD: NYI4jsei5N4P
       MYSQL_USER: ${GITTRENDS_DATABASE_USERNAME}
