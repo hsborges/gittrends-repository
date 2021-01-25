@@ -1,15 +1,17 @@
 apps:
   - name: website-api
     cwd: packages/website-api
+    interpreter: /bin/bash
     script: yarn
-    args: run start
+    args: start
     env:
       NODE_ENV: production
       PORT: 8888
 
   - name: website-server
     cwd: packages/website
+    interpreter: /bin/bash
     script: yarn
-    args: run start --port 8080
+    args: start --port 8080
     env:
       NODE_ENV: production
