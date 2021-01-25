@@ -60,7 +60,7 @@ program
     consola.info(`Updating ${program.type} using ${program.workers} workers`);
 
     const cache = new Cache(process.env.GITTRENDS_CACHE_SIZE ?? 25000);
-    const writerQueue = new WriterQueue();
+    const writerQueue = new WriterQueue(process.env.GITTRENDS_WRITER_QUEUE_CONCURRENCY ?? 1);
     const queueScheduler = new QueueScheduler(program.type, {
       connection: redisOptions,
       maxStalledCount: Number.MAX_SAFE_INTEGER

@@ -22,6 +22,7 @@ declare global {
       GITTRENDS_QUEUE_BOARD_PORT?: number;
       GITTRENDS_CACHE_SIZE?: number;
       GITTRENDS_WRITE_BATCH_SIZE?: number;
+      GITTRENDS_WRITER_QUEUE_CONCURRENCY: number;
       PORT?: number;
     }
   }
