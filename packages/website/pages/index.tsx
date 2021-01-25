@@ -18,7 +18,9 @@ export default function Home(): JSX.Element {
   const { data: sData } = fetchStatistics();
   const { data, isError, isLoading } = fetchProjects({ limit: 8, sortBy: 'random' });
 
-  const [statistics, setStatistics] = useState([]);
+  const [statistics, setStatistics] = useState<
+    { title: string; value: number | null; icon: any }[]
+  >();
 
   useEffect(() => {
     setStatistics([
@@ -51,13 +53,14 @@ export default function Home(): JSX.Element {
           ))}
         </div>
         <div className="db-statistics">
-          {statistics.map((stats) => (
+          {statistics?.map((stats) => (
             <Statistic
               key={stats.title}
               title={stats.title}
               value={stats.value}
               prefix={<FontAwesomeIcon icon={stats.icon} />}
               className="db-stats"
+              loading={!stats.value}
             />
           ))}
         </div>

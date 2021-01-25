@@ -69,8 +69,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
     await Promise.all([mailPromise, insertPromise]);
 
-    return reply.redirect(
-      `${request.headers.referer}authorization?success=true&login=${uInfo.login}`
-    );
+    return reply.redirect(`${request.headers.referer}authorization?success&login=${uInfo.login}`);
   });
 }

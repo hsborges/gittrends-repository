@@ -2,8 +2,14 @@ import React from 'react';
 import Link from 'next/link';
 import Router, { useRouter } from 'next/router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faThLarge, faHome, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
-import { faGithub, faTwitter, faHubspot } from '@fortawesome/free-brands-svg-icons';
+import {
+  faEnvelope,
+  faThLarge,
+  faHome,
+  faQuestionCircle,
+  faGlobe
+} from '@fortawesome/free-solid-svg-icons';
+import { faGithub, faTwitter } from '@fortawesome/free-brands-svg-icons';
 
 import Logo from './Logo';
 import Search from './Search';
@@ -20,7 +26,7 @@ export default function NavigationBar(
   const links: TMenu = [
     { title: 'Home', link: '/', icon: faHome },
     { title: 'Explorer', link: '/explorer', icon: faThLarge },
-    { title: 'Topic Graph', link: '/topics', icon: faHubspot },
+    { title: 'Demography', link: '/demography', icon: faGlobe },
     { title: 'About', link: '/about', icon: faQuestionCircle }
   ];
 
