@@ -1,6 +1,6 @@
 {
-  "name": "website",
-  "version": "0.1.0",
+  "name": "@gittrends/website",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next dev",

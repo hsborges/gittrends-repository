@@ -3,6 +3,8 @@
 /packages/docker-autossh-tunnel
 **/node_modules
 **/dist
+**/build
+**/.next
 npm-debug.log
 .env
 .env.example
