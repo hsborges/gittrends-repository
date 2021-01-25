@@ -12,6 +12,6 @@ apps:
     cwd: packages/website
     interpreter: /bin/bash
     script: yarn
-    args: start --port 8080
+    args: start -H 0.0.0.0 -p 8080
     env:
       NODE_ENV: production
