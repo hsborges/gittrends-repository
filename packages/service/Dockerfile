@@ -1,6 +1,6 @@
 FROM node:alpine
 
-RUN apk add --update python2
+RUN apk add --update make gcc python2
 
 WORKDIR /app
 COPY . .

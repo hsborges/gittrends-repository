@@ -3,7 +3,7 @@ FROM node:alpine
 LABEL maintainer = "Hudson Silva Borges <hudsonsilbor[at]gmail.com>"
 LABEL website    = "www.gittrends.app"
 
-RUN apk add --update bash curl openssl nginx certbot monit
+RUN apk add --update python make gcc bash curl openssl nginx certbot monit
 RUN npm install -g pm2
 
 RUN mkdir -p /etc/monit/conf.d && touch /etc/monit/conf.d/nginx.conf
