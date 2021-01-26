@@ -20,8 +20,8 @@ function preValidate(data: unknown): unknown {
 
 function postValidate(data: TObject): TRecord {
   return mapValues(data, (value) => {
-    if (typeof value === 'string') value.replace(/(\x00|\u0000)/g, '');
-    if (typeof value === 'object') return JSON.stringify(value).replace(/(\x00|\u0000)/g, '');
+    if (typeof value === 'string') value.replace(/(\x00|\u0000|\0x00)/g, '');
+    if (typeof value === 'object') return JSON.stringify(value).replace(/(\x00|\u0000|\0x00)/g, '');
     return value;
   }) as TRecord;
 }
