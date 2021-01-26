@@ -63,6 +63,7 @@ services:
       - 80:80
     volumes:
       - ./data/nginx/development.conf:/app/data/nginx/default.conf:ro
+      - nginx-cache:/var/cache
     environment:
       GITTRENDS_DATABASE_HOST: postgres
       GITTRENDS_DATABASE_PORT: 5432
@@ -76,3 +77,5 @@ volumes:
     name: gittrends.app
   pgadmin:
     name: pgadmin.gittrends.app
+  nginx-cache:
+    name: nginx.gittrends.app
