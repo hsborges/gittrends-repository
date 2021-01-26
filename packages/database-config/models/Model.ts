@@ -30,7 +30,7 @@ function preValidate(data: unknown): unknown {
 
 function postValidate(data: TObject): TRecord {
   return mapValues(data, (value) => {
-    if (typeof value === 'string') cleanString(value);
+    if (typeof value === 'string') return cleanString(value);
     if (typeof value === 'object') return cleanString(JSON.stringify(value));
     return value;
   }) as TRecord;

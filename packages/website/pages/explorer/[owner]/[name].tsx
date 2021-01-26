@@ -5,12 +5,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome } from '@fortawesome/free-solid-svg-icons';
 
 import DefaultLayout from '../../../layouts/DefaultLayout';
-import fetchTags from '../../../hooks/fetchTags';
-import fetchRepository from '../../../hooks/fetchProject';
-import fetchStargazers from '../../../hooks/fetchStargazers';
 import Divider from '../../../components/explorer/divider';
 import OverviewSection from '../../../components/explorer/overview-section';
 import PopularitySection from '../../../components/explorer/popularity-section';
+
+import fetchTags from '../../../hooks/fetchTags';
+import fetchRepository from '../../../hooks/fetchProject';
+import fetchStargazers from '../../../hooks/fetchStargazers';
 
 import './[name].module.less';
 

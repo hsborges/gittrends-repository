@@ -7,7 +7,23 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Descriptions } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import * as FontAwesomeSolidIcons from '@fortawesome/free-solid-svg-icons';
+import {
+  faBalanceScale,
+  faBug,
+  faClock,
+  faCode,
+  faCodeBranch,
+  faEye,
+  faHandsHelping,
+  faHdd,
+  faHome,
+  faNetworkWired,
+  faRocket,
+  faStar,
+  faTag,
+  faUnlock,
+  faUpload
+} from '@fortawesome/free-solid-svg-icons';
 
 dayjs.extend(utc);
 dayjs.extend(relativeTime);
@@ -23,76 +39,76 @@ export default function OverviewSection(props: OverviewSectionAttributes): JSX.E
   const overviewInfo = [
     {
       label: 'Homepage',
-      icon: FontAwesomeSolidIcons.faHome,
+      icon: faHome,
       value: repository?.homepage_url,
       span: 2,
       link: true
     },
     {
       label: 'Stargazers',
-      icon: FontAwesomeSolidIcons.faStar,
+      icon: faStar,
       value: repository && numeral(repository.stargazers_count).format('0,0')
     },
     {
       label: 'Watchers',
-      icon: FontAwesomeSolidIcons.faEye,
+      icon: faEye,
       value: repository && numeral(repository.watchers_count).format('0,0')
     },
     {
       label: 'Forks',
-      icon: FontAwesomeSolidIcons.faNetworkWired,
+      icon: faNetworkWired,
       value: repository && numeral(repository.forks_count).format('0,0')
     },
-    { label: 'Language', icon: FontAwesomeSolidIcons.faCode, value: repository?.primary_language },
+    { label: 'Language', icon: faCode, value: repository?.primary_language },
     {
       label: 'Default Branch',
-      icon: FontAwesomeSolidIcons.faCodeBranch,
+      icon: faCodeBranch,
       value: repository?.default_branch
     },
     {
       label: 'CoC',
       title: 'Code of Conduct',
-      icon: FontAwesomeSolidIcons.faHandsHelping,
+      icon: faHandsHelping,
       value: repository?.code_of_conduct && camelCase(repository?.code_of_conduct)
     },
     {
       label: 'Liscense',
-      icon: FontAwesomeSolidIcons.faBalanceScale,
+      icon: faBalanceScale,
       value: repository?.license_info
     },
     {
       label: 'Total issues',
-      icon: FontAwesomeSolidIcons.faBug,
+      icon: faBug,
       value: repository && numeral(repository.issues_count).format('0,0')
     },
     {
       label: 'Total pulls',
-      icon: FontAwesomeSolidIcons.faUpload,
+      icon: faUpload,
       value: repository && numeral(repository.pull_requests_count_count).format('0,0')
     },
     {
       label: 'Releases',
-      icon: FontAwesomeSolidIcons.faTag,
+      icon: faTag,
       value: repository && numeral(repository.releases_count).format('0,0')
     },
     {
       label: 'Vulnerabilities',
-      icon: FontAwesomeSolidIcons.faUnlock,
+      icon: faUnlock,
       value: repository && numeral(repository.vulnerability_alerts_count).format('0,0')
     },
     {
       label: 'Created at',
-      icon: FontAwesomeSolidIcons.faRocket,
+      icon: faRocket,
       value: repository && dayjs(repository.created_at).from(Date.now())
     },
     {
       label: 'Last updated',
-      icon: FontAwesomeSolidIcons.faClock,
+      icon: faClock,
       value: repository && dayjs(repository.updated_at).from(Date.now())
     },
     {
       label: 'Size',
-      icon: FontAwesomeSolidIcons.faHdd,
+      icon: faHdd,
       value: repository && numeral(repository.disk_usage).format('0.0 b')
     }
   ];

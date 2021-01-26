@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Avatar, Card, Select, Switch } from 'antd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faArrowAltCircleUp, faStar, faTag } from '@fortawesome/free-solid-svg-icons';
+
 import numeral from 'numeral';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import * as ReactVis from 'react-vis';
-import { Card, Select, Switch } from 'antd';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGithub } from '@fortawesome/free-brands-svg-icons';
-import { faArrowAltCircleUp, faStar, faTag } from '@fortawesome/free-solid-svg-icons';
-import Avatar from 'antd/lib/avatar/avatar';
-import Link from 'next/link';
+
+import {
+  FlexibleWidthXYPlot,
+  VerticalGridLines,
+  HorizontalGridLines,
+  YAxis,
+  XAxis,
+  LineSeries,
+  Hint
+} from 'react-vis';
 
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
@@ -139,23 +148,23 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
         </Card>
       </div>
       <div className="plot-area">
-        <ReactVis.FlexibleWidthXYPlot height={300} animation={{ duration: 1 }}>
-          <ReactVis.VerticalGridLines />
-          <ReactVis.HorizontalGridLines />
-          <ReactVis.YAxis
+        <FlexibleWidthXYPlot height={300} animation={{ duration: 1 }}>
+          <VerticalGridLines />
+          <HorizontalGridLines />
+          <YAxis
             title="Stargazers"
             tickPadding={2}
             tickFormat={(value) => numeral(transformLabel(value)).format('0a').toUpperCase()}
           />
-          <ReactVis.XAxis
+          <XAxis
             title="Date"
             tickFormat={(value) => dayjs.utc(value).format('YYYY-MM-YY')}
             tickLabelAngle={-20}
           />
-          <ReactVis.LineSeries data={timeseries} />
+          <LineSeries data={timeseries} />
           {showTags &&
             tags.map((tag, index) => (
-              <ReactVis.Hint
+              <Hint
                 key={`tag_${index}`}
                 value={{ x: tag.x, y: tag.y }}
                 align={{ vertical: 'top' }}
@@ -163,9 +172,9 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
               >
                 <FontAwesomeIcon icon={faTag} rotation={270} color="gray" />
                 <span className="tooltip">{tag.names.join(', ')}</span>
-              </ReactVis.Hint>
+              </Hint>
             ))}
-        </ReactVis.FlexibleWidthXYPlot>
+        </FlexibleWidthXYPlot>
         <div className="controls">
           <div className="control">
             <span className="label">Series</span>
