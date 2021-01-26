@@ -1132,8 +1132,7 @@
             }
           },
           "required": [
-            "date",
-            "name"
+            "date"
           ]
         },
         "target": {

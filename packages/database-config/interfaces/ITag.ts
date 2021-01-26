@@ -7,7 +7,7 @@ export default interface ITag extends Record<string, unknown> {
   tagger?: {
     date: Date;
     email?: string;
-    name: string;
+    name?: string;
     user?: string;
   };
   target?: string;
