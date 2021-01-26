@@ -38,21 +38,23 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
     const updated = await Metadata.query()
       .where({ id: repo.id, resource: 'stargazers', key: 'updatedAt' })
-      .count({ count: 'id' })
+      .select('value')
       .first();
 
-    if (!updated || !updated.count) return reply.callNotFound();
+    if (!updated || !updated.value) return reply.callNotFound();
 
     const timeseries = await Stargazer.query()
       .select(
-        knex.raw('yearweek(starred_at) as yearweek'),
-        knex.raw('count(*) as stargazers_count')
+        knex.raw('extract (week from starred_at) as week'),
+        knex.raw('extract (year from starred_at) as year'),
+        knex.raw('count(*)::integer as stargazers_count')
       )
       .where({ repository: repo.id })
-      .groupBy('yearweek')
-      .orderBy('yearweek', 'asc');
+      .groupBy(['week', 'year'])
+      .orderBy('year', 'asc')
+      .orderBy('week', 'asc');
 
-    if (timeseries.length === 0) reply.send({ timeseries, first: null, last: null });
+    if (timeseries.length === 0) return reply.send({ timeseries, first: null, last: null });
 
     let [first, last]: [IStargazer, IStargazer] = await Promise.all([
       Stargazer.query()
@@ -79,13 +81,16 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
     return reply.send({
       timeseries: timeseries.reduce(
-        (timeseries: TimeSeries, record: { yearweek: string; stargazers_count: number }) => ({
+        (
+          timeseries: TimeSeries,
+          record: { year: number; week: number; stargazers_count: number }
+        ) => ({
           ...timeseries,
           [dayjs
             // .utc(getDateOfWeek(record.week, record.year))
             .utc()
-            .year(parseInt(`${record.yearweek}`.slice(0, 4), 10))
-            .week(parseInt(`${record.yearweek}`.slice(-2), 10))
+            .year(record.year)
+            .week(record.week)
             .endOf('week')
             .format('YYYY-MM-DD')]: record.stargazers_count
         }),

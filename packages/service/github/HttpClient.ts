@@ -9,7 +9,7 @@ import * as Errors from '../helpers/errors';
 
 const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL || 'http';
 const HOST = process.env.GITTRENDS_PROXY_HOST || 'localhost';
-const PORT = process.env.GITTRENDS_PROXY_PORT || 8888;
+const PORT = process.env.GITTRENDS_PROXY_PORT || 3000;
 const TIMEOUT = process.env.GITTRENDS_PROXY_TIMEOUT || undefined;
 const RETRIES = process.env.GITTRENDS_PROXY_RETRIES || 5;
 const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT || new UserAgent().random().toString();

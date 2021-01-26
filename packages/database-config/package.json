@@ -17,7 +17,7 @@
     "glob": "^7.1.6",
     "knex": "^0.21.15",
     "lodash": "^4.17.20",
-    "mysql2": "^2.2.5",
+    "pg": "^8.5.1",
     "typescript-json-schema": "^0.47.0"
   },
   "devDependencies": {

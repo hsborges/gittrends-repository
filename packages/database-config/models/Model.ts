@@ -23,6 +23,7 @@ function postValidate(data: TObject): TRecord {
     if (typeof value === 'string') {
       const dayjsInstance = dayjs(value, DATE_FORMAT);
       if (dayjsInstance.isValid()) return dayjsInstance.toDate();
+      else return value.replace(/(\x00|\u0000)/g, '');
     }
     if (typeof value === 'object') return JSON.stringify(value);
     return value;

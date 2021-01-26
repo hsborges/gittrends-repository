@@ -1,7 +1,7 @@
 *
 !certbot
 !nginx
-!mysql
+!postgres.conf
 !.gitignore
 !.dockerignore
 !tokens.txt.example

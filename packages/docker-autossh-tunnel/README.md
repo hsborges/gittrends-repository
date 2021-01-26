@@ -11,7 +11,7 @@ This Docker creates a simple SSH tunnel over a server. It is very useful when yo
 2. Inside `~/.ssh/config` put these lines:
 
 ```
-Host mysql-tunnel # You can use any name
+Host postgres-tunnel # You can use any name
     HostName ssh-tunnel.corporate.tld # Tunnel
     IdentityFile ~/.ssh/id_rsa # Private key location
     User cagatay.guertuerk # Username to connect to SSH service
@@ -29,17 +29,17 @@ Host mysql-tunnel # You can use any name
 ```
 version: '3'
 services:
-  mysql:
+  postgres:
     image: hsborges/docker-autossh-tunnel:0.0.2
     volumes:
       - $HOME/.ssh:/root/ssh:ro
     environment:
-      TUNNEL_HOST: mysql-tunnel
+      TUNNEL_HOST: postgres-tunnel
       REMOTE_HOST: tunneled-sql.corporate.internal.tld
-      LOCAL_PORT: 3306
-      REMOTE_PORT: 3306
+      LOCAL_PORT: 5432
+      REMOTE_PORT: 5432
 ```
 
 5. Run `docker-compose up -d`
 
-After you start up docker containers, any container in the same network will be able to access to tunneled mysql instance using `tcp://mysql:3306`. Of course you can also expose port 3306 to be able to access to tunneled resource from your host machine.
+After you start up docker containers, any container in the same network will be able to access to tunneled postgres instance using `tcp://postgres:5432`. Of course you can also expose port 5432 to be able to access to tunneled resource from your host machine.

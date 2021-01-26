@@ -50,7 +50,7 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       })
       .orderByRaw(
         request.query.sortBy === 'random'
-          ? 'rand()'
+          ? 'random()'
           : `${request.query.sortBy} ${request.query.order}`
       )
       // TODO - limit the fields returned with .select(...)
