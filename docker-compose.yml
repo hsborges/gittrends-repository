@@ -38,7 +38,7 @@ services:
     container_name: pgbackups
     restart: always
     volumes:
-      - /backups:/backups
+      - ./backups:/backups
     environment:
       - POSTGRES_HOST=${GITTRENDS_DATABASE_HOST}
       - POSTGRES_PORT=${GITTRENDS_DATABASE_PORT}
