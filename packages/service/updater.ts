@@ -57,25 +57,26 @@ program
   .option('-t, --type [type]', 'Update "repositories" or "users"', 'repositories')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
   .action(async () => {
-    consola.info(`Updating ${program.type} using ${program.workers} workers`);
+    const options = program.opts();
+    consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
     const cache = new Cache(process.env.GITTRENDS_CACHE_SIZE ?? 25000);
     const writerQueue = new WriterQueue(process.env.GITTRENDS_WRITER_QUEUE_CONCURRENCY ?? 1);
-    const queueScheduler = new QueueScheduler(program.type, {
+    const queueScheduler = new QueueScheduler(options.type, {
       connection: redisOptions,
       maxStalledCount: Number.MAX_SAFE_INTEGER
     });
 
     const queue = new Worker(
-      program.type,
+      options.type,
       (job: Job) =>
-        retriableWorker(job, program.type, cache, writerQueue)
+        retriableWorker(job, options.type, cache, writerQueue)
           .catch((err) => {
             consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
             throw err;
           })
           .finally(() => (global.gc ? global.gc() : null)),
-      { connection: redisOptions, concurrency: program.workers }
+      { connection: redisOptions, concurrency: options.workers }
     );
 
     queue.on('progress', ({ id }, progress) => {

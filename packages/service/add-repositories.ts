@@ -58,17 +58,19 @@ program
   .option('--language [string]', 'Major programming language')
   .option('--repository-name [name]', 'Repository name to search')
   .action(() => {
+    const options = program.opts();
+
     consola.info(
       'Searching for the top-%s repositories with more stars on GitHub ...',
-      program.limit
+      options.limit
     );
 
-    search(program.limit, program.language, program.repositoryName)
+    search(options.limit, options.language, options.repositoryName)
       .then((result) => {
         const repositories = chain(result.repositories)
           .uniqBy('id')
           .orderBy('stargazers_count', 'desc')
-          .slice(0, program.limit)
+          .slice(0, options.limit)
           .value();
 
         const users = chain(result.users)

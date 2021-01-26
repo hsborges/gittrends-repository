@@ -98,6 +98,7 @@ program
   .option('--destroy-queue', 'Destroy queue before scheduling resources')
   .action(
     async (resource: string, other: string[]): Promise<void> => {
+      const options = program.opts();
       const resources = resourcesParser([resource, ...other]);
 
       async function prepareQueue<T>(name: string) {
@@ -109,10 +110,10 @@ program
           }
         });
 
-        await queue.clean(1000 * 60 * 60 * program.wait, Number.MAX_SAFE_INTEGER, 'completed');
+        await queue.clean(1000 * 60 * 60 * options.wait, Number.MAX_SAFE_INTEGER, 'completed');
         await queue.clean(0, Number.MAX_SAFE_INTEGER, 'failed');
 
-        if (program.destroyQueue) await queue.drain();
+        if (options.destroyQueue) await queue.drain();
 
         return queue;
       }
@@ -124,13 +125,13 @@ program
       const reposResources = resources.filter((r) => r !== 'users');
       if (reposResources) {
         const queue = await prepareQueue('repositories');
-        promises.push(repositoriesScheduler(queue, reposResources, program.wait));
+        promises.push(repositoriesScheduler(queue, reposResources, options.wait));
       }
 
       // schedule users updates
       if (resources.indexOf('users') >= 0) {
         const queue = await prepareQueue('users');
-        promises.push(usersScheduler(queue, program.wait, program.limit));
+        promises.push(usersScheduler(queue, options.wait, options.limit));
       }
 
       // await promises and finish script
