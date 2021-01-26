@@ -11,6 +11,16 @@ type TRecord = Record<string, string | number | boolean>;
 dayjs.extend(customParserForamt);
 const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
 
+function cleanString(input: string): string {
+  let output = '';
+  for (let i = 0; i < input.length; i++) {
+    if (input.charCodeAt(i) <= 127) {
+      output += input.charAt(i);
+    }
+  }
+  return output;
+}
+
 function preValidate(data: unknown): unknown {
   if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
   if (isArray(data)) return data.map((d) => preValidate(d));
@@ -20,8 +30,8 @@ function preValidate(data: unknown): unknown {
 
 function postValidate(data: TObject): TRecord {
   return mapValues(data, (value) => {
-    if (typeof value === 'string') unescape(encodeURIComponent(value));
-    if (typeof value === 'object') return unescape(encodeURIComponent(JSON.stringify(value)));
+    if (typeof value === 'string') cleanString(value);
+    if (typeof value === 'object') return cleanString(JSON.stringify(value));
     return value;
   }) as TRecord;
 }
