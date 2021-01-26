@@ -64,7 +64,7 @@ services:
     volumes:
       - ./data/nginx/development.conf:/app/data/nginx/default.conf:ro
     environment:
-      GITTRENDS_DATABASE_HOST: mysql
+      GITTRENDS_DATABASE_HOST: postgres
       GITTRENDS_DATABASE_PORT: 3306
     env_file:
       - .env
