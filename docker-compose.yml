@@ -65,7 +65,7 @@ services:
       - ./data/nginx/development.conf:/app/data/nginx/default.conf:ro
     environment:
       GITTRENDS_DATABASE_HOST: postgres
-      GITTRENDS_DATABASE_PORT: 3306
+      GITTRENDS_DATABASE_PORT: 5432
     env_file:
       - .env
     depends_on:
