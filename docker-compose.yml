@@ -33,6 +33,25 @@ services:
     depends_on:
       - postgres
 
+  pgbackups:
+    image: prodrigestivill/postgres-backup-local
+    container_name: pgbackups
+    restart: always
+    volumes:
+      - /backups:/backups
+    environment:
+      - POSTGRES_HOST=${GITTRENDS_DATABASE_HOST}
+      - POSTGRES_PORT=${GITTRENDS_DATABASE_PORT}
+      - POSTGRES_DB=${GITTRENDS_DATABASE_DB}
+      - POSTGRES_USER=${GITTRENDS_DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${GITTRENDS_DATABASE_PASSWORD}
+      - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
+      - SCHEDULE=@weekly
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=1
+      - HEALTHCHECK_PORT=9999
+
   pghero:
     image: ankane/pghero
     container_name: pghero
