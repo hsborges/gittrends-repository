@@ -13,7 +13,8 @@ const options: Config = {
     user: process.env.GITTRENDS_DATABASE_USERNAME,
     password: process.env.GITTRENDS_DATABASE_PASSWORD,
     compress: true,
-    timezone: 'utc'
+    timezone: 'utc',
+    charset: 'SQL_ASCII'
   },
   pool: {
     min: parseInt(process.env.GITTRENDS_DATABASE_POOL_MIN ?? '2', 10),

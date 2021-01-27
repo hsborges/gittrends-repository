@@ -2,6 +2,7 @@ import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import Knex, { Transaction } from 'knex';
 import dayjs from 'dayjs';
+import utf8 from 'utf8';
 import customParserForamt from 'dayjs/plugin/customParseFormat';
 import { cloneDeep, mapValues, pick, isArray, isObject } from 'lodash';
 
@@ -20,7 +21,8 @@ function preValidate(data: unknown): unknown {
 
 function postValidate(data: TObject): TRecord {
   return mapValues(data, (value) => {
-    if (typeof value === 'object') return JSON.stringify(value);
+    if (typeof value === 'string') return utf8.encode(value);
+    if (typeof value === 'object') return utf8.encode(JSON.stringify(value));
     return value;
   }) as TRecord;
 }

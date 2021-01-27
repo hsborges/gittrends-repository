@@ -18,7 +18,8 @@
     "knex": "^0.21.16",
     "lodash": "^4.17.20",
     "pg": "^8.5.1",
-    "typescript-json-schema": "^0.48.0"
+    "typescript-json-schema": "^0.48.0",
+    "utf8": "^3.0.0"
   },
   "devDependencies": {
     "@gittrends/env-config": "*",
@@ -26,6 +27,7 @@
     "@types/jest": "^26.0.20",
     "@types/knex": "^0.16.1",
     "@types/lodash": "^4.14.168",
+    "@types/utf8": "^2.1.6",
     "ts-node": "^9.1.1"
   }
 }
