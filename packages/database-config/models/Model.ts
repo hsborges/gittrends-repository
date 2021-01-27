@@ -12,6 +12,13 @@ type TRecord = Record<string, string | number | boolean>;
 dayjs.extend(customParserForamt);
 const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
 
+function recursiveEncode(data: unknown): unknown {
+  if (Array.isArray(data)) return data.map(recursiveEncode);
+  if (typeof data === 'object') return mapValues(data, recursiveEncode);
+  if (typeof data === 'string') return utf8.encode(data);
+  return data;
+}
+
 function preValidate(data: unknown): unknown {
   if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
   if (isArray(data)) return data.map((d) => preValidate(d));
@@ -20,9 +27,8 @@ function preValidate(data: unknown): unknown {
 }
 
 function postValidate(data: TObject): TRecord {
-  return mapValues(data, (value) => {
-    if (typeof value === 'string') return utf8.encode(value);
-    if (typeof value === 'object') return utf8.encode(JSON.stringify(value));
+  return mapValues(recursiveEncode(data) as TObject, (value) => {
+    if (typeof value === 'object') return JSON.stringify(value);
     return value;
   }) as TRecord;
 }
