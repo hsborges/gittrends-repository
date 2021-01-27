@@ -3,14 +3,14 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('dependencies', (table) => {
-    table.string('repository').notNullable();
-    table.string('manifest').notNullable();
-    table.string('filename');
+    table.text('repository').notNullable();
+    table.text('manifest').notNullable();
+    table.text('filename');
     table.boolean('has_dependencies');
-    table.string('package_manager');
-    table.string('package_name').notNullable();
+    table.text('package_manager');
+    table.text('package_name').notNullable();
     table.json('target_repository');
-    table.string('requirements');
+    table.text('requirements');
 
     table.primary(['repository', 'manifest', 'package_name']);
   });

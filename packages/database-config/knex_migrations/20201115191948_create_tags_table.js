@@ -3,11 +3,11 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('tags', (table) => {
-    table.string('id').primary();
-    table.string('repository').notNullable();
-    table.string('name').notNullable();
-    table.string('target');
-    table.string('oid');
+    table.text('id').primary();
+    table.text('repository').notNullable();
+    table.text('name').notNullable();
+    table.text('target');
+    table.text('oid');
     table.text('message');
     table.json('tagger');
 

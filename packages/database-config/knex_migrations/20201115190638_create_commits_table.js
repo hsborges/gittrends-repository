@@ -3,8 +3,8 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('commits', (table) => {
-    table.string('id').primary();
-    table.string('repository').notNullable();
+    table.text('id').primary();
+    table.text('repository').notNullable();
     table.integer('additions');
     table.json('author');
     table.boolean('authored_by_committer');
@@ -16,7 +16,7 @@ exports.up = (knex) =>
     table.json('committer');
     table.integer('deletions');
     table.text('message');
-    table.string('oid').notNullable();
+    table.text('oid').notNullable();
     table.timestamp('pushed_date');
     table.json('signature');
     table.json('status');

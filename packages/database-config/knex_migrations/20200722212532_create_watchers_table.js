@@ -3,8 +3,8 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('watchers', (table) => {
-    table.string('repository').notNullable();
-    table.string('user').notNullable();
+    table.text('repository').notNullable();
+    table.text('user').notNullable();
 
     table.primary(['repository', 'user']);
   });

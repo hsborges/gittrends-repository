@@ -15,7 +15,7 @@ const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
 function recursiveEncode(data: unknown): unknown {
   if (Array.isArray(data)) return data.map(recursiveEncode);
   if (typeof data === 'object') return mapValues(data, recursiveEncode);
-  if (typeof data === 'string') return utf8.encode(data);
+  if (typeof data === 'string') return utf8.encode(data).replace(/\u0000/g, '');
   return data;
 }
 

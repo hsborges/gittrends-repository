@@ -3,13 +3,13 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('reactions', (table) => {
-    table.string('id').primary();
-    table.string('repository').notNullable();
-    table.string('issue').notNullable();
-    table.string('event');
-    table.string('content').notNullable();
+    table.text('id').primary();
+    table.text('repository').notNullable();
+    table.text('issue').notNullable();
+    table.text('event');
+    table.text('content').notNullable();
     table.timestamp('created_at').notNullable();
-    table.string('user').notNullable();
+    table.text('user').notNullable();
 
     table.index(['repository', 'issue']);
   });

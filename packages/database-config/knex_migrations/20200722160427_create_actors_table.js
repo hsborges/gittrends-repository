@@ -3,14 +3,14 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('actors', (table) => {
-    table.string('id').primary();
-    table.string('type').notNullable();
-    table.string('login').notNullable();
-    table.string('avatar_url');
+    table.text('id').primary();
+    table.text('type').notNullable();
+    table.text('login').notNullable();
+    table.text('avatar_url');
 
     // Users
     table.text('bio');
-    table.string('company');
+    table.text('company');
     table.integer('followers_count').unsigned();
     table.integer('following_count').unsigned();
     table.integer('gists_count').unsigned();
@@ -21,7 +21,7 @@ exports.up = (knex) =>
     table.boolean('is_hireable');
     table.boolean('is_site_admin');
     table.integer('projects_count');
-    table.string('projects_url');
+    table.text('projects_url');
     table.integer('repositories_contributed_to_count').unsigned();
     table.integer('starred_repositories_count').unsigned();
     table.json('status');
@@ -34,19 +34,19 @@ exports.up = (knex) =>
     table.integer('teams_count');
 
     // EnterpriseUserAccount
-    table.string('enterprise');
-    table.string('user');
+    table.text('enterprise');
+    table.text('user');
 
     // Common
     table.timestamp('created_at');
     table.integer('database_id');
-    table.string('email');
-    table.string('location');
-    table.string('name');
+    table.text('email');
+    table.text('location');
+    table.text('name');
     table.integer('repositories_count').unsigned();
-    table.string('twitter_username');
+    table.text('twitter_username');
     table.timestamp('updated_at');
-    table.string('website_url');
+    table.text('website_url');
   });
 
 exports.down = (knex) => knex.schema.dropTable('actors');

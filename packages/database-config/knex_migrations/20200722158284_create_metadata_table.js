@@ -4,9 +4,9 @@
 exports.up = (knex) =>
   Promise.all([
     knex.schema.createTable('metadata', (table) => {
-      table.string('id');
-      table.string('resource').notNullable();
-      table.string('key').notNullable();
+      table.text('id');
+      table.text('resource').notNullable();
+      table.text('key').notNullable();
       table.text('value');
 
       table.primary(['id', 'resource', 'key']);

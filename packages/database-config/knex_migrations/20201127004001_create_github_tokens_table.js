@@ -3,11 +3,11 @@
  */
 exports.up = (knex) =>
   knex.schema.createTable('github_tokens', (table) => {
-    table.string('token').primary();
-    table.string('type');
-    table.string('scope');
-    table.string('login');
-    table.string('email');
+    table.text('token').primary();
+    table.text('type');
+    table.text('scope');
+    table.text('login');
+    table.text('email');
     table.timestamp('created_at').defaultTo(knex.fn.now());
   });
 
