@@ -15,7 +15,7 @@ services:
       POSTGRES_USER: ${GITTRENDS_DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
       POSTGRES_DB: ${GITTRENDS_DATABASE_DB}
-      POSTGRES_INITDB_ARGS: -E SQL_ASCII
+      POSTGRES_INITDB_ARGS: -E SQL_ASCII -T template0 --lc-collate=C --lc-ctype=C
 
   pgadmin:
     image: dpage/pgadmin4
