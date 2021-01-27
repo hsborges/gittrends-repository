@@ -4,17 +4,22 @@
 import { resolve } from 'path';
 import { Config } from 'knex';
 
+const USERNAME = process.env.GITTRENDS_DATABASE_USERNAME;
+const PASSWORD = process.env.GITTRENDS_DATABASE_PASSWORD;
+const HOST = process.env.GITTRENDS_DATABASE_HOST ?? 'localhost';
+const PORT = parseInt(process.env.GITTRENDS_DATABASE_PORT ?? '5432', 10);
+const DB = process.env.GITTRENDS_DATABASE_DB;
+
+let connectionString = `postgres://`;
+if (process.env.GITTRENDS_DATABASE_USERNAME) connectionString += `${USERNAME}:${PASSWORD}@`;
+connectionString += `${HOST}:${PORT}/${DB}?client_encoding=C`;
+
 const options: Config = {
   client: 'pg',
   connection: {
-    host: process.env.GITTRENDS_DATABASE_HOST,
-    port: parseInt(process.env.GITTRENDS_DATABASE_PORT ?? '5432', 10),
-    database: process.env.GITTRENDS_DATABASE_DB,
-    user: process.env.GITTRENDS_DATABASE_USERNAME,
-    password: process.env.GITTRENDS_DATABASE_PASSWORD,
+    connectionString: connectionString,
     compress: true,
-    timezone: 'utc',
-    charset: 'SQL_ASCII'
+    timezone: 'utc'
   },
   pool: {
     min: parseInt(process.env.GITTRENDS_DATABASE_POOL_MIN ?? '2', 10),
