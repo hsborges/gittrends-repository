@@ -16,7 +16,7 @@ export class UnmarkedAsDuplicateEvent extends Fragment {
       fragment ${this.code} on UnmarkedAsDuplicateEvent {
         actor { ...${SimplifiedActorFragment.code} }
         createdAt
-        duplicate { ... on Issue { id } }
+        duplicate { ... on Node { id } }
         canonical { ... on Node { id } }
         isCrossRepository
       }
