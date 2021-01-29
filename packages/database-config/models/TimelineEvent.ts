@@ -7,7 +7,11 @@ class TimelineEvent extends Model<ITimelineEvent> {
   idColumn = 'id';
   jsonSchema = schema.definitions.ITimelineEvent;
 
-  validate(data: Record<string, unknown>): Record<string, string | number | boolean> {
+  protected postValidate(data: TObject): Record<string, string | number | boolean> {
+    return super.postValidate({ ...data, payload: JSON.parse(data.payload as string) });
+  }
+
+  protected validate(data: Record<string, unknown>): Record<string, string | number | boolean> {
     data.payload = JSON.stringify(data.payload);
     return super.validate(data);
   }

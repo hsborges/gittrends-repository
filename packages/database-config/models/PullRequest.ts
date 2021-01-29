@@ -8,7 +8,12 @@ class PullRequest extends Model<IPullRequest> {
   idColumn = 'id';
   jsonSchema = schema.definitions.IPullRequest;
 
-  validate(data: Record<string, unknown>): Record<string, string | number | boolean> {
+  protected postValidate(data: TObject): Record<string, string | number | boolean> {
+    if (data.reaction_groups) data.reaction_groups = JSON.parse(data.reaction_groups as string);
+    return super.postValidate(data);
+  }
+
+  protected validate(data: Record<string, unknown>): Record<string, string | number | boolean> {
     if (!data.type) data.type = 'PullRequest';
     if (data.reaction_groups) data.reaction_groups = JSON.stringify(data.reaction_groups);
     return super.validate(data);

@@ -19,20 +19,6 @@ function recursiveEncode(data: unknown): unknown {
   return data;
 }
 
-function preValidate(data: unknown): unknown {
-  if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
-  if (isArray(data)) return data.map((d) => preValidate(d));
-  if (isObject(data)) return mapValues(data, (value) => preValidate(value));
-  return data;
-}
-
-function postValidate(data: TObject): TRecord {
-  return mapValues(recursiveEncode(data) as TObject, (value) => {
-    if (typeof value === 'object') return JSON.stringify(value);
-    return value;
-  }) as TRecord;
-}
-
 export class ValidationError extends Error {
   readonly object: TObject;
   readonly errorObject: ErrorObject[];
@@ -64,19 +50,33 @@ export default abstract class Model<T = void> {
     addFormats(this._ajv);
   }
 
-  query(transaction?: Transaction): Knex.QueryBuilder {
-    const table = Model.knex<T>(this.tableName);
-    return transaction != null ? table.transacting(transaction) : table;
+  protected preValidate(data: unknown): unknown {
+    if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
+    if (isArray(data)) return data.map((d) => this.preValidate(d));
+    if (isObject(data)) return mapValues(data, (value) => this.preValidate(value));
+    return data;
   }
 
-  validate(data: Record<string, unknown>): TRecord {
+  protected postValidate(data: TObject): TRecord {
+    return mapValues(recursiveEncode(data) as TObject, (value) => {
+      if (typeof value === 'object') return JSON.stringify(value);
+      return value;
+    }) as TRecord;
+  }
+
+  protected validate(data: Record<string, unknown>): TRecord {
     if (this._validator === undefined) this._validator = this._ajv.compile<T>(this.jsonSchema);
 
-    const clone = preValidate(cloneDeep(data)) as Record<string, unknown>;
+    const clone = this.preValidate(cloneDeep(data)) as Record<string, unknown>;
     if (!this._validator(clone))
       throw new ValidationError(clone, this._validator.errors as ErrorObject[]);
 
-    return postValidate(clone);
+    return this.postValidate(clone);
+  }
+
+  query(transaction?: Transaction): Knex.QueryBuilder {
+    const table = Model.knex<T>(this.tableName);
+    return transaction != null ? table.transacting(transaction) : table;
   }
 
   async insert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
