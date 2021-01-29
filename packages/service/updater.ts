@@ -30,7 +30,7 @@ async function retriableWorker(
     let updater: Updater;
 
     if (type === 'users') {
-      updater = new ActorsUpdater(job.data.id);
+      updater = new ActorsUpdater(job.data.id, { job });
     } else if (type === 'repositories') {
       const id = job.data.id as string;
       const resources = job.data.resources as THandler[];
