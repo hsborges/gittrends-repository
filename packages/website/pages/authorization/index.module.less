@@ -3,64 +3,58 @@
 .gittrends-authorization {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  margin-top: 5vh;
 
-  .gittrends-authorization-body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 5vh;
-    flex-grow: 1;
+  header {
+    color: @primary-color;
+    font-size: 3em;
+    font-weight: bolder;
+  }
 
-    header {
+  section {
+    color: @text-color;
+    width: 60%;
+    text-align: center;
+  }
+
+  section.main-text,
+  section.feedback-text {
+    font-size: 1.75em;
+    margin-top: 10vh;
+  }
+
+  section.feedback-text {
+    font-size: 2.5em;
+
+    & > .smile {
       color: @primary-color;
-      font-size: 3em;
+      font-size: 1.25em;
+    }
+
+    & > .login {
       font-weight: bolder;
     }
+  }
 
-    section {
-      color: @text-color;
-      width: 60%;
-      text-align: center;
-    }
+  a {
+    background-color: @primary-color;
+    color: white;
+    text-align: center;
+    font-size: 1.75em;
+    line-height: 2em;
+    margin: 5vh 0;
+    padding: 0 25px;
+  }
 
-    section.main-text,
-    section.feedback-text {
-      font-size: 1.75em;
-      margin-top: 10vh;
-    }
+  footer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: -1;
 
-    section.feedback-text {
-      font-size: 2.5em;
-
-      & > .smile {
-        color: @primary-color;
-        font-size: 1.25em;
-      }
-
-      & > .login {
-        font-weight: bolder;
-      }
-    }
-
-    a {
-      background-color: @primary-color;
-      color: white;
-      text-align: center;
-      font-size: 1.75em;
-      line-height: 2em;
-      margin: 5vh 0;
-      padding: 0 25px;
-    }
-
-    footer {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      z-index: -1;
-
-      img {
-        max-height: 50vh;
-      }
+    img {
+      max-height: 50vh;
     }
   }
 }

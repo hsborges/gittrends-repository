@@ -16,6 +16,7 @@ export class CommentDeletedEvent extends Fragment {
       fragment ${this.code} on CommentDeletedEvent {
         actor { ...${SimplifiedActorFragment.code} }
         createdAt
+        deletedCommentAuthor  { ...${SimplifiedActorFragment.code} }
       }
     `;
   }

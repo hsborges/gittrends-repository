@@ -1,8 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-exports.up = (knex) =>
-  knex.schema.createTable('releases', (table) => {
+import * as Knex from 'knex';
+
+export async function up(knex: Knex): Promise<void> {
+  return knex.schema.createTable('releases', (table) => {
     table.text('id').primary();
     table.text('repository').notNullable();
     table.text('author');
@@ -19,5 +21,8 @@ exports.up = (knex) =>
 
     table.index('repository');
   });
+}
 
-exports.down = (knex) => knex.schema.dropTable('releases');
+export async function down(knex: Knex): Promise<void> {
+  return knex.schema.dropTable('releases');
+}

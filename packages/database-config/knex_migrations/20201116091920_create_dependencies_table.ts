@@ -1,8 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-exports.up = (knex) =>
-  knex.schema.createTable('dependencies', (table) => {
+import * as Knex from 'knex';
+
+export async function up(knex: Knex): Promise<void> {
+  return knex.schema.createTable('dependencies', (table) => {
     table.text('repository').notNullable();
     table.text('manifest').notNullable();
     table.text('filename');
@@ -14,5 +16,8 @@ exports.up = (knex) =>
 
     table.primary(['repository', 'manifest', 'package_name']);
   });
+}
 
-exports.down = (knex) => knex.schema.dropTable('dependencies');
+export async function down(knex: Knex): Promise<void> {
+  return knex.schema.dropTable('dependencies');
+}

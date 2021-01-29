@@ -1,8 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-exports.up = (knex) =>
-  knex.schema.createTable('timeline', (table) => {
+import * as Knex from 'knex';
+
+export async function up(knex: Knex): Promise<void> {
+  return knex.schema.createTable('timeline', (table) => {
     table.text('id').primary();
     table.text('repository').notNullable();
     table.text('issue').notNullable();
@@ -11,5 +13,8 @@ exports.up = (knex) =>
 
     table.index(['repository', 'issue']);
   });
+}
 
-exports.down = (knex) => knex.schema.dropTable('timeline');
+export async function down(knex: Knex): Promise<void> {
+  return knex.schema.dropTable('timeline');
+}

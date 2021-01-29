@@ -21,7 +21,7 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
   const { tags } = fetchTags({ name_with_owner: props.name_with_owner });
 
   return (
-    <DefaultLayout id="project-explorer" className="overflow-hidden" showSearch>
+    <DefaultLayout id="project-explorer" showSearch>
       <section id="project-explorer-top" className="project-explorer">
         <header>
           <Breadcrumb className="breadcrumb">
@@ -48,13 +48,7 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
             className="anchor"
             affix
             offsetTop={10}
-            getContainer={(): HTMLElement => document.querySelector('#project-explorer')}
-            onChange={(anchor) =>
-              document
-                .getElementById('project-explorer-top')
-                .querySelector('.breadcrumb')
-                .classList[anchor ? 'add' : 'remove']('hidden')
-            }
+            getContainer={(): HTMLElement => document.querySelector('.main-container')}
           >
             <Anchor.Link href="#project-explorer-top" title="Top" />
             <Anchor.Link href="#overview" title="Overview" />

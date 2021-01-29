@@ -3,7 +3,7 @@ import Router from 'next/router';
 import { Statistic } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub, faGithubAlt } from '@fortawesome/free-brands-svg-icons';
-import { faSpinner, faStar, faTag, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faTag, faUser } from '@fortawesome/free-solid-svg-icons';
 
 import ServerError from '../components/ServerError';
 import ProjectCard from '../components/RepositoryCard';
@@ -16,7 +16,7 @@ import './index.module.less';
 
 export default function Home(): JSX.Element {
   const { data: sData } = fetchStatistics();
-  const { data, isError, isLoading } = fetchProjects({ limit: 8, sortBy: 'random' });
+  const { data, isError } = fetchProjects({ limit: 8, sortBy: 'random' });
 
   const [statistics, setStatistics] = useState<
     { title: string; value: number | null; icon: any }[]
@@ -47,7 +47,6 @@ export default function Home(): JSX.Element {
         </div>
         <span>or explore the popular ones</span>
         <div className="project-samples" hidden={isError}>
-          <FontAwesomeIcon icon={faSpinner} spin className={isLoading ? '' : 'hidden'} />
           {data?.repositories.map((sample) => (
             <ProjectCard key={sample.id} repository={sample} className="card" />
           ))}

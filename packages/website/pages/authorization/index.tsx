@@ -26,8 +26,8 @@ function Authorization(props: TAuthorizationResponse): JSX.Element {
   if (props.success) new Cookie().set('dismissed', 1, { maxAge: Number.MAX_SAFE_INTEGER });
 
   return (
-    <Layout className="gittrends-authorization">
-      <section className="gittrends-authorization-body">
+    <Layout>
+      <section className="gittrends-authorization">
         <header hidden={props.success}>
           Donate an GitHub access token <FontAwesomeIcon icon={faThumbsUp} />
         </header>

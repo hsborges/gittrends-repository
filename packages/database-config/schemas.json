@@ -543,6 +543,9 @@
         "description": {
           "type": "string"
         },
+        "progress_percentage": {
+          "type": "number"
+        },
         "dueOn": {
           "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",

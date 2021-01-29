@@ -17,9 +17,11 @@ export default function DefaultLayout(
         <title>GitTrends.app - Monitoring Popular GitHub Projects</title>
       </Head>
       <NavigationBar showSearch={showSearch ?? false} className="navigation-bar" />
-      <section {...sectionProps} className={`main-container ${props.className ?? ''}`}>
+      <section className="main-container">
         <DonateAlert />
-        {props.children}
+        <div className="main-container-content" {...sectionProps}>
+          {props.children}
+        </div>
         <MadeWithLove className="main-container-footer" />
       </section>
     </section>

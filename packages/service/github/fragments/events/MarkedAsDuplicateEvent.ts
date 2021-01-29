@@ -16,6 +16,9 @@ export class MarkedAsDuplicateEvent extends Fragment {
       fragment ${this.code} on MarkedAsDuplicateEvent {
         actor { ...${SimplifiedActorFragment.code} }
         createdAt
+        duplicate { id }
+        canonical { id }
+        isCrossRepository
       }
     `;
   }

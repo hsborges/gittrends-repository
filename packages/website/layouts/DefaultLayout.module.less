@@ -1,22 +1,21 @@
 section.default-layout {
-  display: flex;
-  flex-direction: row;
   width: 100vw;
   height: 100vh;
+  display: grid;
+  grid-template-columns: 225px auto;
+  grid-template-rows: auto;
   overflow: hidden;
-
-  & > .navigation-bar {
-    max-width: 225px;
-    min-width: 225px;
-    z-index: 999;
-  }
 
   & > .main-container {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    min-height: 100vh;
     overflow-y: auto;
     scroll-behavior: smooth;
+
+    & > .main-container-content {
+      flex-grow: 1;
+    }
 
     & > .main-container-footer {
       margin-top: 40px;

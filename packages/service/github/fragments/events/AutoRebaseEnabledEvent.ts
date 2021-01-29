@@ -4,8 +4,8 @@
 import Fragment from '../../Fragment';
 import { SimplifiedActorFragment } from '../ActorFragment';
 
-export class BaseRefChangedEvent extends Fragment {
-  code = 'baseRefChangedEvent';
+export class AutoRebaseEnabledEvent extends Fragment {
+  code = 'autoRebaseEnabledEvent';
 
   get dependencies(): Fragment[] {
     return [SimplifiedActorFragment];
@@ -13,14 +13,13 @@ export class BaseRefChangedEvent extends Fragment {
 
   toString(): string {
     return `
-      fragment ${this.code} on BaseRefChangedEvent {
+      fragment ${this.code} on AutoRebaseEnabledEvent {
         actor { ...${SimplifiedActorFragment.code} }
         createdAt
-        currentRefName
-        previousRefName
+        enabler { ...${SimplifiedActorFragment.code} }
       }
     `;
   }
 }
 
-export default new BaseRefChangedEvent();
+export default new AutoRebaseEnabledEvent();

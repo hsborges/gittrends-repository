@@ -26,6 +26,11 @@ import ReviewRequestedEvent from '../fragments/events/ReviewRequestedEvent';
 import PullRequestReviewFragment from '../fragments/PullRequestReviewFragment';
 import PullRequestCommitCommentThreadFragment from '../fragments/PullRequestCommitCommentThreadFragment';
 import PullRequestReviewThreadFragment from '../fragments/PullRequestReviewThreadFragment';
+import AutoMergeDisabledEvent from '../fragments/events/AutoMergeDisabledEvent';
+import AutoMergeEnabledEvent from '../fragments/events/AutoMergeEnabledEvent';
+import AutoRebaseEnabledEvent from '../fragments/events/AutoRebaseEnabledEvent';
+import AutoSquashEnabledEvent from '../fragments/events/AutoSquashEnabledEvent';
+import BaseRefDeletedEvent from '../fragments/events/BaseRefDeletedEvent';
 
 export default class PullRequestComponent extends IssueComponent {
   constructor(id: string, alias = 'pull') {
@@ -34,7 +39,12 @@ export default class PullRequestComponent extends IssueComponent {
     this.extraTimelineEvents = `
       ... on AutomaticBaseChangeFailedEvent { ...${AutomaticBaseChangeFailedEvent.code} }
       ... on AutomaticBaseChangeSucceededEvent { ...${AutomaticBaseChangeSucceededEvent.code} }
+      ... on AutoMergeDisabledEvent { ...${AutoMergeDisabledEvent.code} }
+      ... on AutoMergeEnabledEvent { ...${AutoMergeEnabledEvent.code} }
+      ... on AutoRebaseEnabledEvent { ...${AutoRebaseEnabledEvent.code} }
+      ... on AutoSquashEnabledEvent { ...${AutoSquashEnabledEvent.code} }
       ... on BaseRefChangedEvent { ...${BaseRefChangedEvent.code} }
+      ... on BaseRefDeletedEvent { ...${BaseRefDeletedEvent.code} }
       ... on BaseRefForcePushedEvent { ...${BaseRefForcePushedEvent.code} }
       ... on ConvertToDraftEvent { ...${ConvertToDraftEvent.code} }
       ... on DeployedEvent { ...${DeployedEvent.code} }
@@ -65,7 +75,12 @@ export default class PullRequestComponent extends IssueComponent {
       fragments.push(
         AutomaticBaseChangeFailedEvent,
         AutomaticBaseChangeSucceededEvent,
+        AutoMergeDisabledEvent,
+        AutoMergeEnabledEvent,
+        AutoRebaseEnabledEvent,
+        AutoSquashEnabledEvent,
         BaseRefChangedEvent,
+        BaseRefDeletedEvent,
         BaseRefForcePushedEvent,
         ConvertToDraftEvent,
         DeployedEvent,

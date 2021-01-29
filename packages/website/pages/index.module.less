@@ -1,70 +1,49 @@
 @import '../styles/less/antd-custom.less';
 
 .github-index-page {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+  width: 100%;
 
-  header {
-    width: 100%;
-    padding: 5vh 0 10vh 0;
+  & > header {
+    padding: 5vh 0;
     text-align: center;
     font-size: 3.25em;
     color: @primary-color;
+    font-weight: bolder;
   }
 
-  section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-grow: 1;
+  & > section {
+    text-align: center;
     font-size: 1.25em;
-    font-weight: bolder;
-    width: 100%;
 
     & > span {
-      padding: 25px;
-    }
-
-    & > span:first-child {
-      padding: 0 0 25px 0;
+      display: block;
+      margin: 25px;
+      font-weight: bolder;
     }
 
     .search-box {
       width: 50%;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .error .ant-result {
-      padding: 15px;
+      margin: auto;
     }
 
     .project-samples {
-      display: flex;
-      flex-direction: row;
+      display: grid;
+      grid-template-columns: repeat(4, auto);
+      grid-template-rows: auto;
       justify-content: center;
-      flex-wrap: wrap;
-      flex-grow: 1;
-      max-width: 90%;
-      font-weight: normal;
-
-      .card {
-        margin: 10px;
-        text-overflow: clip;
-      }
+      gap: 10px;
+      width: 90%;
+      margin: auto;
+      padding: 50px;
     }
 
     .db-statistics {
+      width: 90%;
+      margin: auto;
+      padding: 50px;
       display: flex;
       flex-direction: row;
-      justify-content: space-around;
-      flex-grow: 1;
-      padding: 50px;
-      width: 75%;
-      margin: auto;
+      justify-content: space-evenly;
 
       .db-stats {
         .ant-statistic-title {

@@ -21,6 +21,7 @@ export class MilestoneFragment extends Fragment {
         dueOn
         id
         number
+        progressPercentage
         state
         title
       }

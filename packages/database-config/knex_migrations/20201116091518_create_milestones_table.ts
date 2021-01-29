@@ -1,8 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-exports.up = (knex) =>
-  knex.schema.createTable('milestones', (table) => {
+import * as Knex from 'knex';
+
+export async function up(knex: Knex): Promise<void> {
+  return knex.schema.createTable('milestones', (table) => {
     table.text('id').primary();
     table.text('repository').notNullable();
     table.text('creator');
@@ -14,5 +16,8 @@ exports.up = (knex) =>
 
     table.index('repository');
   });
+}
 
-exports.down = (knex) => knex.schema.dropTable('milestones');
+export async function down(knex: Knex): Promise<void> {
+  return knex.schema.dropTable('milestones');
+}
