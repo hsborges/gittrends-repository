@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */
 import React from 'react';
 import Link from 'next/link';
 import Router, { useRouter } from 'next/router';
@@ -7,7 +8,9 @@ import {
   faThLarge,
   faHome,
   faQuestionCircle,
-  faGlobe
+  faGlobe,
+  faBars,
+  faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import { faGithub, faTwitter } from '@fortawesome/free-brands-svg-icons';
 
@@ -36,7 +39,10 @@ export default function NavigationBar(
 
     return (
       <Link key={item.title} href={item.link} passHref>
-        <a className={`item ${active ? 'active' : ''}`}>
+        <a
+          className={`item ${active ? 'active' : ''}`}
+          onClick={() => document.querySelector('.menu').classList.remove('visible')}
+        >
           <FontAwesomeIcon icon={item.icon} className="icon" /> <span>{item.title}</span>
         </a>
       </Link>
@@ -51,7 +57,17 @@ export default function NavigationBar(
       <header>
         <Logo />
       </header>
+      <FontAwesomeIcon
+        icon={faBars}
+        className="menu-icon"
+        onClick={() => document.querySelector('.menu').classList.add('visible')}
+      />
       <section className="menu">
+        <FontAwesomeIcon
+          icon={faTimes}
+          className="close-menu-icon"
+          onClick={() => document.querySelector('.menu').classList.remove('visible')}
+        />
         <div className="item search-area" hidden={!showSearch}>
           <Search
             placeholder="Search"

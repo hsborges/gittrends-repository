@@ -4,13 +4,15 @@ import Knex, { Transaction } from 'knex';
 import dayjs from 'dayjs';
 import utf8 from 'utf8';
 import customParserForamt from 'dayjs/plugin/customParseFormat';
-import { cloneDeep, mapValues, pick, isArray, isObject } from 'lodash';
+import { cloneDeep, mapValues, pick, isArray, isObject, chunk } from 'lodash';
 
 type TObject = Record<string, unknown>;
 type TRecord = Record<string, string | number | boolean>;
 
 dayjs.extend(customParserForamt);
+
 const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
+const CHUNK_SIZE = process.env.GITTRENDS_WRITE_BATCH_SIZE ?? 1000;
 
 function recursiveEncode(data: unknown): unknown {
   if (Array.isArray(data)) return data.map(recursiveEncode);
@@ -82,19 +84,27 @@ export default abstract class Model<T = void> {
   async insert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
 
-    await this.query(transaction)
-      .insert(records)
-      .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
-      .ignore();
+    await Promise.all(
+      chunk(records, CHUNK_SIZE).map((_records) =>
+        this.query(transaction)
+          .insert(_records)
+          .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
+          .ignore()
+      )
+    );
   }
 
   async upsert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
 
-    await this.query(transaction)
-      .insert(records)
-      .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
-      .merge();
+    await Promise.all(
+      chunk(records, CHUNK_SIZE).map((_records) =>
+        this.query(transaction)
+          .insert(_records)
+          .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
+          .merge()
+      )
+    );
   }
 
   async update(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
