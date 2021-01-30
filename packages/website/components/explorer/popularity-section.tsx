@@ -148,7 +148,10 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
         </Card>
       </div>
       <div className="plot-area">
-        <FlexibleWidthXYPlot height={300} animation={{ duration: 1 }}>
+        <FlexibleWidthXYPlot
+          height={window.innerWidth >= 576 ? 300 : 200}
+          animation={{ duration: 1 }}
+        >
           <VerticalGridLines />
           <HorizontalGridLines />
           <YAxis

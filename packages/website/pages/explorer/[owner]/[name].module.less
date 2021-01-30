@@ -75,3 +75,34 @@
     }
   }
 }
+
+@media (max-width: 575.98px) {
+  .project-explorer {
+    & > header {
+      display: none;
+    }
+
+    & > section {
+      width: 100%;
+
+      & > .divider {
+        margin-top: 1.25em;
+        margin-bottom: 1.25em;
+        font-size: 1.75em;
+      }
+
+      & > .title {
+        margin: auto;
+        padding-top: 25px;
+
+        .topics {
+          margin-top: 10px;
+          .topic {
+            font-size: 0.75em;
+            margin-top: 5px;
+          }
+        }
+      }
+    }
+  }
+}

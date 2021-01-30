@@ -42,14 +42,13 @@
 
   .content {
     display: flex;
-    flex-direction: row;
     flex-wrap: wrap;
-    flex-grow: 1;
     justify-content: center;
+    gap: 15px;
     margin: 5vw 5vw 0 5vw;
 
-    & > .card {
-      margin: 15px;
+    .card {
+      width: 225px;
     }
   }
 
@@ -70,5 +69,29 @@
 
   footer {
     margin-top: 25px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gittrends-explorer-page {
+    .header {
+      .select,
+      .statistic {
+        display: none;
+      }
+
+      .search {
+        width: 100%;
+      }
+    }
+
+    .content {
+      gap: 10px;
+      margin: 25px 5px;
+
+      .card {
+        width: 170px;
+      }
+    }
   }
 }

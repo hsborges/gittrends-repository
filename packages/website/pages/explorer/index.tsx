@@ -54,7 +54,11 @@ function Explorer(props: ISearch): JSX.Element {
             ))}
           </Select>
           <Skeleton loading={isLoading} title={false} paragraph={{ rows: 1 }} className="statistic">
-            <Statistic title="Total Repositories" value={data?.meta.repositories_count} />
+            <Statistic
+              title="Total Repositories"
+              value={data?.meta.repositories_count}
+              className="statistic"
+            />
           </Skeleton>
           <Search
             className="search"

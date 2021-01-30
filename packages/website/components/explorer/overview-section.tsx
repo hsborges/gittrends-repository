@@ -115,7 +115,13 @@ export default function OverviewSection(props: OverviewSectionAttributes): JSX.E
 
   return (
     <section {...props}>
-      <Descriptions layout="vertical" bordered colon={false} column={4} size="small">
+      <Descriptions
+        layout="vertical"
+        bordered
+        colon={false}
+        column={window.innerWidth >= 576 ? 4 : 3}
+        size="small"
+      >
         {overviewInfo
           .filter((info) => info.value)
           .map((info, index) => (

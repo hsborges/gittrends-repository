@@ -61,6 +61,7 @@
 
 @media (max-width: 575.98px) {
   .gittrends-navigation-bar {
+    position: relative;
     height: 65px;
 
     .badge {
@@ -78,8 +79,8 @@
       color: white;
       position: absolute;
       right: 0;
-      margin: 20px 15px;
-      font-size: 2em;
+      margin: 23px 15px;
+      font-size: 1.5em;
       cursor: pointer;
     }
 
@@ -101,7 +102,6 @@
       &.visible {
         width: 100vw;
         height: 100vh;
-        opacity: 1;
         background-color: @primary-color;
         color: white;
         z-index: 2;
@@ -111,6 +111,8 @@
         align-items: center;
         padding-top: 15vh;
         transition: width 0.5s ease-out;
+        position: fixed;
+        top: 0;
 
         & > .item {
           width: 50vw;

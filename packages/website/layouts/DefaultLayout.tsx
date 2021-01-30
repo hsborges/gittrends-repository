@@ -19,8 +19,8 @@ export default function DefaultLayout(
       <NavigationBar showSearch={showSearch ?? false} className="navigation-bar" />
       <section className="main-container">
         <DonateAlert />
-        <div className="main-container-content" {...sectionProps}>
-          {props.children}
+        <div className="main-container-content">
+          <div {...sectionProps}>{props.children}</div>
         </div>
         <MadeWithLove className="main-container-footer" />
       </section>

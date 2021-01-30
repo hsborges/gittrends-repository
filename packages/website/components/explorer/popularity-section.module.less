@@ -25,10 +25,6 @@
         font-size: 1.5em;
       }
     }
-
-    .card:not(last-child) {
-      margin-right: 10px;
-    }
   }
 
   .plot-area {
@@ -83,6 +79,33 @@
 
       .control:not(last-child) {
         padding-right: 10px;
+      }
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gittrends-repository-popularity-section {
+    .statistics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: auto;
+      gap: 10px;
+    }
+
+    .plot-area {
+      .controls {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+
+        .control {
+          margin-bottom: 10px;
+          .select {
+            width: 100px;
+          }
+        }
       }
     }
   }

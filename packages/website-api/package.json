@@ -25,7 +25,8 @@
     "fastify-helmet": "^5.1.0",
     "fastify-plugin": "^3.0.0",
     "lodash": "^4.17.19",
-    "nodemailer": "^6.4.17"
+    "nodemailer": "^6.4.17",
+    "utf8": "^3.0.0"
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
