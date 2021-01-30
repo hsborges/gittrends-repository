@@ -1,9 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
+import { truncate } from 'lodash';
 import { Card, Avatar, Divider, Statistic, Row, Col, Empty } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faCodeBranch } from '@fortawesome/free-solid-svg-icons';
-import { XYPlot, XAxis, LineSeries } from 'react-vis';
+import { FlexibleWidthXYPlot, XAxis, LineSeries } from 'react-vis';
 
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -57,14 +58,19 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
             ))}
           </Row>
           <Divider plain></Divider>
-          <Row className={`views ${!isLoading ? 'has-extra' : ''}`}>
+          <Row className={`views ${!isLoading && !isError ? 'has-extra' : ''}`}>
             <Col span={24} className="description">
-              {(repository.description || '').slice(0, 100) +
-                ((repository.description || '').length > 100 ? ' ...' : '')}
+              {truncate(repository.description || '', {
+                length: window.innerWidth < 600 ? 60 : 95
+              })}
             </Col>
             <Col span={24} className="extra" hidden={isError}>
-              <XYPlot height={125} width={225} className="plot">
-                <XAxis title="stars history" hideLine hideTicks top={110} position="middle" />
+              <FlexibleWidthXYPlot
+                height={90}
+                className="plot"
+                margin={{ left: 0, right: 0, bottom: 20, top: 0 }}
+              >
+                <XAxis title="stars history" hideLine hideTicks top={95} position="middle" />
                 <LineSeries
                   curve={null}
                   data={Object.entries(timeseries || {}).reduce(
@@ -79,7 +85,7 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
                   strokeStyle="solid"
                   style={{}}
                 />
-              </XYPlot>
+              </FlexibleWidthXYPlot>
             </Col>
             <Col span={24} className="extra" hidden={!isError}>
               <Empty description="stars history not avaliable yet" className="not-available" />

@@ -37,7 +37,7 @@ export default function NavigationBar(
     return (
       <Link key={item.title} href={item.link} passHref>
         <a className={`item ${active ? 'active' : ''}`}>
-          <FontAwesomeIcon icon={item.icon} className="icon" /> {item.title}
+          <FontAwesomeIcon icon={item.icon} className="icon" /> <span>{item.title}</span>
         </a>
       </Link>
     );
@@ -47,7 +47,7 @@ export default function NavigationBar(
 
   return (
     <section {...sectionProps} className={`gittrends-navigation-bar ${props.className ?? ''}`}>
-      <BetaBadge />
+      <BetaBadge className="badge" />
       <header>
         <Logo />
       </header>

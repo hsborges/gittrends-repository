@@ -1,4 +1,4 @@
-section.default-layout {
+.default-layout {
   width: 100vw;
   height: 100vh;
   display: grid;
@@ -20,5 +20,14 @@ section.default-layout {
     & > .main-container-footer {
       margin-top: 40px;
     }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .default-layout {
+    grid-template-columns: auto;
+    grid-template-rows: 40px auto;
+    min-height: 100vh;
+    height: auto;
   }
 }

@@ -1,6 +1,6 @@
 .gittrends-repository-card {
-  width: 225px;
-  height: 225px;
+  max-width: 225px;
+  height: 200px;
   cursor: pointer;
 
   .card-header {
@@ -48,12 +48,14 @@
     }
 
     .extra {
-      display: flex;
-      justify-content: center;
-      align-items: center;
       height: 0px;
       width: 0px;
       opacity: 0;
+      margin: auto;
+
+      .plot {
+        width: 100%;
+      }
 
       .not-available {
         font-size: 0.9em;
@@ -61,10 +63,6 @@
           height: 75px;
         }
       }
-    }
-
-    .plot {
-      margin-left: -35px;
     }
   }
 
@@ -90,5 +88,30 @@
 
   .ant-divider {
     margin: 5px 0;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gittrends-repository-card {
+    height: 185px;
+
+    .views {
+      .description {
+        text-overflow: clip;
+      }
+    }
+
+    .views.has-extra {
+      .description {
+        height: 0px;
+        width: 0px;
+        opacity: 0;
+      }
+      .extra {
+        height: 100%;
+        width: 100%;
+        opacity: 1;
+      }
+    }
   }
 }

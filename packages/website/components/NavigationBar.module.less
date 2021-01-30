@@ -53,3 +53,42 @@
     }
   }
 }
+
+@media (max-width: 575.98px) {
+  .gittrends-navigation-bar {
+    height: 65px;
+
+    .badge {
+      position: absolute;
+      margin: 5px -40px;
+    }
+
+    header {
+      margin: auto;
+      padding: 0px;
+    }
+
+    & > .menu {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0px;
+      height: 0px;
+      opacity: 0;
+
+      & > .item {
+        display: inline;
+        border: none;
+
+        span {
+          width: 0px;
+          opacity: 0;
+        }
+      }
+    }
+
+    & > footer {
+      display: none;
+    }
+  }
+}
