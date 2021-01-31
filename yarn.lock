@@ -412,10 +412,10 @@
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.1.1.tgz#9daf5745156fd84b8e9889a2dc721f0c58e894aa"
   integrity sha512-CAEbWH7OIur6jEOzaai83jq3FmKmv4PmX1JYfs9IrYcGEVI/lyL1EXJGCj7eFVJ0bg5QR8LMxBlEtA+xKiLpFw==
 
-"@hsborges/github-proxy-server@^3.2.1":
-  version "3.2.1"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.2.1.tgz#b46894f7d8bb75326a1d45f969cf91e4b08406cc"
-  integrity sha512-0YGOz7qZIoBILjTK2T8vYWHV0n/bE1M7XbvWse4ECwA4PVhurNHFhE5S3gsMYb6/vf+eVG0TsBX/ZntlIm6ydg==
+"@hsborges/github-proxy-server@^3.2.2":
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.2.2.tgz#01c276a0daf5280a556259775123ab00a534132f"
+  integrity sha512-pGkvQQdnSvpyuJo3uQGW8LemwzHBbsKEu2U59BVlJVrUDilrb9YBchdCsGvj2KAcA2k1cdyEEJRZ56nwiP+xdQ==
   dependencies:
     async "^3.2.0"
     chalk "^4.1.0"
@@ -5274,7 +5274,7 @@ kind-of@^6.0.0, kind-of@^6.0.2:
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.3.tgz#07c05034a6c349fa06e24fa35aa76db4580ce4dd"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
 
-knex@*, knex@^0.21.16:
+knex@*:
   version "0.21.16"
   resolved "https://registry.yarnpkg.com/knex/-/knex-0.21.16.tgz#5431efe66d7194cdcf34ba3a874c6c66d7229c1a"
   integrity sha512-M3FTFfby49AEngsx/0UXEJEMnKMjPjeKOtvk+AY6d6kboz9NsT7xDudl0wRNj+S0lq0yearCSb1v+YxgbU/kWA==
