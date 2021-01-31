@@ -15,7 +15,7 @@
     "ajv": "^7.0.3",
     "ajv-formats": "1.5.0",
     "glob": "^7.1.6",
-    "knex": "^0.21.16",
+    "knex": "^0.21.17",
     "lodash": "^4.17.20",
     "pg": "^8.5.1",
     "typescript-json-schema": "^0.48.0",
