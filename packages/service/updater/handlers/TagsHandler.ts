@@ -18,10 +18,9 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.tags.endCursor) {
-      this.tags.endCursor = await Metadata.query()
-        .where({ ...this.meta, key: 'endCursor' })
-        .first()
-        .then((result) => result && result.value);
+      this.tags.endCursor = await Metadata.find(this.meta.id, this.meta.resource, 'endCursor').then(
+        (result) => result && result.value
+      );
     }
 
     return this._component.includeTags(this.tags.hasNextPage, {
@@ -56,7 +55,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });
+      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date().toISOString() });
     }
   }
 

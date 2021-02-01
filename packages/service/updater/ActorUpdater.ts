@@ -5,7 +5,7 @@ import { Job } from 'bullmq';
 import { chunk } from 'lodash';
 import { mapSeries } from 'bluebird';
 import { NotFoundError, RetryableError } from '../helpers/errors';
-import knex, { Actor, Metadata } from '@gittrends/database-config';
+import knex, { Actor, IMetadata, Metadata } from '@gittrends/database-config';
 
 import Updater from './Updater';
 import Query from '../github/Query';
@@ -35,7 +35,7 @@ export default class ActorsUpdater implements Updater {
                 resource: 'actor',
                 key: 'updatedAt',
                 value: new Date().toISOString()
-              })),
+              })) as IMetadata[],
               trx
             )
           ])

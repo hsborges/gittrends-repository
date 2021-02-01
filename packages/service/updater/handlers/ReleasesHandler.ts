@@ -18,10 +18,11 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.releases.endCursor) {
-      this.releases.endCursor = await Metadata.query()
-        .where({ ...this.meta, key: 'endCursor' })
-        .first()
-        .then((result) => result && result.value);
+      this.releases.endCursor = await Metadata.find(
+        this.meta.id,
+        this.meta.resource,
+        'endCursor'
+      ).then((result) => result && result.value);
     }
 
     return this._component.includeReleases(this.releases.hasNextPage, {
@@ -56,7 +57,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });
+      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date().toISOString() });
     }
   }
 

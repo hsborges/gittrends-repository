@@ -18,10 +18,11 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.watchers.endCursor) {
-      this.watchers.endCursor = await Metadata.query()
-        .where({ ...this.meta, key: 'endCursor' })
-        .first()
-        .then((result) => result && result.value);
+      this.watchers.endCursor = await Metadata.find(
+        this.meta.id,
+        this.meta.resource,
+        'endCursor'
+      ).then((result) => result && result.value);
     }
 
     return this._component.includeWatchers(this.watchers.hasNextPage, {
@@ -56,7 +57,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date() });
+      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date().toISOString() });
     }
   }
 

@@ -16,7 +16,7 @@ import WriterQueue from './updater/WriterQueue';
 
 type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
 
-async function retriableWorker(job: Job<TJob>, type: string, writerQueue?: WriterQueue) {
+function retriableWorker(job: Job<TJob>, type: string, writerQueue?: WriterQueue): Promise<void> {
   const options = { retries: 3, minTimeout: 1000, maxTimeout: 5000, randomize: true };
   const operation = retry.operation(options);
 
@@ -34,7 +34,7 @@ async function retriableWorker(job: Job<TJob>, type: string, writerQueue?: Write
     operation.attempt(() =>
       updater
         .update()
-        .then(() => resolve(null))
+        .then(() => resolve())
         .catch((err) => {
           if (err.message && /recovery.mode|rollback/gi.test(err.message) && operation.retry(err))
             return null;

@@ -3,7 +3,14 @@
  */
 import { Transaction } from 'knex';
 import { get, omit } from 'lodash';
-import { Issue, Metadata, PullRequest, Reaction, TimelineEvent } from '@gittrends/database-config';
+import {
+  IMetadata,
+  Issue,
+  Metadata,
+  PullRequest,
+  Reaction,
+  TimelineEvent
+} from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
@@ -60,11 +67,11 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       this.getPendingReactables().length === 0
     ) {
       if (!this.issues.endCursor) {
-        this.issues.endCursor = await Metadata.query()
-          .where({ ...this.meta, key: 'endCursor' })
-          .select('value')
-          .first()
-          .then((result) => result && result.value);
+        this.issues.endCursor = await Metadata.find(
+          this.meta.id,
+          this.meta.resource,
+          'endCursor'
+        ).then((result) => result && result.value);
       }
 
       const method =
@@ -84,11 +91,11 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       return Promise.all(
         pendingItems.map(async (issue) => {
           if (!issue.timeline.endCursor) {
-            issue.timeline.endCursor = await Metadata.query()
-              .where({ id: issue.data.id, resource: this.resource.slice(0, -1), key: 'endCursor' })
-              .select('value')
-              .first()
-              .then((result) => result && result.value);
+            issue.timeline.endCursor = await Metadata.find(
+              issue.data.id as string,
+              null,
+              'endCursor'
+            ).then((result) => result && result.value);
           }
 
           return issue.component
@@ -241,14 +248,14 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         (meta) => compact(omit(meta.data, 'timeline')) as TObject
       );
 
-      const issuesMetadata = this.issues.items.reduce((acc: TObject[], issue) => {
-        const path = { id: issue.data.id, resource: this.resource.slice(0, -1) };
+      const issuesMetadata = this.issues.items.reduce((acc: IMetadata[], issue) => {
+        const id = { id: issue.data.id as string };
         return acc.concat(
           issue.error
-            ? [{ ...path, key: 'error', value: JSON.stringify(issue.error) }]
+            ? [{ ...id, key: 'error', value: JSON.stringify(issue.error) }]
             : [
-                { ...path, key: 'updatedAt', value: new Date().toISOString() },
-                { ...path, key: 'endCursor', value: issue.timeline.endCursor }
+                { ...id, key: 'updatedAt', value: new Date().toISOString() },
+                { ...id, key: 'endCursor', value: issue.timeline.endCursor }
               ]
         );
       }, []);
@@ -291,7 +298,10 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      return Metadata.upsert([{ ...this.meta, key: 'updatedAt', value: new Date() }], trx);
+      return Metadata.upsert(
+        [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
+        trx
+      );
     }
   }
 

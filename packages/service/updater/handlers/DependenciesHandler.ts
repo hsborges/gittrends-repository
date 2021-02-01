@@ -110,7 +110,10 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      return Metadata.upsert([{ ...this.meta, key: 'updatedAt', value: new Date() }], trx);
+      return Metadata.upsert(
+        [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
+        trx
+      );
     }
   }
 

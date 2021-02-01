@@ -1,6 +1,5 @@
 import { cargoQueue, QueueObject } from 'async';
-import Model from '@gittrends/database-config/dist/models/Model';
-import knex from '@gittrends/database-config';
+import knex, { Model } from '@gittrends/database-config';
 
 import Cache from './Cache';
 
@@ -25,20 +24,16 @@ export default class WriterQueue {
     const queueName = `${opts.model.constructor.name}_${opts.operation}`;
 
     if (!this.queue[queueName]) {
-      this.queue[queueName] = cargoQueue((tasks, callback) => {
+      this.queue[queueName] = cargoQueue(async (tasks) => {
         const data = tasks
           .reduce((acc: TObject[], task) => acc.concat(task.data), [])
           .filter((record) => !this.cache?.has(record));
 
-        if (!data.length) return callback();
+        if (!data.length) return;
 
-        knex
+        return knex
           .transaction((trx) => opts.model[opts.operation](data, trx))
-          .then(() => {
-            this.cache?.add(data);
-            callback();
-          })
-          .catch(callback);
+          .then(async () => this.cache?.add(data));
       }, 1);
     }
 

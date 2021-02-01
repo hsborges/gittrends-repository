@@ -68,9 +68,7 @@ export default class RepositoryUpdater implements Updater {
       .compose(...components)
       .then(async ({ data, actors = [], commits = [], milestones = [] }) => {
         const baseWriter = (opts: WriterQueueArguments) =>
-          this.writerQueue
-            ? this.writerQueue.push(opts)
-            : opts.model[opts.operation ?? 'insert'](opts.data);
+          this.writerQueue ? this.writerQueue.push(opts) : opts.model[opts.operation](opts.data);
 
         await knex.transaction((trx) =>
           Promise.all([
