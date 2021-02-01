@@ -12,10 +12,12 @@ export type WriterQueueArguments = {
 
 export default class WriterQueue {
   private readonly queue: Record<string, QueueObject<WriterQueueArguments>>;
+  private readonly concurrency: number;
   private readonly cache?: Cache;
 
-  constructor(cacheSize?: number) {
+  constructor(concurrency: number, cacheSize?: number) {
     if (cacheSize) this.cache = new Cache(cacheSize);
+    this.concurrency = concurrency;
     this.queue = {};
   }
 

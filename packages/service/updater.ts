@@ -54,7 +54,11 @@ program
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
-    const writerQueue = new WriterQueue(process.env.GITTRENDS_CACHE_SIZE ?? 25000);
+    const writerQueue = new WriterQueue(
+      process.env.GITTRENDS_WRITE_QUEUE_CONCURRENCY ?? 1,
+      process.env.GITTRENDS_CACHE_SIZE ?? 25000
+    );
+
     const queueScheduler = new QueueScheduler(options.type, {
       connection: redisOptions,
       maxStalledCount: Number.MAX_SAFE_INTEGER
