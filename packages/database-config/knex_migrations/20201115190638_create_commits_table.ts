@@ -22,8 +22,6 @@ export async function up(knex: Knex): Promise<void> {
     table.timestamp('pushed_date');
     table.json('signature');
     table.json('status');
-
-    table.index('repository');
   });
 }
 

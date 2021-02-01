@@ -13,8 +13,6 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('number');
     table.text('state');
     table.text('title');
-
-    table.index('repository');
   });
 }
 

@@ -18,8 +18,6 @@ export async function up(knex: Knex): Promise<void> {
     table.text('tag');
     table.text('tag_name');
     table.timestamp('updated_at');
-
-    table.index('repository');
   });
 }
 

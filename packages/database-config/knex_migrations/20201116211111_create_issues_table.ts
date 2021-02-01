@@ -58,8 +58,6 @@ export async function up(knex: Knex): Promise<void> {
     table.text('merged_by');
     table.text('permalink');
     table.text('potential_merge_commit');
-
-    table.index(['repository', 'type']);
   });
 }
 

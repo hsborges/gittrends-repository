@@ -12,8 +12,6 @@ export async function up(knex: Knex): Promise<void> {
     table.text('content').notNullable();
     table.timestamp('created_at').notNullable();
     table.text('user').notNullable();
-
-    table.index(['repository', 'issue']);
   });
 }
 

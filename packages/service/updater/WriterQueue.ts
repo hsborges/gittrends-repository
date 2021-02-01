@@ -28,10 +28,14 @@ export default class WriterQueue {
           .reduce((acc: TObject[], task) => acc.concat(task.data), [])
           .filter((record) => !this.cache?.has(record));
 
+        if (!data.length) return callback();
+
         knex
           .transaction((trx) => opts.model[opts.operation](data, trx))
-          .then(() => this.cache?.add(data))
-          .then(() => callback())
+          .then(() => {
+            this.cache?.add(data);
+            callback();
+          })
           .catch(callback);
       }, 1);
     }

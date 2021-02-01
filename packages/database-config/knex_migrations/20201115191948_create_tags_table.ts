@@ -12,8 +12,6 @@ export async function up(knex: Knex): Promise<void> {
     table.text('oid');
     table.text('message');
     table.json('tagger');
-
-    table.index('repository');
   });
 }
 

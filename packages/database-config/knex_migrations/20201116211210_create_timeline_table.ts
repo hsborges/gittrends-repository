@@ -10,8 +10,6 @@ export async function up(knex: Knex): Promise<void> {
     table.text('issue').notNullable();
     table.text('type').notNullable();
     table.jsonb('payload').notNullable();
-
-    table.index(['repository', 'issue']);
   });
 }
 
