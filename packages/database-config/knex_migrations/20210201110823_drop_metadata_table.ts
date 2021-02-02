@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as Knex from 'knex';
 import { all, each } from 'bluebird';
+import { snakeCase } from 'lodash';
 
 type TObject = Record<string, unknown>;
 
@@ -90,7 +91,7 @@ export async function down(knex: Knex): Promise<void> {
     ['issues', 'actors'].map(async (table) => {
       const repositories = await knex
         .table(table)
-        .select('metadata.id')
+        .select(['metadata.id', `${table}.type`])
         .join('metadata', 'metadata.id', `${table}.id`);
 
       await each(repositories, async (record: any) => {
@@ -100,6 +101,7 @@ export async function down(knex: Knex): Promise<void> {
           (acc: TObject[], entry) =>
             acc.concat({
               id: record.id,
+              resource: table === 'issues' ? snakeCase(record.type) : 'actor',
               key: entry[0],
               value: entry[1]
             }),
