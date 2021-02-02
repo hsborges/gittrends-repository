@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as Knex from 'knex';
-import { each, all } from 'bluebird';
+import { each } from 'bluebird';
 import { snakeCase } from 'lodash';
 
 type TObject = Record<string, unknown>;
@@ -36,18 +36,16 @@ export async function up(knex: Knex): Promise<void> {
       .join('metadata', `${table}.id`, 'metadata.id')
       .select(knex.raw(`distinct(${table}.id)`));
 
-    await all(
-      records.map(async (record: any) => {
-        const metadata = await knex.table('metadata').where({ id: record.id });
+    await each(records, async (record: any) => {
+      const metadata = await knex.table('metadata').where({ id: record.id });
 
-        const newMetadata = metadata.reduce(
-          (acc: any, meta: any) => ({ ...acc, [meta.key]: meta.value }),
-          {}
-        );
+      const newMetadata = metadata.reduce(
+        (acc: any, meta: any) => ({ ...acc, [meta.key]: meta.value }),
+        {}
+      );
 
-        return knex.table('metadata_new').insert({ id: record.id, data: newMetadata });
-      })
-    );
+      return knex.table('metadata_new').insert({ id: record.id, data: newMetadata });
+    });
   });
 
   console.log('Dropping and renaming tables');
@@ -95,22 +93,20 @@ export async function down(knex: Knex): Promise<void> {
       .select(['id', `${table}.type`])
       .join('metadata', 'metadata.id', `${table}.id`);
 
-    await all(
-      repositories.map(async (record: any) => {
-        const records = Object.entries(record._metadata).reduce(
-          (acc: TObject[], entry) =>
-            acc.concat({
-              id: record.id,
-              resource: record.type && snakeCase(record.type),
-              key: entry[0],
-              value: entry[1]
-            }),
-          []
-        );
+    await each(repositories, async (record: any) => {
+      const records = Object.entries(record._metadata).reduce(
+        (acc: TObject[], entry) =>
+          acc.concat({
+            id: record.id,
+            resource: record.type && snakeCase(record.type),
+            key: entry[0],
+            value: entry[1]
+          }),
+        []
+      );
 
-        await knex.table('metadata_old').insert(records);
-      })
-    );
+      await knex.table('metadata_old').insert(records);
+    });
   });
 
   await knex.schema.dropTable('metadata');
