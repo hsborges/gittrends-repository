@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as Knex from 'knex';
-import { each } from 'bluebird';
+import { all, each } from 'bluebird';
 
 type TObject = Record<string, unknown>;
 
@@ -86,26 +86,30 @@ export async function down(knex: Knex): Promise<void> {
     await knex.table('metadata_old').insert(records);
   });
 
-  await each(['issues', 'actors'], async (table) => {
-    const repositories = await knex
-      .table(table)
-      .select('metadata.id')
-      .join('metadata', 'metadata.id', `${table}.id`);
+  await all(
+    ['issues', 'actors'].map(async (table) => {
+      const repositories = await knex
+        .table(table)
+        .select('metadata.id')
+        .join('metadata', 'metadata.id', `${table}.id`);
 
-    await each(repositories, async (record: any) => {
-      const records = Object.entries(record._metadata).reduce(
-        (acc: TObject[], entry) =>
-          acc.concat({
-            id: record.id,
-            key: entry[0],
-            value: entry[1]
-          }),
-        []
-      );
+      await each(repositories, async (record: any) => {
+        const metadata = await knex.table('metadata').where({ id: record.id }).first();
 
-      await knex.table('metadata_old').insert(records);
-    });
-  });
+        const records = Object.entries((metadata && metadata.data) || {}).reduce(
+          (acc: TObject[], entry) =>
+            acc.concat({
+              id: record.id,
+              key: entry[0],
+              value: entry[1]
+            }),
+          []
+        );
+
+        await knex.table('metadata_old').insert(records);
+      });
+    })
+  );
 
   await knex.schema.dropTable('metadata');
   await knex.schema.renameTable('metadata_old', 'metadata');
