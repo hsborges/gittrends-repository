@@ -42,7 +42,7 @@ class Metadata extends Model<IMetadata> {
     key: string,
     transaction?: Transaction
   ): Promise<IMetadata | undefined> {
-    const metadata = await this.query(transaction).where({ id });
+    const metadata = await this.query(transaction).where({ id }).first();
     const value = get(metadata, resource ? [resource, key] : [key], null);
     if (value) return { id, resource: resource || undefined, key, value };
     return undefined;
