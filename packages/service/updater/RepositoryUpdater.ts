@@ -1,8 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { each, map } from 'bluebird';
 import { Job } from 'bullmq';
+import { all, each, map } from 'bluebird';
+import { shuffle } from 'lodash';
 import knex, { Actor, Commit, Milestone } from '@gittrends/database-config';
 
 import Updater from './Updater';
@@ -18,7 +19,7 @@ import Component from '../github/Component';
 import DependenciesHander from './handlers/DependenciesHandler';
 import IssuesHander from './handlers/IssueHandler';
 import { ResourceUpdateError } from '../helpers/errors';
-import WriterQueue, { WriterQueueArguments } from './WriterQueue';
+import Cache from './Cache';
 
 export type THandler =
   | 'dependencies'
@@ -31,19 +32,19 @@ export type THandler =
   | 'watchers';
 
 type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
-type TOptions = { job?: Job<TJob>; writerQueue?: WriterQueue };
+type TOptions = { job?: Job<TJob>; cache?: Cache };
 
 export default class RepositoryUpdater implements Updater {
   readonly id: string;
   readonly job?: Job<TJob>;
-  readonly writerQueue?: WriterQueue;
+  readonly cache?: Cache;
   readonly handlers: AbstractRepositoryHandler[] = [];
   readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
 
   constructor(repositoryId: string, handlers: THandler[], opts?: TOptions) {
     this.id = repositoryId;
     this.job = opts?.job;
-    this.writerQueue = opts?.writerQueue;
+    this.cache = opts?.cache;
     if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHander(this.id));
     if (handlers.includes('issues'))
       this.handlers.push(new IssuesHander(this.id, undefined, 'issues'));
@@ -67,17 +68,19 @@ export default class RepositoryUpdater implements Updater {
     await Query.create()
       .compose(...components)
       .then(async ({ data, actors = [], commits = [], milestones = [] }) => {
-        const baseWriter = (opts: WriterQueueArguments) =>
-          this.writerQueue ? this.writerQueue.push(opts) : opts.model[opts.operation](opts.data);
+        actors = actors.filter((actor) => !this.cache?.has(actor));
+        commits = commits.filter((commit) => !this.cache?.has(commit));
+        milestones = milestones.filter((milestone) => !this.cache?.has(milestone));
 
-        await knex.transaction((trx) =>
-          Promise.all([
-            baseWriter({ model: Actor, data: actors, operation: 'insert' }),
-            baseWriter({ model: Commit, data: commits, operation: 'insert' }),
-            baseWriter({ model: Milestone, data: milestones, operation: 'insert' }),
-            map(handlers, (handler) => handler.update(data as TObject, trx))
-          ])
-        );
+        await knex.transaction(async (trx) => {
+          await all([
+            Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
+            Commit.insert(commits, trx).then(() => this.cache?.add(commits)),
+            Milestone.insert(milestones, trx).then(() => this.cache?.add(milestones))
+          ]);
+
+          return each(shuffle(handlers), (handler) => handler.update(data as TObject, trx));
+        });
 
         const doneHandlers = handlers.filter((handler) => {
           if (this.job && handler.isDone()) {

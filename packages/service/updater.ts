@@ -12,11 +12,11 @@ import { redisOptions } from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
 import Updater from './updater/Updater';
 import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
-import WriterQueue from './updater/WriterQueue';
+import Cache from './updater/Cache';
 
 type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
 
-function retriableWorker(job: Job<TJob>, type: string, writerQueue?: WriterQueue): Promise<void> {
+function retriableWorker(job: Job<TJob>, type: string, cache?: Cache): Promise<void> {
   const options = { retries: 3, minTimeout: 1000, maxTimeout: 5000, randomize: true };
   const operation = retry.operation(options);
 
@@ -28,7 +28,7 @@ function retriableWorker(job: Job<TJob>, type: string, writerQueue?: WriterQueue
     } else if (type === 'repositories') {
       const id = job.data.id as string;
       const resources = job.data.resources as THandler[];
-      updater = new RepositoryUpdater(id, resources, { job, writerQueue });
+      updater = new RepositoryUpdater(id, resources, { job, cache });
     }
 
     operation.attempt(() =>
@@ -54,10 +54,7 @@ program
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
-    const writerQueue = new WriterQueue(
-      process.env.GITTRENDS_WRITE_QUEUE_CONCURRENCY ?? 1,
-      process.env.GITTRENDS_CACHE_SIZE ?? 25000
-    );
+    const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '25000', 10));
 
     const queueScheduler = new QueueScheduler(options.type, {
       connection: redisOptions,
@@ -67,7 +64,7 @@ program
     const queue = new Worker(
       options.type,
       (job: Job) =>
-        retriableWorker(job, options.type, writerQueue)
+        retriableWorker(job, options.type, cache)
           .catch((err) => {
             consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
             throw err;

@@ -7,8 +7,8 @@ import consola from 'consola';
 
 import { each } from 'bluebird';
 import { program } from 'commander';
-import { difference, chunk, intersection, get } from 'lodash';
-import { Actor, Repository, Metadata } from '@gittrends/database-config';
+import { difference, chunk, intersection } from 'lodash';
+import { Actor, Repository, Metadata, IMetadata } from '@gittrends/database-config';
 
 import { redisOptions } from './redis';
 import { version, config } from './package.json';
@@ -29,11 +29,16 @@ const repositoriesScheduler = async (queue: Queue, resources: string[], wait = 2
   return each(
     Repository.query().select(['id', 'updated_at', 'name_with_owner']),
     async (data: TObject) => {
-      const metadata = await Metadata.query().where({ id: data.id }).first();
+      const records: IMetadata[] = await Metadata.query().where({ id: data.id });
 
       const exclude: string[] = resources.filter((resource) => {
-        const updatedAt = get(metadata, ['data', resource, 'updatedAt']);
-        return updatedAt && dayjs().subtract(wait, 'hour').isBefore(new Date(updatedAt));
+        const metadata = records.find((record) => record.resource === resource);
+        return (
+          metadata &&
+          dayjs()
+            .subtract(wait, 'hour')
+            .isBefore(new Date(metadata.value as string))
+        );
       });
 
       const _resources = difference(resources, exclude);

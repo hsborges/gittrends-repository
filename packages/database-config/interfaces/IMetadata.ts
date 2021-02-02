@@ -1,6 +1,6 @@
 export default interface IMetadata extends Record<string, unknown> {
   id: string;
-  resource?: string;
+  resource: string;
   key: string;
   value?: string;
 }

@@ -524,7 +524,8 @@
       },
       "required": [
         "id",
-        "key"
+        "key",
+        "resource"
       ]
     },
     "IMilestone": {

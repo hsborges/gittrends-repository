@@ -249,7 +249,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       );
 
       const issuesMetadata = this.issues.items.reduce((acc: IMetadata[], issue) => {
-        const id = { id: issue.data.id as string };
+        const id = { id: issue.data.id as string, resource: this.resource.slice(0, -1) };
         return acc.concat(
           issue.error
             ? [{ ...id, key: 'error', value: JSON.stringify(issue.error) }]

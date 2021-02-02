@@ -20,9 +20,8 @@ declare global {
       GITTRENDS_REDIS_DB?: number;
       GITTRENDS_QUEUE_ATTEMPS?: number;
       GITTRENDS_QUEUE_BOARD_PORT?: number;
-      GITTRENDS_CACHE_SIZE?: number;
+      GITTRENDS_CACHE_SIZE?: string;
       GITTRENDS_WRITE_BATCH_SIZE?: number;
-      GITTRENDS_WRITE_QUEUE_CONCURRENCY?: number;
       PORT?: number;
     }
   }
