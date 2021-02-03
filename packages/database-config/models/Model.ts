@@ -84,6 +84,7 @@ export default abstract class Model<T = void> {
 
   async insert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
+    if (!records.length) return;
 
     await each(chunk(records, CHUNK_SIZE), (_records) =>
       this.query(transaction)
@@ -95,6 +96,7 @@ export default abstract class Model<T = void> {
 
   async upsert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
+    if (!records.length) return;
 
     await each(chunk(records, CHUNK_SIZE), (_records) =>
       this.query(transaction)
@@ -106,6 +108,7 @@ export default abstract class Model<T = void> {
 
   async update(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
+    if (!records.length) return;
 
     await all(
       records.map((record) =>
