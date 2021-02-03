@@ -63,7 +63,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   async component(): Promise<RepositoryComponent | Component[]> {
     if (
       this.issues.hasNextPage &&
-      this.getPendingItems().length === 0 &&
+      this.getPendingIssues().length === 0 &&
       this.getPendingReactables().length === 0
     ) {
       if (!this.issues.endCursor) {
@@ -86,10 +86,10 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       });
     }
 
-    const pendingItems = this.getPendingItems();
-    if (pendingItems.length > 0) {
+    const pendingIssues = this.getPendingIssues();
+    if (pendingIssues.length > 0) {
       return Promise.all(
-        pendingItems.map(async (issue) => {
+        pendingIssues.map(async (issue) => {
           if (!issue.timeline.endCursor) {
             issue.timeline.endCursor = await Metadata.find(
               issue.data.id as string,
@@ -122,10 +122,10 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
     const pendingReactables = this.getPendingReactables();
     if (pendingReactables.length > 0) {
-      return pendingReactables.map((issue) =>
-        issue.component.includeReactions(issue.hasNextPage, {
+      return pendingReactables.map((reactable) =>
+        reactable.component.includeReactions(reactable.hasNextPage, {
           first: 50,
-          after: issue.endCursor
+          after: reactable.endCursor
         })
       );
     }
@@ -159,9 +159,9 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       if (this.issues.items.length) return;
     }
 
-    const pendingItems = this.getPendingItems();
-    if (pendingItems.length > 0) {
-      pendingItems.forEach((item) => {
+    const pendingIssues = this.getPendingIssues();
+    if (pendingIssues.length > 0) {
+      pendingIssues.forEach((item) => {
         const data = response[item.component.alias];
         const omitFields = ['assignees', 'labels', 'participants', 'timeline'];
 
@@ -195,18 +195,18 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         item.timeline.endCursor = tPageInfo.end_cursor ?? item.timeline.endCursor;
       });
 
-      if (this.getPendingItems().length > 0) return;
+      if (this.getPendingIssues().length > 0) return;
     }
 
-    if (this.getPendingItems().length === 0 && !this.reactions) {
+    if (this.getPendingIssues().length === 0 && !this.reactions) {
       const reactables: TObject[] = this.issues.items
         .filter((issue) => issue.data.reaction_groups)
-        .map((meta) => ({ repository: this.id, issue: meta.data.id }));
+        .map((issue) => ({ repository: this.id, issue: issue.data.id }));
 
       reactables.push(
-        ...this.issues.items.reduce((timeseries: TObject[], issue) => {
-          if (!issue.data.timeline) return timeseries;
-          return timeseries.concat(
+        ...this.issues.items.reduce((eReactables: TObject[], issue) => {
+          if (!issue.data.timeline) return eReactables;
+          return eReactables.concat(
             (issue.data.timeline as [])
               .filter((event: TObject) => event.reaction_groups)
               .map((event: TObject) => ({
@@ -243,7 +243,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       if (this.getPendingReactables().length > 0) return;
     }
 
-    if (this.getPendingItems().length === 0 && this.getPendingReactables().length === 0) {
+    if (this.getPendingIssues().length === 0 && this.getPendingReactables().length === 0) {
       const issues = this.issues.items.map(
         (meta) => compact(omit(meta.data, 'timeline')) as TObject
       );
@@ -293,7 +293,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       ]);
 
       this.issues.items = [];
-      this.reactions = [];
+      this.reactions = undefined;
       this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
     }
 
@@ -307,7 +307,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof RetryableError || err instanceof ForbiddenError) {
-      const hasNextDetails = this.getPendingItems().length > 0;
+      const hasNextDetails = this.getPendingIssues().length > 0;
       const hasNextReactions = this.getPendingReactables().length > 0;
 
       if (this.batchSize > 1)
@@ -317,7 +317,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         }
 
       if (hasNextDetails) {
-        const issue = this.getPendingItems()[0];
+        const issue = this.getPendingIssues()[0];
         issue.details.hasNextPage = issue.assignees.hasNextPage = issue.labels.hasNextPage = issue.participants.hasNextPage = issue.timeline.hasNextPage = false;
         issue.error = err;
       } else if (hasNextReactions) {
@@ -335,7 +335,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     super.error(err);
   }
 
-  getPendingItems(): TIssueMetadata[] {
+  getPendingIssues(): TIssueMetadata[] {
     return this.issues.items
       .filter(
         (i) =>
@@ -352,7 +352,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   }
 
   get alias(): string[] {
-    const alias = this.getPendingItems().map((meta) => meta.component.alias);
+    const alias = this.getPendingIssues().map((meta) => meta.component.alias);
     alias.push(...(super.alias === 'string' ? [super.alias] : super.alias));
     alias.push(...this.getPendingReactables().map((meta) => meta.component.alias));
     return alias;
@@ -361,7 +361,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   hasNextPage(): boolean {
     return (
       this.issues.hasNextPage ||
-      this.getPendingItems().length > 0 ||
+      this.getPendingIssues().length > 0 ||
       this.getPendingReactables().length > 0
     );
   }
