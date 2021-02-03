@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import utf8 from 'utf8';
 import customParserForamt from 'dayjs/plugin/customParseFormat';
 import { cloneDeep, mapValues, pick, isArray, isObject, chunk } from 'lodash';
+import { all, each } from 'bluebird';
 
 type TObject = Record<string, unknown>;
 type TRecord = Record<string, string | number | boolean>;
@@ -84,33 +85,29 @@ export default abstract class Model<T = void> {
   async insert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
 
-    await Promise.all(
-      chunk(records, CHUNK_SIZE).map((_records) =>
-        this.query(transaction)
-          .insert(_records)
-          .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
-          .ignore()
-      )
+    await each(chunk(records, CHUNK_SIZE), (_records) =>
+      this.query(transaction)
+        .insert(_records)
+        .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
+        .ignore()
     );
   }
 
   async upsert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
 
-    await Promise.all(
-      chunk(records, CHUNK_SIZE).map((_records) =>
-        this.query(transaction)
-          .insert(_records)
-          .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
-          .merge()
-      )
+    await each(chunk(records, CHUNK_SIZE), (_records) =>
+      this.query(transaction)
+        .insert(_records)
+        .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
+        .merge()
     );
   }
 
   async update(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
 
-    await Promise.all(
+    await all(
       records.map((record) =>
         this.query(transaction).where(pick(record, this.idColumn)).update(record)
       )
