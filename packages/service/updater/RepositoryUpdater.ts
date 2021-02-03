@@ -100,23 +100,23 @@ export default class RepositoryUpdater implements Updater {
       })
       .catch(async (err) => {
         if (err instanceof ValidationError) throw err;
-        if (handlers.length === 1) return handlers[0].error(err);
+
+        if (handlers.length === 1) {
+          return handlers[0].error(err).catch((err2) => {
+            this.errors.push({ handler: handlers[0], error: err2 });
+            this.job?.update({
+              ...this.job.data,
+              resources: this.job.data.resources.filter((r) => r !== handlers[0].meta.resource),
+              errors: [...(this.job.data.errors || []), handlers[0].meta.resource]
+            });
+            return Promise.resolve();
+          });
+        }
+
         return each(
           handlers.filter((handler) => handler.hasNextPage()),
           (handler) => this._update([handler])
         );
-      })
-      .catch(async (err) => {
-        if (handlers.length === 1) {
-          this.errors.push({ handler: handlers[0], error: err });
-          this.job?.update({
-            ...this.job.data,
-            resources: this.job.data.resources.filter((r) => r !== handlers[0].meta.resource),
-            errors: [...(this.job.data.errors || []), handlers[0].meta.resource]
-          });
-          return;
-        }
-        throw err;
       });
   }
 
