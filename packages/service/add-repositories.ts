@@ -4,7 +4,7 @@
 import consola from 'consola';
 import { program } from 'commander';
 import { version } from './package.json';
-import { chain, get, min } from 'lodash';
+import { chain, get, min, uniqBy } from 'lodash';
 import { BadGatewayError } from './helpers/errors';
 import knex, { Actor, Repository } from '@gittrends/database-config';
 
@@ -12,17 +12,21 @@ import Query from './github/Query';
 import SearchComponent from './github/components/SearchComponent';
 
 async function search(limit = 1000, language?: string, name?: string) {
-  const repos: TObject[] = [];
-  const actors: TObject[] = [];
+  let repos: TObject[] = [];
+  let actors: TObject[] = [];
 
   let after = undefined;
-  let total = Math.min(100, limit);
   let maxStargazers = undefined;
+  let total = Math.min(100, limit);
 
   do {
     await Query.create()
       .compose(
-        new SearchComponent({ maxStargazers, language, name }, after, total).setAlias('search')
+        new SearchComponent(
+          { maxStargazers, language, name },
+          after,
+          Math.min(100, total, limit - repos.length)
+        ).setAlias('search')
       )
       .run()
       .then(({ data, actors: _actors = [] }) => {
@@ -37,8 +41,11 @@ async function search(limit = 1000, language?: string, name?: string) {
           after = null;
           maxStargazers = min(repos.map((r) => r.stargazers_count));
         }
+
+        total = 100;
+        actors = uniqBy(actors, 'id');
+        repos = uniqBy(repos, 'id');
       })
-      .then(() => (total = 100))
       .catch((err) => {
         if (err instanceof BadGatewayError) return (total = Math.ceil(total / 2));
         throw err;
@@ -57,7 +64,7 @@ program
   .option('--limit [number]', 'Maximun number of repositories', Number, 100)
   .option('--language [string]', 'Major programming language')
   .option('--repository-name [name]', 'Repository name to search')
-  .action(() => {
+  .action(async () => {
     const options = program.opts();
 
     consola.info(
@@ -65,8 +72,18 @@ program
       options.limit
     );
 
-    search(options.limit, options.language, options.repositoryName)
-      .then((result) => {
+    return Promise.all(
+      [1, 1, 1].map(() => search(options.limit, options.language, options.repositoryName))
+    )
+      .then((results) => {
+        const result = results.reduce(
+          (acc, result) => ({
+            repositories: acc.repositories.concat(result.repositories),
+            users: acc.users.concat(result.users)
+          }),
+          { repositories: new Array<TObject>(), users: new Array<TObject>() }
+        );
+
         const repositories = chain(result.repositories)
           .uniqBy('id')
           .orderBy('stargazers_count', 'desc')
