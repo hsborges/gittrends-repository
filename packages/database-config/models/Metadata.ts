@@ -11,7 +11,7 @@ class Metadata extends Model<IMetadata> {
 
   async find(
     id: string,
-    resource: string | null | undefined,
+    resource: string,
     key: string,
     transaction?: Transaction
   ): Promise<IMetadata | undefined> {

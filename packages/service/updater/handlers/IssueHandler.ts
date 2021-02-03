@@ -93,7 +93,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           if (!issue.timeline.endCursor) {
             issue.timeline.endCursor = await Metadata.find(
               issue.data.id as string,
-              null,
+              this.resource.slice(0, -1),
               'endCursor'
             ).then((result) => result && result.value);
           }
