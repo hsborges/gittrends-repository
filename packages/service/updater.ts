@@ -3,7 +3,7 @@
  */
 import consola from 'consola';
 import program from 'commander';
-import retry from 'retry';
+import pRetry from 'promise-retry';
 import { bold } from 'chalk';
 import { QueueScheduler, Worker, Job } from 'bullmq';
 
@@ -15,33 +15,28 @@ import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
 
 type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
+type TUpdaterType = 'users' | 'repositories';
 
-function retriableWorker(job: Job<TJob>, type: string, cache?: Cache): Promise<void> {
-  const options = { retries: 3, minTimeout: 1000, maxTimeout: 5000, randomize: true };
-  const operation = retry.operation(options);
+function retriableWorker(job: Job<TJob>, type: TUpdaterType, cache?: Cache): Promise<void> {
+  return pRetry(
+    (retry) => {
+      let updater: Updater;
 
-  return new Promise((resolve, reject) => {
-    let updater: Updater;
+      if (type === 'users') {
+        updater = new ActorsUpdater(job.data.id, { job });
+      } else {
+        const id = job.data.id as string;
+        const resources = job.data.resources as THandler[];
+        updater = new RepositoryUpdater(id, resources, { job, cache });
+      }
 
-    if (type === 'users') {
-      updater = new ActorsUpdater(job.data.id, { job });
-    } else if (type === 'repositories') {
-      const id = job.data.id as string;
-      const resources = job.data.resources as THandler[];
-      updater = new RepositoryUpdater(id, resources, { job, cache });
-    }
-
-    operation.attempt(() =>
-      updater
-        .update()
-        .then(() => resolve())
-        .catch((err) => {
-          if (err.message && /recovery.mode|rollback/gi.test(err.message) && operation.retry(err))
-            return null;
-          else reject(operation.mainError() ?? err);
-        })
-    );
-  });
+      return updater.update().catch((err) => {
+        if (err.message && /recovery.mode|rollback/gi.test(err.message)) return retry(err);
+        throw err;
+      });
+    },
+    { retries: 3, minTimeout: 500, maxTimeout: 5000, randomize: true }
+  );
 }
 
 /* execute */

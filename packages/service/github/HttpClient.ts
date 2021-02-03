@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import retry from 'retry';
+import pRetry from 'promise-retry';
 import UserAgent from 'user-agents';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import compact from '../helpers/compact';
@@ -32,26 +32,15 @@ const requestClient: AxiosInstance = axios.create({
 type IObject = Record<string, unknown>;
 
 async function retriableRequest(data: IObject): Promise<AxiosResponse> {
-  return new Promise((resolve, reject) => {
-    const operation = retry.operation({
-      retries: RETRIES,
-      randomize: true,
-      minTimeout: 500,
-      maxTimeout: 2000
-    });
-
-    operation.attempt(() => {
-      requestClient({ method: 'post', data: data })
-        .then(resolve)
-        .catch((err) => {
-          if (err.code === 'ECONNABORTED' && operation.retry(err)) return;
-          if (err.code === 'ECONNREFUSED' && operation.retry(err)) return;
-          if (err.response && err.response.status === 408 && operation.retry(err)) return;
-          if (err.response && /500/g.test(err.response.status) && operation.retry(err)) return;
-          return reject(operation.mainError() || err);
-        });
-    });
-  });
+  return pRetry(
+    (retry) =>
+      requestClient({ method: 'post', data: data }).catch((err) => {
+        if (err.code === 'ECONNABORTED' || err.code === 'ECONNREFUSED') return retry(err);
+        if (err.response && /500|408/g.test(err.response.status)) return retry(err);
+        throw err;
+      }),
+    { retries: RETRIES, minTimeout: 500, maxTimeout: 2000, randomize: true }
+  );
 }
 
 /* exports */
