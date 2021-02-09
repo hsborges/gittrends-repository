@@ -43,15 +43,16 @@ export default class ActorsUpdater implements Updater {
       })
       .catch(async (err) => {
         if (err instanceof RetryableError || err instanceof NotFoundError) {
-          if (ids.length > 1) {
+          if (ids.length > 1)
             return mapSeries(chunk(ids, Math.ceil(ids.length / 2)), (_ids) => this.$update(_ids));
-          }
 
           const meta = { id: ids[0], resource: 'actor' };
           await Metadata.upsert([
             { ...meta, key: 'error', value: err.message },
             { ...meta, key: 'updatedAt', value: new Date().toISOString() }
           ]);
+
+          return;
         }
 
         throw err;
