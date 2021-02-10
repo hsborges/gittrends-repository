@@ -1,26 +1,14 @@
 import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
-import Knex, { Transaction } from 'knex';
+import { ClientSession, Collection, Cursor, Db } from 'mongodb';
+import { cloneDeep, pick, omit, isArray, mapValues, isObject } from 'lodash';
+import hash from 'object-hash';
 import dayjs from 'dayjs';
-import utf8 from 'utf8';
 import customParserForamt from 'dayjs/plugin/customParseFormat';
-import { cloneDeep, mapValues, pick, isArray, isObject, chunk } from 'lodash';
-import { all, each } from 'bluebird';
-
-type TObject = Record<string, unknown>;
-type TRecord = Record<string, string | number | boolean>;
 
 dayjs.extend(customParserForamt);
 
 const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
-const CHUNK_SIZE = process.env.GITTRENDS_WRITE_BATCH_SIZE ?? 1000;
-
-function recursiveEncode(data: unknown): unknown {
-  if (Array.isArray(data)) return data.map(recursiveEncode);
-  if (typeof data === 'object') return mapValues(data, recursiveEncode);
-  if (typeof data === 'string') return utf8.encode(data).replace(/\u0000/g, '');
-  return data;
-}
 
 export class ValidationError extends Error {
   readonly object: TObject;
@@ -34,18 +22,13 @@ export class ValidationError extends Error {
 }
 
 export default abstract class Model<T = void> {
-  static knex: Knex;
+  static db: Db;
 
-  abstract get tableName(): string;
-  abstract get idColumn(): string | string[];
+  abstract get collectionName(): string;
+  abstract get idField(): string | string[];
   abstract get jsonSchema(): Record<string, unknown>;
 
-  private readonly _ajv: Ajv = new Ajv({
-    allErrors: true,
-    coerceTypes: true,
-    useDefaults: true,
-    removeAdditional: 'all'
-  });
+  private readonly _ajv: Ajv = new Ajv({ allErrors: true, coerceTypes: true });
 
   private _validator: ValidateFunction<T> | undefined;
 
@@ -60,60 +43,61 @@ export default abstract class Model<T = void> {
     return data;
   }
 
-  protected postValidate(data: TObject): TRecord {
-    return mapValues(recursiveEncode(data) as TObject, (value) => {
-      if (typeof value === 'object') return JSON.stringify(value);
+  protected postValidate(data: TObject): TObject {
+    return mapValues(data, (value) => {
+      if (typeof value === 'string') {
+        const d = dayjs(value, DATE_FORMAT);
+        if (d.isValid()) return d.toDate();
+        else return value;
+      }
       return value;
-    }) as TRecord;
+    });
   }
 
-  protected validate(data: Record<string, unknown>): TRecord {
+  protected validate(data: TObject): TObject & { _id?: string } {
     if (this._validator === undefined) this._validator = this._ajv.compile<T>(this.jsonSchema);
 
-    const clone = this.preValidate(cloneDeep(data)) as Record<string, unknown>;
+    const clone = this.preValidate(cloneDeep(data)) as TObject;
     if (!this._validator(clone))
       throw new ValidationError(clone, this._validator.errors as ErrorObject[]);
 
-    return this.postValidate(clone);
+    if (typeof this.idField === 'string') {
+      return this.postValidate(
+        omit({ _id: clone[this.idField] as string, ...clone }, this.idField)
+      );
+    }
+
+    return this.postValidate({ _id: hash(pick(clone, this.idField)), ...clone });
   }
 
-  query(transaction?: Transaction): Knex.QueryBuilder {
-    const table = Model.knex<T>(this.tableName);
-    return transaction != null ? table.transacting(transaction) : table;
+  get collection(): Collection {
+    return Model.db.collection(this.collectionName);
   }
 
-  async insert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async find(query: TObject, session?: ClientSession): Promise<Cursor<any>> {
+    return this.collection.find(query, { session });
+  }
+
+  async insert(record: TObject | TObject[], session?: ClientSession): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
     if (!records.length) return;
 
-    await each(chunk(records, CHUNK_SIZE), (_records) =>
-      this.query(transaction)
-        .insert(_records)
-        .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
-        .ignore()
+    await this.collection.bulkWrite(
+      records.map((record) => ({ insertOne: { document: record } })),
+      { session, ordered: false }
     );
   }
 
-  async upsert(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
+  async upsert(record: TObject | TObject[], session?: ClientSession): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
     if (!records.length) return;
 
-    await each(chunk(records, CHUNK_SIZE), (_records) =>
-      this.query(transaction)
-        .insert(_records)
-        .onConflict(typeof this.idColumn === 'string' ? [this.idColumn] : this.idColumn)
-        .merge()
-    );
-  }
-
-  async update(record: TObject | TObject[], transaction?: Transaction): Promise<void> {
-    const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
-    if (!records.length) return;
-
-    await all(
-      records.map((record) =>
-        this.query(transaction).where(pick(record, this.idColumn)).update(record)
-      )
+    await this.collection.bulkWrite(
+      records.map((record) => ({
+        replaceOne: { filter: { _id: record._id }, replacement: record, upsert: true }
+      })),
+      { session, ordered: false }
     );
   }
 }

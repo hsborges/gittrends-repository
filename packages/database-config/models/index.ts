@@ -7,7 +7,6 @@ export { default as Commit } from './Commit';
 export { default as Dependency } from './Dependency';
 export { default as GithubToken } from './GithubToken';
 export { default as Issue } from './Issue';
-export { default as Metadata } from './Metadata';
 export { default as Milestone } from './Milestone';
 export { default as PullRequest } from './PullRequest';
 export { default as Reaction } from './Reaction';

@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import IWatcher from '../interfaces/IWatcher';
 
 class Watcher extends Model<IWatcher> {
-  tableName = 'watchers';
-  idColumn = ['repository', 'user'];
+  collectionName = 'watchers';
+  idField = ['repository', 'user'];
   jsonSchema = schema.definitions.IWatcher;
 }
 

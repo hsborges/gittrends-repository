@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import IRepository from '../interfaces/IRepository';
 
 class Repository extends Model<IRepository> {
-  tableName = 'repositories';
-  idColumn = 'id';
+  collectionName = 'repositories';
+  idField = 'id';
   jsonSchema = schema.definitions.IRepository;
 }
 

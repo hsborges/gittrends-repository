@@ -6,7 +6,6 @@ export { default as ICommit } from './ICommit';
 export { default as IDependency } from './IDependency';
 export { default as IGithubToken } from './IGithubToken';
 export { default as IIssue } from './IIssue';
-export { default as IMetadata } from './IMetadata';
 export { default as IMilestone } from './IMilestone';
 export { default as IPullRequest } from './IPullRequest';
 export { default as IReaction } from './IReaction';

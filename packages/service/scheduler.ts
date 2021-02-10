@@ -7,12 +7,11 @@ import consola from 'consola';
 
 import { each } from 'bluebird';
 import { program } from 'commander';
-import { difference, chunk, intersection } from 'lodash';
-import { Actor, Repository, Metadata, IMetadata } from '@gittrends/database-config';
+import { difference, chunk, intersection, get } from 'lodash';
+import client, { Actor, Repository } from '@gittrends/database-config';
 
 import { redisOptions } from './redis';
 import { version, config } from './package.json';
-import knex from '@gittrends/database-config/dist/knex';
 
 /* COMMANDS */
 function resourcesParser(resources: string[]): string[] {
@@ -27,18 +26,13 @@ const repositoriesScheduler = async (queue: Queue, resources: string[], wait = 2
   let count = 0;
 
   return each(
-    Repository.query().select(['id', 'updated_at', 'name_with_owner']),
+    Repository.collection
+      .find({}, { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } })
+      .toArray(),
     async (data: TObject) => {
-      const records: IMetadata[] = await Metadata.query().where({ id: data.id });
-
       const exclude: string[] = resources.filter((resource) => {
-        const metadata = records.find((record) => record.resource === resource);
-        return (
-          metadata &&
-          dayjs()
-            .subtract(wait, 'hour')
-            .isBefore(new Date(metadata.value as string))
-        );
+        const updatedAt = get(data, ['_metadata', resource, 'updatedAt']);
+        return updatedAt && dayjs().subtract(wait, 'hour').isBefore(updatedAt);
       });
 
       const _resources = difference(resources, exclude);
@@ -46,7 +40,7 @@ const repositoriesScheduler = async (queue: Queue, resources: string[], wait = 2
       if (_resources.length) {
         await queue.add(
           'update',
-          { id: data.id, resources: _resources },
+          { id: data._id, resources: _resources },
           { jobId: (data.name_with_owner as string).toLowerCase() }
         );
         count += 1;
@@ -68,24 +62,20 @@ const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hour').toISOString();
   // get metadata
-  const usersIds = (
-    await Actor.query()
-      .select('actors.id')
-      .leftJoin(
-        Metadata.query()
-          .where({ resource: 'actor', key: 'updatedAt' })
-          .select('id', 'value')
-          .as('metadata'),
-        'metadata.id',
-        'actors.id'
-      )
-      .whereNotIn('actors.id', waiting)
-      .andWhere((builder) =>
-        builder.whereNull('metadata.id').orWhere('metadata.value', '<', before)
-      )
-      .select('actors.id')
-      .limit(limit)
-  ).map((r: TObject) => r.id);
+  const usersIds = await Actor.collection
+    .find(
+      {
+        _id: { $nin: waiting },
+        $or: [
+          { '_metadata.updatedAt': { $exists: false } },
+          { '_metadata.updatedAt': { $lt: before } }
+        ]
+      },
+      { projection: { _id: 1 } }
+    )
+    .limit(limit)
+    .toArray()
+    .then((users) => users.map((r: TObject) => r._id));
   // add to queue
   return Promise.all(
     chunk(usersIds, 25).map((id) => queue.add('update', { id }, { jobId: `users@${id[0]}+` }))
@@ -122,6 +112,8 @@ program
         return queue;
       }
 
+      if (!client.isConnected()) await client.connect();
+
       // store promises running
       const promises = [];
 
@@ -141,7 +133,7 @@ program
       // await promises and finish script
       await Promise.all(promises)
         .catch((err) => consola.error(err))
-        .finally(() => knex.destroy())
+        .finally(() => client.close())
         .finally(() => process.exit(0));
     }
   )

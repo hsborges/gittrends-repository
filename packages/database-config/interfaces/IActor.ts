@@ -50,4 +50,8 @@ export default interface IActor extends Record<string, unknown> {
   // EnterpriseUserAccount
   enterprise?: string;
   user?: string;
+
+  // entity metadata
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  _metadata?: object;
 }

@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import IRelease from '../interfaces/IRelease';
 
 class Release extends Model<IRelease> {
-  tableName = 'releases';
-  idColumn = 'id';
+  collectionName = 'releases';
+  idField = 'id';
   jsonSchema = schema.definitions.IRelease;
 }
 

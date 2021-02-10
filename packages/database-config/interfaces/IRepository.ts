@@ -55,4 +55,8 @@ export default interface IRepository extends Record<string, unknown> {
   uses_custom_open_graph_image?: boolean;
   vulnerability_alerts_count?: number;
   watchers_count?: number;
+
+  // entity metadata
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  _metadata?: object;
 }

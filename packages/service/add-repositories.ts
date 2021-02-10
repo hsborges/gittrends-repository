@@ -6,7 +6,8 @@ import { program } from 'commander';
 import { version } from './package.json';
 import { chain, get, min, uniqBy } from 'lodash';
 import { BadGatewayError } from './helpers/errors';
-import knex, { Actor, Repository } from '@gittrends/database-config';
+import client, { Actor, Repository } from '@gittrends/database-config';
+import { filter } from 'bluebird';
 
 import Query from './github/Query';
 import SearchComponent from './github/components/SearchComponent';
@@ -97,16 +98,38 @@ program
 
         return [repositories, users];
       })
+      .then(async ([repos, users]) =>
+        Promise.all([
+          filter(repos, (repo) =>
+            Repository.collection
+              .findOne({ _id: repo.id }, { projection: { _id: 1 } })
+              .then((data) => !data)
+          ),
+          filter(users, (user) =>
+            Actor.collection
+              .findOne({ _id: user.id }, { projection: { _id: 1 } })
+              .then((data) => !data)
+          )
+        ])
+      )
       .then(async ([repos, users]) => {
         consola.info('Adding repositories to database ...');
 
-        return knex.transaction(async (trx) => {
-          await Actor.insert(users, trx);
-          return Repository.insert(repos, trx);
-        });
+        if (!client.isConnected()) await client.connect();
+
+        const session = client.startSession();
+        return session
+          .withTransaction(() =>
+            Promise.all([Actor.insert(users, session), Repository.insert(repos, session)])
+          )
+          .catch(async (err) => {
+            await session.abortTransaction();
+            throw err;
+          })
+          .finally(() => session.endSession());
       })
       .then(() => consola.success('Repositories successfully added!'))
       .catch((err) => consola.error(err))
-      .finally(() => knex.destroy());
+      .finally(() => client.close());
   })
   .parse(process.argv);

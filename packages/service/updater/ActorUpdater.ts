@@ -5,7 +5,7 @@ import { Job } from 'bullmq';
 import { chunk } from 'lodash';
 import { mapSeries } from 'bluebird';
 import { NotFoundError, RetryableError } from '../helpers/errors';
-import knex, { Actor, IMetadata, Metadata } from '@gittrends/database-config';
+import client, { Actor } from '@gittrends/database-config';
 
 import Updater from './Updater';
 import Query from '../github/Query';
@@ -26,33 +26,29 @@ export default class ActorsUpdater implements Updater {
     await Query.create()
       .compose(...components)
       .then(async ({ actors }) => {
-        await knex.transaction((trx) =>
-          Promise.all([
-            Actor.upsert(actors, trx),
-            Metadata.upsert(
-              actors.map((actor) => ({
-                id: actor.id,
-                resource: 'actor',
-                key: 'updatedAt',
-                value: new Date().toISOString()
-              })) as IMetadata[],
-              trx
-            )
-          ])
-        );
+        const session = client.startSession();
+
+        session
+          .withTransaction(() =>
+            Actor.upsert(
+              actors.map((actor) => Object.assign({ _metadata: { updatedAt: new Date() } }, actor)),
+              session
+            ).catch(async (err) => {
+              await session.abortTransaction();
+              throw err;
+            })
+          )
+          .finally(() => session.endSession());
       })
       .catch(async (err) => {
         if (err instanceof RetryableError || err instanceof NotFoundError) {
           if (ids.length > 1)
             return mapSeries(chunk(ids, Math.ceil(ids.length / 2)), (_ids) => this.$update(_ids));
 
-          const meta = { id: ids[0], resource: 'actor' };
-          await Metadata.upsert([
-            { ...meta, key: 'error', value: err.message },
-            { ...meta, key: 'updatedAt', value: new Date().toISOString() }
-          ]);
-
-          return;
+          return Actor.collection.updateOne(
+            { _id: ids[0] },
+            { $set: { _metadata: { updatedAt: new Date(), error: err.message } } }
+          );
         }
 
         throw err;

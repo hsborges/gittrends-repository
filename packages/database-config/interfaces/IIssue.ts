@@ -26,4 +26,8 @@ export default interface IIssue extends Record<string, unknown> {
   labels?: string[];
   participants?: string[];
   reaction_groups?: string;
+
+  // entity metadata
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  _metadata?: object;
 }

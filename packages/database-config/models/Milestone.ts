@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import IMilestone from '../interfaces/IMilestone';
 
 class Milestone extends Model<IMilestone> {
-  tableName = 'milestones';
-  idColumn = 'id';
+  collectionName = 'milestones';
+  idField = 'id';
   jsonSchema = schema.definitions.IMilestone;
 }
 

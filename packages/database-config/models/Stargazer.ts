@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import IStargazer from '../interfaces/IStargazer';
 
 class Stargazer extends Model<IStargazer> {
-  tableName = 'stargazers';
-  idColumn = ['repository', 'user', 'starred_at'];
+  collectionName = 'stargazers';
+  idField = ['repository', 'user', 'starred_at'];
   jsonSchema = schema.definitions.IStargazer;
 }
 

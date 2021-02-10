@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import IGithubToken from '../interfaces/IGithubToken';
 
 class GithubToken extends Model<IGithubToken> {
-  tableName = 'github_tokens';
-  idColumn = 'id';
+  collectionName = 'github_tokens';
+  idField = 'id';
   jsonSchema = schema.definitions.IGithubToken;
 }
 

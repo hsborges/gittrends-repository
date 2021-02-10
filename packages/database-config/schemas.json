@@ -151,6 +151,11 @@
         },
         "user": {
           "type": "string"
+        },
+        "_metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
         }
       },
       "required": [
@@ -498,34 +503,17 @@
         },
         "reaction_groups": {
           "type": "string"
+        },
+        "_metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
         }
       },
       "required": [
         "id",
         "repository",
         "type"
-      ]
-    },
-    "IMetadata": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "resource": {
-          "type": "string"
-        },
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "id",
-        "key",
-        "resource"
       ]
     },
     "IMilestone": {
@@ -765,6 +753,11 @@
         },
         "reaction_groups": {
           "type": "string"
+        },
+        "_metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
         }
       },
       "required": [
@@ -1069,6 +1062,11 @@
         },
         "watchers_count": {
           "type": "number"
+        },
+        "_metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
         }
       },
       "required": [

@@ -7,8 +7,7 @@ declare global {
       GITTRENDS_DATABASE_DB?: string;
       GITTRENDS_DATABASE_USERNAME?: string;
       GITTRENDS_DATABASE_PASSWORD?: string;
-      GITTRENDS_DATABASE_POOL_MIN?: string;
-      GITTRENDS_DATABASE_POOL_MAX?: string;
+      GITTRENDS_DATABASE_POOL_SIZE?: string;
       GITTRENDS_PROXY_PROTOCOL?: string;
       GITTRENDS_PROXY_HOST?: string;
       GITTRENDS_PROXY_PORT?: number;

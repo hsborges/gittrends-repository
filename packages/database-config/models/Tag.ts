@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import ITag from '../interfaces/ITag';
 
 class Tag extends Model<ITag> {
-  tableName = 'tags';
-  idColumn = 'id';
+  collectionName = 'tags';
+  idField = 'id';
   jsonSchema = schema.definitions.ITag;
 }
 

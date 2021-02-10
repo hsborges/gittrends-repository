@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import IReaction from '../interfaces/IReaction';
 
 class Reaction extends Model<IReaction> {
-  tableName = 'reactions';
-  idColumn = 'id';
+  collectionName = 'reactions';
+  idField = 'id';
   jsonSchema = schema.definitions.IReaction;
 }
 

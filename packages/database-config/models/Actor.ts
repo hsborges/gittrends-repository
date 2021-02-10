@@ -3,8 +3,8 @@ import schema from '../schemas.json';
 import IActor from '../interfaces/IActor';
 
 class Actor extends Model<IActor> {
-  tableName = 'actors';
-  idColumn = 'id';
+  collectionName = 'actors';
+  idField = 'id';
   jsonSchema = schema.definitions.IActor;
 }
 
