@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
+/** @additionalProperties false */
 export default interface IIssue extends Record<string, unknown> {
   id: string;
   repository: string;

@@ -1,3 +1,4 @@
+/** @additionalProperties false */
 export default interface ITag extends Record<string, unknown> {
   id: string;
   repository: string;

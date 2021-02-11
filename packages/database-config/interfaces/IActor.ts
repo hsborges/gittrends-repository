@@ -1,3 +1,4 @@
+/** @additionalProperties false */
 export default interface IActor extends Record<string, unknown> {
   id: string;
   type: 'User' | 'Organization' | 'Mannequin' | 'Bot' | 'EnterpriseUserAccount';

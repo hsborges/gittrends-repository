@@ -1,3 +1,4 @@
+/** @additionalProperties false */
 export default interface IDependency extends Record<string, unknown> {
   repository: string;
   manifest: string;

@@ -1,3 +1,4 @@
+/** @additionalProperties false */
 export default interface IMilestone extends Record<string, unknown> {
   id: string;
   repository: string;

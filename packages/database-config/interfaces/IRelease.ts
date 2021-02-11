@@ -1,3 +1,4 @@
+/** @additionalProperties false */
 export default interface IRelease extends Record<string, unknown> {
   id: string;
   repository: string;

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "IActor": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": {
@@ -165,6 +166,7 @@
       ]
     },
     "ICommit": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": {
@@ -320,6 +322,7 @@
       ]
     },
     "IDependency": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "repository": {
@@ -370,6 +373,7 @@
       ]
     },
     "IGithubToken": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "token": {
@@ -401,6 +405,7 @@
       ]
     },
     "IIssue": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": {
@@ -519,6 +524,7 @@
       ]
     },
     "IMilestone": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": {
@@ -771,6 +777,7 @@
       ]
     },
     "IReaction": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": {
@@ -807,6 +814,7 @@
       ]
     },
     "IRelease": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": {
@@ -861,6 +869,7 @@
       ]
     },
     "IRepository": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": {
@@ -1080,6 +1089,7 @@
       ]
     },
     "IStargazer": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "repository": {
@@ -1101,6 +1111,7 @@
       ]
     },
     "ITag": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": {
@@ -1151,6 +1162,7 @@
       ]
     },
     "ITimelineEvent": {
+      "additionalProperties": true,
       "type": "object",
       "properties": {
         "id": {
@@ -1174,6 +1186,7 @@
       ]
     },
     "IWatcher": {
+      "additionalProperties": false,
       "type": "object",
       "properties": {
         "repository": {

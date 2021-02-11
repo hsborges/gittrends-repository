@@ -8,4 +8,4 @@ class TimelineEvent extends Model<ITimelineEvent> {
   jsonSchema = schema.definitions.ITimelineEvent;
 }
 
-export default new TimelineEvent(false);
+export default new TimelineEvent();

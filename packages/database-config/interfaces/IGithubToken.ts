@@ -1,3 +1,4 @@
+/** @additionalProperties false */
 export default interface IGithubToken extends Record<string, unknown> {
   token: string;
   type: string;

@@ -8,6 +8,9 @@ import customParserForamt from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParserForamt);
 
+const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/i;
+
 export class ValidationError extends Error {
   readonly object: TObject;
   readonly errorObject: ErrorObject[];
@@ -30,37 +33,47 @@ export default abstract class Model<T = void> {
 
   private _validator: ValidateFunction<T> | undefined;
 
-  constructor(removeAdditional = true) {
+  constructor() {
     this._ajv = new Ajv({
       allErrors: true,
       coerceTypes: true,
-      removeAdditional: removeAdditional ? 'all' : undefined
+      removeAdditional: true
     });
 
     addFormats(this._ajv);
   }
 
   private preValidate(data: unknown): unknown {
-    if (data instanceof Date) return data.toISOString();
+    if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
     if (isArray(data)) return data.map((d) => this.preValidate(d));
     if (isObject(data)) return mapValues(data, (value) => this.preValidate(value));
+    return data;
+  }
+
+  private postValidate(data: unknown): unknown {
+    if (typeof data === 'string' && DATE_REGEX.test(data)) return dayjs(data, DATE_FORMAT).toDate();
+    if (isArray(data)) return data.map((d) => this.postValidate(d));
+    if (isObject(data)) return mapValues(data, (value) => this.postValidate(value));
     return data;
   }
 
   protected validate(data: TObject): TObject & { _id?: string } {
     if (this._validator === undefined) this._validator = this._ajv.compile<T>(this.jsonSchema);
 
-    if (!this._validator(this.preValidate(cloneDeep(data))))
-      throw new ValidationError(data, this._validator.errors as ErrorObject[]);
+    let clone = this.preValidate(cloneDeep(data)) as TObject;
+    if (!this._validator(clone))
+      throw new ValidationError(clone, this._validator.errors as ErrorObject[]);
+
+    clone = this.postValidate(clone) as TObject;
 
     if (typeof this.idField === 'string') {
-      return cloneDeep(omit({ _id: data[this.idField] as string, ...data }, this.idField));
+      return omit({ _id: clone[this.idField] as string, ...clone }, this.idField);
     }
 
-    return cloneDeep({
-      _id: hash(pick(data, this.idField), { algorithm: 'sha1', encoding: 'hex' }),
-      ...data
-    });
+    return {
+      _id: hash(pick(clone, this.idField), { algorithm: 'sha1', encoding: 'hex' }),
+      ...clone
+    };
   }
 
   get collection(): Collection {

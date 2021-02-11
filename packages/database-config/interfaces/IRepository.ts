@@ -1,3 +1,4 @@
+/** @additionalProperties false */
 export default interface IRepository extends Record<string, unknown> {
   id: string;
   assignable_users_count?: number;
