@@ -8,8 +8,6 @@ import customParserForamt from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParserForamt);
 
-const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
-
 export class ValidationError extends Error {
   readonly object: TObject;
   readonly errorObject: ErrorObject[];
@@ -28,46 +26,41 @@ export default abstract class Model<T = void> {
   abstract get idField(): string | string[];
   abstract get jsonSchema(): Record<string, unknown>;
 
-  private readonly _ajv: Ajv = new Ajv({ allErrors: true, coerceTypes: true });
+  private readonly _ajv: Ajv;
 
   private _validator: ValidateFunction<T> | undefined;
 
-  constructor() {
+  constructor(removeAdditional = true) {
+    this._ajv = new Ajv({
+      allErrors: true,
+      coerceTypes: true,
+      removeAdditional: removeAdditional ? 'all' : undefined
+    });
+
     addFormats(this._ajv);
   }
 
-  protected preValidate(data: unknown): unknown {
-    if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
+  private preValidate(data: unknown): unknown {
+    if (data instanceof Date) return data.toISOString();
     if (isArray(data)) return data.map((d) => this.preValidate(d));
     if (isObject(data)) return mapValues(data, (value) => this.preValidate(value));
     return data;
   }
 
-  protected postValidate(data: TObject): TObject {
-    return mapValues(data, (value) => {
-      if (typeof value === 'string') {
-        const d = dayjs(value, DATE_FORMAT);
-        if (d.isValid()) return d.toDate();
-        else return value;
-      }
-      return value;
-    });
-  }
-
   protected validate(data: TObject): TObject & { _id?: string } {
     if (this._validator === undefined) this._validator = this._ajv.compile<T>(this.jsonSchema);
 
-    const clone = this.preValidate(cloneDeep(data)) as TObject;
-    if (!this._validator(clone))
-      throw new ValidationError(clone, this._validator.errors as ErrorObject[]);
+    if (!this._validator(this.preValidate(cloneDeep(data))))
+      throw new ValidationError(data, this._validator.errors as ErrorObject[]);
 
     if (typeof this.idField === 'string') {
-      return this.postValidate(
-        omit({ _id: clone[this.idField] as string, ...clone }, this.idField)
-      );
+      return cloneDeep(omit({ _id: data[this.idField] as string, ...data }, this.idField));
     }
 
-    return this.postValidate({ _id: hash(pick(clone, this.idField)), ...clone });
+    return cloneDeep({
+      _id: hash(pick(data, this.idField), { algorithm: 'sha1', encoding: 'hex' }),
+      ...data
+    });
   }
 
   get collection(): Collection {
@@ -83,10 +76,15 @@ export default abstract class Model<T = void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
     if (!records.length) return;
 
-    await this.collection.bulkWrite(
-      records.map((record) => ({ insertOne: { document: record } })),
-      { session, ordered: false }
-    );
+    await this.collection
+      .bulkWrite(
+        records.map((record) => ({ insertOne: { document: record } })),
+        { session, ordered: false }
+      )
+      .catch((err) => {
+        if (err.code && err.code === 11000) return;
+        else throw err;
+      });
   }
 
   async upsert(record: TObject | TObject[], session?: ClientSession): Promise<void> {

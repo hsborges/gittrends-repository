@@ -4,6 +4,7 @@
 import consola from 'consola';
 import program from 'commander';
 import pRetry from 'promise-retry';
+import mongoClient from '@gittrends/database-config';
 import { bold } from 'chalk';
 import { QueueScheduler, Worker, Job } from 'bullmq';
 
@@ -46,6 +47,8 @@ program
   .option('-t, --type [type]', 'Update "repositories" or "users"', 'repositories')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
   .action(async () => {
+    await mongoClient.connect();
+
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
@@ -78,7 +81,9 @@ program
     process.on('SIGTERM', async () => {
       consola.warn('Signal received: closing queues');
       if (!timeout) {
-        Promise.all([queue.close(), queueScheduler.close()]).then(() => process.exit(0));
+        Promise.all([queue.close(), queueScheduler.close(), mongoClient.close()]).then(() =>
+          process.exit(0)
+        );
         timeout = setTimeout(() => process.exit(1), 10 * 1000);
       }
     });

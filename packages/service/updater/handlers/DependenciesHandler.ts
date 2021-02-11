@@ -2,14 +2,14 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { ResourceUpdateError, RetryableError } from '../../helpers/errors';
-import { Transaction } from 'knex';
+import { ClientSession } from 'mongodb';
+import { Dependency, Repository } from '@gittrends/database-config';
 
 import Component from '../../github/Component';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import DependencyGraphManifestComponent from '../../github/components/DependencyGraphManifestComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
-import { Dependency, Metadata } from '@gittrends/database-config';
+import { ResourceUpdateError, RetryableError } from '../../helpers/errors';
 
 type TManifestMetadata = {
   data: TObject;
@@ -47,7 +47,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     return pendingManifests.map((c) => c.component);
   }
 
-  async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
+  async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
     if (response && this.manifests.hasNextPage) {
@@ -101,7 +101,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
         []
       );
 
-      if (dependencies.length > 0) await Dependency.insert(dependencies, trx);
+      if (dependencies.length > 0) await Dependency.upsert(dependencies, session);
 
       if (this.hasNextPage()) {
         this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
@@ -110,9 +110,10 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      return Metadata.upsert(
-        [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
-        trx
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
+        { session }
       );
     }
   }
@@ -127,7 +128,12 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
       const [pending] = this.getPendingManifests();
       pending.hasNextPage = false;
 
-      return Metadata.upsert([{ ...this.meta, key: 'error', value: err.message }]);
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.error`]: err.message } }
+      );
+
+      throw err;
     }
 
     throw new ResourceUpdateError(err.message, err);

@@ -7,12 +7,12 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import compact from '../helpers/compact';
 import * as Errors from '../helpers/errors';
 
-const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL || 'http';
-const HOST = process.env.GITTRENDS_PROXY_HOST || 'localhost';
-const PORT = process.env.GITTRENDS_PROXY_PORT || 3000;
-const TIMEOUT = process.env.GITTRENDS_PROXY_TIMEOUT || undefined;
-const RETRIES = process.env.GITTRENDS_PROXY_RETRIES || 5;
-const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT || new UserAgent().random().toString();
+const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
+const HOST = process.env.GITTRENDS_PROXY_HOST ?? 'localhost';
+const PORT = parseInt(process.env.GITTRENDS_PROXY_PORT ?? '3000', 10);
+const TIMEOUT = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT ?? '0', 10) || undefined;
+const RETRIES = parseInt(process.env.GITTRENDS_PROXY_RETRIES ?? '5', 10);
+const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT ?? new UserAgent().random().toString();
 
 const requestClient: AxiosInstance = axios.create({
   baseURL: `${PROTOCOL}://${HOST}:${PORT}/graphql`,

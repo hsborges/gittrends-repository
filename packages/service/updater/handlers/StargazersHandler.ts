@@ -2,8 +2,8 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { Transaction } from 'knex';
-import knex, { Metadata, Stargazer, Actor } from '@gittrends/database-config';
+import { ClientSession } from 'mongodb';
+import { Stargazer, Actor, Repository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
@@ -19,11 +19,9 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.stargazers.endCursor) {
-      this.stargazers.endCursor = await Metadata.find(
-        this.meta.id,
-        this.meta.resource,
-        'endCursor'
-      ).then((result) => result && result.value);
+      this.stargazers.endCursor = await Repository.collection
+        .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+        .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
 
     return this._component.includeStargazers(this.stargazers.hasNextPage, {
@@ -33,7 +31,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: TObject, trx: Transaction): Promise<void> {
+  async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
     const data = response[this.alias as string];
@@ -50,15 +48,21 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
     if (this.stargazers.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([
-        Stargazer.insert(this.stargazers.items, trx),
-        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.stargazers.endCursor }, trx)
-      ]);
+      await Stargazer.upsert(this.stargazers.items, session);
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } },
+        { session }
+      );
       this.stargazers.items = [];
     }
 
     if (this.isDone()) {
-      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date().toISOString() });
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
+        { session }
+      );
     }
   }
 
@@ -73,15 +77,14 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
         this.stargazers.hasNextPage = pageInfo.has_next_page;
         this.stargazers.endCursor = pageInfo.end_cursor || this.stargazers.endCursor;
 
-        await knex.transaction((trx) =>
-          Promise.all([
-            Actor.insert(get(err, 'response.actors', []), trx),
-            Stargazer.insert(stargazers, trx),
-            Metadata.upsert(
-              [{ ...this.meta, key: 'endCursor', value: this.stargazers.endCursor }],
-              trx
-            )
-          ])
+        await Promise.all([
+          Actor.insert(get(err, 'response.actors', [])),
+          Stargazer.upsert(stargazers)
+        ]);
+
+        await Repository.collection.updateOne(
+          { _id: this.meta.id },
+          { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } }
         );
 
         return;

@@ -4,43 +4,45 @@
 import chalk from 'chalk';
 import numeral from 'numeral';
 import { table } from 'table';
-import { startCase, difference } from 'lodash';
+import { startCase, difference, get } from 'lodash';
 
-import knex, { Repository, Metadata } from '@gittrends/database-config';
+import mongoClient, { Repository } from '@gittrends/database-config';
 import packageJson from '../package.json';
 
 (async () => {
+  await mongoClient.connect();
+
   const reposResources = difference(packageJson.config.resources, ['users']);
 
-  const { total: totalRepositories } = (await Repository.query()
-    .count('*', { as: 'total' })
-    .first()) || { total: 0 };
+  const repositories = await Repository.collection
+    .find({}, { projection: { _id: 1, _metadata: 1 } })
+    .toArray();
 
-  if (totalRepositories === 0) throw new Error('Database is empty!');
+  if (repositories.length === 0) throw new Error('Database is empty!');
 
   const data = [];
 
   // eslint-disable-next-line no-restricted-syntax, guard-for-in
   for (const resource of reposResources) {
-    const updatedRepos = (
-      await Metadata.query().where({ resource, key: 'updatedAt' }).select('id')
-    ).map((m: TObject) => m.id);
-
-    const updated = updatedRepos.length;
+    const updatedRepos = repositories
+      .filter((repo) => get(repo, ['_metadata', resource, 'updatedAt']))
+      .map((repo) => repo._id);
 
     const updating = difference(
-      (await Metadata.query().where({ resource }).distinct('id')).map((m) => m.id),
+      repositories.filter((repo) => get(repo, ['_metadata', resource])).map((repo) => repo._id),
       updatedRepos
     ).length;
 
     data.push([
       startCase(resource),
-      updated,
-      numeral(updated / totalRepositories).format('0.[00]%'),
-      updating,
-      numeral(updating / totalRepositories).format('0.[00]%'),
-      totalRepositories - updated - updating,
-      numeral((totalRepositories - updated - updating) / totalRepositories).format('0.[00]%')
+      numeral(updatedRepos.length).format('0,0'),
+      numeral(updatedRepos.length / repositories.length).format('0.[00]%'),
+      numeral(updating).format('0,0'),
+      numeral(updating / repositories.length).format('0.[00]%'),
+      numeral(repositories.length - updatedRepos.length - updating).format('0,0'),
+      numeral((repositories.length - updatedRepos.length - updating) / repositories.length).format(
+        '0.[00]%'
+      )
     ]);
   }
 
@@ -59,4 +61,4 @@ import packageJson from '../package.json';
   )
   .then((data) => console.log(data))
   .catch(console.error)
-  .finally(() => knex.destroy());
+  .finally(() => mongoClient.close());

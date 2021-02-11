@@ -4,5 +4,4 @@ export default interface ITimelineEvent extends Record<string, unknown> {
   repository: string;
   issue: string;
   type: string;
-  payload: string;
 }

@@ -1,8 +1,8 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { ClientSession } from 'mongodb';
 import Component from '../github/Component';
-import { Transaction } from 'knex';
 
 export default abstract class AbstractHandler<T extends Component> {
   protected readonly _component: T;
@@ -16,7 +16,7 @@ export default abstract class AbstractHandler<T extends Component> {
   }
 
   abstract component(): Promise<T | Component[]>;
-  abstract update(response: Record<string, unknown>, trx: Transaction): Promise<void>;
+  abstract update(response: Record<string, unknown>, session?: ClientSession): Promise<void>;
   abstract hasNextPage(): boolean;
 
   isDone(): boolean {

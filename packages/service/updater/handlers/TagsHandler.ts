@@ -2,8 +2,8 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { Transaction } from 'knex';
-import { Metadata, Tag } from '@gittrends/database-config';
+import { ClientSession } from 'mongodb';
+import { Repository, Tag } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
@@ -18,9 +18,9 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.tags.endCursor) {
-      this.tags.endCursor = await Metadata.find(this.meta.id, this.meta.resource, 'endCursor').then(
-        (result) => result && result.value
-      );
+      this.tags.endCursor = await Repository.collection
+        .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+        .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
 
     return this._component.includeTags(this.tags.hasNextPage, {
@@ -30,7 +30,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: TObject, trx: Transaction): Promise<void> {
+  async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
     const data = response[this.alias as string];
@@ -47,15 +47,21 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     this.tags.endCursor = pageInfo.end_cursor ?? this.tags.endCursor;
 
     if (this.tags.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([
-        Tag.insert(this.tags.items, trx),
-        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.tags.endCursor }, trx)
-      ]);
+      await Tag.upsert(this.tags.items, session);
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.tags.endCursor } },
+        { session }
+      );
       this.tags.items = [];
     }
 
     if (this.isDone()) {
-      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date().toISOString() });
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
+        { session }
+      );
     }
   }
 

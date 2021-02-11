@@ -1,19 +1,17 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Transaction } from 'knex';
 import { get, omit } from 'lodash';
+import { ClientSession } from 'mongodb';
 import {
-  IMetadata,
   Issue,
-  Metadata,
   PullRequest,
   Reaction,
+  Repository,
   TimelineEvent
 } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
-
 import Component from '../../github/Component';
 import IssueComponent from '../../github/components/IssueComponent';
 import PullRequestComponent from '../../github/components/PullRequestComponent';
@@ -67,11 +65,9 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       this.getPendingReactables().length === 0
     ) {
       if (!this.issues.endCursor) {
-        this.issues.endCursor = await Metadata.find(
-          this.meta.id,
-          this.meta.resource,
-          'endCursor'
-        ).then((result) => result && result.value);
+        this.issues.endCursor = await Repository.collection
+          .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+          .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
       }
 
       const method =
@@ -91,11 +87,9 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       return Promise.all(
         pendingIssues.map(async (issue) => {
           if (!issue.timeline.endCursor) {
-            issue.timeline.endCursor = await Metadata.find(
-              issue.data.id as string,
-              this.resource.slice(0, -1),
-              'endCursor'
-            ).then((result) => result && result.value);
+            issue.timeline.endCursor = await Issue.collection
+              .findOne({ _id: issue.data.id }, { projection: { _metadata: 1 } })
+              .then((result) => result && get(result, '_metadata.endCursor'));
           }
 
           return issue.component
@@ -133,7 +127,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     return [];
   }
 
-  async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
+  async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
     if (this.issues.items.length === 0) {
@@ -248,17 +242,10 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         (meta) => compact(omit(meta.data, 'timeline')) as TObject
       );
 
-      const issuesMetadata = this.issues.items.reduce((acc: IMetadata[], issue) => {
-        const id = { id: issue.data.id as string, resource: this.resource.slice(0, -1) };
-        return acc.concat(
-          issue.error
-            ? [{ ...id, key: 'error', value: JSON.stringify(issue.error) }]
-            : [
-                { ...id, key: 'updatedAt', value: new Date().toISOString() },
-                { ...id, key: 'endCursor', value: issue.timeline.endCursor }
-              ]
-        );
-      }, []);
+      this.issues.items.forEach((issue) => {
+        if (issue.error) issue.data._metadata = { error: JSON.stringify(issue.error) };
+        else issue.data._metadata = { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
+      });
 
       const timeline = this.issues.items.reduce((acc: TObject[], issue) => {
         if (!issue.data.timeline) return acc;
@@ -266,11 +253,9 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           (issue.data.timeline as TObject[]).map(
             (tl) =>
               compact({
-                id: tl.id,
                 repository: this.id,
                 issue: issue.data.id,
-                type: tl.type,
-                payload: omit(tl, ['id', 'type'])
+                ...tl
               }) as TObject
           )
         );
@@ -283,14 +268,16 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       );
 
       await Promise.all([
-        (this.resource === 'issues' ? Issue : PullRequest).insert(issues, trx),
-        TimelineEvent.insert(timeline, trx),
-        Reaction.insert(reactions, trx),
-        Metadata.upsert(
-          [{ ...this.meta, key: 'endCursor', value: this.issues.endCursor }, ...issuesMetadata],
-          trx
-        )
+        (this.resource === 'issues' ? Issue : PullRequest).upsert(issues, session),
+        TimelineEvent.upsert(timeline, session),
+        Reaction.upsert(reactions, session)
       ]);
+
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.issues.endCursor } },
+        { session }
+      );
 
       this.issues.items = [];
       this.reactions = undefined;
@@ -298,9 +285,10 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      return Metadata.upsert(
-        [{ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }],
-        trx
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
+        { session }
       );
     }
   }

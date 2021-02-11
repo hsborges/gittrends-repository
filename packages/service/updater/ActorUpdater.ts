@@ -5,7 +5,7 @@ import { Job } from 'bullmq';
 import { chunk } from 'lodash';
 import { mapSeries } from 'bluebird';
 import { NotFoundError, RetryableError } from '../helpers/errors';
-import client, { Actor } from '@gittrends/database-config';
+import { Actor } from '@gittrends/database-config';
 
 import Updater from './Updater';
 import Query from '../github/Query';
@@ -25,21 +25,9 @@ export default class ActorsUpdater implements Updater {
 
     await Query.create()
       .compose(...components)
-      .then(async ({ actors }) => {
-        const session = client.startSession();
-
-        session
-          .withTransaction(() =>
-            Actor.upsert(
-              actors.map((actor) => Object.assign({ _metadata: { updatedAt: new Date() } }, actor)),
-              session
-            ).catch(async (err) => {
-              await session.abortTransaction();
-              throw err;
-            })
-          )
-          .finally(() => session.endSession());
-      })
+      .then(async ({ actors }) =>
+        Actor.upsert(actors.map((actor) => ({ ...actor, _metadata: { updatedAt: new Date() } })))
+      )
       .catch(async (err) => {
         if (err instanceof RetryableError || err instanceof NotFoundError) {
           if (ids.length > 1)

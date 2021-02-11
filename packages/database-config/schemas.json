@@ -502,7 +502,9 @@
           }
         },
         "reaction_groups": {
-          "type": "string"
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
         },
         "_metadata": {
           "type": "object",
@@ -752,7 +754,9 @@
           }
         },
         "reaction_groups": {
-          "type": "string"
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
         },
         "_metadata": {
           "type": "object",
@@ -1160,15 +1164,11 @@
         },
         "type": {
           "type": "string"
-        },
-        "payload": {
-          "type": "string"
         }
       },
       "required": [
         "id",
         "issue",
-        "payload",
         "repository",
         "type"
       ]

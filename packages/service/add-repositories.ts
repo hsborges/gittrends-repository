@@ -6,7 +6,7 @@ import { program } from 'commander';
 import { version } from './package.json';
 import { chain, get, min, uniqBy } from 'lodash';
 import { BadGatewayError } from './helpers/errors';
-import client, { Actor, Repository } from '@gittrends/database-config';
+import mongoClient, { Actor, Repository } from '@gittrends/database-config';
 import { filter } from 'bluebird';
 
 import Query from './github/Query';
@@ -98,8 +98,10 @@ program
 
         return [repositories, users];
       })
-      .then(async ([repos, users]) =>
-        Promise.all([
+      .then(async ([repos, users]) => {
+        await mongoClient.connect();
+
+        return Promise.all([
           filter(repos, (repo) =>
             Repository.collection
               .findOne({ _id: repo.id }, { projection: { _id: 1 } })
@@ -110,26 +112,15 @@ program
               .findOne({ _id: user.id }, { projection: { _id: 1 } })
               .then((data) => !data)
           )
-        ])
-      )
+        ]);
+      })
       .then(async ([repos, users]) => {
         consola.info('Adding repositories to database ...');
-
-        if (!client.isConnected()) await client.connect();
-
-        const session = client.startSession();
-        return session
-          .withTransaction(() =>
-            Promise.all([Actor.insert(users, session), Repository.insert(repos, session)])
-          )
-          .catch(async (err) => {
-            await session.abortTransaction();
-            throw err;
-          })
-          .finally(() => session.endSession());
+        await Actor.insert(users);
+        await Repository.insert(repos);
       })
       .then(() => consola.success('Repositories successfully added!'))
       .catch((err) => consola.error(err))
-      .finally(() => client.close());
+      .finally(() => mongoClient.close());
   })
   .parse(process.argv);

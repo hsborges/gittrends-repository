@@ -2,8 +2,8 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { Transaction } from 'knex';
-import { Repository, Metadata } from '@gittrends/database-config';
+import { ClientSession } from 'mongodb';
+import { Repository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
@@ -36,7 +36,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
       });
   }
 
-  async update(response: Record<string, unknown>, trx: Transaction): Promise<void> {
+  async update(response: Record<string, unknown>, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
     const data = response[this.alias as string];
@@ -57,17 +57,20 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
     this.topics.endCursor = topicsPageInfo.end_cursor ?? this.topics.endCursor;
 
     if (this.isDone()) {
-      await Promise.all([
-        Repository.update(
-          compact({
-            ...this.details,
-            languages: this.languages.items,
-            repository_topics: this.topics.items
-          }) as TObject,
-          trx
-        ),
-        Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date().toISOString() }, trx)
-      ]);
+      const current = await Repository.collection.findOne(
+        { _id: this.id },
+        { projection: { _metadata: 1 }, session }
+      );
+
+      await Repository.upsert(
+        compact({
+          ...this.details,
+          languages: this.languages.items,
+          repository_topics: this.topics.items,
+          _metadata: { ...current._metadata, [this.meta.resource]: { updatedAt: new Date() } }
+        }) as TObject,
+        session
+      );
     }
   }
 

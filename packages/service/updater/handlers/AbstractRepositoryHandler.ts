@@ -18,7 +18,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     this.id = id;
     this.meta = { id, resource };
     this.batchSize = this.defaultBatchSize = 100;
-    this.writeBatchSize = process.env.GITTRENDS_WRITE_BATCH_SIZE ?? 500;
+    this.writeBatchSize = parseInt(process.env.GITTRENDS_WRITE_BATCH_SIZE ?? '500', 10);
   }
 
   async error(err: Error): Promise<void> {

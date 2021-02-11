@@ -2,8 +2,8 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { Transaction } from 'knex';
-import { Metadata, Watcher } from '@gittrends/database-config';
+import { ClientSession } from 'mongodb';
+import { Repository, Watcher } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
@@ -18,11 +18,9 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.watchers.endCursor) {
-      this.watchers.endCursor = await Metadata.find(
-        this.meta.id,
-        this.meta.resource,
-        'endCursor'
-      ).then((result) => result && result.value);
+      this.watchers.endCursor = await Repository.collection
+        .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+        .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
 
     return this._component.includeWatchers(this.watchers.hasNextPage, {
@@ -32,7 +30,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: TObject, trx: Transaction): Promise<void> {
+  async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
     const data = response[this.alias as string];
@@ -49,15 +47,21 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     this.watchers.endCursor = pageInfo.end_cursor ?? this.watchers.endCursor;
 
     if (this.watchers.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([
-        Watcher.insert(this.watchers.items, trx),
-        Metadata.upsert({ ...this.meta, key: 'endCursor', value: this.watchers.endCursor }, trx)
-      ]);
+      await Watcher.upsert(this.watchers.items, session);
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.watchers.endCursor } },
+        { session }
+      );
       this.watchers.items = [];
     }
 
     if (this.isDone()) {
-      await Metadata.upsert({ ...this.meta, key: 'updatedAt', value: new Date().toISOString() });
+      await Repository.collection.updateOne(
+        { _id: this.meta.id },
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
+        { session }
+      );
     }
   }
 

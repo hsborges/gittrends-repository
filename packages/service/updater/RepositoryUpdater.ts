@@ -4,7 +4,7 @@
 import { Job } from 'bullmq';
 import { all, each, map } from 'bluebird';
 import { shuffle } from 'lodash';
-import knex, { Actor, Commit, Milestone } from '@gittrends/database-config';
+import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
 import Updater from './Updater';
 import Query from '../github/Query';
@@ -72,15 +72,11 @@ export default class RepositoryUpdater implements Updater {
         commits = commits.filter((commit) => !this.cache?.has(commit));
         milestones = milestones.filter((milestone) => !this.cache?.has(milestone));
 
-        await knex.transaction(async (trx) => {
-          await all([
-            Actor.insert(actors, trx).then(() => this.cache?.add(actors)),
-            Commit.insert(commits, trx).then(() => this.cache?.add(commits)),
-            Milestone.insert(milestones, trx).then(() => this.cache?.add(milestones))
-          ]);
-
-          return each(shuffle(handlers), (handler) => handler.update(data as TObject, trx));
-        });
+        await all([
+          Actor.insert(actors).then(() => this.cache?.add(actors)),
+          Commit.upsert(commits).then(() => this.cache?.add(commits)),
+          Milestone.upsert(milestones).then(() => this.cache?.add(milestones))
+        ]).then(() => each(shuffle(handlers), (handler) => handler.update(data as TObject)));
 
         const doneHandlers = handlers.filter((handler) => {
           if (this.job && handler.isDone()) {

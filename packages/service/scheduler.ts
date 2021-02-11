@@ -8,7 +8,7 @@ import consola from 'consola';
 import { each } from 'bluebird';
 import { program } from 'commander';
 import { difference, chunk, intersection, get } from 'lodash';
-import client, { Actor, Repository } from '@gittrends/database-config';
+import mongoClient, { Actor, Repository } from '@gittrends/database-config';
 
 import { redisOptions } from './redis';
 import { version, config } from './package.json';
@@ -99,7 +99,7 @@ program
         const queue = new Queue<T>(name, {
           connection: redisOptions,
           defaultJobOptions: {
-            attempts: process.env.GITTRENDS_QUEUE_ATTEMPS ?? 3,
+            attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
             removeOnComplete: true
           }
         });
@@ -112,7 +112,8 @@ program
         return queue;
       }
 
-      if (!client.isConnected()) await client.connect();
+      // connect to database
+      await mongoClient.connect();
 
       // store promises running
       const promises = [];
@@ -133,7 +134,7 @@ program
       // await promises and finish script
       await Promise.all(promises)
         .catch((err) => consola.error(err))
-        .finally(() => client.close())
+        .finally(() => mongoClient.close())
         .finally(() => process.exit(0));
     }
   )

@@ -22,9 +22,12 @@ const client = new MongoClient(
   }
 );
 
-(async () => {
-  await client.connect();
-  Model.db = client.db(DB);
-})();
+const oldConnect = client.connect.bind(client);
+client.connect = async function () {
+  return oldConnect().then((db) => {
+    Model.db = client.db(DB);
+    return db;
+  });
+};
 
 export default client;

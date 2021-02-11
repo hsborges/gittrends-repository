@@ -10,18 +10,18 @@ declare global {
       GITTRENDS_DATABASE_POOL_SIZE?: string;
       GITTRENDS_PROXY_PROTOCOL?: string;
       GITTRENDS_PROXY_HOST?: string;
-      GITTRENDS_PROXY_PORT?: number;
-      GITTRENDS_PROXY_TIMEOUT?: number;
-      GITTRENDS_PROXY_RETRIES?: number;
+      GITTRENDS_PROXY_PORT?: string;
+      GITTRENDS_PROXY_TIMEOUT?: string;
+      GITTRENDS_PROXY_RETRIES?: string;
       GITTRENDS_PROXY_USER_AGENT?: string;
       GITTRENDS_REDIS_HOST?: string;
-      GITTRENDS_REDIS_PORT?: number;
-      GITTRENDS_REDIS_DB?: number;
-      GITTRENDS_QUEUE_ATTEMPS?: number;
-      GITTRENDS_QUEUE_BOARD_PORT?: number;
+      GITTRENDS_REDIS_PORT?: string;
+      GITTRENDS_REDIS_DB?: string;
       GITTRENDS_CACHE_SIZE?: string;
-      GITTRENDS_WRITE_BATCH_SIZE?: number;
-      PORT?: number;
+      GITTRENDS_WRITE_BATCH_SIZE?: string;
+      GITTRENDS_QUEUE_ATTEMPS?: string;
+      GITTRENDS_QUEUE_BOARD_PORT?: string;
+      PORT?: string;
     }
   }
 

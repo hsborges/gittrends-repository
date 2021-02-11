@@ -5,7 +5,7 @@ services:
     image: mongo:latest
     container_name: mongo
     restart: always
-    command: --config /etc/mongo/mongod.conf --auth --replSet rs0
+    command: --config /etc/mongo/mongod.conf --auth
     ports:
       - ${GITTRENDS_DATABASE_PORT}:27017
     volumes:
