@@ -12,6 +12,9 @@ export = {
       db
         .collection('dependencies')
         .createIndex([{ key: { repository: 1 }, name: 'dependencies_repository_index' }]),
+      db
+        .collection('actors')
+        .createIndex([{ key: { '_metadata.updatedAt': 1 }, name: '_metadata_updatedat_index' }]),
       db.collection('issues').createIndex([{ key: { type: 1 }, name: 'issues_type_index' }])
     ]);
   },
@@ -19,6 +22,7 @@ export = {
   async down(db: Db): Promise<void> {
     await Promise.all([
       db.collection('issues').dropIndex('issues_type_index'),
+      db.collection('actors').dropIndex('_metadata_updatedat_index'),
       db.collection('dependencies').dropIndex('dependencies_repository_index'),
       db.collection('watchers').dropIndex('watchers_repository_index'),
       db.collection('stargazers').dropIndex('stargazers_repository_index')
