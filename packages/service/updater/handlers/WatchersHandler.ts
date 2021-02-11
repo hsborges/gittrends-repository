@@ -7,6 +7,7 @@ import { Repository, Watcher } from '@gittrends/database-config';
 
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
+import { ResourceUpdateError } from '../../helpers/errors';
 
 export default class WatchersHandler extends AbstractRepositoryHandler {
   watchers: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
@@ -63,6 +64,10 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
         { session }
       );
     }
+  }
+
+  async error(err: Error): Promise<void> {
+    throw new ResourceUpdateError(err.message, err);
   }
 
   hasNextPage(): boolean {

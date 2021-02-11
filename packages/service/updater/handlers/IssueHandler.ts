@@ -19,7 +19,7 @@ import ReactionComponent from '../../github/components/ReactionComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 import compact from '../../helpers/compact';
-import { RetryableError, ForbiddenError } from '../../helpers/errors';
+import { RetryableError, ForbiddenError, ResourceUpdateError } from '../../helpers/errors';
 
 type TComponent = IssueComponent | PullRequestComponent;
 type TPaginable = { hasNextPage: boolean; endCursor?: string };
@@ -320,7 +320,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       return;
     }
 
-    super.error(err);
+    throw new ResourceUpdateError(err.message, err);
   }
 
   getPendingIssues(): TIssueMetadata[] {

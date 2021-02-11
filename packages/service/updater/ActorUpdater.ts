@@ -20,18 +20,19 @@ export default class ActorsUpdater implements Updater {
     this.job = opts?.job;
   }
 
-  async $update(ids: string[]): Promise<void> {
+  private async _update(ids: string[]): Promise<void> {
     const components = ids.map((id, index) => new ActorComponent(id).setAlias(`actor_${index}`));
 
     await Query.create()
       .compose(...components)
+      .run()
       .then(async ({ actors }) =>
         Actor.upsert(actors.map((actor) => ({ ...actor, _metadata: { updatedAt: new Date() } })))
       )
       .catch(async (err) => {
         if (err instanceof RetryableError || err instanceof NotFoundError) {
           if (ids.length > 1)
-            return mapSeries(chunk(ids, Math.ceil(ids.length / 2)), (_ids) => this.$update(_ids));
+            return mapSeries(chunk(ids, Math.ceil(ids.length / 2)), (_ids) => this._update(_ids));
 
           return Actor.collection.updateOne(
             { _id: ids[0] },
@@ -44,7 +45,7 @@ export default class ActorsUpdater implements Updater {
   }
 
   async update(): Promise<void> {
-    return this.$update(Array.isArray(this.id) ? this.id : [this.id]).then(() => {
+    return this._update(Array.isArray(this.id) ? this.id : [this.id]).then(() => {
       if (this.job) this.job.updateProgress(100);
     });
   }

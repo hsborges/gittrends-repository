@@ -8,6 +8,7 @@ import { Repository } from '@gittrends/database-config';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import compact from '../../helpers/compact';
+import { ResourceUpdateError } from '../../helpers/errors';
 
 type TObject = Record<string, unknown>;
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
@@ -72,6 +73,10 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
         session
       );
     }
+  }
+
+  async error(err: Error): Promise<void> {
+    throw new ResourceUpdateError(err.message, err);
   }
 
   hasNextPage(): boolean {

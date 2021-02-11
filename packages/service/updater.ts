@@ -3,7 +3,6 @@
  */
 import consola from 'consola';
 import program from 'commander';
-import pRetry from 'promise-retry';
 import mongoClient from '@gittrends/database-config';
 import { bold } from 'chalk';
 import { QueueScheduler, Worker, Job } from 'bullmq';
@@ -11,33 +10,20 @@ import { QueueScheduler, Worker, Job } from 'bullmq';
 import { version } from './package.json';
 import { redisOptions } from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
-import Updater from './updater/Updater';
 import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
 
 type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
 type TUpdaterType = 'users' | 'repositories';
 
-function retriableWorker(job: Job<TJob>, type: TUpdaterType, cache?: Cache): Promise<void> {
-  return pRetry(
-    (retry) => {
-      let updater: Updater;
-
-      if (type === 'users') {
-        updater = new ActorsUpdater(job.data.id, { job });
-      } else {
-        const id = job.data.id as string;
-        const resources = job.data.resources as THandler[];
-        updater = new RepositoryUpdater(id, resources, { job, cache });
-      }
-
-      return updater.update().catch((err) => {
-        if (err.message && /recovery.mode|rollback/gi.test(err.message)) return retry(err);
-        throw err;
-      });
-    },
-    { retries: 3, minTimeout: 500, maxTimeout: 5000, randomize: true }
-  );
+async function worker(job: Job<TJob>, type: TUpdaterType, cache?: Cache): Promise<void> {
+  if (type === 'users') {
+    return new ActorsUpdater(job.data.id, { job }).update();
+  } else {
+    const id = job.data.id as string;
+    const resources = job.data.resources as THandler[];
+    return new RepositoryUpdater(id, resources, { job, cache }).update();
+  }
 }
 
 /* execute */
@@ -61,8 +47,8 @@ program
 
     const queue = new Worker(
       options.type,
-      (job: Job) =>
-        retriableWorker(job, options.type, cache)
+      async (job: Job) =>
+        worker(job, options.type, cache)
           .catch((err) => {
             consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
             throw err;

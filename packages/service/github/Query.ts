@@ -69,16 +69,11 @@ export default class Query {
   }
 
   async run(interceptor?: (args: string) => string): Promise<Response> {
-    const query = interceptor ? interceptor(this.toString()) : this.toString();
-    return client({ query })
+    return client({ query: interceptor ? interceptor(this.toString()) : this.toString() })
       .then((response) => parser(get(response, 'data.data', null)))
       .catch((err) => {
         if (err.response) err.response = parser(get(err, 'response.data', null));
         throw err;
       });
-  }
-
-  async then(callback: (response: Response) => PromiseLike<void>): Promise<void> {
-    return this.run().then(callback);
   }
 }

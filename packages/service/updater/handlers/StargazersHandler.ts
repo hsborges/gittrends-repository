@@ -7,7 +7,7 @@ import { Stargazer, Actor, Repository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
-import { InternalError, RetryableError } from '../../helpers/errors';
+import { InternalError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
   stargazers: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
@@ -98,7 +98,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
       }
     }
 
-    super.error(err);
+    throw new ResourceUpdateError(err.message, err);
   }
 
   hasNextPage(): boolean {

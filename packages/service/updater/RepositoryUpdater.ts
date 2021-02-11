@@ -3,9 +3,10 @@
  */
 import { Job } from 'bullmq';
 import { all, each, map } from 'bluebird';
-import { shuffle } from 'lodash';
+import { flatten } from 'lodash';
 import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
+import Cache from './Cache';
 import Updater from './Updater';
 import Query from '../github/Query';
 import RepositoryHander from './handlers/RepositoryHandler';
@@ -13,13 +14,11 @@ import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
 import StargazersHandler from './handlers/StargazersHandler';
 import WatchersHandler from './handlers/WatchersHandler';
 import TagsHandler from './handlers/TagsHandler';
-import { ValidationError } from '@gittrends/database-config/dist/models/Model';
 import ReleasesHandler from './handlers/ReleasesHandler';
-import Component from '../github/Component';
 import DependenciesHander from './handlers/DependenciesHandler';
 import IssuesHander from './handlers/IssueHandler';
 import { ResourceUpdateError } from '../helpers/errors';
-import Cache from './Cache';
+import { ValidationError } from '@gittrends/database-config/dist/models/Model';
 
 export type THandler =
   | 'dependencies'
@@ -58,15 +57,10 @@ export default class RepositoryUpdater implements Updater {
   }
 
   private async _update(handlers: AbstractRepositoryHandler[]): Promise<void> {
-    // get components
-    const components = (await map(handlers, (handler) => handler.component())).reduce(
-      (acc: Component[], result) => acc.concat(result),
-      []
-    );
-
     // run queries and update handlers
     await Query.create()
-      .compose(...components)
+      .compose(...flatten(await map(handlers, (handler) => handler.component())))
+      .run()
       .then(async ({ data, actors = [], commits = [], milestones = [] }) => {
         actors = actors.filter((actor) => !this.cache?.has(actor));
         commits = commits.filter((commit) => !this.cache?.has(commit));
@@ -76,7 +70,7 @@ export default class RepositoryUpdater implements Updater {
           Actor.insert(actors).then(() => this.cache?.add(actors)),
           Commit.upsert(commits).then(() => this.cache?.add(commits)),
           Milestone.upsert(milestones).then(() => this.cache?.add(milestones))
-        ]).then(() => each(shuffle(handlers), (handler) => handler.update(data as TObject)));
+        ]).then(() => all(handlers.map(async (handler) => handler.update(data as TObject))));
 
         const doneHandlers = handlers.filter((handler) => {
           if (this.job && handler.isDone()) {
@@ -117,19 +111,15 @@ export default class RepositoryUpdater implements Updater {
   }
 
   async update(): Promise<void> {
-    while (this.hasNextPage()) await this._update(this.pendingHandlers());
+    while (this.pendingHandlers().length > 0) await this._update(this.pendingHandlers());
 
     if (this.errors.length)
       throw new ResourceUpdateError(this.errors.map((e) => e.error.message).join(', '));
   }
 
-  pendingHandlers(): AbstractRepositoryHandler[] {
+  private pendingHandlers(): AbstractRepositoryHandler[] {
     return this.handlers.filter(
       (handler) => handler.hasNextPage() && this.errors.findIndex((e) => e.handler === handler) < 0
     );
-  }
-
-  hasNextPage(): boolean {
-    return this.pendingHandlers().length > 0;
   }
 }
