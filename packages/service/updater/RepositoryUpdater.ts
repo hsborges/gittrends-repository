@@ -78,14 +78,14 @@ export default class RepositoryUpdater implements Updater {
 
         if (this.job && doneHandlers.length) {
           const totalDone = this.handlers.reduce((acc: number, h) => acc + (h.isDone() ? 1 : 0), 0);
-          const resourcesDone = this.pendingHandlers().map((handler) => handler.meta.resource);
+          const pendingResources = this.pendingHandlers().map((handler) => handler.meta.resource);
           this.job.updateProgress(Math.ceil((totalDone / this.handlers.length) * 100));
           this.job.update({
             ...this.job.data,
-            resources: this.handlers
+            resources: pendingResources,
+            done: this.handlers
               .map((handler) => handler.meta.resource)
-              .filter((resource) => resourcesDone.indexOf(resource) < 0),
-            done: resourcesDone
+              .filter((resource) => pendingResources.indexOf(resource) < 0)
           });
         }
       })
