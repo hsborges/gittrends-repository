@@ -34,7 +34,7 @@ async function retriableRequest(data: TObject): Promise<AxiosResponse> {
     (retry) =>
       requestClient({ method: 'post', data: data }).catch((err) => {
         if (err.code === 'ECONNABORTED' || err.code === 'ECONNREFUSED') return retry(err);
-        if (err.response && /500|408/g.test(err.response.status)) return retry(err);
+        if (err.response && /500|408|403/g.test(err.response.status)) return retry(err);
         throw err;
       }),
     { retries: RETRIES, minTimeout: 500, maxTimeout: 2000, randomize: true }
