@@ -3,15 +3,9 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import utc from 'dayjs/plugin/utc';
 
+import { get } from 'lodash';
 import { FastifyInstance } from 'fastify';
-import knex, {
-  Repository,
-  IRepository,
-  Stargazer,
-  IStargazer,
-  Metadata,
-  Actor
-} from '@gittrends/database-config';
+import { Repository, IRepository, Stargazer, IStargazer, Actor } from '@gittrends/database-config';
 
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
@@ -26,58 +20,43 @@ type TimeSeries = Array<{ week: number; year: number; stargazers_count: number }
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: IParams }>('/:owner/:name/stargazers', async function (request, reply) {
-    const repo: IRepository = await Repository.query()
-      .where(
-        knex.raw('lower(name_with_owner)'),
-        'like',
-        `${request.params.owner}/${request.params.name}`
-      )
-      .first('id');
+    const repo: IRepository | null = await Repository.collection.findOne(
+      { name_with_owner: new RegExp(`^${request.params.owner}/${request.params.name}$`, 'i') },
+      { projection: { _id: 1, _metadata: 1 } }
+    );
 
-    if (!repo) return reply.callNotFound();
+    if (!repo || !get(repo, '_metadata.stargazers.updatedAt')) return reply.callNotFound();
 
-    const updated = await Metadata.query()
-      .where({ id: repo.id, resource: 'stargazers', key: 'updatedAt' })
-      .select('value')
-      .first();
-
-    if (!updated || !updated.value) return reply.callNotFound();
-
-    const timeseries = await Stargazer.query()
-      .select(
-        knex.raw('extract (week from starred_at) as week'),
-        knex.raw('extract (year from starred_at) as year'),
-        knex.raw('count(*)::integer as stargazers_count')
-      )
-      .where({ repository: repo.id })
-      .groupBy(['week', 'year'])
-      .orderBy('year', 'asc')
-      .orderBy('week', 'asc');
+    const timeseries = await Stargazer.collection
+      .aggregate([
+        { $match: { repository: repo._id } },
+        { $project: { _id: 0, week: { $week: '$starred_at' }, year: { $year: '$starred_at' } } },
+        { $sort: { year: 1, week: 1 } },
+        { $group: { _id: { year: '$year', week: '$week' }, stargazers_count: { $sum: 1 } } },
+        { $project: { _id: 0, year: '$_id.year', week: '$_id.week', stargazers_count: 1 } }
+      ])
+      .toArray();
 
     if (timeseries.length === 0) return reply.send({ timeseries, first: null, last: null });
 
     let [first, last]: [IStargazer, IStargazer] = await Promise.all([
-      Stargazer.query()
-        .where({ repository: repo.id })
-        .orderBy('starred_at', 'asc')
-        .first('user', 'starred_at')
-        .select('user', 'starred_at'),
-
-      Stargazer.query()
-        .where({ repository: repo.id })
-        .orderBy('starred_at', 'desc')
-        .first('user', 'starred_at')
-        .select('user', 'starred_at')
+      Stargazer.collection.findOne(
+        { repository: repo._id },
+        { sort: { starred_at: 1 }, projection: { _id: 0, user: 1, starred_at: 1 } }
+      ),
+      Stargazer.collection.findOne(
+        { repository: repo._id },
+        { sort: { starred_at: -1 }, projection: { _id: 0, user: 1, starred_at: 1 } }
+      )
     ]);
 
     [first, last] = await Promise.all(
       [first, last].map((data) =>
-        Actor.query()
-          .where({ id: data.user })
-          .first()
-          .then((result) => ({ ...data, user: result }))
+        Actor.collection.findOne({ _id: data.user }).then((result) => ({ ...data, user: result }))
       )
     );
+
+    console.log(timeseries);
 
     return reply.send({
       timeseries: timeseries.reduce(
@@ -87,7 +66,6 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         ) => ({
           ...timeseries,
           [dayjs
-            // .utc(getDateOfWeek(record.week, record.year))
             .utc()
             .year(record.year)
             .week(record.week)

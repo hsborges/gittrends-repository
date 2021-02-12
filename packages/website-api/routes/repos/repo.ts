@@ -1,6 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import knex, { Actor, Metadata, Repository } from '@gittrends/database-config';
-import { IActor, IMetadata, IRepository } from '@gittrends/database-config';
+import { IActor, Actor, IRepository, Repository } from '@gittrends/database-config';
 
 interface IParams {
   owner: string;
@@ -9,20 +8,13 @@ interface IParams {
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: IParams }>('/:owner/:name', async function (request, reply) {
-    const repo: IRepository = await Repository.query()
-      .where(
-        knex.raw('lower(name_with_owner)'),
-        'like',
-        `${request.params.owner}/${request.params.name}`
-      )
-      .first('*');
+    const repo: IRepository = await Repository.collection.findOne({
+      name_with_owner: new RegExp(`${request.params.owner}/${request.params.name}`, 'i')
+    });
 
     if (!repo) return reply.callNotFound();
 
-    const owner: IActor = await Actor.query().where({ id: repo.owner }).first();
-    const metadata: IMetadata[] = await Metadata.query()
-      .where({ id: repo.id, key: 'updatedAt' })
-      .select(['resource', 'value']);
+    const owner: IActor = await Actor.collection.findOne({ _id: repo.owner });
 
     return reply.send({
       ...repo,
@@ -31,7 +23,10 @@ export default async function (fastify: FastifyInstance): Promise<void> {
         (m: Record<string, number>, lang) => ({ ...m, [lang.language]: lang.size }),
         {}
       ),
-      _metadata: metadata.reduce((mem, m) => ({ ...mem, [m.resource]: m.value }), {})
+      _metadata: Object.entries(repo._metadata || {}).reduce(
+        (mem, [key, value]) => (value.updatedAt ? { ...mem, [key]: value.updatedAt } : mem),
+        {}
+      )
     });
   });
 }

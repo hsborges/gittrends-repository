@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import knex, { Repository, IRepository, Metadata, Tag } from '@gittrends/database-config';
+import { Repository, IRepository, Tag } from '@gittrends/database-config';
+import { get } from 'lodash';
 
 interface IParams {
   owner: string;
@@ -8,34 +9,30 @@ interface IParams {
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Params: IParams }>('/:owner/:name/tags', async function (request, reply) {
-    const repo: IRepository = await Repository.query()
-      .where(
-        knex.raw('lower(name_with_owner)'),
-        'like',
-        `${request.params.owner}/${request.params.name}`
-      )
-      .first('id');
+    const repo: IRepository | null = await Repository.collection.findOne(
+      { name_with_owner: new RegExp(`^${request.params.owner}/${request.params.name}$`, 'i') },
+      { projection: { _id: 1, _metadata: 1 } }
+    );
 
-    if (!repo) return reply.callNotFound();
+    if (!repo || !get(repo, '_metadata.tags.updatedAt')) return reply.callNotFound();
 
-    const updated = await Metadata.query()
-      .where({ id: repo.id, resource: 'tags', key: 'updatedAt' })
-      .count({ count: 'id' })
-      .first();
-
-    if (!updated || !updated.count) return reply.callNotFound();
-
-    const tags = await Tag.query()
-      .join('commits', 'tags.target', 'commits.id')
-      .select(
-        'tags.id',
-        'tags.name',
-        'commits.committed_date',
-        'commits.additions',
-        'commits.changed_files',
-        'commits.deletions'
-      )
-      .where('tags.repository', repo.id);
+    const tags = await Tag.collection
+      .aggregate([
+        { $match: { repository: repo._id } },
+        { $lookup: { from: 'commits', localField: 'target', foreignField: '_id', as: 'commit' } },
+        { $unwind: { path: '$commit' } },
+        {
+          $project: {
+            _id: 0,
+            name: 1,
+            committed_date: '$commit.committed_date',
+            additions: '$commit.additions',
+            changed_files: '$commit.changed_files',
+            deletions: '$commit.deletions'
+          }
+        }
+      ])
+      .toArray();
 
     reply.send(tags);
   });

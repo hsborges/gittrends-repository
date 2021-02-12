@@ -1,7 +1,7 @@
 apps:
   - name: website-api
     cwd: packages/website-api
-    script: yarn
+    script: npm
     args: run dev
     env:
       NODE_ENV: development
@@ -9,8 +9,8 @@ apps:
 
   - name: website-server
     cwd: packages/website
-    script: yarn
-    args: run dev --port 8080
+    script: npm
+    args: run dev -- --port 8080
     env:
       NODE_ENV: development
       GITTRENDS_API_HOST: localhost

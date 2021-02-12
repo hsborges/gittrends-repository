@@ -4,7 +4,7 @@ import IGithubToken from '../interfaces/IGithubToken';
 
 class GithubToken extends Model<IGithubToken> {
   collectionName = 'github_tokens';
-  idField = 'id';
+  idField = 'token';
   jsonSchema = schema.definitions.IGithubToken;
 }
 

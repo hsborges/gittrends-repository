@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import knex, { IRepository, Repository } from '@gittrends/database-config';
+import { IRepository, Repository } from '@gittrends/database-config';
 
 const schema = {
   querystring: {
@@ -42,40 +42,31 @@ interface IQuerystring {
 
 export default async function (fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Querystring: IQuerystring }>('/repos', { schema }, async function (request, reply) {
-    const repositories: Array<IRepository> = await Repository.query()
-      .where((builder) => {
-        builder.where(knex.raw('lower(name_with_owner)'), 'like', `%${request.query.query}%`);
-        if (request.query.language)
-          builder.where(knex.raw('lower(primary_language)'), 'like', request.query.language);
-      })
-      .orderByRaw(
-        request.query.sortBy === 'random'
-          ? 'random()'
-          : `${request.query.sortBy} ${request.query.order}`
-      )
-      // TODO - limit the fields returned with .select(...)
-      .limit(request.query.limit)
-      .offset(request.query.offset);
+    const [pipelineResult] = await Repository.collection
+      .aggregate([
+        { $match: { name_with_owner: new RegExp(request.query.query, 'i') } },
+        {
+          $match: request.query.language
+            ? { primary_language: new RegExp(`^${request.query.language}$`, 'i') }
+            : {}
+        },
+        {
+          $facet: {
+            repositories: [{ $skip: request.query.offset }, { $limit: request.query.limit }],
+            languages: [
+              { $group: { _id: '$primary_language', count: { $sum: 1 } } },
+              { $project: { _id: 0, language: '$_id', count: '$count' } },
+              { $sort: { count: -1 } }
+            ],
+            count: [{ $count: 'totalRepositories' }]
+          }
+        }
+      ])
+      .toArray();
 
-    const [{ count }] = await Repository.query()
-      .where((builder) => {
-        builder.where(knex.raw('lower(name_with_owner)'), 'like', `%${request.query.query}%`);
-        if (request.query.language)
-          builder.where(knex.raw('lower(primary_language)'), 'like', request.query.language);
-      })
-      .count('id', { as: 'count' });
-
-    const languages: Array<{ language: string; count: number }> = await Repository.query()
-      .select('primary_language as language')
-      .count('*', { as: 'count' })
-      .where((builder) => {
-        if (request.query.query)
-          builder.where(knex.raw('lower(name_with_owner)'), 'like', `%${request.query.query}%`);
-        if (request.query.language)
-          builder.where(knex.raw('lower(primary_language)'), 'like', request.query.language);
-      })
-      .groupBy('primary_language')
-      .orderBy('count', 'desc');
+    const repositories: Array<IRepository> = pipelineResult.repositories;
+    const languages: Array<{ language: string; count: number }> = pipelineResult.languages;
+    const count: number = pipelineResult.count[0].totalRepositories;
 
     reply.send({
       repositories,

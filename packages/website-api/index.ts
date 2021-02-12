@@ -1,15 +1,14 @@
 import application from './app';
+import mongoClient from '@gittrends/database-config';
 
-const fastify = application();
+(async (): Promise<void> => {
+  await mongoClient.connect();
+  const fastify = await application();
 
-const start = async (): Promise<void> => {
   try {
     await fastify.listen(process.env.PORT ?? 3000, '0.0.0.0');
   } catch (error) {
     fastify.log.error(error);
     process.exit(1);
   }
-};
-
-// eslint-disable-next-line no-void
-void start();
+})();
