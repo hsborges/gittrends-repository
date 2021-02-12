@@ -4,7 +4,7 @@ RUN apk add --update make gcc python2
 
 WORKDIR /app
 COPY . .
-RUN rm -rf packages/website packages/website-api packages/docker-autossh-tunnel
+RUN rm -rf packages/website packages/website-api
 RUN yarn install
 
 WORKDIR /app/packages/env-config

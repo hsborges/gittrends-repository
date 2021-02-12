@@ -1,6 +1,5 @@
 backups
 docs
-packages/docker-autossh-tunnel
 **/node_modules
 **/dist
 **/build
