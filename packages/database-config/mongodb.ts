@@ -74,9 +74,11 @@ client.connect = async function () {
 };
 
 client.close = async function () {
-  await new Promise((resolve, reject) =>
-    server.close(() => oldClose().then(resolve).catch(reject))
-  );
+  if (server)
+    await new Promise((resolve, reject) =>
+      server.close((err) => (err ? reject(err) : resolve(true)))
+    );
+  return oldClose();
 };
 
 export default client;
