@@ -72,20 +72,21 @@ export default class RepositoryUpdater implements Updater {
           Milestone.upsert(milestones).then(() => this.cache?.add(milestones))
         ]).then(() => all(handlers.map(async (handler) => handler.update(data as TObject))));
 
-        const doneHandlers = handlers.filter((handler) => {
-          if (this.job && handler.isDone()) {
-            this.job.update({
-              ...this.job.data,
-              resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
-              done: [...(this.job.data.done || []), handler.meta.resource]
-            });
-            return true;
-          }
-        });
+        const doneHandlers = handlers.filter((handler) =>
+          this.job && handler.isDone() ? true : false
+        );
 
         if (this.job && doneHandlers.length) {
           const totalDone = this.handlers.reduce((acc: number, h) => acc + (h.isDone() ? 1 : 0), 0);
+          const resourcesDone = this.pendingHandlers().map((handler) => handler.meta.resource);
           this.job.updateProgress(Math.ceil((totalDone / this.handlers.length) * 100));
+          this.job.update({
+            ...this.job.data,
+            resources: this.handlers
+              .map((handler) => handler.meta.resource)
+              .filter((resource) => resourcesDone.indexOf(resource) < 0),
+            done: resourcesDone
+          });
         }
       })
       .catch(async (err) => {
