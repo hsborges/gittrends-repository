@@ -1,23 +1,23 @@
 /*
  *  Author: Hudson S. Borges
  */
-import LRU from 'lru-cache';
+import LfuSet from 'collections/lfu-set';
 import { MD5 } from 'object-hash';
 
 export default class UpdaterCache {
-  readonly cache: LRU<string, Date>;
+  readonly cache: LfuSet<string>;
 
   constructor(cacheSize: number) {
-    this.cache = new LRU<string, Date>({ max: cacheSize, updateAgeOnGet: true });
+    this.cache = new LfuSet<string>([], cacheSize);
   }
 
   add(object: TObject | TObject[]): void {
     (Array.isArray(object) ? object : [object]).forEach((obj) =>
-      this.cache.set(MD5(obj.id || obj), new Date())
+      this.cache.set(MD5(obj.id || obj))
     );
   }
 
   has(object: TObject): boolean {
-    return this.cache.get(MD5(object.id || object)) !== undefined;
+    return this.cache.has(MD5(object.id || object));
   }
 }
