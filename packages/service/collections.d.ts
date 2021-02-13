@@ -2,7 +2,7 @@ declare module 'collections/lfu-set' {
   export default class LfuSet<T = void> {
     has(value: T): boolean;
     get(value: T): T;
-    set(value: T): void;
+    add(value: T): void;
 
     constructor(
       values: [],

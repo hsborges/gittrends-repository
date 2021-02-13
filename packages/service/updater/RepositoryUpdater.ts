@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bullmq';
-import { all, each, map } from 'bluebird';
+import { all, map } from 'bluebird';
 import { flatten } from 'lodash';
 import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
@@ -104,9 +104,10 @@ export default class RepositoryUpdater implements Updater {
           });
         }
 
-        return each(
-          handlers.filter((handler) => handler.hasNextPage()),
-          (handler) => this._update([handler])
+        return all(
+          handlers
+            .filter((handler) => handler.hasNextPage())
+            .map((handler) => this._update([handler]))
         );
       });
   }

@@ -13,7 +13,7 @@ export default class UpdaterCache {
 
   add(object: TObject | TObject[]): void {
     (Array.isArray(object) ? object : [object]).forEach((obj) =>
-      this.cache.set(MD5(obj.id || obj))
+      this.cache.add(MD5(obj.id || obj))
     );
   }
 

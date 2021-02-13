@@ -37,7 +37,7 @@ async function retriableRequest(data: TObject): Promise<AxiosResponse> {
         if (err.response && /500|408|403/g.test(err.response.status)) return retry(err);
         throw err;
       }),
-    { retries: RETRIES, minTimeout: 500, maxTimeout: 2000, randomize: true }
+    { retries: RETRIES, minTimeout: 100, maxTimeout: 1000 }
   );
 }
 
