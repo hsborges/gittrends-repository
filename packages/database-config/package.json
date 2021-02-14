@@ -26,12 +26,13 @@
     "typescript-json-schema": "^0.49.0"
   },
   "devDependencies": {
-    "@gittrends/env-config": "*",
+    "@gittrends/env-config": "file:../env-config",
     "@types/debug": "^4.1.5",
     "@types/glob": "^7.1.3",
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.168",
     "@types/mongodb": "^3.6.7",
+    "@types/object-hash": "^1.3.4",
     "@types/tunnel-ssh": "^4.1.0",
     "ts-node": "^9.1.1"
   }

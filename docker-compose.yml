@@ -16,24 +16,6 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
       MONGO_INITDB_DATABASE: ${GITTRENDS_DATABASE_DB}
 
-  adminmongo:
-    image: mrvautin/adminmongo:latest
-    container_name: adminmongo
-    restart: always
-    ports:
-      - ${GITTRENDS_ADMIN_MONGO_PORT}:1234
-    environment:
-      HOST: 0.0.0.0
-      PORT: 1234
-      CONN_NAME: mongo-docker
-      DB_USERNAME: ${GITTRENDS_DATABASE_USERNAME}
-      DB_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
-      DB_HOST: mongo
-      DB_PORT: 27017
-      DB_NAME: ${GITTRENDS_DATABASE_DB}
-    depends_on:
-      - mongo
-
   redis:
     image: redis:alpine
     container_name: redis
@@ -66,7 +48,5 @@ services:
 volumes:
   db:
     name: gittrends.app
-  pgadmin:
-    name: pgadmin.gittrends.app
   nginx-cache:
     name: nginx.gittrends.app

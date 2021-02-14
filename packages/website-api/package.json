@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@gittrends/database-config": "*",
+    "@gittrends/database-config": "file:../database-config",
     "aws-lambda": "^1.0.6",
     "aws-serverless-express": "^3.4.0",
     "axios": "^0.21.1",
@@ -31,7 +31,7 @@
     "nodemailer": "^6.4.18"
   },
   "devDependencies": {
-    "@gittrends/env-config": "*",
+    "@gittrends/env-config": "file:../env-config",
     "@types/aws-serverless-express": "^3.3.3",
     "@types/faker": "^5.1.6",
     "@types/lodash": "^4.14.168",
