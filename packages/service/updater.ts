@@ -47,13 +47,14 @@ program
 
     const queue = new Worker(
       options.type,
-      async (job: Job) =>
-        worker(job, options.type, cache)
+      async (job: Job) => {
+        await worker(job, options.type, cache)
           .catch((err) => {
             consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
             throw err;
           })
-          .finally(() => (global.gc ? global.gc() : null)),
+          .finally(() => (global.gc ? global.gc() : null));
+      },
       { connection: redisOptions, concurrency: options.workers }
     );
 

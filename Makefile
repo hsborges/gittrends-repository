@@ -48,5 +48,5 @@ dev:
 service:
 		@docker run -it --rm --env-file=${env-file} --network host --detach=${detach} \
 			-v ${BASE_DIR}/data/tokens.txt:/app/data/tokens.txt:ro \
-			-v ${BASE_DIR}/packages/service/pm2-ecosystem.yml:/app/service/pm2-ecosystem.yml:ro \
+			-v ${BASE_DIR}/packages/service/pm2-ecosystem.yml:/app/packages/service/pm2-ecosystem.yml:ro \
 			${SERVICE_IMAGE_NAME}:latest
