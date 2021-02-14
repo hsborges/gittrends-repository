@@ -1,17 +1,16 @@
 apps:
   - name: website-api
     cwd: packages/website-api
-    interpreter: /bin/bash
-    script: yarn
-    args: start
+    script: npm
+    args: run start
     env:
       NODE_ENV: production
       PORT: 8888
+      DEBUG: 'gittrends:*'
 
   - name: website-server
     cwd: packages/website
-    interpreter: /bin/bash
-    script: yarn
-    args: start -H 0.0.0.0 -p 8080
+    script: npm
+    args: run start -- -H 0.0.0.0 -p 8080
     env:
       NODE_ENV: production
