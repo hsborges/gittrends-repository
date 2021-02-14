@@ -20,6 +20,7 @@ declare global {
       GITTRENDS_TUNEL_DST_PORT: string;
       GITTRENDS_TUNEL_LOCAL_HOST: string;
       GITTRENDS_TUNEL_LOCAL_PORT: string;
+      GITTRENDS_TUNEL_READY_TIMEOUT: string;
       GITTRENDS_PROXY_PROTOCOL?: string;
       GITTRENDS_PROXY_HOST?: string;
       GITTRENDS_PROXY_PORT?: string;

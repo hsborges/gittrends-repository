@@ -7,7 +7,10 @@ import { faStar, faCodeBranch } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleWidthXYPlot, XAxis, LineSeries } from 'react-vis';
 
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(utc);
 dayjs.extend(customParseFormat);
 
 import fetchStargazers from '../hooks/fetchStargazers';
@@ -32,9 +35,11 @@ interface RepositoryCardProps extends React.HTMLAttributes<HTMLElement> {
 
 export default function RepositoryCard(props: RepositoryCardProps): JSX.Element {
   const { repository, ...cardProps } = props;
+  const since = dayjs.utc().startOf('year');
 
   const { timeseries, isLoading, isError } = fetchStargazers({
-    name_with_owner: repository.name_with_owner
+    name_with_owner: repository.name_with_owner,
+    since: since.toDate()
   });
 
   return (
@@ -70,7 +75,13 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
                 className="plot"
                 margin={{ left: 0, right: 0, bottom: 20, top: 0 }}
               >
-                <XAxis title="stars history" hideLine hideTicks top={95} position="middle" />
+                <XAxis
+                  title={`stars since ${since.format('YYYY-MM-DD')}`}
+                  hideLine
+                  hideTicks
+                  top={95}
+                  position="middle"
+                />
                 <LineSeries
                   curve={null}
                   data={Object.entries(timeseries || {}).reduce(

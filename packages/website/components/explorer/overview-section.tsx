@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import numeral from 'numeral';
 import camelCase from 'lodash/camelCase';
 import dayjs from 'dayjs';
@@ -35,6 +35,9 @@ interface OverviewSectionAttributes extends React.HTMLAttributes<HTMLElement> {
 
 export default function OverviewSection(props: OverviewSectionAttributes): JSX.Element {
   const { repository } = props;
+  const [columns, setColumns] = useState(3);
+
+  useEffect(() => setColumns(window.innerWidth >= 576 ? 4 : 3), []);
 
   const overviewInfo = [
     {
@@ -115,13 +118,7 @@ export default function OverviewSection(props: OverviewSectionAttributes): JSX.E
 
   return (
     <section {...props}>
-      <Descriptions
-        layout="vertical"
-        bordered
-        colon={false}
-        column={window.innerWidth >= 576 ? 4 : 3}
-        size="small"
-      >
+      <Descriptions layout="vertical" bordered colon={false} column={columns} size="small">
         {overviewInfo
           .filter((info) => info.value)
           .map((info, index) => (

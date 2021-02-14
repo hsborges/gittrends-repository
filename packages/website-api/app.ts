@@ -4,12 +4,12 @@ import { join } from 'path';
 import cors from 'fastify-cors';
 import helmet from 'fastify-helmet';
 import AutoLoad from 'fastify-autoload';
-import fastify, { FastifyInstance } from 'fastify';
+import fastify, { FastifyInstance, FastifyServerFactory } from 'fastify';
 
 import compact from './helpers/compact';
 
-export default function (): FastifyInstance {
-  const server: FastifyInstance = fastify({ logger: true });
+export default function (serverFactory?: FastifyServerFactory): FastifyInstance {
+  const server: FastifyInstance = fastify({ logger: true, serverFactory });
 
   server.register(helmet);
   server.register(cors);

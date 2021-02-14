@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { stringify } from 'querystring';
 import axios from './axiosClient';
 
 interface StargazersResult {
@@ -10,8 +11,13 @@ interface StargazersResult {
   isError: boolean;
 }
 
-export default function FetchStargazers(args: { name_with_owner: string }): StargazersResult {
-  const { data, error } = useSWR(`/repos/${args.name_with_owner}/stargazers`, axios);
+export default function FetchStargazers(args: {
+  name_with_owner: string;
+  since?: Date;
+}): StargazersResult {
+  let url = `/repos/${args.name_with_owner}/stargazers`;
+  if (args.since) url += '?' + stringify({ since: args?.since.toISOString() });
+  const { data, error } = useSWR(url, axios);
 
   return {
     timeseries: data?.data.timeseries,

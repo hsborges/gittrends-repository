@@ -45,14 +45,24 @@ export default async function (fastify: FastifyInstance): Promise<void> {
     const [pipelineResult] = await Repository.collection
       .aggregate([
         { $match: { name_with_owner: new RegExp(request.query.query, 'i') } },
-        {
-          $match: request.query.language
-            ? { primary_language: new RegExp(`^${request.query.language}$`, 'i') }
-            : {}
-        },
+        ...(request.query.language
+          ? [{ $match: { primary_language: new RegExp(`^${request.query.language}$`, 'i') } }]
+          : []),
         {
           $facet: {
-            repositories: [{ $skip: request.query.offset }, { $limit: request.query.limit }],
+            repositories: [
+              ...(request.query.sortBy === 'random'
+                ? [
+                    { $sort: { stargazers_count: -1 } },
+                    { $limit: 250 },
+                    { $sample: { size: request.query.limit } }
+                  ]
+                : [
+                    { $sort: { [request.query.sortBy]: request.query.order === 'asc' ? 1 : -1 } },
+                    { $skip: request.query.offset },
+                    { $limit: request.query.limit }
+                  ])
+            ],
             languages: [
               { $group: { _id: '$primary_language', count: { $sum: 1 } } },
               { $project: { _id: 0, language: '$_id', count: '$count' } },

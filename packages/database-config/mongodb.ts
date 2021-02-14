@@ -2,6 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import tunnel from 'tunnel-ssh';
+import debug from 'debug';
 import { Server } from 'net';
 import { readFileSync } from 'fs';
 import { promisify } from 'util';
@@ -10,6 +11,7 @@ import { MongoClient } from 'mongodb';
 import Model from './models/Model';
 
 const tunnelAsync = promisify(tunnel);
+const debugError = debug('gittrends:database-config');
 
 const HOST = process.env.GITTRENDS_DATABASE_HOST ?? 'localhost';
 const PORT = process.env.GITTRENDS_DATABASE_PORT ?? '27017';
@@ -28,7 +30,8 @@ const TUNNEL = {
   DST_HOST: process.env.GITTRENDS_TUNEL_DST_HOST,
   DST_PORT: parseInt(process.env.GITTRENDS_TUNEL_DST_PORT ?? PORT, 10),
   LOCAL_HOST: process.env.GITTRENDS_TUNEL_LOCAL_HOST,
-  LOCAL_PORT: parseInt(process.env.GITTRENDS_TUNEL_LOCAL_PORT ?? PORT, 10)
+  LOCAL_PORT: parseInt(process.env.GITTRENDS_TUNEL_LOCAL_PORT ?? PORT, 10),
+  READY_TIMEOUT: parseInt(process.env.GITTRENDS_TUNEL_READY_TIMEOUT ?? '60000', 10)
 };
 
 const client = new MongoClient(
@@ -48,7 +51,7 @@ const oldClose = client.close.bind(client);
 
 client.connect = async function () {
   if (TUNNEL.HOST) {
-    server = await tunnelAsync({
+    const options: tunnel.Config = {
       host: TUNNEL.HOST,
       port: TUNNEL.PORT,
       username: TUNNEL.USERNAME,
@@ -62,8 +65,19 @@ client.connect = async function () {
       dstPort: TUNNEL.DST_PORT,
       localHost: TUNNEL.LOCAL_HOST,
       localPort: TUNNEL.DST_PORT,
+      readyTimeout: TUNNEL.READY_TIMEOUT,
       keepAlive: true,
+      keepaliveInterval: 5000,
+      compress: 'force',
       agent: process.env.SSH_AUTH_SOCK
+    };
+
+    server = await tunnelAsync(options);
+    server.on('error', async (err) => {
+      debugError('Tunneling error: ', err);
+      debugError('Reconnecting ...');
+      server.close();
+      server = await tunnelAsync(options);
     });
   }
 
