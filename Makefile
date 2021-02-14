@@ -1,6 +1,5 @@
 # DOCKER VARIABLES
 env-file=.env
-port=80
 
 # VARIABLES
 BASE_DIR=$(shell pwd)
@@ -30,7 +29,7 @@ pull:
 		@docker pull ${IMAGE_FULLNAME}
 
 up:
-		@docker run -i --rm --env-file=${env-file} --publish ${port}:80 -v ${BASE_DIR}/data/certbot:/app/data/certbot:ro hsborges/gittrends.app:latest
+		@docker run -i --rm --env-file=${env-file} -p 80:80 -p 443:443 -v ${BASE_DIR}/data/certbot:/app/data/certbot:ro hsborges/gittrends.app:latest
 
 dev:
-		@docker run -i --rm --env-file=${env-file} --publish ${port}:80 -v ${BASE_DIR}/data/nginx/development.conf:/app/data/nginx/default.conf:ro hsborges/gittrends.app:latest
+		@docker run -i --rm --env-file=${env-file} -p 80:80 -v ${BASE_DIR}/data/nginx/development.conf:/app/data/nginx/default.conf:ro hsborges/gittrends.app:latest
