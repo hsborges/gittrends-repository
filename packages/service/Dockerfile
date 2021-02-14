@@ -1,22 +1,13 @@
 FROM node:alpine
 
-RUN apk add --update make gcc python2
+RUN apk add --update make gcc g++ python
 
 WORKDIR /app
 COPY . .
 RUN rm -rf packages/website packages/website-api
-RUN yarn install
-
-WORKDIR /app/packages/env-config
-RUN yarn build
-
-WORKDIR /app/packages/database-config
-RUN yarn build
+RUN yarn install && yarn build && yarn install --force
 
 WORKDIR /app/packages/service
-RUN yarn install --force && yarn build
-
-EXPOSE 3000
-EXPOSE 8000-8010
+EXPOSE 3000 8000-8010
 
 CMD [ "./node_modules/.bin/pm2-runtime", "pm2-ecosystem.yml" ]
