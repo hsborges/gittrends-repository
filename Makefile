@@ -1,5 +1,6 @@
 # DOCKER VARIABLES
 env-file=.env
+detach=false
 
 # VARIABLES
 BASE_DIR=$(shell pwd)
@@ -29,13 +30,13 @@ pull:
 		@docker pull ${IMAGE_FULLNAME}
 
 up:
-		@docker run -i --rm --env-file=${env-file} -p 80:80 -p 443:443 \
+		@docker run -i --rm --env-file=${env-file} -p 80:80 -p 443:443 --detach=${detach} \
 			-v ${BASE_DIR}/data/certbot:/app/data/certbot:ro \
 			-v gittrends-nginx-cache:/var/cache \
 			hsborges/gittrends.app:latest
 
 dev:
-		@docker run -i --rm --env-file=${env-file} -p 80:80 \
+		@docker run -i --rm --env-file=${env-file} -p 80:80 --detach=${detach} \
 			-v ${BASE_DIR}/data/nginx/development.conf:/app/data/nginx/default.conf:ro \
 			-v gittrends-nginx-cache:/var/cache \
 			hsborges/gittrends.app:latest
