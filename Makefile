@@ -8,7 +8,7 @@ WEBSITE_IMAGE_NAME=hsborges/gittrends.app
 SERVICE_IMAGE_NAME=hsborges/service.gittrends.app
 REPO=https://github.com/hsborges/gittrends-repository
 
-.PHONY: help build push up dev service
+.PHONY: help build build-website build-service push up dev service
 
 help:
 		@echo "Makefile commands:"
@@ -21,8 +21,12 @@ help:
 
 .DEFAULT_GOAL := build
 
-build:
+build: build-website build-service
+
+build-website:
 		@docker build --pull --compress -t ${WEBSITE_IMAGE_NAME} .
+
+build-service:
 		@docker build --pull --compress -t ${SERVICE_IMAGE_NAME} -f packages/service/Dockerfile .
 
 push:

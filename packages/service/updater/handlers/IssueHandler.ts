@@ -128,6 +128,12 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, session?: ClientSession): Promise<void> {
+    return this._update(response, session).finally(
+      () => (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2))
+    );
+  }
+
+  private async _update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
     if (this.issues.items.length === 0) {
@@ -238,13 +244,11 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     }
 
     if (this.getPendingIssues().length === 0 && this.getPendingReactables().length === 0) {
-      const issues = this.issues.items.map(
-        (meta) => compact(omit(meta.data, 'timeline')) as TObject
-      );
-
-      this.issues.items.forEach((issue) => {
+      const issues = this.issues.items.map((issue) => {
         if (issue.error) issue.data._metadata = { error: JSON.stringify(issue.error) };
         else issue.data._metadata = { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
+
+        return compact(omit(issue.data, 'timeline')) as TObject;
       });
 
       const timeline = this.issues.items.reduce((acc: TObject[], issue) => {
@@ -281,7 +285,6 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
       this.issues.items = [];
       this.reactions = undefined;
-      this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
     }
 
     if (this.isDone()) {
@@ -314,8 +317,6 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         reaction.hasNextPage = false;
         reaction.error = err;
       }
-
-      this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
 
       return;
     }
