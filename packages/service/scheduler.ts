@@ -95,12 +95,13 @@ program
       const options = program.opts();
       const resources = resourcesParser([resource, ...other]);
 
-      async function prepareQueue<T>(name: string) {
+      async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
         const queue = new Queue<T>(name, {
           connection: redisOptions,
           defaultJobOptions: {
             attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
-            removeOnComplete: true
+            removeOnComplete,
+            removeOnFail
           }
         });
 
@@ -127,7 +128,7 @@ program
 
       // schedule users updates
       if (resources.indexOf('users') >= 0) {
-        const queue = await prepareQueue('users');
+        const queue = await prepareQueue('users', true, true);
         promises.push(usersScheduler(queue, options.wait, options.limit));
       }
 
