@@ -61,7 +61,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
     this.resource = type;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 15;
+    this.batchSize = this.defaultBatchSize = type === 'issues' ? 15 : 10;
     this.issues = { items: [], hasNextPage: true };
   }
 

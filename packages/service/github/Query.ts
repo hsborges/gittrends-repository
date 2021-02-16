@@ -35,8 +35,11 @@ export default class Query {
     this.components.push(...components);
 
     const pushFragment = (fragments: Fragment[]) => {
-      fragments.forEach((fragment) => this.fragments.add(fragment));
-      fragments.forEach((fragment) => pushFragment(fragment.dependencies));
+      fragments.forEach((fragment) => {
+        if (this.fragments.has(fragment)) return;
+        this.fragments.add(fragment);
+        pushFragment(fragment.dependencies);
+      });
     };
 
     components.forEach((component) => pushFragment(component.fragments));

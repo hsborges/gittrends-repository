@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bullmq';
-import { all, map } from 'bluebird';
+import { map } from 'bluebird';
 import { flatten } from 'lodash';
 import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
@@ -66,11 +66,13 @@ export default class RepositoryUpdater implements Updater {
         commits = commits.filter((commit) => !this.cache?.has(commit));
         milestones = milestones.filter((milestone) => !this.cache?.has(milestone));
 
-        await all([
+        await Promise.all([
           Actor.insert(actors).then(() => this.cache?.add(actors)),
           Commit.upsert(commits).then(() => this.cache?.add(commits)),
           Milestone.upsert(milestones).then(() => this.cache?.add(milestones))
-        ]).then(() => all(handlers.map(async (handler) => handler.update(data as TObject))));
+        ]);
+
+        await map(handlers, async (handler) => handler.update(data as TObject));
 
         const doneHandlers = handlers.filter((handler) =>
           this.job && handler.isDone() ? true : false
@@ -78,7 +80,7 @@ export default class RepositoryUpdater implements Updater {
 
         if (this.job && doneHandlers.length) {
           const totalDone = this.handlers.reduce((acc: number, h) => acc + (h.isDone() ? 1 : 0), 0);
-          const pendingResources = this.pendingHandlers().map((handler) => handler.meta.resource);
+          const pendingResources = this.pendingHandlers.map((handler) => handler.meta.resource);
           this.job.updateProgress(Math.ceil((totalDone / this.handlers.length) * 100));
           this.job.update({
             ...this.job.data,
@@ -100,28 +102,23 @@ export default class RepositoryUpdater implements Updater {
               resources: this.job.data.resources.filter((r) => r !== handlers[0].meta.resource),
               errors: [...(this.job.data.errors || []), handlers[0].meta.resource]
             });
-            return Promise.resolve();
           });
         }
 
-        return all(
-          handlers
-            .filter((handler) => handler.hasNextPage())
-            .map((handler) => this._update([handler]))
-        );
+        return map(handlers, (handler) => this._update([handler]));
       });
   }
 
   async update(): Promise<void> {
-    while (this.pendingHandlers().length > 0) await this._update(this.pendingHandlers());
+    while (this.pendingHandlers.length > 0) await this._update(this.pendingHandlers);
 
     if (this.errors.length)
       throw new ResourceUpdateError(this.errors.map((e) => e.error.message).join(', '));
   }
 
-  private pendingHandlers(): AbstractRepositoryHandler[] {
+  private get pendingHandlers(): AbstractRepositoryHandler[] {
     return this.handlers.filter(
-      (handler) => handler.hasNextPage() && this.errors.findIndex((e) => e.handler === handler) < 0
+      (handler) => handler.hasNextPage() && !this.errors.find((e) => e.handler === handler)
     );
   }
 }
