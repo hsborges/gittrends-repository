@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import Model from './Model';
 import schema from '../schemas.json';
 import IMilestone from '../interfaces/IMilestone';

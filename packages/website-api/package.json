@@ -1,6 +1,6 @@
 {
   "name": "@gittrends/website-api",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,10 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "@gittrends/database-config": "file:../database-config",
-    "aws-lambda": "^1.0.6",
-    "aws-serverless-express": "^3.4.0",
     "axios": "^0.21.1",
-    "claudia": "^5.13.0",
     "dayjs": "^1.10.4",
     "faker": "^5.4.0",
     "fastify": "^3.12.0",
@@ -32,10 +29,8 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@types/aws-serverless-express": "^3.3.3",
     "@types/faker": "^5.1.6",
     "@types/lodash": "^4.14.168",
-    "@types/node": "^14.14.27",
     "@types/nodemailer": "^6.4.0",
     "ts-node-dev": "^1.1.1",
     "tsconfig-paths": "^3.9.0"

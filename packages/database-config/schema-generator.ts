@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import glob from 'glob';
 import { resolve } from 'path';
 import { writeFileSync } from 'fs';

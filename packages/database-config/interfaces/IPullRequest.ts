@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 /* eslint-disable @typescript-eslint/ban-types */
 /** @additionalProperties false */
 import IIssue from './IIssue';

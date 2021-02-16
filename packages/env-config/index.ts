@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import find from 'find-up';
 import { config } from 'dotenv';
 

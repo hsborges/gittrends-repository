@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import _ from 'lodash';
 import axios from 'axios';
 import faker from 'faker';

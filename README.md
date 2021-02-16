@@ -13,7 +13,7 @@ To get a local copy up and running follow these simple steps.
 ### Prerequisites
 
 - [NodeJS](https://nodejs.org)
-- [PostgreSQL](https://www.postgresql.org)
+- [MongoDB](https://www.mongodb.com)
 - [Redis](https://redis.io)
 - [Docker](https://www.docker.com) (Optional)
 
@@ -48,8 +48,6 @@ yarn workspace @gittrends/database-config run-migrations
 You can also use docker containers:
 
 ```sh
-# create a volume
-docker volume create gittrends.app
 # run containers
 docker-compose up -d
 ```

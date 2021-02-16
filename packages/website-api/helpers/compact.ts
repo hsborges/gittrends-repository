@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import { isArray, isObject, chain } from 'lodash';
 
 export default function compact(object: unknown): unknown {

@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 declare global {
   namespace NodeJS {
     interface ProcessEnv {

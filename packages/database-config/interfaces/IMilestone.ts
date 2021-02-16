@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 /** @additionalProperties false */
 export default interface IMilestone extends Record<string, unknown> {
   id: string;

@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import { FastifyInstance } from 'fastify';
 import { Repository, IRepository, Tag } from '@gittrends/database-config';
 import { get } from 'lodash';

@@ -5,8 +5,6 @@ First of all, we need to install common libs which may help in several tasks. Th
 ```bash
 # git and curl are mandatory
 sudo apt install -y git curl tmux
-# the postgres client is recommended to backup and restore data
-sudo apt install -y postgresql-client
 ```
 
 You may want to enhance the system terminal with `zsh` and some useful plugin.

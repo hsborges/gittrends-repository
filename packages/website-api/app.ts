@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { join } from 'path';
 

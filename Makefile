@@ -1,6 +1,12 @@
+#!make
+# INCLUDE ENVIRONMENT VARIABLES FROM FILE
+include .env
+export $(shell sed 's/=.*//' .env)
+
 # DOCKER VARIABLES
 env-file=.env
 detach=false
+command=
 
 # VARIABLES
 BASE_DIR=$(shell pwd)
@@ -24,7 +30,7 @@ help:
 build: build-website build-service
 
 build-website:
-		@docker build --pull --compress -t ${WEBSITE_IMAGE_NAME} .
+		@docker build --pull --compress --build-arg GITHUB_CLIENT_ID -t ${WEBSITE_IMAGE_NAME} .
 
 build-service:
 		@docker build --pull --compress -t ${SERVICE_IMAGE_NAME} -f packages/service/Dockerfile .
@@ -41,16 +47,16 @@ up:
 		@docker run -it --rm --env-file=${env-file} -p 80:80 -p 443:443 --detach=${detach} \
 			-v ${BASE_DIR}/data/certbot:/app/data/certbot:ro \
 			-v gittrends-nginx-cache:/var/cache \
-			${WEBSITE_IMAGE_NAME}:latest
+			${WEBSITE_IMAGE_NAME}:latest ${command}
 
 dev:
 		@docker run -it --rm --env-file=${env-file} -p 80:80 --detach=${detach} \
 			-v ${BASE_DIR}/data/nginx/development.conf:/app/data/nginx/default.conf:ro \
 			-v gittrends-nginx-cache:/var/cache \
-			${WEBSITE_IMAGE_NAME}:latest
+			${WEBSITE_IMAGE_NAME}:latest ${command}
 
 service:
 		@docker run -it --rm --env-file=${env-file} --network host --detach=${detach} \
 			-v ${BASE_DIR}/data/tokens.txt:/app/data/tokens.txt:ro \
 			-v ${BASE_DIR}/packages/service/pm2-ecosystem.yml:/app/packages/service/pm2-ecosystem.yml:ro \
-			${SERVICE_IMAGE_NAME}:latest
+			${SERVICE_IMAGE_NAME}:latest ${command}

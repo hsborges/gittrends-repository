@@ -2,7 +2,7 @@
   "name": "gittrends-repository",
   "description": "GitTrends.app service worker to collect information on OSS projects",
   "homepage": "http://gittrends.app",
-  "version": "0.1.0",
+  "version": "3.0.0",
   "main": "index.js",
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "license": "MIT",
@@ -16,7 +16,7 @@
   },
   "type": "commonjs",
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=15.0.0"
   },
   "workspaces": [
     "packages/*"

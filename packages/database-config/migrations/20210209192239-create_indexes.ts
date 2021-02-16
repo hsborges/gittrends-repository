@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import { Db } from 'mongodb';
 
 export = {

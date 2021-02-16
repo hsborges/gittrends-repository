@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import application from './app';
 import mongoClient from '@gittrends/database-config';
 

@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 /* eslint-disable @typescript-eslint/ban-types */
 /** @additionalProperties true */
 export default interface ITimelineEvent extends Record<string, unknown> {

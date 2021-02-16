@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import { FastifyInstance } from 'fastify';
 
 import { Actor, IActor } from '@gittrends/database-config';

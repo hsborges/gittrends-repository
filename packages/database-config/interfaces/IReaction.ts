@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 /** @additionalProperties false */
 export default interface IReaction extends Record<string, unknown> {
   id: string;

@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 /** @additionalProperties false */
 export default interface IGithubToken extends Record<string, unknown> {
   token: string;

@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 /** @additionalProperties false */
 export default interface ITag extends Record<string, unknown> {
   id: string;

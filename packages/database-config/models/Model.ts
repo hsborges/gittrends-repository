@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import { ClientSession, Collection, Cursor, Db } from 'mongodb';
