@@ -6,8 +6,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "yarn clean && ts-node schema-generator.ts && yarn tsc",
-    "clean": "rm -rf dist",
+    "build": "rm -rf dist && ts-node schema-generator.ts && yarn tsc",
     "migrate:create": "sh -c 'ts-node node_modules/.bin/migrate-mongo create $0 -f migrate-mongo-config.ts' ",
     "migrate:status": "ts-node -r @gittrends/env-config node_modules/.bin/migrate-mongo status -f migrate-mongo-config.ts",
     "migrate:undo-last": "ts-node -r @gittrends/env-config node_modules/.bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
