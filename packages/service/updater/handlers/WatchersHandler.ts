@@ -34,7 +34,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
   async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
-    const data = response[this.alias as string];
+    const data = super.parseResponse(response[this.alias as string]);
 
     this.watchers.items.push(
       ...get(data, 'watchers.nodes', []).map((watcher: string) => ({
@@ -48,6 +48,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     this.watchers.endCursor = pageInfo.end_cursor ?? this.watchers.endCursor;
 
     if (this.watchers.items.length >= this.writeBatchSize || this.isDone()) {
+      await super.saveReferences(session);
       await Watcher.upsert(this.watchers.items, session);
       await Repository.collection.updateOne(
         { _id: this.meta.id },

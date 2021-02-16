@@ -5,7 +5,7 @@ import { isArray, isPlainObject, reduce, isEqual } from 'lodash';
 
 const valuesToRemove = [null, undefined, '', {}, []];
 
-export default function compact(object: unknown): unknown {
+export default function compact(object: any): any {
   if (isArray(object)) {
     const _object = object
       .map((value) => compact(value))
@@ -15,7 +15,7 @@ export default function compact(object: unknown): unknown {
 
   if (isPlainObject(object))
     return reduce(
-      object as Record<string, unknown>,
+      object as Record<string, any>,
       (acc, value, key) => {
         const _value = compact(value);
         return valuesToRemove.findIndex((r) => isEqual(r, _value)) < 0

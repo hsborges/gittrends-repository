@@ -2,10 +2,12 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import parser, { Response } from './ResponseParser';
 import client from './HttpClient';
 import Component from './Component';
 import Fragment from './Fragment';
+
+import normalize from '../helpers/normalize';
+import compact from '../helpers/compact';
 
 function getGraphQLType(key: unknown) {
   switch (typeof key) {
@@ -71,12 +73,9 @@ export default class Query {
       .trim();
   }
 
-  async run(interceptor?: (args: string) => string): Promise<Response> {
-    return client({ query: interceptor ? interceptor(this.toString()) : this.toString() })
-      .then((response) => parser(get(response, 'data.data', null)))
-      .catch((err) => {
-        if (err.response) err.response = parser(get(err, 'response.data', null));
-        throw err;
-      });
+  async run(interceptor?: (args: string) => string): Promise<any> {
+    return client({
+      query: interceptor ? interceptor(this.toString()) : this.toString()
+    }).then((response) => compact(normalize(get(response, 'data.data', null))));
   }
 }

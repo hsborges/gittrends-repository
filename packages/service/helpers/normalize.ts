@@ -4,19 +4,17 @@
 import dayjs from 'dayjs';
 import { isArray, isPlainObject, snakeCase, reduce, has, size } from 'lodash';
 
-type IObject = Record<string, unknown>;
-
-export default function normalize(object: unknown): unknown {
+export default function normalize(object: any): any {
   if (isArray(object)) return object.map(normalize);
   if (isPlainObject(object)) {
     return reduce(
-      object as IObject,
-      (memo: IObject, value: unknown, key: string) => {
+      object as TObject,
+      (memo: TObject, value: any, key: string) => {
         const _value = normalize(value);
         const _key = snakeCase(key);
 
-        if (_value && has(_value, 'total_count') && size(_value as IObject) === 1) {
-          memo[`${_key}_count`] = (_value as IObject).total_count;
+        if (_value && has(_value, 'total_count') && size(_value as TObject) === 1) {
+          memo[`${_key}_count`] = (_value as TObject).total_count;
         } else if (
           _key.endsWith('_at') ||
           _key.endsWith('_on') ||

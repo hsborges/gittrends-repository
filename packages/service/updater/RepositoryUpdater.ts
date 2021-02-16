@@ -4,7 +4,6 @@
 import { Job } from 'bullmq';
 import { map } from 'bluebird';
 import { flatten } from 'lodash';
-import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
 import Cache from './Cache';
 import Updater from './Updater';
@@ -36,14 +35,12 @@ type TOptions = { job?: Job<TJob>; cache?: Cache };
 export default class RepositoryUpdater implements Updater {
   readonly id: string;
   readonly job?: Job<TJob>;
-  readonly cache?: Cache;
   readonly handlers: AbstractRepositoryHandler[] = [];
   readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
 
   constructor(repositoryId: string, handlers: THandler[], opts?: TOptions) {
     this.id = repositoryId;
     this.job = opts?.job;
-    this.cache = opts?.cache;
     if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHander(this.id));
     if (handlers.includes('issues'))
       this.handlers.push(new IssuesHander(this.id, undefined, 'issues'));
@@ -54,6 +51,8 @@ export default class RepositoryUpdater implements Updater {
     if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));
     if (handlers.includes('tags')) this.handlers.push(new TagsHandler(this.id));
     if (handlers.includes('watchers')) this.handlers.push(new WatchersHandler(this.id));
+
+    this.handlers.forEach((handler) => (handler.cache = opts?.cache));
   }
 
   private async _update(handlers: AbstractRepositoryHandler[]): Promise<void> {
@@ -61,17 +60,7 @@ export default class RepositoryUpdater implements Updater {
     await Query.create()
       .compose(...flatten(await map(handlers, (handler) => handler.component())))
       .run()
-      .then(async ({ data, actors = [], commits = [], milestones = [] }) => {
-        actors = actors.filter((actor) => !this.cache?.has(actor));
-        commits = commits.filter((commit) => !this.cache?.has(commit));
-        milestones = milestones.filter((milestone) => !this.cache?.has(milestone));
-
-        await Promise.all([
-          Actor.insert(actors).then(() => this.cache?.add(actors)),
-          Commit.upsert(commits).then(() => this.cache?.add(commits)),
-          Milestone.upsert(milestones).then(() => this.cache?.add(milestones))
-        ]);
-
+      .then(async (data) => {
         await map(handlers, async (handler) => handler.update(data as TObject));
 
         const doneHandlers = handlers.filter((handler) =>

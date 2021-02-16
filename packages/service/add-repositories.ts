@@ -3,11 +3,13 @@
  */
 import consola from 'consola';
 import { program } from 'commander';
-import { version } from './package.json';
 import { chain, get, min, uniqBy } from 'lodash';
-import { BadGatewayError } from './helpers/errors';
-import mongoClient, { Actor, Repository } from '@gittrends/database-config';
 import { filter } from 'bluebird';
+import mongoClient, { Actor, Repository } from '@gittrends/database-config';
+
+import parser from './helpers/response-parser';
+import { version } from './package.json';
+import { BadGatewayError } from './helpers/errors';
 
 import Query from './github/Query';
 import SearchComponent from './github/components/SearchComponent';
@@ -30,6 +32,7 @@ async function search(limit = 1000, language?: string, name?: string) {
         ).setAlias('search')
       )
       .run()
+      .then((response) => parser(response))
       .then(({ data, actors: _actors = [] }) => {
         actors.push(..._actors);
         repos.push(...get(data, 'search.nodes', []));

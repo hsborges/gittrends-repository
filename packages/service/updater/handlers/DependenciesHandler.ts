@@ -51,7 +51,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     if (this.isDone()) return;
 
     if (response && this.manifests.hasNextPage) {
-      const data = response[this.alias[0]];
+      const data = super.parseResponse(response[this.alias[0]]);
 
       this.manifestsComponents.push(
         ...get(data, 'dependency_graph_manifests.nodes', []).map(
@@ -101,7 +101,10 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
         []
       );
 
-      if (dependencies.length > 0) await Dependency.upsert(dependencies, session);
+      if (dependencies.length > 0) {
+        await super.saveReferences(session);
+        await Dependency.upsert(dependencies, session);
+      }
 
       if (this.hasNextPage()) {
         this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);

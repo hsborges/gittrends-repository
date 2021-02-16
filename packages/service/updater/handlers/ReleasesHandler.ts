@@ -34,7 +34,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
   async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
-    const data = response[this.alias as string];
+    const data = super.parseResponse(response[this.alias as string]);
 
     this.releases.items.push(
       ...get(data, 'releases.nodes', []).map((release: TObject) => ({
@@ -48,6 +48,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     this.releases.endCursor = pageInfo.end_cursor ?? this.releases.endCursor;
 
     if (this.releases.items.length >= this.writeBatchSize || this.isDone()) {
+      await super.saveReferences(session);
       await Release.upsert(this.releases.items, session);
       await Repository.collection.updateOne(
         { _id: this.meta.id },

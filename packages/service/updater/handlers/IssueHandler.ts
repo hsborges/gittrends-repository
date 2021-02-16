@@ -149,7 +149,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
     switch (this.currentStage) {
       case Stages.GET_ISSUES_LIST: {
-        const data = response[super.alias as string];
+        const data = super.parseResponse(response[super.alias as string]);
 
         this.issues.items = get(data, `${this.resource}.nodes`, []).map((issue: TObject) => ({
           data: { repository: this.id, ...issue },
@@ -174,7 +174,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
       case Stages.GET_ISSUES_DETAILS: {
         this.pendingIssues.forEach((item) => {
-          const data = response[item.component.alias];
+          const data = super.parseResponse(response[item.component.alias]);
           const omitFields = ['assignees', 'labels', 'participants', 'timeline'];
 
           if (item.details.hasNextPage) {
@@ -244,7 +244,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
       case Stages.GET_REACTIONS: {
         this.pendingReactables.forEach((meta) => {
-          const data = response[meta.component.alias];
+          const data = super.parseResponse(response[meta.component.alias]);
           meta.reactions.push(...get(data, 'reactions.nodes', []));
           meta.hasNextPage = get(data, 'reactions.page_info.has_next_page', false);
           meta.endCursor = get(data, 'reactions.page_info.end_cursor', meta.endCursor);
@@ -285,11 +285,15 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       []
     );
 
-    await Promise.all([
-      (this.resource === 'issues' ? Issue : PullRequest).upsert(issues, session),
-      TimelineEvent.upsert(timeline, session),
-      Reaction.upsert(reactions, session)
-    ]);
+    await super
+      .saveReferences(session)
+      .then(() =>
+        Promise.all([
+          (this.resource === 'issues' ? Issue : PullRequest).upsert(issues, session),
+          TimelineEvent.upsert(timeline, session),
+          Reaction.upsert(reactions, session)
+        ])
+      );
 
     await Repository.collection.updateOne(
       { _id: this.meta.id },

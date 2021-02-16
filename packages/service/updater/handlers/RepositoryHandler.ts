@@ -5,9 +5,9 @@ import { get } from 'lodash';
 import { ClientSession } from 'mongodb';
 import { Repository } from '@gittrends/database-config';
 
+import compact from '../../helpers/compact';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
-import compact from '../../helpers/compact';
 import { ResourceUpdateError } from '../../helpers/errors';
 
 type TObject = Record<string, unknown>;
@@ -40,7 +40,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
   async update(response: Record<string, unknown>, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
-    const data = response[this.alias as string];
+    const data = super.parseResponse(response[this.alias as string]);
 
     if (!this.details) this.details = data as TObject;
 
@@ -63,14 +63,16 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
         { projection: { _metadata: 1 }, session }
       );
 
-      await Repository.upsert(
-        compact({
-          ...this.details,
-          languages: this.languages.items,
-          repository_topics: this.topics.items,
-          _metadata: { ...current._metadata, [this.meta.resource]: { updatedAt: new Date() } }
-        }) as TObject,
-        session
+      await super.saveReferences(session).then(() =>
+        Repository.upsert(
+          compact({
+            ...this.details,
+            languages: this.languages.items,
+            repository_topics: this.topics.items,
+            _metadata: { ...current._metadata, [this.meta.resource]: { updatedAt: new Date() } }
+          }) as TObject,
+          session
+        )
       );
     }
   }

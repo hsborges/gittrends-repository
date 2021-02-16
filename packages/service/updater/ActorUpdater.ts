@@ -9,6 +9,7 @@ import { Actor } from '@gittrends/database-config';
 
 import Updater from './Updater';
 import Query from '../github/Query';
+import parser from '../helpers/response-parser';
 import ActorComponent from '../github/components/ActorComponent';
 
 export default class ActorsUpdater implements Updater {
@@ -26,6 +27,7 @@ export default class ActorsUpdater implements Updater {
     await Query.create()
       .compose(...components)
       .run()
+      .then((response) => parser(response))
       .then(async ({ actors }) =>
         Actor.upsert(actors.map((actor) => ({ ...actor, _metadata: { updatedAt: new Date() } })))
       )

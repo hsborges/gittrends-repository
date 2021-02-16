@@ -34,7 +34,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
   async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
-    const data = response[this.alias as string];
+    const data = super.parseResponse(response[this.alias as string]);
 
     this.stargazers.items.push(
       ...get(data, 'stargazers.edges', []).map((stargazer: { user: string; starred_at: Date }) => ({
@@ -48,6 +48,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
     if (this.stargazers.items.length >= this.writeBatchSize || this.isDone()) {
+      await super.saveReferences(session);
       await Stargazer.upsert(this.stargazers.items, session);
       await Repository.collection.updateOne(
         { _id: this.meta.id },

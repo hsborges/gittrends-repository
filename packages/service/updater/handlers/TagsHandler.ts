@@ -34,7 +34,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
   async update(response: TObject, session?: ClientSession): Promise<void> {
     if (this.isDone()) return;
 
-    const data = response[this.alias as string];
+    const data = super.parseResponse(response[this.alias as string]);
 
     this.tags.items.push(
       ...get(data, 'tags.nodes', []).map((tag: TObject) => ({
@@ -48,6 +48,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     this.tags.endCursor = pageInfo.end_cursor ?? this.tags.endCursor;
 
     if (this.tags.items.length >= this.writeBatchSize || this.isDone()) {
+      await super.saveReferences(session);
       await Tag.upsert(this.tags.items, session);
       await Repository.collection.updateOne(
         { _id: this.meta.id },

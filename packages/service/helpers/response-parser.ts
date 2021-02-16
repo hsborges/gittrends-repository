@@ -4,29 +4,26 @@
 import { get, size, mapValues, omit } from 'lodash';
 import { isArray, isPlainObject, uniqBy } from 'lodash';
 
-import normalize from '../helpers/normalize';
-import compact from '../helpers/compact';
-
-type IObject = Record<string, unknown>;
-type Source = IObject | Array<unknown> | unknown;
+import normalize from './normalize';
+import compact from './compact';
 
 export type Response = {
-  data: Source;
-  actors: Array<IObject>;
-  commits: Array<IObject>;
-  milestones: Array<IObject>;
+  data: any;
+  actors: Array<TObject>;
+  commits: Array<TObject>;
+  milestones: Array<TObject>;
 };
 
-export default function (source: Source): Response {
-  const actors: Array<IObject> = [];
-  const commits: Array<IObject> = [];
-  const milestones: Array<IObject> = [];
+export default function (source: any): Response {
+  const actors: Array<TObject> = [];
+  const commits: Array<TObject> = [];
+  const milestones: Array<TObject> = [];
 
-  function recursive(object: Source): Source {
+  function recursive(object: any): any {
     if (isArray(object)) return object.map(recursive);
 
     if (isPlainObject(object)) {
-      const _object = mapValues(object as IObject, (value, key) => {
+      const _object = mapValues(object as TObject, (value, key) => {
         let _result = recursive(value);
 
         if (key === 'reaction_groups') {
@@ -42,7 +39,7 @@ export default function (source: Source): Response {
         return _result;
       });
 
-      if (size(_object as IObject) === 1) {
+      if (size(_object as TObject) === 1) {
         if (_object.id) return _object.id;
         if (_object.name) return _object.name;
         if (_object.target) return _object.target;
