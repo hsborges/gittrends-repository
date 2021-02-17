@@ -3,24 +3,23 @@
  */
 import { isArray, isPlainObject, reduce, isEqual } from 'lodash';
 
-const valuesToRemove = [null, undefined, '', {}, []];
+function canBeRemoved(value: any): boolean {
+  return [null, undefined, '', {}, []].findIndex((r) => isEqual(r, value)) >= 0;
+}
+
+function cannotBeRemoved(value: any): boolean {
+  return !canBeRemoved(value);
+}
 
 export default function compact(object: any): any {
-  if (isArray(object)) {
-    const _object = object
-      .map((value) => compact(value))
-      .filter((o) => valuesToRemove.findIndex((r) => isEqual(r, o)) < 0);
-    return _object;
-  }
+  if (isArray(object)) return object.map((value) => compact(value)).filter(cannotBeRemoved);
 
   if (isPlainObject(object))
     return reduce(
-      object as Record<string, any>,
+      object,
       (acc, value, key) => {
         const _value = compact(value);
-        return valuesToRemove.findIndex((r) => isEqual(r, _value)) < 0
-          ? { ...acc, [key]: _value }
-          : acc;
+        return cannotBeRemoved(_value) ? { ...acc, [key]: _value } : acc;
       },
       {}
     );

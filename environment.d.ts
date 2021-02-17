@@ -28,7 +28,6 @@ declare global {
       GITTRENDS_PROXY_HOST?: string;
       GITTRENDS_PROXY_PORT?: string;
       GITTRENDS_PROXY_TIMEOUT?: string;
-      GITTRENDS_PROXY_RETRIES?: string;
       GITTRENDS_PROXY_USER_AGENT?: string;
       GITTRENDS_REDIS_HOST?: string;
       GITTRENDS_REDIS_PORT?: string;

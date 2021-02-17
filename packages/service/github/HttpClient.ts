@@ -1,7 +1,6 @@
 /*
  *  Author: Hudson S. Borges
  */
-import pRetry from 'promise-retry';
 import UserAgent from 'user-agents';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import compact from '../helpers/compact';
@@ -11,7 +10,6 @@ const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
 const HOST = process.env.GITTRENDS_PROXY_HOST ?? 'localhost';
 const PORT = parseInt(process.env.GITTRENDS_PROXY_PORT ?? '3000', 10);
 const TIMEOUT = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT ?? '0', 10) || undefined;
-const RETRIES = parseInt(process.env.GITTRENDS_PROXY_RETRIES ?? '5', 10);
 const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT ?? new UserAgent().random().toString();
 
 const requestClient: AxiosInstance = axios.create({
@@ -29,21 +27,9 @@ const requestClient: AxiosInstance = axios.create({
   }
 });
 
-async function retriableRequest(data: TObject): Promise<AxiosResponse> {
-  return pRetry(
-    (retry) =>
-      requestClient({ method: 'post', data: data }).catch((err) => {
-        if (err.code === 'ECONNABORTED' || err.code === 'ECONNREFUSED') return retry(err);
-        if (err.response && /500|408|403/g.test(err.response.status)) return retry(err);
-        throw err;
-      }),
-    { retries: RETRIES, minTimeout: 100, maxTimeout: 1000 }
-  );
-}
-
 /* exports */
 export default async function (query: TObject): Promise<AxiosResponse> {
-  return retriableRequest(query)
+  return requestClient({ method: 'post', data: query })
     .catch((err) => {
       if (err.response && err.response.status === 500)
         throw new Errors.InternalServerError(err.message, err, err.response && err.response.data);

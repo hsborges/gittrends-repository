@@ -61,7 +61,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
     this.resource = type;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 15;
+    this.batchSize = this.defaultBatchSize = type === 'issues' ? 15 : 10;
     this.issues = { items: [], hasNextPage: true };
   }
 
@@ -105,19 +105,19 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           return issue.component
             .includeDetails(issue.details.hasNextPage)
             .includeAssignees(issue.assignees.hasNextPage, {
-              first: 50,
+              first: 100,
               after: issue.assignees.endCursor
             })
             .includeLabels(issue.labels.hasNextPage, {
-              first: 50,
+              first: 100,
               after: issue.labels.endCursor
             })
             .includeParticipants(issue.participants.hasNextPage, {
-              first: 50,
+              first: 100,
               after: issue.participants.endCursor
             })
             .includeTimeline(issue.timeline.hasNextPage, {
-              first: 50,
+              first: 100,
               after: issue.timeline.endCursor
             });
         })
@@ -129,7 +129,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
       return this.pendingReactables.map((reactable) =>
         reactable.component.includeReactions(reactable.hasNextPage, {
-          first: 50,
+          first: 100,
           after: reactable.endCursor
         })
       );

@@ -2,6 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
+
 import client from './HttpClient';
 import Component from './Component';
 import Fragment from './Fragment';
@@ -22,7 +23,7 @@ function getGraphQLType(key: unknown) {
 
 export default class Query {
   readonly components: Component[] = [];
-  readonly fragments: Set<Fragment> = new Set();
+  readonly fragments: Fragment[] = [];
   readonly args: Record<string, unknown>;
 
   private constructor(args?: Record<string, unknown>) {
@@ -38,9 +39,10 @@ export default class Query {
 
     const pushFragment = (fragments: Fragment[]) => {
       fragments.forEach((fragment) => {
-        if (this.fragments.has(fragment)) return;
-        this.fragments.add(fragment);
-        pushFragment(fragment.dependencies);
+        if (this.fragments.indexOf(fragment) < 0) {
+          this.fragments.push(fragment);
+          pushFragment(fragment.dependencies);
+        }
       });
     };
 
@@ -65,9 +67,9 @@ export default class Query {
 
     return `
     query${_args} {
-      ${this.components.map((component) => component.toString())}
+      ${this.components.map((component) => component.toString()).join('\n')}
     }
-    ${[...this.fragments].map((fragment) => fragment.toString())}
+    ${this.fragments.map((fragment) => fragment.toString()).join('\n')}
     `
       .replace(/\s+/g, ' ')
       .trim();
