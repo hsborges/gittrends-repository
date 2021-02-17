@@ -145,8 +145,6 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   }
 
   private async _update(response: TObject, session?: ClientSession): Promise<void> {
-    if (this.isDone()) return;
-
     switch (this.currentStage) {
       case Stages.GET_ISSUES_LIST: {
         const data = super.parseResponse(response[super.alias as string]);
@@ -179,7 +177,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
           if (item.details.hasNextPage) {
             item.details.hasNextPage = false;
-            item.data = { ...item.data, ...omit(data as TObject, omitFields) };
+            item.data = { ...item.data, ...omit(data, omitFields) };
             item.data.assignees = [];
             item.data.labels = [];
             item.data.participants = [];
@@ -315,20 +313,16 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof RetryableError || err instanceof ForbiddenError) {
-      const hasNextDetails = this.pendingIssues.length > 0;
-      const hasNextReactions = this.pendingReactables.length > 0;
-
       if (this.batchSize > 1) {
-        this.batchSize = Math.floor(this.batchSize / 2);
+        this.batchSize = 1;
         return;
       }
 
-      if (hasNextDetails) {
+      if (this.pendingIssues.length > 0) {
         const issue = this.pendingIssues[0];
         issue.details.hasNextPage = issue.assignees.hasNextPage = issue.labels.hasNextPage = issue.participants.hasNextPage = issue.timeline.hasNextPage = false;
         issue.error = err;
-      } else if (hasNextReactions) {
-        // TODO -- handle single reactables problems
+      } else if (this.pendingReactables.length > 0) {
         const reaction = this.pendingReactables[0];
         reaction.hasNextPage = false;
         reaction.error = err;
@@ -343,18 +337,23 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   get pendingIssues(): TIssueMetadata[] {
     return this.issues.items
       .filter(
-        (i) =>
-          i.details.hasNextPage ||
-          i.assignees.hasNextPage ||
-          i.labels.hasNextPage ||
-          i.participants.hasNextPage ||
-          i.timeline.hasNextPage
+        (issue) =>
+          (issue.details.hasNextPage ||
+            issue.assignees.hasNextPage ||
+            issue.labels.hasNextPage ||
+            issue.participants.hasNextPage ||
+            issue.timeline.hasNextPage) &&
+          !issue.error
       )
       .slice(0, this.batchSize);
   }
 
   get pendingReactables(): TReactableMetadata[] {
-    return this.reactions?.filter((rm) => rm.hasNextPage).slice(0, this.batchSize) || [];
+    return (
+      this.reactions
+        ?.filter((reactable) => reactable.hasNextPage && !reactable.error)
+        .slice(0, this.batchSize) || []
+    );
   }
 
   get alias(): string[] {

@@ -32,8 +32,6 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, session?: ClientSession): Promise<void> {
-    if (this.isDone()) return;
-
     const data = super.parseResponse(response[this.alias as string]);
 
     this.watchers.items.push(

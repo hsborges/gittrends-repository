@@ -55,7 +55,7 @@ export default class RepositoryUpdater implements Updater {
     this.handlers.forEach((handler) => (handler.cache = opts?.cache));
   }
 
-  private async _update(handlers: AbstractRepositoryHandler[]): Promise<void> {
+  private async _update(handlers: AbstractRepositoryHandler[], isRetry = false): Promise<void> {
     // run queries and update handlers
     await Query.create()
       .compose(...flatten(await map(handlers, (handler) => handler.component())))
@@ -81,20 +81,20 @@ export default class RepositoryUpdater implements Updater {
         }
       })
       .catch(async (err) => {
-        if (err instanceof ValidationError) throw err;
+        if (isRetry || err instanceof ValidationError) throw err;
 
-        if (handlers.length === 1) {
-          return handlers[0].error(err).catch((err2) => {
-            this.errors.push({ handler: handlers[0], error: err2 });
-            this.job?.update({
-              ...this.job.data,
-              resources: this.job.data.resources.filter((r) => r !== handlers[0].meta.resource),
-              errors: [...(this.job.data.errors || []), handlers[0].meta.resource]
-            });
-          });
-        }
-
-        return map(handlers, (handler) => this._update([handler]));
+        return map(handlers, (handler) =>
+          this._update([handler], true).catch((err) =>
+            handler.error(err).catch((err2) => {
+              this.errors.push({ handler, error: err2 });
+              this.job?.update({
+                ...this.job.data,
+                resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
+                errors: [...(this.job.data.errors || []), handler.meta.resource]
+              });
+            })
+          )
+        );
       });
   }
 

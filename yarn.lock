@@ -313,10 +313,10 @@
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.1.1.tgz#9daf5745156fd84b8e9889a2dc721f0c58e894aa"
   integrity sha512-CAEbWH7OIur6jEOzaai83jq3FmKmv4PmX1JYfs9IrYcGEVI/lyL1EXJGCj7eFVJ0bg5QR8LMxBlEtA+xKiLpFw==
 
-"@hsborges/github-proxy-server@^3.2.5":
-  version "3.2.5"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.2.5.tgz#82eddfb81a4777c8ca7065e0e1f88f3ecc258344"
-  integrity sha512-J2ut9ZGm/qGSEUuOdEYkJ896yB0c7W7QhaPcHUxMTrL2wIDAUuBZhE9cM2B+csb0FaSMiBnFYaSfDZmCRwsqYA==
+"@hsborges/github-proxy-server@^3.2.6":
+  version "3.2.6"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.2.6.tgz#cca33d51b2859aee09157d0025644b9806762ea8"
+  integrity sha512-QpgsUhdHDd69BnTYhVfluCg7UWMMhzIMEk3GHH+ur1ghivibD20OGa0j4uE7BoL2wR6EsTdKP7pdLynag2Se8Q==
   dependencies:
     async "^3.2.0"
     chalk "^4.1.0"
@@ -1870,31 +1870,32 @@ builtin-status-codes@^3.0.0:
   resolved "https://registry.yarnpkg.com/builtin-status-codes/-/builtin-status-codes-3.0.0.tgz#85982878e21b98e1c66425e03d0174788f569ee8"
   integrity sha1-hZgoeOIbmOHGZCXgPQF0eI9Wnug=
 
-bull-board@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/bull-board/-/bull-board-1.2.0.tgz#daf69472c306bebff5918da4715c34ff5cac3063"
-  integrity sha512-ma0bEdxpfwpTVYiOVAxFmAZgZHwKNYkLLkDqJGuM8WrP+n6UHnqS7rWxajxBZurQSKmwEyQH8gtemX8UFZnOIg==
+bull-board@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/bull-board/-/bull-board-1.3.0.tgz#09551933d36a3a71ef1192bf68243db3de9a5d13"
+  integrity sha512-wO6g2Ak2sBWNV7IR0m9u2lEUNGxdAB6pfNpSqKFYaVsul9t6iEcgTQ7w/4C491UYaiaDZBBCUcLRtDATmy+PrQ==
   dependencies:
     "@types/bull" "^3.14.4"
     "@types/express" "^4.17.9"
     "@types/express-serve-static-core" "^4.17.14"
     "@types/react-dom" "^17.0.0"
+    axios "^0.21.1"
     classnames "^2.2.6"
     date-fns "2.16.1"
-    ejs "3.1.5"
+    ejs "3.1.6"
     express "4.17.1"
     highlight.js "^10.4.1"
     pretty-bytes "5.4.1"
-    query-string "^6.13.7"
     react "17.0.1"
     react-dom "17.0.1"
     react-router-dom "^5.2.0"
+    react-toastify "^7.0.3"
     redis-info "^3.0.8"
 
-bullmq@^1.14.5:
-  version "1.14.5"
-  resolved "https://registry.yarnpkg.com/bullmq/-/bullmq-1.14.5.tgz#a40d65c10bbc137b5610adb12e4a866f73d23731"
-  integrity sha512-tPRqYFRdAW4JTIv+PA77JuJoCzfHS16J+tvT6e6nOLajNDcUA7iOOPj2nPFBO6487Gj7o/mfBvkIgM/UiEEktA==
+bullmq@^1.14.7:
+  version "1.14.7"
+  resolved "https://registry.yarnpkg.com/bullmq/-/bullmq-1.14.7.tgz#619cc59e4d60c6fa6a211c8e0311edf9983bbcdf"
+  integrity sha512-sul8aas41zsHg4ZJPlkePzalboYH6GVwFis9TVeZIy5jbeallKcFKeiwdq2yAkXtfqc3xu9g7hPagTmjc/ppJA==
   dependencies:
     "@types/ioredis" "^4.16.3"
     cron-parser "^2.7.3"
@@ -2192,6 +2193,11 @@ clone@^2.1.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/clone/-/clone-2.1.2.tgz#1b7f4b9f591f1e8f83670401600345a02887435f"
   integrity sha1-G39Ln1kfHo+DZwQBYANFoCiHQ18=
+
+clsx@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/clsx/-/clsx-1.1.1.tgz#98b3134f9abbdf23b2663491ace13c5c03a73188"
+  integrity sha512-6/bPho624p3S2pMyvP5kKBPXnI3ufHLObBFCfgx+LkeR5lg2XYy2hqZqUf45ypD8COn2bhgGJSUE+l5dhNBieA==
 
 cluster-key-slot@^1.1.0:
   version "1.1.0"
@@ -3169,10 +3175,10 @@ ee-first@1.1.1:
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
-ejs@3.1.5:
-  version "3.1.5"
-  resolved "https://registry.yarnpkg.com/ejs/-/ejs-3.1.5.tgz#aed723844dc20acb4b170cd9ab1017e476a0d93b"
-  integrity sha512-dldq3ZfFtgVTJMLjOe+/3sROTzALlL9E34V4/sDtUd/KlBSS0s6U1/+WPE1B4sj9CXHJpL1M6rhNJnc9Wbal9w==
+ejs@3.1.6:
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/ejs/-/ejs-3.1.6.tgz#5bfd0a0689743bb5268b3550cceeebbc1702822a"
+  integrity sha512-9lt9Zse4hPucPkoP7FHDF0LQAlGyF9JVpnClFLFH3aSSbxmyoqINRpp/9wePWJTUl4KOQwRL72Iw3InHPDkoGw==
   dependencies:
     jake "^10.6.1"
 
@@ -4047,11 +4053,6 @@ fill-range@^7.0.1:
   integrity sha512-qOo9F+dMUmC2Lcb4BbVvnKJxTPjCm+RRpe4gDuGrzkL7mEVl/djYSu2OdQ2Pa302N4oqkSg9ir6jaLWJ2USVpQ==
   dependencies:
     to-regex-range "^5.0.1"
-
-filter-obj@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/filter-obj/-/filter-obj-1.1.0.tgz#9b311112bc6c6127a16e016c6c5d7f19e0805c5b"
-  integrity sha1-mzERErxsYSehbgFsbF1/GeCAXFs=
 
 finalhandler@~1.1.2:
   version "1.1.2"
@@ -7305,16 +7306,6 @@ qs@6.7.0:
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.7.0.tgz#41dc1a015e3d581f1621776be31afb2876a9b1bc"
   integrity sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==
 
-query-string@^6.13.7:
-  version "6.14.0"
-  resolved "https://registry.yarnpkg.com/query-string/-/query-string-6.14.0.tgz#0b7b7ca326f5facf10dd2d45d26645cd287f8c92"
-  integrity sha512-In3o+lUxlgejoVJgwEdYtdxrmlL0cQWJXj0+kkI7RWVo7hg5AhFtybeKlC9Dpgbr8eOC4ydpEh8017WwyfzqVQ==
-  dependencies:
-    decode-uri-component "^0.2.0"
-    filter-obj "^1.1.0"
-    split-on-first "^1.0.0"
-    strict-uri-encode "^2.0.0"
-
 querystring-es3@^0.2.0:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/querystring-es3/-/querystring-es3-0.2.1.tgz#9ec61f79049875707d69414596fd907a4d711e73"
@@ -7801,6 +7792,13 @@ react-router@5.2.0:
     react-is "^16.6.0"
     tiny-invariant "^1.0.2"
     tiny-warning "^1.0.0"
+
+react-toastify@^7.0.3:
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/react-toastify/-/react-toastify-7.0.3.tgz#93804c777ecf918872ba3b5be9c654db14547f85"
+  integrity sha512-cxZ5rfurC8LzcZQMTYc8RHIkQTs+BFur18Pzk6Loz6uS8OXUWm6nXVlH/wqglz4Z7UAE8xxcF5mRjfE13487uQ==
+  dependencies:
+    clsx "^1.1.1"
 
 react-vis@^1.11.7:
   version "1.11.7"
@@ -8687,11 +8685,6 @@ spdx-license-ids@^3.0.0:
   resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-3.0.7.tgz#e9c18a410e5ed7e12442a549fbd8afa767038d65"
   integrity sha512-U+MTEOO0AiDzxwFvoa4JVnMV6mZlJKk2sBLt90s7G0Gd0Mlknc7kxEn3nuDPNZRta7O2uy8oLcZLVT+4sqNZHQ==
 
-split-on-first@^1.0.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/split-on-first/-/split-on-first-1.1.0.tgz#f610afeee3b12bce1d0c30425e76398b78249a5f"
-  integrity sha512-43ZssAJaMusuKWL8sKUBQXHWOpq8d6CfN/u1p4gUzfJkM05C8rxTmYrkIPTXapZpORA6LkkzcUulJ8FqA7Uudw==
-
 split-string@^3.0.1, split-string@^3.0.2:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/split-string/-/split-string-3.1.0.tgz#7cb09dda3a86585705c64b39a6466038682e8fe2"
@@ -8808,11 +8801,6 @@ streamsearch@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/streamsearch/-/streamsearch-0.1.2.tgz#808b9d0e56fc273d809ba57338e929919a1a9f1a"
   integrity sha1-gIudDlb8Jz2Am6VzOOkpkZoanxo=
-
-strict-uri-encode@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/strict-uri-encode/-/strict-uri-encode-2.0.0.tgz#b9c7330c7042862f6b142dc274bbcc5866ce3546"
-  integrity sha1-ucczDHBChi9rFC3CdLvMWGbONUY=
 
 string-convert@^0.2.0:
   version "0.2.1"

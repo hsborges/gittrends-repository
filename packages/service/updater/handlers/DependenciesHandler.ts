@@ -48,8 +48,12 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, session?: ClientSession): Promise<void> {
-    if (this.isDone()) return;
+    return this._update(response, session).finally(
+      () => (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2))
+    );
+  }
 
+  private async _update(response: TObject, session?: ClientSession): Promise<void> {
     if (response && this.manifests.hasNextPage) {
       const data = super.parseResponse(response[this.alias[0]]);
 
@@ -68,14 +72,11 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
         )
       );
 
-      const pageInfo = 'dependency_graph_manifests.page_info';
-      this.manifests.hasNextPage = get(data, `${pageInfo}.has_next_page`);
-      this.manifests.endCursor = get(data, `${pageInfo}.end_cursor`, this.manifests.endCursor);
+      const pageInfo = get(data, 'dependency_graph_manifests.page_info', {});
+      this.manifests.hasNextPage = pageInfo.has_next_page ?? false;
+      this.manifests.endCursor = pageInfo.end_cursor ?? this.manifests.endCursor;
 
-      if (this.hasNextPage()) {
-        this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
-        return;
-      }
+      if (this.hasNextPage()) return;
     }
 
     if (response && !this.manifests.hasNextPage && this.hasNextPage) {
@@ -106,10 +107,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
         await Dependency.upsert(dependencies, session);
       }
 
-      if (this.hasNextPage()) {
-        this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
-        return;
-      }
+      if (this.hasNextPage()) return;
     }
 
     if (this.isDone()) {
@@ -124,7 +122,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
   async error(err: Error): Promise<void> {
     if (err instanceof RetryableError) {
       if (this.batchSize > 1) {
-        this.batchSize = Math.floor(this.batchSize / 2);
+        this.batchSize = 1;
         return;
       }
 

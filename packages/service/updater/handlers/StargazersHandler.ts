@@ -32,8 +32,12 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, session?: ClientSession): Promise<void> {
-    if (this.isDone()) return;
+    return this._update(response, session).finally(
+      () => (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2))
+    );
+  }
 
+  private async _update(response: TObject, session?: ClientSession): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
     this.stargazers.items.push(
@@ -75,8 +79,8 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
       if (stargazers.length) {
         const pageInfo = get(err, `response.data.${this.alias}.stargazers.page_info`);
-        this.stargazers.hasNextPage = pageInfo.has_next_page;
-        this.stargazers.endCursor = pageInfo.end_cursor || this.stargazers.endCursor;
+        this.stargazers.hasNextPage = pageInfo.has_next_page ?? false;
+        this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
         await Promise.all([
           Actor.insert(get(err, 'response.actors', [])),
@@ -94,7 +98,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
     if (err instanceof RetryableError) {
       if (this.batchSize > 1) {
-        this.batchSize = Math.floor(this.batchSize / 2);
+        this.batchSize = 1;
         return;
       }
     }

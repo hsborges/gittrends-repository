@@ -38,11 +38,9 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
   }
 
   async update(response: Record<string, unknown>, session?: ClientSession): Promise<void> {
-    if (this.isDone()) return;
-
     const data = super.parseResponse(response[this.alias as string]);
 
-    if (!this.details) this.details = data as TObject;
+    if (!this.details) this.details = data;
 
     this.languages.items.push(...(get(data, 'languages.edges', []) as []));
     this.topics.items.push(
@@ -70,7 +68,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
             languages: this.languages.items,
             repository_topics: this.topics.items,
             _metadata: { ...current._metadata, [this.meta.resource]: { updatedAt: new Date() } }
-          }) as TObject,
+          }),
           session
         )
       );
