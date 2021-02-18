@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@types/faker": "^5.1.6",
+    "@types/faker": "^5.1.7",
     "@types/lodash": "^4.14.168",
     "@types/nodemailer": "^6.4.0",
     "ts-node-dev": "^1.1.1",

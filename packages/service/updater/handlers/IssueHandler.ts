@@ -57,11 +57,14 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   private issues: { items: TIssueMetadata[]; hasNextPage: boolean; endCursor?: string };
   private reactions?: TReactableMetadata[];
   private currentStage?: Stages;
+  private reactablesBatchSize: number;
+  private defaultReactablesBatchSize: number;
 
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
     this.resource = type;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 15 : 10;
+    this.batchSize = this.defaultBatchSize = type === 'issues' ? 50 : 20;
+    this.reactablesBatchSize = this.defaultReactablesBatchSize = 100;
     this.issues = { items: [], hasNextPage: true };
   }
 
@@ -139,9 +142,13 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, session?: ClientSession): Promise<void> {
-    return this._update(response, session).finally(
-      () => (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2))
-    );
+    return this._update(response, session).finally(() => {
+      this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
+      this.reactablesBatchSize = Math.min(
+        this.defaultReactablesBatchSize,
+        this.reactablesBatchSize * 2
+      );
+    });
   }
 
   private async _update(response: TObject, session?: ClientSession): Promise<void> {
@@ -313,22 +320,31 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof RetryableError || err instanceof ForbiddenError) {
-      if (this.batchSize > 1) {
-        this.batchSize = 1;
-        return;
+      switch (this.currentStage) {
+        case Stages.GET_ISSUES_LIST:
+        case Stages.GET_ISSUES_DETAILS:
+          if (this.batchSize === 1) break;
+          this.batchSize = 1;
+          return;
+        case Stages.GET_REACTIONS:
+          if (this.reactablesBatchSize === 1) break;
+          this.reactablesBatchSize = 1;
+          return;
       }
 
-      if (this.pendingIssues.length > 0) {
-        const issue = this.pendingIssues[0];
-        issue.details.hasNextPage = issue.assignees.hasNextPage = issue.labels.hasNextPage = issue.participants.hasNextPage = issue.timeline.hasNextPage = false;
-        issue.error = err;
-      } else if (this.pendingReactables.length > 0) {
-        const reaction = this.pendingReactables[0];
-        reaction.hasNextPage = false;
-        reaction.error = err;
+      switch (this.currentStage) {
+        case Stages.GET_ISSUES_LIST:
+        case Stages.GET_ISSUES_DETAILS:
+          const issue = this.pendingIssues[0];
+          issue.details.hasNextPage = issue.assignees.hasNextPage = issue.labels.hasNextPage = issue.participants.hasNextPage = issue.timeline.hasNextPage = false;
+          issue.error = err;
+          return;
+        case Stages.GET_REACTIONS:
+          const reaction = this.pendingReactables[0];
+          reaction.hasNextPage = false;
+          reaction.error = err;
+          return;
       }
-
-      return;
     }
 
     throw new ResourceUpdateError(err.message, err);
@@ -352,7 +368,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     return (
       this.reactions
         ?.filter((reactable) => reactable.hasNextPage && !reactable.error)
-        .slice(0, this.batchSize) || []
+        .slice(0, this.reactablesBatchSize) || []
     );
   }
 
