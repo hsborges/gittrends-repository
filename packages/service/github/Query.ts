@@ -7,9 +7,6 @@ import client from './HttpClient';
 import Component from './Component';
 import Fragment from './Fragment';
 
-import normalize from '../helpers/normalize';
-import compact from '../helpers/compact';
-
 function getGraphQLType(key: unknown) {
   switch (typeof key) {
     case 'number':
@@ -78,6 +75,6 @@ export default class Query {
   async run(interceptor?: (args: string) => string): Promise<any> {
     return client({
       query: interceptor ? interceptor(this.toString()) : this.toString()
-    }).then((response) => compact(normalize(get(response, 'data.data', null))));
+    }).then((response) => get(response, 'data.data', null));
   }
 }

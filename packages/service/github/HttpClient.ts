@@ -4,6 +4,7 @@
 import UserAgent from 'user-agents';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import compact from '../helpers/compact';
+import normalize from '../helpers/normalize';
 import * as Errors from '../helpers/errors';
 
 const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
@@ -63,6 +64,6 @@ export default async function (query: TObject): Promise<AxiosResponse> {
         throw new Errors.RequestError(message, null, data, query);
       }
 
-      return { ...response, data: compact(response.data) };
+      return { ...response, data: normalize(compact(data)) };
     });
 }

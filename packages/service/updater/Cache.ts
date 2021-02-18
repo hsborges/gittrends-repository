@@ -1,25 +1,23 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { each } from 'bluebird';
+import LfuSet from 'collections/lfu-set';
 import { MD5 } from 'object-hash';
-import redisLru, { LRU } from 'redis-lru';
-import redis from '../redis';
 
 export default class UpdaterCache {
-  readonly cache: LRU;
+  readonly cache: LfuSet<string>;
 
   constructor(cacheSize: number) {
-    this.cache = redisLru(redis, { max: cacheSize, namespace: 'cache:updater:' });
+    this.cache = new LfuSet<string>([], cacheSize);
   }
 
-  async add(object: TObject | TObject[]): Promise<void> {
-    await each(Array.isArray(object) ? object : [object], (obj) =>
-      this.cache.set(typeof obj.id === 'string' ? obj.id : MD5(obj), new Date())
+  add(object: TObject | TObject[]): void {
+    (Array.isArray(object) ? object : [object]).forEach((obj) =>
+      this.cache.add(MD5(obj.id || obj))
     );
   }
 
-  async has(object: TObject): Promise<boolean> {
-    return this.cache.has(typeof object.id === 'string' ? object.id : MD5(object));
+  has(object: TObject): boolean {
+    return this.cache.has(MD5(object.id || object));
   }
 }

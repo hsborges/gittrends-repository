@@ -34,7 +34,7 @@ export default abstract class Model<T = void> {
 
   private readonly _ajv: Ajv;
 
-  private _validator: ValidateFunction<T> | undefined;
+  private _validator?: ValidateFunction<T>;
 
   constructor() {
     this._ajv = new Ajv({
@@ -46,14 +46,14 @@ export default abstract class Model<T = void> {
     addFormats(this._ajv);
   }
 
-  private preValidate(data: unknown): unknown {
+  private preValidate(data: any): any {
     if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
     if (isArray(data)) return data.map((d) => this.preValidate(d));
     if (isObject(data)) return mapValues(data, (value) => this.preValidate(value));
     return data;
   }
 
-  private postValidate(data: unknown): unknown {
+  private postValidate(data: any): any {
     if (typeof data === 'string' && DATE_REGEX.test(data)) return dayjs(data, DATE_FORMAT).toDate();
     if (isArray(data)) return data.map((d) => this.postValidate(d));
     if (isObject(data)) return mapValues(data, (value) => this.postValidate(value));
@@ -61,7 +61,7 @@ export default abstract class Model<T = void> {
   }
 
   protected validate(data: TObject): TObject & { _id?: string } {
-    if (this._validator === undefined) this._validator = this._ajv.compile<T>(this.jsonSchema);
+    if (!this._validator) this._validator = this._ajv.compile<T>(this.jsonSchema);
 
     let clone = this.preValidate(cloneDeep(data)) as TObject;
     if (!this._validator(clone))

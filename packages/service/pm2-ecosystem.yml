@@ -12,7 +12,7 @@ apps:
     interpreter_args: -r @gittrends/env-config
     script: dist/scheduler.js
     args: all
-    instance_var: INSTANCE_ID
+    exec_mode: cluster
     cron_restart: '0 */4 * * *'
     autorestart: false
 
@@ -21,7 +21,7 @@ apps:
     script: dist/updater.js
     args: --type repositories --workers 1
     instances: 1
-    instance_var: INSTANCE_ID
+    exec_mode: cluster
     env:
       GITTRENDS_PROXY_PORT: '3000'
 
@@ -30,6 +30,6 @@ apps:
     script: dist/updater.js
     args: --type users --workers 1
     instances: 1
-    instance_var: INSTANCE_ID
+    exec_mode: cluster
     env:
       GITTRENDS_PROXY_PORT: '3000'

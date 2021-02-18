@@ -40,8 +40,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   }
 
   protected async saveReferences(session?: ClientSession): Promise<void> {
-    const objectIsNotInCache = (object: any) =>
-      this.cache ? this.cache.has(object).then((r) => !r) : false;
+    const objectIsNotInCache = (object: any) => !this.cache?.has(object);
 
     const [actors, commits, milestones] = await Promise.all([
       filter(this.actors, objectIsNotInCache),
