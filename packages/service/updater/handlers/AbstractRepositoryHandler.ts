@@ -1,6 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { filter } from 'bluebird';
 import { ClientSession } from 'mongodb';
 import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
@@ -32,16 +33,21 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
 
   protected parseResponse(response: any): any {
     const { data, actors, commits, milestones } = parser(response);
-    this.actors.push(...actors.filter((actor) => !this.cache?.has(actor)));
-    this.commits.push(...commits.filter((commit) => !this.cache?.has(commit)));
-    this.milestones.push(...milestones.filter((milestone) => !this.cache?.has(milestone)));
+    this.actors.push(...actors);
+    this.commits.push(...commits);
+    this.milestones.push(...milestones);
     return data;
   }
 
   protected async saveReferences(session?: ClientSession): Promise<void> {
-    const actors = this.actors.filter((actor) => !this.cache?.has(actor));
-    const commits = this.commits.filter((commit) => !this.cache?.has(commit));
-    const milestones = this.milestones.filter((milestone) => !this.cache?.has(milestone));
+    const objectIsNotInCache = (object: any) =>
+      this.cache ? this.cache.has(object).then((r) => !r) : false;
+
+    const [actors, commits, milestones] = await Promise.all([
+      filter(this.actors, objectIsNotInCache),
+      filter(this.commits, objectIsNotInCache),
+      filter(this.milestones, objectIsNotInCache)
+    ]);
 
     await Promise.all([
       Actor.insert(actors, session).then(() => this.cache?.add(actors)),

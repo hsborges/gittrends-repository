@@ -7945,6 +7945,11 @@ redis-info@^3.0.8:
   dependencies:
     lodash "^4.17.11"
 
+redis-lru@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/redis-lru/-/redis-lru-0.6.0.tgz#2a820a99011fe1a16a7ad2d67980def9d3336c7a"
+  integrity sha512-nDH+EHcUXp+cJdnkq8Hb+99kr82EDmAiFY40Bb02nB00A4N/dUqw3SCIJSgH8SUP2uee9EFijbMlf5WSul22uw==
+
 redis-parser@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/redis-parser/-/redis-parser-3.0.0.tgz#b66d828cdcafe6b4b8a428a7def4c6bcac31c8b4"

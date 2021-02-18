@@ -36,6 +36,7 @@
     "mongodb": "^3.6.4",
     "numeral": "^2.0.6",
     "object-hash": "^2.1.1",
+    "redis-lru": "^0.6.0",
     "table": "^6.0.7",
     "user-agents": "^1.0.565"
   },

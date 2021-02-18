@@ -63,16 +63,5 @@ program
       const progressStr = `${progress}`.padStart(3);
       consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(id)}.`);
     });
-
-    let timeout: NodeJS.Timeout;
-    process.on('SIGTERM', async () => {
-      consola.warn('Signal received: closing queues');
-      if (!timeout) {
-        Promise.all([queue.close(), queueScheduler.close(), mongoClient.close()]).then(() =>
-          process.exit(0)
-        );
-        timeout = setTimeout(() => process.exit(1), 10 * 1000);
-      }
-    });
   })
   .parse(process.argv);
