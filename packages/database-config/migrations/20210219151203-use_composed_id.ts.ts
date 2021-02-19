@@ -24,7 +24,7 @@ export = {
       while (await cursor.hasNext()) {
         const record = castDates(await cursor.next());
         await collection
-          .insertOne({ _id: pick(record, model.idField), ...omit(record, model.idField) })
+          .insertOne({ ...omit(record, model.idField), _id: pick(record, model.idField) })
           .catch((err) => {
             if (err.code === 11000) return;
             throw err;
