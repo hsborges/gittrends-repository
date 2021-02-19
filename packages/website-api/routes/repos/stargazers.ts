@@ -40,15 +40,15 @@ export default async function (fastify: FastifyInstance): Promise<void> {
 
       const timeseries = await Stargazer.collection
         .aggregate([
-          { $match: { repository: repo._id } },
+          { $match: { '_id.repository': repo._id } },
           ...(since && since.isValid()
-            ? [{ $match: { starred_at: { $gte: since.toDate() } } }]
+            ? [{ $match: { '_id.starred_at': { $gte: since.toDate() } } }]
             : []),
           {
             $project: {
               _id: 0,
-              week: { $isoWeek: '$starred_at' },
-              year: { $isoWeekYear: '$starred_at' }
+              week: { $isoWeek: '$_id.starred_at' },
+              year: { $isoWeekYear: '$_id.starred_at' }
             }
           },
           { $group: { _id: { year: '$year', week: '$week' }, stargazers_count: { $sum: 1 } } },
@@ -62,14 +62,20 @@ export default async function (fastify: FastifyInstance): Promise<void> {
       let [first, last]: [IStargazer, IStargazer] = await Promise.all([
         Stargazer.collection.findOne(
           {
-            repository: repo._id,
-            ...(since && since.isValid() ? { starred_at: { $gte: since.toDate() } } : {})
+            '_id.repository': repo._id,
+            ...(since && since.isValid() ? { '_id.starred_at': { $gte: since.toDate() } } : {})
           },
-          { sort: { starred_at: 1 }, projection: { _id: 0, user: 1, starred_at: 1 } }
+          {
+            sort: { '_id.starred_at': 1 },
+            projection: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' }
+          }
         ),
         Stargazer.collection.findOne(
-          { repository: repo._id },
-          { sort: { starred_at: -1 }, projection: { _id: 0, user: 1, starred_at: 1 } }
+          { '_id.repository': repo._id },
+          {
+            sort: { '_id.starred_at': 1 },
+            projection: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' }
+          }
         )
       ]);
 

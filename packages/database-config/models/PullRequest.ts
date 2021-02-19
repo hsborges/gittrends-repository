@@ -10,7 +10,7 @@ class PullRequest extends Model<IPullRequest> {
   idField = 'id';
   jsonSchema = schema.definitions.IPullRequest;
 
-  protected validate(data: TObject): TObject & { _id?: string } {
+  protected validate(data: any): any & { _id?: string } {
     return super.validate({ ...data, type: 'PullRequest' });
   }
 }

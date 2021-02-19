@@ -3,7 +3,7 @@
  */
 /** @additionalProperties false */
 export default interface IRelease extends Record<string, unknown> {
-  id: string;
+  _id: string;
   repository: string;
   author?: string;
   created_at?: Date;

@@ -5,7 +5,7 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "type": {
@@ -160,7 +160,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "login",
         "type"
       ]
@@ -169,7 +169,7 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "repository": {
@@ -316,7 +316,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "oid",
         "repository"
       ]
@@ -325,11 +325,24 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "repository": {
-          "type": "string"
-        },
-        "manifest": {
-          "type": "string"
+        "_id": {
+          "type": "object",
+          "properties": {
+            "repository": {
+              "type": "string"
+            },
+            "manifest": {
+              "type": "string"
+            },
+            "package_name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "manifest",
+            "package_name",
+            "repository"
+          ]
         },
         "filename": {
           "type": "string"
@@ -338,9 +351,6 @@
           "type": "boolean"
         },
         "package_manager": {
-          "type": "string"
-        },
-        "package_name": {
           "type": "string"
         },
         "target_repository": {
@@ -367,9 +377,7 @@
         }
       },
       "required": [
-        "manifest",
-        "package_name",
-        "repository"
+        "_id"
       ]
     },
     "IGithubToken": {
@@ -408,7 +416,7 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "repository": {
@@ -518,7 +526,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "repository",
         "type"
       ]
@@ -527,7 +535,7 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "repository": {
@@ -558,7 +566,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "repository"
       ]
     },
@@ -661,7 +669,7 @@
         "potential_merge_commit": {
           "type": "string"
         },
-        "id": {
+        "_id": {
           "type": "string"
         },
         "repository": {
@@ -771,7 +779,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "repository",
         "type"
       ]
@@ -780,7 +788,7 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "repository": {
@@ -805,9 +813,9 @@
         }
       },
       "required": [
+        "_id",
         "content",
         "created_at",
-        "id",
         "issue",
         "repository",
         "user"
@@ -817,7 +825,7 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "repository": {
@@ -864,7 +872,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "repository"
       ]
     },
@@ -872,7 +880,7 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "assignable_users_count": {
@@ -1083,7 +1091,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "name_with_owner",
         "owner"
       ]
@@ -1092,29 +1100,37 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "repository": {
-          "type": "string"
-        },
-        "user": {
-          "type": "string"
-        },
-        "starred_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
-          "type": "string",
-          "format": "date-time"
+        "_id": {
+          "type": "object",
+          "properties": {
+            "repository": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            },
+            "starred_at": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "repository",
+            "starred_at",
+            "user"
+          ]
         }
       },
       "required": [
-        "repository",
-        "starred_at",
-        "user"
+        "_id"
       ]
     },
     "ITag": {
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "repository": {
@@ -1156,7 +1172,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "name",
         "repository"
       ]
@@ -1165,7 +1181,7 @@
       "additionalProperties": true,
       "type": "object",
       "properties": {
-        "id": {
+        "_id": {
           "type": "string"
         },
         "repository": {
@@ -1179,7 +1195,7 @@
         }
       },
       "required": [
-        "id",
+        "_id",
         "issue",
         "repository",
         "type"
@@ -1189,16 +1205,24 @@
       "additionalProperties": false,
       "type": "object",
       "properties": {
-        "repository": {
-          "type": "string"
-        },
-        "user": {
-          "type": "string"
+        "_id": {
+          "type": "object",
+          "properties": {
+            "repository": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "user"
+          ]
         }
       },
       "required": [
-        "repository",
-        "user"
+        "_id"
       ]
     }
   }

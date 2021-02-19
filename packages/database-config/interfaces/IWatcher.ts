@@ -3,6 +3,8 @@
  */
 /** @additionalProperties false */
 export default interface IWatcher extends Record<string, unknown> {
-  repository: string;
-  user: string;
+  _id: {
+    repository: string;
+    user: string;
+  };
 }

@@ -3,6 +3,7 @@ docs
 **/node_modules
 **/dist
 **/build
+**/.clinic
 **/.next
 npm-debug.log
 .env

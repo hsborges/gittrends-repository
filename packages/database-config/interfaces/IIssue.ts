@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /** @additionalProperties false */
 export default interface IIssue extends Record<string, unknown> {
-  id: string;
+  _id: string;
   repository: string;
   type: 'Issue' | 'PullRequest';
   active_lock_reason?: string;

@@ -10,7 +10,7 @@ class Issue extends Model<IIssue> {
   idField = 'id';
   jsonSchema = schema.definitions.IIssue;
 
-  protected validate(data: TObject): TObject & { _id?: string } {
+  protected validate(data: any): any & { _id?: string } {
     return super.validate({ ...data, type: 'Issue' });
   }
 }

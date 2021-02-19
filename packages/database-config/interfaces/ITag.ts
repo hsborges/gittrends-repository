@@ -3,7 +3,7 @@
  */
 /** @additionalProperties false */
 export default interface ITag extends Record<string, unknown> {
-  id: string;
+  _id: string;
   repository: string;
   name: string;
   oid?: string;

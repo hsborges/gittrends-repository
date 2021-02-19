@@ -3,7 +3,7 @@
  */
 import { isArray, isPlainObject, snakeCase, has, size, mapValues, mapKeys } from 'lodash';
 
-const DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/i;
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/i;
 
 export default function normalize(object: any): any {
   if (isArray(object)) return object.map(normalize);

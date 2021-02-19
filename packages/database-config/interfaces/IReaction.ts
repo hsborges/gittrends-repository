@@ -3,7 +3,7 @@
  */
 /** @additionalProperties false */
 export default interface IReaction extends Record<string, unknown> {
-  id: string;
+  _id: string;
   repository: string;
   issue: string;
   event?: string;

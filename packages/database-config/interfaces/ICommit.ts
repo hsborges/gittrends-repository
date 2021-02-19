@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /** @additionalProperties false */
 export default interface ICommit extends Record<string, unknown> {
-  id: string;
+  _id: string;
   repository: string;
   additions?: number;
   author?: {

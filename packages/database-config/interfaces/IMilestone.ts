@@ -3,7 +3,7 @@
  */
 /** @additionalProperties false */
 export default interface IMilestone extends Record<string, unknown> {
-  id: string;
+  _id: string;
   repository: string;
   creator?: string;
   description?: string;

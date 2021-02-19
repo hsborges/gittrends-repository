@@ -36,12 +36,13 @@ const requestClient: AxiosInstance = axios.create({
 export default async function (query: TObject): Promise<AxiosResponse> {
   return requestClient({ method: 'post', data: query })
     .catch((err) => {
-      debug(`Error detect when performing request (status: ${err.response.status})`);
-      if (err.response && err.response.status === 500)
+      const status = err.response && err.response.status;
+      debug(`Error detect when performing request (status: ${status})`);
+      if (status === 500)
         throw new Errors.InternalServerError(err.message, err, err.response && err.response.data);
-      if (err.response && err.response.status === 502)
+      if (status === 502)
         throw new Errors.BadGatewayError(err.message, err, err.response && err.response.data);
-      if (err.response && err.response.status === 408)
+      if (status === 408)
         throw new Errors.TimedoutError(err.message, err, err.response && err.response.data);
       throw new Errors.RequestError(err.message, err, JSON.stringify(err.response?.data), query);
     })

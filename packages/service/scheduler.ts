@@ -8,7 +8,7 @@ import consola from 'consola';
 import { each } from 'bluebird';
 import { program } from 'commander';
 import { difference, chunk, intersection, get } from 'lodash';
-import mongoClient, { Actor, Repository } from '@gittrends/database-config';
+import mongoClient, { Actor, IActor, IRepository, Repository } from '@gittrends/database-config';
 
 import { redisOptions } from './redis';
 import { version, config } from './package.json';
@@ -29,7 +29,7 @@ const repositoriesScheduler = async (queue: Queue, resources: string[], wait = 2
     Repository.collection
       .find({}, { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } })
       .toArray(),
-    async (data: TObject) => {
+    async (data: IRepository) => {
       const exclude: string[] = resources.filter((resource) => {
         const updatedAt = get(data, ['_metadata', resource, 'updatedAt']);
         return updatedAt && dayjs().subtract(wait, 'hour').isBefore(updatedAt);
@@ -75,7 +75,7 @@ const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
     )
     .limit(limit)
     .toArray()
-    .then((users) => users.map((r: TObject) => r._id));
+    .then((users: IActor[]) => users.map((r) => r._id));
   // add to queue
   return Promise.all(
     chunk(usersIds, 25).map((id) => queue.add('update', { id }, { jobId: `users@${id[0]}+` }))

@@ -3,7 +3,7 @@
  */
 /** @additionalProperties false */
 export default interface IRepository extends Record<string, unknown> {
-  id: string;
+  _id: string;
   assignable_users_count?: number;
   code_of_conduct?: string;
   contact_links?: string;

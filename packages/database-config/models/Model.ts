@@ -4,21 +4,15 @@
 import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import { ClientSession, Collection, Cursor, Db } from 'mongodb';
-import { cloneDeep, pick, omit, isArray, mapValues, isObject } from 'lodash';
-import hash from 'object-hash';
-import dayjs from 'dayjs';
-import customParserForamt from 'dayjs/plugin/customParseFormat';
+import { cloneDeep, isArray, mapValues, isObject, pick, omit } from 'lodash';
 
-dayjs.extend(customParserForamt);
-
-const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss.SSS[Z]';
-const DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/i;
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/i;
 
 export class ValidationError extends Error {
-  readonly object: TObject;
+  readonly object: any;
   readonly errorObject: ErrorObject[];
 
-  constructor(object: TObject, error: ErrorObject[]) {
+  constructor(object: any, error: ErrorObject[]) {
     super(JSON.stringify({ error, object }));
     this.object = object;
     this.errorObject = error;
@@ -47,36 +41,35 @@ export default abstract class Model<T = void> {
   }
 
   private preValidate(data: any): any {
-    if (data instanceof Date) return dayjs(data).format(DATE_FORMAT);
+    if (data instanceof Date) return data.toISOString();
     if (isArray(data)) return data.map((d) => this.preValidate(d));
     if (isObject(data)) return mapValues(data, (value) => this.preValidate(value));
     return data;
   }
 
   private postValidate(data: any): any {
-    if (typeof data === 'string' && DATE_REGEX.test(data)) return dayjs(data, DATE_FORMAT).toDate();
     if (isArray(data)) return data.map((d) => this.postValidate(d));
     if (isObject(data)) return mapValues(data, (value) => this.postValidate(value));
+    if (typeof data === 'string' && DATE_REGEX.test(data)) return new Date(data);
     return data;
   }
 
-  protected validate(data: TObject): TObject & { _id?: string } {
+  protected validate(data: any): any & { _id?: string } {
     if (!this._validator) this._validator = this._ajv.compile<T>(this.jsonSchema);
 
-    let clone = this.preValidate(cloneDeep(data)) as TObject;
+    let clone = this.preValidate(cloneDeep(data)) as any;
+
+    if (!clone._id) {
+      clone = {
+        _id: typeof this.idField === 'string' ? clone[this.idField] : pick(clone, this.idField),
+        ...omit(clone, this.idField)
+      };
+    }
+
     if (!this._validator(clone))
       throw new ValidationError(clone, this._validator.errors as ErrorObject[]);
 
-    clone = this.postValidate(clone) as TObject;
-
-    if (typeof this.idField === 'string') {
-      return omit({ _id: clone[this.idField] as string, ...clone }, this.idField);
-    }
-
-    return {
-      _id: hash(pick(clone, this.idField), { algorithm: 'sha1', encoding: 'hex' }),
-      ...clone
-    };
+    return this.postValidate(clone);
   }
 
   get collection(): Collection {
@@ -84,11 +77,11 @@ export default abstract class Model<T = void> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async find(query: TObject, session?: ClientSession): Promise<Cursor<any>> {
+  async find(query: any, session?: ClientSession): Promise<Cursor<any>> {
     return this.collection.find(query, { session });
   }
 
-  async insert(record: TObject | TObject[], session?: ClientSession): Promise<void> {
+  async insert(record: any | any[], session?: ClientSession): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
     if (!records.length) return;
 
@@ -103,7 +96,7 @@ export default abstract class Model<T = void> {
       });
   }
 
-  async upsert(record: TObject | TObject[], session?: ClientSession): Promise<void> {
+  async upsert(record: any | any[], session?: ClientSession): Promise<void> {
     const records = (Array.isArray(record) ? record : [record]).map((data) => this.validate(data));
     if (!records.length) return;
 
