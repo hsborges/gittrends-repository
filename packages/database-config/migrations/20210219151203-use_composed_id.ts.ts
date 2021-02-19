@@ -23,10 +23,12 @@ export = {
       const cursor = db.collection(model.collectionName).find({});
       while (await cursor.hasNext()) {
         const record = castDates(await cursor.next());
-        await collection.insertOne({
-          ...omit(record, model.idField),
-          _id: pick(record, model.idField)
-        });
+        await collection
+          .insertOne({ _id: pick(record, model.idField), ...omit(record, model.idField) })
+          .catch((err) => {
+            if (err.code === 11000) return;
+            throw err;
+          });
       }
       await db.renameCollection(tmpName, model.collectionName, { dropTarget: true });
     };
@@ -53,11 +55,16 @@ export = {
       const cursor = db.collection(model.collectionName).find({});
       while (await cursor.hasNext()) {
         const record = await cursor.next();
-        await collection.insertOne({
-          ...omit(record, '_id'),
-          ...record._id,
-          _id: hash(record._id, { algorithm: 'sha1', encoding: 'hex' })
-        });
+        await collection
+          .insertOne({
+            ...omit(record, '_id'),
+            ...record._id,
+            _id: hash(record._id, { algorithm: 'sha1', encoding: 'hex' })
+          })
+          .catch((err) => {
+            if (err.code === 11000) return;
+            throw err;
+          });
       }
       await db.renameCollection(tmpName, model.collectionName, { dropTarget: true });
     };
