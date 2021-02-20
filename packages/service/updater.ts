@@ -1,6 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
+import axios from 'axios';
 import consola from 'consola';
 import program from 'commander';
 import mongoClient from '@gittrends/database-config';
@@ -26,6 +27,16 @@ async function worker(job: Job<TJob>, type: TUpdaterType, cache?: Cache): Promis
   }
 }
 
+async function proxyServerHealthCheck(): Promise<boolean> {
+  const protocol = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
+  const host = process.env.GITTRENDS_PROXY_HOST ?? 'localhost';
+  const port = parseInt(process.env.GITTRENDS_PROXY_PORT ?? '3000', 10);
+  return axios
+    .get(`${protocol}://${host}:${port}/status`, { timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+}
+
 /* execute */
 program
   .version(version)
@@ -33,6 +44,11 @@ program
   .option('-t, --type [type]', 'Update "repositories" or "users"', 'repositories')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
   .action(async () => {
+    if (!(await proxyServerHealthCheck())) {
+      consola.error('Proxy server not responding, exiting ...');
+      process.exit(1);
+    }
+
     await mongoClient.connect();
 
     const options = program.opts();
