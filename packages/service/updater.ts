@@ -58,7 +58,8 @@ program
 
     const queueScheduler = new QueueScheduler(options.type, {
       connection: redisOptions,
-      maxStalledCount: Number.MAX_SAFE_INTEGER
+      stalledInterval: 15000,
+      maxStalledCount: 5
     });
 
     const queue = new Worker(
@@ -71,7 +72,7 @@ program
           })
           .finally(() => (global.gc ? global.gc() : null));
       },
-      { connection: redisOptions, concurrency: options.workers }
+      { connection: redisOptions, concurrency: options.workers, lockDuration: 15000 }
     );
 
     queue.on('progress', ({ id }, progress) => {
