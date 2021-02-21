@@ -73,27 +73,18 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof InternalError) {
-      const stargazers = get(err, `response.data.${this.alias}.stargazers.edges`, [])
-        .map((star: TObject) => ({ repository: this.id, ...star }))
-        .filter((star: TObject) => star.starred_at);
+      const data = super.parseResponse(get(err, `response.data.${this.alias as string}`));
 
-      if (stargazers.length) {
-        const pageInfo = get(err, `response.data.${this.alias}.stargazers.page_info`);
-        this.stargazers.hasNextPage = pageInfo.has_next_page ?? false;
-        this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
+      this.stargazers.items.push(
+        get(data, 'stargazers.edges', [])
+          .map((star: TObject) => ({ repository: this.id, ...star }))
+          .filter((star: TObject) => star.starred_at)
+      );
 
-        await Promise.all([
-          Actor.insert(get(err, 'response.actors', [])),
-          Stargazer.upsert(stargazers)
-        ]);
+      const pageInfo = get(data, 'stargazers.page_info');
+      this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
-        await Repository.collection.updateOne(
-          { _id: this.meta.id },
-          { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } }
-        );
-
-        return;
-      }
+      return;
     }
 
     if (err instanceof RetryableError) {
