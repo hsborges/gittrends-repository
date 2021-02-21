@@ -77,8 +77,8 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
       this.stargazers.items.push(
         get(data, 'stargazers.edges', [])
-          .map((star: TObject) => ({ repository: this.id, ...star }))
           .filter((star: TObject) => star.starred_at)
+          .map((star: TObject) => ({ repository: this.id, ...star }))
       );
 
       const pageInfo = get(data, 'stargazers.page_info');
