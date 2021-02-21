@@ -2,6 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { get, omit } from 'lodash';
+import { map } from 'bluebird';
 import { ClientSession } from 'mongodb';
 import {
   Issue,
@@ -57,23 +58,19 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   private issues: { items: TIssueMetadata[]; hasNextPage: boolean; endCursor?: string };
   private reactions?: TReactableMetadata[];
   private currentStage?: Stages;
-  private reactablesBatchSize: number;
-  private defaultReactablesBatchSize: number;
+  private rBatchSize: number;
+  private defaultRBatchSize: number;
 
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
     this.resource = type;
     this.batchSize = this.defaultBatchSize = type === 'issues' ? 50 : 20;
-    this.reactablesBatchSize = this.defaultReactablesBatchSize = 100;
+    this.rBatchSize = this.defaultRBatchSize = 100;
     this.issues = { items: [], hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent | Component[]> {
-    if (
-      this.issues.hasNextPage &&
-      this.pendingIssues.length === 0 &&
-      this.pendingReactables.length === 0
-    ) {
+    if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
       this.currentStage = Stages.GET_ISSUES_LIST;
 
       if (!this.issues.endCursor) {
@@ -94,40 +91,32 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       });
     }
 
-    if (this.pendingIssues.length > 0) {
+    if (this.pendingIssues.length) {
       this.currentStage = Stages.GET_ISSUES_DETAILS;
 
-      return Promise.all(
-        this.pendingIssues.map(async (issue) => {
-          if (!issue.timeline.endCursor) {
-            issue.timeline.endCursor = await Issue.collection
-              .findOne({ _id: issue.data.id }, { projection: { _metadata: 1 } })
-              .then((result) => result && get(result, '_metadata.endCursor'));
-          }
-
-          return issue.component
-            .includeDetails(issue.details.hasNextPage)
-            .includeAssignees(issue.assignees.hasNextPage, {
-              first: 100,
-              after: issue.assignees.endCursor
-            })
-            .includeLabels(issue.labels.hasNextPage, {
-              first: 100,
-              after: issue.labels.endCursor
-            })
-            .includeParticipants(issue.participants.hasNextPage, {
-              first: 100,
-              after: issue.participants.endCursor
-            })
-            .includeTimeline(issue.timeline.hasNextPage, {
-              first: 100,
-              after: issue.timeline.endCursor
-            });
-        })
+      return this.pendingIssues.map((issue) =>
+        issue.component
+          .includeDetails(issue.details.hasNextPage)
+          .includeAssignees(issue.assignees.hasNextPage, {
+            first: 100,
+            after: issue.assignees.endCursor
+          })
+          .includeLabels(issue.labels.hasNextPage, {
+            first: 100,
+            after: issue.labels.endCursor
+          })
+          .includeParticipants(issue.participants.hasNextPage, {
+            first: 100,
+            after: issue.participants.endCursor
+          })
+          .includeTimeline(issue.timeline.hasNextPage, {
+            first: 100,
+            after: issue.timeline.endCursor
+          })
       );
     }
 
-    if (this.pendingReactables.length > 0) {
+    if (this.pendingReactables.length) {
       this.currentStage = Stages.GET_REACTIONS;
 
       return this.pendingReactables.map((reactable) =>
@@ -144,10 +133,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   async update(response: TObject, session?: ClientSession): Promise<void> {
     return this._update(response, session).finally(() => {
       this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
-      this.reactablesBatchSize = Math.min(
-        this.defaultReactablesBatchSize,
-        this.reactablesBatchSize * 2
-      );
+      this.rBatchSize = Math.min(this.defaultRBatchSize, this.rBatchSize * 2);
     });
   }
 
@@ -156,24 +142,32 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       case Stages.GET_ISSUES_LIST: {
         const data = super.parseResponse(response[super.alias as string]);
 
-        this.issues.items = get(data, `${this.resource}.nodes`, []).map((issue: TObject) => ({
-          data: { repository: this.id, ...issue },
-          component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
-            issue.id as string,
-            `issue_${issue.number}`
-          ),
-          details: { hasNextPage: true },
-          assignees: { hasNextPage: true },
-          labels: { hasNextPage: true },
-          participants: { hasNextPage: true },
-          timeline: { hasNextPage: true }
-        }));
+        this.issues.items = await map(
+          get(data, `${this.resource}.nodes`, []),
+          async (issue: TObject) => ({
+            data: { repository: this.id, ...issue },
+            component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
+              issue.id as string,
+              `issue_${issue.number}`
+            ),
+            details: { hasNextPage: true },
+            assignees: { hasNextPage: true },
+            labels: { hasNextPage: true },
+            participants: { hasNextPage: true },
+            timeline: {
+              hasNextPage: true,
+              endCursor: await Issue.collection
+                .findOne({ _id: issue.id }, { projection: { _metadata: 1 } })
+                .then((result) => result && get(result, '_metadata.endCursor'))
+            }
+          })
+        );
 
         const pageInfo = get(data, `${this.resource}.page_info`, {});
         this.issues.hasNextPage = pageInfo.has_next_page ?? false;
         this.issues.endCursor = pageInfo.end_cursor ?? this.issues.endCursor;
 
-        if (this.issues.items.length > 0) return;
+        if (this.pendingIssues.length) return;
         else break;
       }
 
@@ -212,7 +206,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           item.timeline.endCursor = tPageInfo.end_cursor ?? item.timeline.endCursor;
         });
 
-        if (this.pendingIssues.length > 0) return;
+        if (this.pendingIssues.length) return;
 
         const reactables: TObject[] = this.issues.items
           .filter((issue) => issue.data.reaction_groups)
@@ -243,7 +237,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           hasNextPage: true
         }));
 
-        if (this.reactions.length > 0) return;
+        if (this.pendingReactables.length) return;
         else break;
       }
 
@@ -255,7 +249,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           meta.endCursor = get(data, 'reactions.page_info.end_cursor', meta.endCursor);
         });
 
-        if (this.pendingReactables.length > 0) return;
+        if (this.pendingReactables.length) return;
         else break;
       }
 
@@ -266,20 +260,14 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     const issues = this.issues.items.map((issue) => {
       if (issue.error) issue.data._metadata = { error: JSON.stringify(issue.error) };
       else issue.data._metadata = { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
-
-      return compact(omit(issue.data, 'timeline')) as TObject;
+      return compact(omit(issue.data, 'timeline'));
     });
 
     const timeline = this.issues.items.reduce((acc: TObject[], issue) => {
       if (!issue.data.timeline) return acc;
       return acc.concat(
-        (issue.data.timeline as TObject[]).map(
-          (tl) =>
-            compact({
-              repository: this.id,
-              issue: issue.data.id,
-              ...tl
-            }) as TObject
+        (issue.data.timeline as TObject[]).map((tl) =>
+          compact({ repository: this.id, issue: issue.data.id, ...tl })
         )
       );
     }, []);
@@ -327,8 +315,8 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           this.batchSize = 1;
           return;
         case Stages.GET_REACTIONS:
-          if (this.reactablesBatchSize === 1) break;
-          this.reactablesBatchSize = 1;
+          if (this.rBatchSize === 1) break;
+          this.rBatchSize = 1;
           return;
       }
 
@@ -368,7 +356,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     return (
       this.reactions
         ?.filter((reactable) => reactable.hasNextPage && !reactable.error)
-        .slice(0, this.reactablesBatchSize) || []
+        .slice(0, this.rBatchSize) || []
     );
   }
 

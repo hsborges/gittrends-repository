@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { get, size, mapValues, omit } from 'lodash';
+import { get, mapValues, omit } from 'lodash';
 import { isArray, isPlainObject, uniqBy } from 'lodash';
 
 export type Response = {

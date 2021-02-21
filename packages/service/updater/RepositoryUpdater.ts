@@ -61,7 +61,7 @@ export default class RepositoryUpdater implements Updater {
       .compose(...flatten(await map(handlers, (handler) => handler.component())))
       .run()
       .then(async (data) => {
-        await map(handlers, async (handler) => handler.update(data as TObject));
+        await map(handlers, async (handler) => handler.update(data));
 
         const doneHandlers = handlers.filter((handler) =>
           this.job && handler.isDone() ? true : false
