@@ -98,7 +98,7 @@ export default class RepositoryUpdater implements Updater {
           });
         }
 
-        if (this.pendingHandlers) return this.update();
+        if (this.pendingHandlers.length) return this.update();
       });
 
     if (this.errors.length)
