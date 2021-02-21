@@ -13,19 +13,10 @@ import { redisOptions } from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
 import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
+import Updater from './updater/Updater';
 
 type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
 type TUpdaterType = 'users' | 'repositories';
-
-async function worker(job: Job<TJob>, type: TUpdaterType, cache?: Cache): Promise<void> {
-  if (type === 'users') {
-    return new ActorsUpdater(job.data.id, { job }).update();
-  } else {
-    const id = job.data.id as string;
-    const resources = job.data.resources as THandler[];
-    return new RepositoryUpdater(id, resources, { job, cache }).update();
-  }
-}
 
 async function proxyServerHealthCheck(): Promise<boolean> {
   const protocol = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
@@ -56,21 +47,31 @@ program
 
     const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '25000', 10));
 
-    const queueScheduler = new QueueScheduler(options.type, {
+    new QueueScheduler(options.type, {
       connection: redisOptions,
       stalledInterval: 15000,
-      maxStalledCount: 5
+      maxStalledCount: Number.MAX_SAFE_INTEGER
     });
 
     const queue = new Worker(
       options.type,
       async (job: Job) => {
-        await worker(job, options.type, cache)
-          .catch((err) => {
-            consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
-            throw err;
-          })
-          .finally(() => (global.gc ? global.gc() : null));
+        try {
+          switch (options.type) {
+            case 'users':
+              return new ActorsUpdater(job.data.id, { job }).update();
+            case 'repositories':
+              const id = job.data.id as string;
+              const resources = job.data.resources as THandler[];
+              return new RepositoryUpdater(id, resources, { job, cache }).update();
+            default:
+              consola.error(new Error('Invalid "type" option!'));
+              process.exit(1);
+          }
+        } catch (err) {
+          consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
+          throw err;
+        }
       },
       { connection: redisOptions, concurrency: options.workers, lockDuration: 15000 }
     );

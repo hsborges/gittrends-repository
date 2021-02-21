@@ -55,13 +55,31 @@ export default class RepositoryUpdater implements Updater {
     this.handlers.forEach((handler) => (handler.cache = opts?.cache));
   }
 
-  private async _update(handlers: AbstractRepositoryHandler[], isRetry = false): Promise<void> {
-    // run queries and update handlers
+  async update(handlers = this.pendingHandlers, isRetry?: boolean): Promise<void> {
     await Query.create()
       .compose(...flatten(await map(handlers, (handler) => handler.component())))
       .run()
       .then(async (data) => {
         await map(handlers, async (handler) => handler.update(data));
+      })
+      .catch(async (err) => {
+        if (isRetry || err instanceof ValidationError) throw err;
+
+        return map(handlers, (handler) =>
+          this.update([handler], true).catch((err) =>
+            handler.error(err).catch((err2) => {
+              this.errors.push({ handler, error: err2 });
+              this.job?.update({
+                ...this.job.data,
+                resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
+                errors: [...(this.job.data.errors || []), handler.meta.resource]
+              });
+            })
+          )
+        );
+      })
+      .finally(() => {
+        if (isRetry) return;
 
         const doneHandlers = handlers.filter((handler) =>
           this.job && handler.isDone() ? true : false
@@ -79,27 +97,9 @@ export default class RepositoryUpdater implements Updater {
               .filter((resource) => pendingResources.indexOf(resource) < 0)
           });
         }
-      })
-      .catch(async (err) => {
-        if (isRetry || err instanceof ValidationError) throw err;
 
-        return map(handlers, (handler) =>
-          this._update([handler], true).catch((err) =>
-            handler.error(err).catch((err2) => {
-              this.errors.push({ handler, error: err2 });
-              this.job?.update({
-                ...this.job.data,
-                resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
-                errors: [...(this.job.data.errors || []), handler.meta.resource]
-              });
-            })
-          )
-        );
+        if (this.pendingHandlers) return this.update();
       });
-  }
-
-  async update(): Promise<void> {
-    while (this.pendingHandlers.length > 0) await this._update(this.pendingHandlers);
 
     if (this.errors.length)
       throw new ResourceUpdateError(this.errors.map((e) => e.error.message).join(', '));
