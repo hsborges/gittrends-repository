@@ -5,6 +5,7 @@ LABEL website    = "www.gittrends.app"
 
 RUN apk add --update make gcc g++ python bash curl openssl nginx certbot monit
 RUN npm install -g pm2
+RUN curl https://get.acme.sh | sh
 
 RUN mkdir -p /etc/monit/conf.d && touch /etc/monit/conf.d/nginx.conf
 RUN echo "check process nginx with pidfile /var/run/nginx.pid" >> /etc/monit/conf.d/nginx.conf

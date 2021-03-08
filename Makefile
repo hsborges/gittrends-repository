@@ -14,7 +14,7 @@ WEBSITE_IMAGE_NAME=hsborges/gittrends.app
 SERVICE_IMAGE_NAME=hsborges/service.gittrends.app
 REPO=https://github.com/hsborges/gittrends-repository
 
-.PHONY: help build build-website build-service push up dev service init-lestsencrypt
+.PHONY: help build build-website build-service push up dev service init-acme
 
 help:
 		@echo "Makefile commands:"
@@ -49,11 +49,9 @@ up:
 			-v gittrends-nginx-cache:/var/cache \
 			${WEBSITE_IMAGE_NAME}:latest ${command}
 
-init-lestsencrypt:
+init-acme:
 		@docker run -it --rm --env-file=${env-file} -p 80:80 -p 443:443 \
-			-v ${BASE_DIR}/init-letsencrypt.sh:/app/init-letsencrypt.sh:ro \
-			-v ${BASE_DIR}/data/certbot:/app/data/certbot \
-			${WEBSITE_IMAGE_NAME}:latest ./init-letsencrypt.sh
+			${WEBSITE_IMAGE_NAME}:latest ./init-acme.sh
 
 dev:
 		@docker run -it --rm --env-file=${env-file} -p 80:80 --detach=${detach} \
