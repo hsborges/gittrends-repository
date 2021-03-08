@@ -51,6 +51,8 @@ up:
 
 init-acme:
 		@docker run -it --rm --env-file=${env-file} -p 80:80 -p 443:443 \
+			-v ${BASE_DIR}/init-acme.sh:/app/init-acme.sh:ro \
+			-v ${BASE_DIR}/data/acme:/app/data/acme \
 			${WEBSITE_IMAGE_NAME}:latest ./init-acme.sh
 
 dev:
