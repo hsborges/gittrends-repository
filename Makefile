@@ -52,7 +52,7 @@ up:
 init-lestsencrypt:
 		@docker run -it --rm --env-file=${env-file} -p 80:80 \
 			-v ${BASE_DIR}/init-letsencrypt.sh:/app/init-letsencrypt.sh:ro \
-			-v gittrends-nginx-cache:/var/cache \
+			-v ${BASE_DIR}/data/certbot:/app/data/certbot \
 			${WEBSITE_IMAGE_NAME}:latest
 
 dev:
