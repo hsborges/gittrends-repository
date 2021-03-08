@@ -1,36 +1,42 @@
 #!/bin/bash
 
-domains=(gittrends.app www.gittrends.app)
-data_path="./data/acme"
-email=""
+ACME_SH=${HOME}/.acme.sh/acme.sh
+DATA_PATH=$(pwd)/data/acme
+DOMAINS=(gittrends.app www.gittrends.app)
+EMAIL=""
 
-if [ -d "$data_path" ]; then
-  read -p "Existing data found for $domains. Continue and replace existing certificate? (y/N) " decision
+if [ -d "$DATA_PATH" ]; then
+  read -p "Existing data found for $DOMAINS. Continue and replace existing certificate? (y/N) " decision
   if [ "$decision" != "Y" ] && [ "$decision" != "y" ]; then
     exit
   fi
 fi
 
 echo "### Starting nginx ..."
-pkill nginx && nginx -c data/nginx/init-acme.conf
+pkill nginx
+nginx
 echo
 
 echo "### Registering ZeroSSL account"
-if [ $email != "" ]; then acme.sh --register-account  -m $email --server zerossl; fi
+if [ $EMAIL != "" ]; then $ACME_SH --register-account  -m $EMAIL --server zerossl; fi
 
 
-echo "### Requesting ZeroSSL certificate for $domains ..."
-#Join $domains to -d args
+echo "### Requesting ZeroSSL certificate for $DOMAINS ..."
+#Join $DOMAINS to -d args
 domain_args=""
-for domain in "${domains[@]}"; do
+for domain in "${DOMAINS[@]}"; do
   domain_args="$domain_args -d $domain"
 done
 
-mkdir -p data/acme/www/gittrends.app
-acme.sh --server zerossl --issue $domain_args -w data/acme/www/gittrends.app --dns dns_cf
+dest="data/acme/certs/gittrends.app"
+mkdir -p $dest
 
-mkdir -p data/acme/certs/gittrends.app
-mv *.pem data/acme/certs/gittrends.app
+$ACME_SH --server zerossl \
+  --issue $domain_args \
+  -w data/acme/www/gittrends.app \
 
-echo "### Reloading nginx ..."
-nginx -s reload
+$ACME_SH --install-cert $domain_args \
+  --cert-file $dest/cert.pem \
+  --key-file $dest/key.pem \
+  --fullchain-file $dest/fullchain.pem \
+  --reloadcmd "nginx -s reload"
