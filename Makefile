@@ -50,7 +50,7 @@ up:
 			${WEBSITE_IMAGE_NAME}:latest ${command}
 
 init-lestsencrypt:
-		@docker run -it --rm --env-file=${env-file} -p 80:80 \
+		@docker run -it --rm --env-file=${env-file} -p 80:80 -p 443:443 \
 			-v ${BASE_DIR}/init-letsencrypt.sh:/app/init-letsencrypt.sh:ro \
 			-v ${BASE_DIR}/data/certbot:/app/data/certbot \
 			${WEBSITE_IMAGE_NAME}:latest ./init-letsencrypt.sh
