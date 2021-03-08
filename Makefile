@@ -14,7 +14,7 @@ WEBSITE_IMAGE_NAME=hsborges/gittrends.app
 SERVICE_IMAGE_NAME=hsborges/service.gittrends.app
 REPO=https://github.com/hsborges/gittrends-repository
 
-.PHONY: help build build-website build-service push up dev service
+.PHONY: help build build-website build-service push up dev service init-lestsencrypt
 
 help:
 		@echo "Makefile commands:"
