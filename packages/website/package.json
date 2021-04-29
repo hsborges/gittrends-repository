@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next dev",
     "build": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next build",
+    "export": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next export",
     "start": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next start"
   },
   "dependencies": {
