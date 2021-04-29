@@ -1,0 +1,31 @@
+{
+  "name": "@gittrends/gittrends-exporter",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "export": "node -r @gittrends/env-config dist/index.js",
+    "dev": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --respawn -T index.ts",
+    "build": "rm -rf dist && tsc",
+    "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@gittrends/database-config": "file:../database-config",
+    "async": "^3.2.0",
+    "bluebird": "^3.7.2",
+    "commander": "^7.2.0",
+    "consola": "^2.15.3",
+    "lodash": "^4.17.19",
+    "mkdirp": "^1.0.4",
+    "nodemailer": "^6.4.18"
+  },
+  "devDependencies": {
+    "@types/async": "^3.2.6",
+    "@types/mkdirp": "^1.0.1",
+    "ts-node-dev": "^1.1.6",
+    "tsconfig-paths": "^3.9.0"
+  }
+}

@@ -18,13 +18,17 @@ interface FetchTagsResult {
 }
 
 export default function FetchProjectTags(args: { name_with_owner: string }): FetchTagsResult {
-  const { data, error } = useSWR(`/repos/${args.name_with_owner}/tags`, axios);
+  const fetcher = (url) =>
+    axios.get(url).then((result) =>
+      result.data.map(([name, committed_date, additions, deletions, changed_files]) => {
+        return { name, committed_date, additions, deletions, changed_files };
+      })
+    );
+
+  const { data, error } = useSWR(`/${args.name_with_owner}/tags.json`, fetcher);
 
   return {
-    tags: data?.data?.map((d: Record<string, any>) => ({
-      ...d,
-      committed_date: new Date(d.committed_date)
-    })),
+    tags: data,
     error,
     isLoading: !data && !error,
     isError: !!error

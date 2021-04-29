@@ -72,7 +72,7 @@ function Explorer(props: ISearch): JSX.Element {
           ref={container}
         >
           {data?.repositories.map((repo) => (
-            <Card key={repo.id} repository={repo} className="card" />
+            <Card key={repo.name_with_owner} repository={repo.name_with_owner} className="card" />
           ))}
         </section>
         <section

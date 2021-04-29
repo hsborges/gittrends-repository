@@ -9,7 +9,7 @@ interface FetchTagsResult {
 }
 
 export default function FetchProjectTags(): FetchTagsResult {
-  const { data, error } = useSWR(`/statistics`, axios);
+  const { data, error } = useSWR(`/stats.json`, axios);
 
   return {
     data: data?.data,

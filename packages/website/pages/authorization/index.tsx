@@ -15,10 +15,7 @@ type TAuthorizationResponse = { success?: boolean; login?: string };
 
 const URL = `https://github.com/login/oauth/authorize?${stringify({
   client_id: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
-  redirect_uri:
-    process.env.NODE_ENV === 'production'
-      ? ''
-      : `http://${process.env.GITTRENDS_API_HOST}:${process.env.GITTRENDS_API_PORT}/authorize`,
+  redirect_uri: process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI,
   scope: 'public_repo read:org read:user user:email'
 })}`;
 

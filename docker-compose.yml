@@ -1,25 +1,17 @@
 version: '3.7'
 
 services:
-  nginx:
+  service:
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
-    container_name: nginx
+      dockerfile: packages/service/Dockerfile
+    container_name: gittrends-service
     restart: always
-    ports:
-      - 80:80
     volumes:
-      - ./data/nginx/development.conf:/app/data/nginx/default.conf:ro
-      - nginx-cache:/var/cache
-    environment:
-      GITTRENDS_DATABASE_HOST: mongo
-      GITTRENDS_DATABASE_PORT: 27017
+      - ./data/tokens.txt:/app/data/tokens.txt:ro
+      - ./packages/service/pm2-ecosystem.yml:/app/packages/service/pm2-ecosystem.yml:ro
+    ports:
+      - ${GITTRENDS_PROXY_PORT}:${GITTRENDS_PROXY_PORT}
+      - ${GITTRENDS_QUEUE_BOARD_PORT}:${GITTRENDS_QUEUE_BOARD_PORT}
     env_file:
       - .env
-
-volumes:
-  nginx-cache:
-    name: nginx.gittrends.app

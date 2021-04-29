@@ -48,7 +48,11 @@ export default function Home(): JSX.Element {
         <span>or explore the popular ones</span>
         <div className="project-samples" hidden={isError}>
           {data?.repositories.map((sample) => (
-            <ProjectCard key={sample.id} repository={sample} className="card" />
+            <ProjectCard
+              key={sample.name_with_ownerid}
+              repository={sample.name_with_owner}
+              className="card"
+            />
           ))}
         </div>
         <div className="db-statistics">

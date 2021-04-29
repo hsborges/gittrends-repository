@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { truncate } from 'lodash';
 import { Card, Avatar, Divider, Statistic, Row, Col, Empty } from 'antd';
@@ -13,6 +13,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(utc);
 dayjs.extend(customParseFormat);
 
+import fetchProject from '../hooks/fetchProject';
 import fetchStargazers from '../hooks/fetchStargazers';
 
 interface IRepository extends Record<string, any> {
@@ -30,25 +31,27 @@ const stats: { field: string; icon: any }[] = [
 ];
 
 interface RepositoryCardProps extends React.HTMLAttributes<HTMLElement> {
-  repository: IRepository;
+  repository: string;
 }
 
 export default function RepositoryCard(props: RepositoryCardProps): JSX.Element {
   const { repository, ...cardProps } = props;
   const since = dayjs.utc().startOf('year');
 
+  const project = fetchProject({ name_with_owner: repository });
+
   const { timeseries, isLoading, isError } = fetchStargazers({
-    name_with_owner: repository.name_with_owner,
+    name_with_owner: repository,
     since: since.toDate()
   });
 
   return (
     <Card {...cardProps} className={`gittrends-repository-card ${cardProps.className ?? ''}`}>
-      <Link href={`/explorer/${repository.name_with_owner}`} passHref>
+      <Link href={`/explorer/${project.repository?.name_with_owner}`} passHref>
         <a>
           <Card.Meta
-            avatar={<Avatar src={repository.open_graph_image_url} />}
-            title={repository.name}
+            avatar={<Avatar src={project.repository?.open_graph_image_url} />}
+            title={project.repository?.name}
             className="card-header"
           />
           <Divider plain></Divider>
@@ -56,7 +59,7 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
             {stats.map((stat) => (
               <Col key={stat.field} className="stat">
                 <Statistic
-                  value={repository[stat.field]}
+                  value={project.repository?.[stat.field]}
                   prefix={<FontAwesomeIcon icon={stat.icon} />}
                 />
               </Col>
@@ -65,7 +68,7 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
           <Divider plain></Divider>
           <Row className={`views ${!isLoading && !isError ? 'has-extra' : ''}`}>
             <Col span={24} className="description">
-              {truncate(repository.description || '', {
+              {truncate(project.repository?.description || '', {
                 length: window.innerWidth < 600 ? 60 : 95
               })}
             </Col>

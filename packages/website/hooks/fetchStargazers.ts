@@ -15,9 +15,9 @@ export default function FetchStargazers(args: {
   name_with_owner: string;
   since?: Date;
 }): StargazersResult {
-  let url = `/repos/${args.name_with_owner}/stargazers`;
+  let url = ``;
   if (args.since) url += '?' + stringify({ since: args?.since.toISOString() });
-  const { data, error } = useSWR(url, axios);
+  const { data, error } = useSWR(`/${args.name_with_owner}/stargazers.json`, axios);
 
   return {
     timeseries: data?.data.timeseries,
