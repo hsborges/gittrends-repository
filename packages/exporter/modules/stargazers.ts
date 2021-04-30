@@ -55,7 +55,7 @@ export default async function (name_with_owner: string, writer: WriterFunction) 
     Stargazer.collection.findOne(
       { '_id.repository': repo._id },
       {
-        sort: { '_id.starred_at': 1 },
+        sort: { '_id.starred_at': -1 },
         projection: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' }
       }
     )
