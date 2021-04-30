@@ -6,6 +6,8 @@ import mongoClient, { Repository, Actor, Stargazer, Tag, Model } from '@gittrend
 
 import async from 'async';
 import mkdirp from 'mkdirp';
+import cliProgress from 'cli-progress';
+import { cyan } from 'colors';
 import { program } from 'commander';
 import { dirname, join } from 'path';
 import { writeFileSync, existsSync } from 'fs';
@@ -45,20 +47,34 @@ program
       )
       .toArray();
 
-    consola.info(`Exporting resources from repositories (${options.workers} workers) ...`);
+    consola.info(
+      `Exporting resources from repositories (${repos.length} repos using ${options.workers} workers) ...`
+    );
+    const progressBar = new cliProgress.SingleBar({
+      format: 'CLI Progress |' + cyan('{bar}') + '| {percentage}% | {value}/{total} projects',
+      barCompleteChar: '\u2588',
+      barIncompleteChar: '\u2591',
+      hideCursor: true
+    });
+
+    if (!process.env.DEBUG) progressBar.start(repos.length, 0);
+
     const queue = async.queue((repo: any, callback) => {
       consola.debug(`Exporting resources from ${repo.name_with_owner}`);
       return Promise.all([
-        repository(repo.name_with_owner, writer).catch((err) => consola.warn(err.message)),
-        stargazers(repo.name_with_owner, writer).catch((err) => consola.warn(err.message)),
-        tags(repo.name_with_owner, writer).catch((err) => consola.warn(err.message))
-      ]).then(() => callback());
+        repository(repo.name_with_owner, writer).catch((err) => consola.debug(err.message)),
+        stargazers(repo.name_with_owner, writer).catch((err) => consola.debug(err.message)),
+        tags(repo.name_with_owner, writer).catch((err) => consola.debug(err.message))
+      ]).then(() => {
+        progressBar.increment();
+        callback();
+      });
     }, options.workers);
 
     await queue.push(repos);
-    await queue.drain();
+    await queue.drain().then(() => progressBar.stop());
 
-    consola.info(`Exporting repositories list (${repos.length} repos) ...`);
+    consola.info(`Exporting repositories list ...`);
     writer(repos.map(Object.values), 'repos.json');
 
     consola.info(`Exporting repositories stats ...`);
