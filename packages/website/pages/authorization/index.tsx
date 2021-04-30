@@ -15,7 +15,9 @@ type TAuthorizationResponse = { success?: boolean; login?: string };
 
 const URL = `https://github.com/login/oauth/authorize?${stringify({
   client_id: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
-  redirect_uri: process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI,
+  ...(process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI
+    ? { redirect_uri: process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI }
+    : {}),
   scope: 'public_repo read:org read:user user:email'
 })}`;
 
@@ -36,7 +38,7 @@ function Authorization(props: TAuthorizationResponse): JSX.Element {
           We make thousands of GitHub API requests to keep our database updated. With more tokens we
           can add expand our dataset and speedup the data processing.
         </section>
-        <a target="_blank" href={URL} hidden={props.success}>
+        <a href={URL} hidden={props.success}>
           <FontAwesomeIcon icon={faGithub} /> Donate
         </a>
         <section className="ps" hidden={props.success}>
