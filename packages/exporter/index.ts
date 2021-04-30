@@ -51,7 +51,7 @@ program
       `Exporting resources from repositories (${repos.length} repos using ${options.workers} workers) ...`
     );
     const progressBar = new cliProgress.SingleBar({
-      format: 'CLI Progress |' + cyan('{bar}') + '| {percentage}% | {value}/{total} projects',
+      format: 'Progress |' + cyan('{bar}') + '| {percentage}% | {value}/{total} projects',
       barCompleteChar: '\u2588',
       barIncompleteChar: '\u2591',
       hideCursor: true
