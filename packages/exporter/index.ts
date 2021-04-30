@@ -93,5 +93,6 @@ program
     );
 
     consola.success('Done');
+    process.exit(0);
   })
   .parse(process.argv);
