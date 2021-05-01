@@ -1,10 +1,11 @@
 {
-  "name": "@gittrends/serverless-api",
+  "name": "@gittrends/website-api",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node -r tsconfig-paths/register -r @gittrends/env-config local.ts",
+    "start": "node -r @gittrends/env-config dist/local.js",
+    "dev": "ts-node -r tsconfig-paths/register -r @gittrends/env-config local.ts",
     "clean": "rm -rf dist",
     "dotenv-to-json": "node -r @gittrends/env-config dist/util/dotenv-to-json.js > dist/env.json",
     "pack": "yarn build && claudia pack --source dist --output dist/gittrends-serverless-api.zip --no-optional-dependencies",
@@ -33,6 +34,7 @@
     "@types/compression": "^1.7.0",
     "@types/cors": "^2.8.10",
     "@types/faker": "^5.5.3",
+    "@types/lodash": "^4.14.168",
     "claudia": "^5.13.0",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0"

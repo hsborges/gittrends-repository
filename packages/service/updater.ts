@@ -60,10 +60,12 @@ program
           switch (options.type) {
             case 'users':
               await new ActorsUpdater(job.data.id, { job }).update();
+              break;
             case 'repositories':
               const id = job.data.id as string;
               const resources = job.data.resources as THandler[];
               await new RepositoryUpdater(id, resources, { job, cache }).update();
+              break;
             default:
               consola.error(new Error('Invalid "type" option!'));
               process.exit(1);

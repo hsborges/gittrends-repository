@@ -4,8 +4,20 @@ RUN apk add --update make gcc g++ python
 
 WORKDIR /app
 COPY . .
-RUN rm -rf packages/exporter packages/serverless-api packages/website
-RUN yarn install && yarn build && yarn install --force
+RUN rm -rf packages
+
+COPY ./packages/env-config ./packages/env-config
+COPY ./packages/database-config ./packages/database-config
+COPY ./packages/service ./packages/service
+
+WORKDIR /app/packages/env-config
+RUN yarn install && yarn build
+
+WORKDIR /app/packages/database-config
+RUN yarn install && yarn build
+
+WORKDIR /app/packages/service
+RUN yarn install && yarn build
 
 WORKDIR /app/packages/service
 EXPOSE 3000 8000-8010
