@@ -47,7 +47,7 @@ export default async function (query: TObject): Promise<AxiosResponse> {
       throw new Errors.RequestError(err.message, err, JSON.stringify(err.response?.data), query);
     })
     .then((response) => {
-      const { data } = response;
+      const data = normalize(compact(response.data));
 
       if (data && data.errors && data.errors.length) {
         const message = `Response errors (${data.errors.length}): ${JSON.stringify(data.errors)}`;
@@ -89,6 +89,6 @@ export default async function (query: TObject): Promise<AxiosResponse> {
         throw new Errors.RequestError(message, null, data, query);
       }
 
-      return { ...response, data: normalize(compact(data)) };
+      return { ...response, data };
     });
 }

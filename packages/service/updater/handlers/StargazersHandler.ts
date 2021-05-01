@@ -1,9 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
+import consola from 'consola';
 import { get } from 'lodash';
 import { ClientSession } from 'mongodb';
-import { Stargazer, Actor, Repository } from '@gittrends/database-config';
+import { Stargazer, Repository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
@@ -73,6 +74,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof InternalError) {
+      consola.debug(`[StargazersHandler] InternalError detected: ${err.message}`);
       const data = super.parseResponse(get(err, `response.data.${this.alias as string}`));
 
       this.stargazers.items.push(

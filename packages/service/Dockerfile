@@ -4,7 +4,7 @@ RUN apk add --update make gcc g++ python
 
 WORKDIR /app
 COPY . .
-RUN rm -rf packages/website packages/website-api
+RUN rm -rf packages/exporter packages/serverless-api packages/website
 RUN yarn install && yarn build && yarn install --force
 
 WORKDIR /app/packages/service
