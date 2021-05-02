@@ -78,7 +78,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
       const data = super.parseResponse(get(err, `response.data.${this.alias as string}`));
 
       this.stargazers.items.push(
-        get(data, 'stargazers.edges', [])
+        ...get(data, 'stargazers.edges', [])
           .filter((star: TObject) => star && star.starred_at)
           .map((star: TObject) => ({ repository: this.id, ...star }))
       );
