@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { countBy, sampleSize, sortBy } from 'lodash';
+import { countBy, sampleSize, orderBy } from 'lodash';
 import axios from './axiosClient';
 import { useEffect, useState } from 'react';
 
@@ -44,12 +44,12 @@ export default function FetchProjects(args?: ISearch): FetchProjectsResult {
 
   useEffect(() => {
     if (!data) return;
-    let repositories = data;
+    let repositories = Array.from(data);
 
-    if (args?.query)
-      repositories = repositories.filter(
-        (repo) => repo.name_with_owner.toLowerCase().indexOf(args.query.toLowerCase()) >= 0
-      );
+    if (args?.query) {
+      const regex = new RegExp(`.*${args.query}.*`, 'gi');
+      repositories = repositories.filter((repo) => regex.test(repo.name_with_owner));
+    }
 
     if (args?.language)
       repositories = repositories.filter((repo) => repo.primary_language === args?.language);
@@ -57,22 +57,17 @@ export default function FetchProjects(args?: ISearch): FetchProjectsResult {
     const repositoriesCount = repositories.length;
     const languagesCount = countBy(repositories, 'primary_language');
 
-    if (args?.sortBy === 'stargazers_count')
-      repositories = sortBy(repositories, 'stargazers_count', args?.order ?? 'desc');
-
-    if (args?.sortBy === 'name_with_owner')
-      repositories = sortBy(repositories, 'name_with_owner', args?.order ?? 'asc');
-
-    if (args?.sortBy === 'random') repositories = sampleSize(repositories, args?.limit);
+    if (args?.sortBy === 'random') {
+      repositories = sampleSize(repositories, args?.limit);
+    } else if (args?.sortBy === 'name_with_owner') {
+      repositories = orderBy(repositories, 'name_with_owner', args?.order ?? 'asc');
+    } else {
+      repositories = orderBy(repositories, 'stargazers_count', args?.order ?? 'desc');
+    }
 
     repositories = repositories.slice(args?.offset ?? 0, (args?.offset ?? 0) + (args?.limit ?? 5));
 
     setResponse({
-      repositories,
-      meta: { repositories_count: repositoriesCount, languages_count: languagesCount }
-    });
-
-    console.log(args, {
       repositories,
       meta: { repositories_count: repositoriesCount, languages_count: languagesCount }
     });

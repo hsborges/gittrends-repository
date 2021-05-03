@@ -64,6 +64,7 @@ function Explorer(props: ISearch): JSX.Element {
             className="search"
             defaultValue={query.query}
             onSearch={(value: string) => updateQuery({ query: value })}
+            onSelectProject={(value: string) => Router.push({ pathname: `/explorer/${value}` })}
           />
         </header>
         <section

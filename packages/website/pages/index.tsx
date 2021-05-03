@@ -42,7 +42,10 @@ export default function Home(): JSX.Element {
           <Search
             placeholder="e.g., twbs/bootstrap"
             size="large"
-            onSearch={(value) => Router.push({ pathname: '/explorer', query: { query: value } })}
+            onSearch={(value: string) =>
+              Router.push({ pathname: '/explorer', query: { query: value } })
+            }
+            onSelectProject={(value: string) => Router.push({ pathname: `/explorer/${value}` })}
           />
         </div>
         <span>or explore the popular ones</span>
