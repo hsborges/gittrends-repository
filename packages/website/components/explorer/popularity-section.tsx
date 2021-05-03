@@ -68,8 +68,6 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
       )
     );
 
-    console.log(tags);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seriesType, scaleType, props.timeseries]);
 
@@ -135,7 +133,8 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
             description={
               dayjs.utc(peak.date).subtract(6, 'days').format('[DD') +
               '-' +
-              dayjs.utc(peak.date).format('DD]/MM/YYYY')
+              dayjs.utc(peak.date).format('DD]') +
+              dayjs.utc(peak.date).format(' MMMM YYYY')
             }
           />
         </Card>
@@ -143,7 +142,7 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
           <Card.Meta
             avatar={<FontAwesomeIcon icon={faArrowAltCircleUp} className="avatar-icon" />}
             title={numeral(gainedRecently).format('0,0') + ' stars'}
-            description={'since ' + dayjs.utc().startOf('year').format('DD/MM/YYYY')}
+            description={'this year'}
           />
         </Card>
       </div>
