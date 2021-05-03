@@ -45,7 +45,6 @@ export default function Home(): JSX.Element {
             onSearch={(value: string) =>
               Router.push({ pathname: '/explorer', query: { query: value } })
             }
-            onSelectProject={(value: string) => Router.push({ pathname: `/explorer/${value}` })}
           />
         </div>
         <span>or explore the popular ones</span>
