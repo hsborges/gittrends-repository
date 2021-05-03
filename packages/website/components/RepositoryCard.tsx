@@ -36,14 +36,9 @@ interface RepositoryCardProps extends React.HTMLAttributes<HTMLElement> {
 
 export default function RepositoryCard(props: RepositoryCardProps): JSX.Element {
   const { repository, ...cardProps } = props;
-  const since = dayjs.utc().startOf('year');
 
   const project = fetchProject({ name_with_owner: repository });
-
-  const { timeseries, isLoading, isError } = fetchStargazers({
-    name_with_owner: repository,
-    since: since.toDate()
-  });
+  const { timeseries, isLoading, isError } = fetchStargazers({ name_with_owner: repository });
 
   return (
     <Card {...cardProps} className={`gittrends-repository-card ${cardProps.className ?? ''}`}>
@@ -68,7 +63,7 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
           <Divider plain></Divider>
           <Row className={`views ${!isLoading && !isError ? 'has-extra' : ''}`}>
             <Col span={24} className="description">
-              {truncate(project.repository?.description || '', {
+              {truncate(project.repository?.description || '<no_description_available>', {
                 length: window.innerWidth < 600 ? 60 : 95
               })}
             </Col>
@@ -78,13 +73,7 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
                 className="plot"
                 margin={{ left: 0, right: 0, bottom: 20, top: 0 }}
               >
-                <XAxis
-                  title={`stars since ${since.format('YYYY-MM-DD')}`}
-                  hideLine
-                  hideTicks
-                  top={95}
-                  position="middle"
-                />
+                <XAxis title={'stars'} hideLine hideTicks top={95} position="middle" />
                 <LineSeries
                   curve={null}
                   data={Object.entries(timeseries || {}).reduce(
