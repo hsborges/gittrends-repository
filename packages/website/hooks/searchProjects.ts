@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { countBy, sampleSize, orderBy } from 'lodash';
+import { countBy, sampleSize, sortBy, orderBy } from 'lodash';
 import axios from './axiosClient';
 import { useEffect, useState } from 'react';
 
@@ -62,7 +62,10 @@ export default function FetchProjects(args?: ISearch): FetchProjectsResult {
     } else if (args?.sortBy === 'name_with_owner') {
       repositories = orderBy(repositories, 'name_with_owner', args?.order ?? 'asc');
     } else {
-      repositories = orderBy(repositories, 'stargazers_count', args?.order ?? 'desc');
+      repositories = sortBy(
+        repositories,
+        ({ stargazers_count }) => (args.order === 'asc' ? 1 : -1) * stargazers_count
+      );
     }
 
     repositories = repositories.slice(args?.offset ?? 0, (args?.offset ?? 0) + (args?.limit ?? 5));
