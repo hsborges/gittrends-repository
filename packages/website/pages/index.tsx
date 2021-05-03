@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Router from 'next/router';
+import numeral from 'numeral';
 import { Statistic } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub, faGithubAlt } from '@fortawesome/free-brands-svg-icons';
@@ -11,12 +12,14 @@ import Search from '../components/Search';
 import Layout from '../layouts/DefaultLayout';
 import fetchProjects from '../hooks/searchProjects';
 import fetchStatistics from '../hooks/fetchStatistics';
+import useWindowDimensions from '../hooks/useWindowDimensions';
 
 import './index.module.less';
 
 export default function Home(): JSX.Element {
   const { data: sData } = fetchStatistics();
   const { data, isError } = fetchProjects({ limit: 8, sortBy: 'random' });
+  const { width } = useWindowDimensions();
 
   const [statistics, setStatistics] = useState<
     { title: string; value: number | null; icon: any }[]
@@ -62,7 +65,7 @@ export default function Home(): JSX.Element {
             <Statistic
               key={stats.title}
               title={stats.title}
-              value={stats.value}
+              value={width > 600 ? stats.value : numeral(stats.value).format('0a').toUpperCase()}
               prefix={<FontAwesomeIcon icon={stats.icon} />}
               className="db-stats"
               loading={!stats.value}
