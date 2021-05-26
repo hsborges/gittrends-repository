@@ -9,6 +9,7 @@
 
     .card {
       max-width: 225px;
+      min-width: 225px;
       margin-right: 5px;
 
       .card-title {
@@ -96,6 +97,11 @@
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: auto;
       gap: 10px;
+
+      .card {
+        margin-right: 0px;
+        min-width: auto;
+      }
     }
 
     .plot-area {
