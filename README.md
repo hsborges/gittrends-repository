@@ -49,7 +49,7 @@ You can also use docker containers:
 
 ```sh
 # run containers
-docker-compose up -d
+docker-compose -f docker-compose.service.yml up -d
 ```
 
 <!-- ROADMAP -->
