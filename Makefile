@@ -25,16 +25,22 @@ help:
 build:
 		@echo "Preparing packages to build"
 		@echo "Building environment config"
+		@yarn workspace @gittrends/env-config install
 		@yarn workspace @gittrends/env-config build
 		@echo "Building database config"
+		@yarn workspace @gittrends/database-config install
 		@yarn workspace @gittrends/database-config build
 		@echo "Building database service"
+		@yarn workspace @gittrends/service install --force
 		@yarn workspace @gittrends/service build
 		@echo "Building database exporter"
+		@yarn workspace @gittrends/exporter install --force
 		@yarn workspace @gittrends/exporter build
 		@echo "Building database website"
+		@yarn workspace @gittrends/website install
 		@yarn workspace @gittrends/website build
 		@echo "Building database website-api"
+		@yarn workspace @gittrends/website-api install
 		@yarn workspace @gittrends/website-api build
 
 build-docker:
