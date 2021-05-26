@@ -1,0 +1,108 @@
+@import '../../../styles/less/antd-custom.less';
+@import '../../../components/explorer/divider.module.less';
+@import '../../../components/explorer/popularity-section.module.less';
+
+.project-explorer {
+  width: 95%;
+  margin: auto;
+
+  & > header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 15px;
+
+    .breadcrumb .icon {
+      margin-right: 5px;
+    }
+  }
+
+  & > section {
+    width: 75%;
+    margin: auto;
+
+    & > .divider {
+      margin-top: 2em;
+      margin-bottom: 1.5em;
+      font-size: 1.75em;
+    }
+
+    & > .title {
+      margin: auto;
+      margin-top: -15px;
+      text-align: center;
+
+      div {
+        font-size: 1.75em;
+        font-weight: bolder;
+        color: @primary-color;
+        padding-bottom: 10px;
+        .ant-avatar {
+          margin-right: 15px;
+        }
+      }
+
+      .description,
+      .topics {
+        display: block;
+      }
+
+      .topics .topic {
+        margin-top: 10px;
+      }
+    }
+
+    & > .overview {
+      .ant-descriptions-item-label,
+      .ant-descriptions-item-content {
+        padding: 0.5em 1em;
+      }
+
+      .ant-descriptions-item-label {
+        font-weight: bolder;
+        color: @secondary-color;
+        .icon {
+          color: @primary-color;
+          margin-right: 5px;
+        }
+      }
+    }
+
+    & > .popularity {
+      display: flex;
+      justify-content: center;
+      margin: 50px 0;
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .project-explorer {
+    & > header {
+      display: none;
+    }
+
+    & > section {
+      width: 100%;
+
+      & > .divider {
+        margin-top: 1.25em;
+        margin-bottom: 1.25em;
+        font-size: 1.75em;
+      }
+
+      & > .title {
+        margin: auto;
+        padding-top: 25px;
+
+        .topics {
+          margin-top: 10px;
+          .topic {
+            font-size: 0.75em;
+            margin-top: 5px;
+          }
+        }
+      }
+    }
+  }
+}

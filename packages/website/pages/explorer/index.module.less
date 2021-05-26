@@ -1,0 +1,97 @@
+@import '../../styles/less/antd-custom.less';
+
+.gittrends-explorer-page {
+  display: flex;
+  flex-direction: column;
+
+  .header {
+    min-height: 65px;
+    max-height: 65px;
+    padding: 0 25px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 0 5px #aaaaaa;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: white;
+
+    .select,
+    .search {
+      width: 300px;
+    }
+
+    .statistic {
+      max-width: 150px;
+    }
+
+    .ant-statistic-title {
+      line-height: 1em;
+      text-align: center;
+    }
+
+    .ant-statistic-content {
+      color: @primary-color;
+      line-height: 1em;
+      text-align: center;
+      font-weight: bolder;
+    }
+  }
+
+  .content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin: 5vw 5vw 0 5vw;
+
+    .card {
+      width: 225px;
+    }
+  }
+
+  .footer {
+    height: 125px;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    button {
+      .icon {
+        margin-right: 10px;
+      }
+    }
+  }
+
+  footer {
+    margin-top: 25px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gittrends-explorer-page {
+    .header {
+      .select,
+      .statistic {
+        display: none;
+      }
+
+      .search {
+        width: 100%;
+      }
+    }
+
+    .content {
+      gap: 10px;
+      margin: 25px 5px;
+
+      .card {
+        width: 170px;
+      }
+    }
+  }
+}

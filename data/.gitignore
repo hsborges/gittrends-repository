@@ -1,6 +1,7 @@
 *
-!certbot
+!acme
 !nginx
+!mongo
 !.gitignore
 !.dockerignore
 !tokens.txt.example

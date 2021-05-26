@@ -1,0 +1,31 @@
+.gittrends-donate {
+  line-height: 2em;
+  width: 100%;
+  background-color: #505050;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-weight: bolder;
+  color: white !important;
+
+  & > a {
+    color: white !important;
+    .bullhorn {
+      margin-right: 10px;
+    }
+  }
+
+  & > .close {
+    position: absolute;
+    right: 0;
+    margin-right: 20px;
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gittrends-donate {
+    display: none;
+  }
+}

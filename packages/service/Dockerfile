@@ -1,31 +1,25 @@
-FROM node:alpine AS env-config
+FROM node:14-alpine
 
-WORKDIR /app/env-config
-COPY /packages/env-config/package.json .
-RUN yarn install
-COPY /packages/env-config/. .
-
-FROM node:alpine AS database-config
+RUN apk add --update make gcc g++ python
 
 WORKDIR /app
-COPY --from=env-config /app/env-config env-config
-WORKDIR /app/database-config
-COPY /packages/database-config/package.json .
-RUN yarn install
-COPY /packages/database-config/. .
+COPY . .
+RUN rm -rf packages
 
+COPY ./packages/env-config ./packages/env-config
+COPY ./packages/database-config ./packages/database-config
+COPY ./packages/service ./packages/service
 
-FROM node:alpine
+WORKDIR /app/packages/env-config
+RUN yarn install && yarn build
 
-WORKDIR /app
-COPY --from=env-config /app/env-config env-config
-COPY --from=database-config /app/database-config database-config
+WORKDIR /app/packages/database-config
+RUN yarn install && yarn build
 
-WORKDIR /app/service
-COPY /packages/service/package.json .
-RUN yarn install
-COPY /packages/service/. .
+WORKDIR /app/packages/service
+RUN yarn install --force && yarn build
 
-VOLUME [ "/app/service/" ]
+WORKDIR /app/packages/service
+EXPOSE 3000 8000-8010
 
-CMD [ "node", "util/repos-stats.js" ]
+CMD [ "./node_modules/.bin/pm2-runtime", "pm2-ecosystem.yml" ]

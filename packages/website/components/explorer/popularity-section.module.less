@@ -1,0 +1,117 @@
+@import '../../styles/less/antd-custom.less';
+
+.gittrends-repository-popularity-section {
+  .statistics {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding-bottom: 40px;
+
+    .card {
+      max-width: 225px;
+      margin-right: 5px;
+
+      .card-title {
+        a {
+          color: inherit;
+        }
+
+        .icon {
+          color: @primary-color;
+        }
+      }
+
+      .avatar-icon {
+        color: @primary-color;
+        font-size: 1.5em;
+      }
+    }
+
+    .card:last-child {
+      margin-right: 0px;
+    }
+  }
+
+  .plot-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .rv-crosshair,
+    .rv-hint {
+      pointer-events: auto;
+    }
+
+    .hint {
+      .tooltip {
+        display: none;
+        color: white;
+        background-color: @primary-color;
+        font-weight: bolder;
+        cursor: pointer;
+        padding: 5px 10px;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+      }
+
+      &:hover {
+        .tooltip {
+          position: absolute;
+          top: 0;
+          display: initial;
+          z-index: 1;
+        }
+      }
+    }
+
+    .controls {
+      display: block;
+      padding: 10px 0;
+
+      .control {
+        display: inline;
+
+        span.label {
+          color: @primary-color;
+          font-weight: bolder;
+          padding-right: 5px;
+        }
+
+        .select {
+          width: 125px;
+        }
+      }
+
+      .control:not(last-child) {
+        padding-right: 10px;
+      }
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gittrends-repository-popularity-section {
+    .statistics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: auto;
+      gap: 10px;
+    }
+
+    .plot-area {
+      .controls {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+
+        .control {
+          margin-bottom: 10px;
+          .select {
+            width: 100px;
+          }
+        }
+      }
+    }
+  }
+}

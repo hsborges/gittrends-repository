@@ -1,0 +1,7 @@
+backups
+data
+docs
+**/node_modules
+**/dist
+**/build
+**/.next

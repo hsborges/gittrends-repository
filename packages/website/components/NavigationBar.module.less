@@ -1,0 +1,141 @@
+.gittrends-navigation-bar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 100%;
+  background-color: @primary-color;
+  box-shadow: 2px 0 2px 0 #888888;
+
+  header {
+    padding: 1em;
+    margin: 3vh 0;
+  }
+
+  .menu-icon,
+  .close-menu-icon {
+    display: none;
+  }
+
+  section.menu {
+    flex-grow: 1;
+
+    .item:last-child {
+      border-bottom: 1px solid white;
+    }
+
+    .item {
+      display: block;
+      color: white;
+      font-size: 1.35em;
+      padding: 0.75em 0;
+      padding-left: 10px;
+      border-top: 1px solid white;
+      cursor: pointer;
+    }
+
+    .search-area {
+      padding: 0.75em 10px;
+    }
+
+    .item.active {
+      background-color: white;
+      color: @primary-color;
+    }
+  }
+
+  footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    color: white;
+    font-weight: bolder;
+    font-size: 1.5em;
+    padding: 5px 0;
+
+    .icon {
+      padding: 0 15px;
+      color: white;
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gittrends-navigation-bar {
+    position: relative;
+    height: 65px;
+
+    .badge {
+      position: absolute;
+      margin: 5px -40px;
+    }
+
+    header {
+      margin: auto;
+      padding: 0px;
+    }
+
+    & > .menu-icon {
+      display: initial;
+      color: white;
+      position: absolute;
+      right: 0;
+      margin: 23px 15px;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+
+    & > .menu {
+      display: inline;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0px;
+      height: 0px;
+      opacity: 0;
+      transition: width 0.5s ease-in;
+
+      .search-area {
+        display: none;
+      }
+
+      &.visible {
+        width: 100vw;
+        height: 100vh;
+        background-color: @primary-color;
+        color: white;
+        z-index: 2;
+        opacity: 0.95;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 15vh;
+        transition: width 0.5s ease-out;
+        position: fixed;
+        top: 0;
+
+        & > .item {
+          width: 50vw;
+          border: none !important;
+          text-align: center;
+          padding: 10px;
+          margin: 10px;
+        }
+
+        & > .close-menu-icon {
+          display: initial;
+          position: absolute;
+          top: 0;
+          right: 0;
+          margin: 20px 15px;
+          font-size: 2em;
+          cursor: pointer;
+        }
+      }
+    }
+
+    & > footer {
+      display: none;
+    }
+  }
+}

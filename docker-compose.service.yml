@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  service:
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    container_name: gittrends-service
+    restart: always
+    volumes:
+      - ./data/tokens.txt:/app/data/tokens.txt:ro
+      - ./packages/service/pm2-ecosystem.yml:/app/packages/service/pm2-ecosystem.yml:ro
+    ports:
+      - ${GITTRENDS_PROXY_PORT}:${GITTRENDS_PROXY_PORT}
+      - ${GITTRENDS_QUEUE_BOARD_PORT}:${GITTRENDS_QUEUE_BOARD_PORT}
+    env_file:
+      - .env

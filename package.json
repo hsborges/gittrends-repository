@@ -2,7 +2,7 @@
   "name": "gittrends-repository",
   "description": "GitTrends.app service worker to collect information on OSS projects",
   "homepage": "http://gittrends.app",
-  "version": "0.1.0",
+  "version": "3.0.0",
   "main": "index.js",
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "license": "MIT",
@@ -11,16 +11,33 @@
     "type": "git",
     "url": "https://github.com/hsborges/gittrends-repository.git"
   },
+  "scripts": {
+    "install": "yarn workspaces run install",
+    "build": "yarn workspaces run build"
+  },
   "type": "commonjs",
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=14.0.0"
   },
   "workspaces": [
     "packages/*"
   ],
   "devDependencies": {
-    "commitizen": "^4.2.2",
-    "cz-conventional-changelog": "3.3.0"
+    "@typescript-eslint/eslint-plugin": "4.15.1",
+    "@typescript-eslint/parser": "^4.15.1",
+    "commitizen": "^4.2.3",
+    "cz-conventional-changelog": "3.3.0",
+    "eslint": "7.20.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-config-standard-with-typescript": "^20.0.0",
+    "eslint-plugin-import": "2",
+    "eslint-plugin-node": "11",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-promise": "4.3.1",
+    "eslint-plugin-standard": "5.0.0",
+    "prettier": "^2.2.1",
+    "typescript": "^4.1.5"
   },
   "config": {
     "commitizen": {

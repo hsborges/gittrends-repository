@@ -1,30 +1,42 @@
 {
   "name": "@gittrends/website-api",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "main": "index.js",
+  "license": "MIT",
   "scripts": {
-    "start": "node -r @gittrends/env-config ./node_modules/.bin/fastify start -l info app.js",
-    "dev": "node -r @gittrends/env-config ./node_modules/.bin/fastify start -w -l info -P app.js"
+    "start": "node -r @gittrends/env-config dist/local.js",
+    "dev": "ts-node -r tsconfig-paths/register -r @gittrends/env-config local.ts",
+    "clean": "rm -rf dist",
+    "dotenv-to-json": "node -r @gittrends/env-config dist/util/dotenv-to-json.js > dist/env.json",
+    "pack": "yarn build && claudia pack --source dist --output dist/gittrends-serverless-api.zip --no-optional-dependencies",
+    "build": "yarn clean && tsc && cp package.json dist/package.json && yarn dotenv-to-json",
+    "deploy": "yarn build && claudia create --source dist --region us-east-1 --handler lambda.handler --set-env-from-json dist/env.json --config .claudia.json --deploy-proxy-api --no-optional-dependencies",
+    "update": "yarn build && claudia update --source dist --update-env-from-json dist/env.json --config .claudia.json --no-optional-dependencies",
+    "destroy": "claudia destroy --source dist --config .claudia.json"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@gittrends/database-config": "file:../database-config",
-    "axios": "^0.21.0",
-    "dayjs": "^1.9.7",
-    "faker": "^5.1.0",
-    "fastify": "^3.9.2",
-    "fastify-autoload": "^3.0.7",
-    "fastify-cli": "^2.0.2",
-    "fastify-cors": "^5.1.0",
-    "fastify-helmet": "^5.0.0",
-    "fastify-plugin": "^3.0.0",
-    "lodash": "^4.17.19",
-    "nodemailer": "^6.4.17"
+    "@types/nodemailer": "^6.4.1",
+    "@vendia/serverless-express": "^4.3.4",
+    "aws-lambda": "^1.0.6",
+    "axios": "^0.21.1",
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "consola": "^2.15.3",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "faker": "^5.5.3",
+    "lodash": "^4.17.21",
+    "nodemailer": "^6.6.0"
   },
   "devDependencies": {
-    "@gittrends/env-config": "file:../env-config"
+    "@gittrends/env-config": "file:../env-config",
+    "@types/aws-lambda": "^8.10.76",
+    "@types/compression": "^1.7.0",
+    "@types/cors": "^2.8.10",
+    "@types/faker": "^5.5.3",
+    "@types/lodash": "^4.14.168",
+    "claudia": "^5.13.0",
+    "ts-node": "^9.1.1",
+    "tsconfig-paths": "^3.9.0"
   }
 }

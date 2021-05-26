@@ -1,0 +1,1229 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "IActor": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "Bot",
+            "EnterpriseUserAccount",
+            "Mannequin",
+            "Organization",
+            "User"
+          ],
+          "type": "string"
+        },
+        "login": {
+          "type": "string"
+        },
+        "avatar_url": {
+          "type": "string"
+        },
+        "created_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "database_id": {
+          "type": "number"
+        },
+        "email": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "repositories_count": {
+          "type": "number"
+        },
+        "twitter_username": {
+          "type": "string"
+        },
+        "updated_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "website_url": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        },
+        "company": {
+          "type": "string"
+        },
+        "followers_count": {
+          "type": "number"
+        },
+        "following_count": {
+          "type": "number"
+        },
+        "gists_count": {
+          "type": "number"
+        },
+        "is_bounty_hunter": {
+          "type": "boolean"
+        },
+        "is_campus_expert": {
+          "type": "boolean"
+        },
+        "is_developer_program_member": {
+          "type": "boolean"
+        },
+        "is_employee": {
+          "type": "boolean"
+        },
+        "is_hireable": {
+          "type": "boolean"
+        },
+        "is_site_admin": {
+          "type": "boolean"
+        },
+        "projects_count": {
+          "type": "number"
+        },
+        "projects_url": {
+          "type": "string"
+        },
+        "repositories_contributed_to_count": {
+          "type": "number"
+        },
+        "starred_repositories_count": {
+          "type": "number"
+        },
+        "status": {
+          "type": "object",
+          "properties": {
+            "created_at": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "emoji": {
+              "type": "string"
+            },
+            "expires_at": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "indicates_limited_availability": {
+              "type": "boolean"
+            },
+            "message": {
+              "type": "string"
+            },
+            "updated_at": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "created_at"
+          ]
+        },
+        "watching_count": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string"
+        },
+        "is_verified": {
+          "type": "boolean"
+        },
+        "members_with_role_count": {
+          "type": "number"
+        },
+        "teams_count": {
+          "type": "number"
+        },
+        "enterprise": {
+          "type": "string"
+        },
+        "user": {
+          "type": "string"
+        },
+        "_metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "_id",
+        "login",
+        "type"
+      ]
+    },
+    "ICommit": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "additions": {
+          "type": "number"
+        },
+        "author": {
+          "type": "object",
+          "properties": {
+            "date": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "email": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "date"
+          ]
+        },
+        "authored_by_committer": {
+          "type": "boolean"
+        },
+        "authored_date": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "changed_files": {
+          "type": "number"
+        },
+        "comments_count": {
+          "type": "number"
+        },
+        "committed_date": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "committed_via_web": {
+          "type": "boolean"
+        },
+        "committer": {
+          "type": "object",
+          "properties": {
+            "date": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "email": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "date"
+          ]
+        },
+        "deletions": {
+          "type": "number"
+        },
+        "message": {
+          "type": "string"
+        },
+        "oid": {
+          "type": "string"
+        },
+        "pushed_date": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "signature": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string"
+            },
+            "isValid": {
+              "type": "boolean"
+            },
+            "signer": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "wasSignedByGitHub": {
+              "type": "boolean"
+            }
+          }
+        },
+        "status": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "contexts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "context": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "description": "Enables basic storage and retrieval of dates and times.",
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "context"
+                ]
+              }
+            },
+            "state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "required": [
+        "_id",
+        "oid",
+        "repository"
+      ]
+    },
+    "IDependency": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "object",
+          "properties": {
+            "repository": {
+              "type": "string"
+            },
+            "manifest": {
+              "type": "string"
+            },
+            "package_name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "manifest",
+            "package_name",
+            "repository"
+          ]
+        },
+        "filename": {
+          "type": "string"
+        },
+        "has_dependencies": {
+          "type": "boolean"
+        },
+        "package_manager": {
+          "type": "string"
+        },
+        "target_repository": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "database_id": {
+              "type": "number"
+            },
+            "name_with_owner": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "database_id",
+            "id",
+            "name_with_owner"
+          ]
+        },
+        "requirements": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "_id"
+      ]
+    },
+    "IGithubToken": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "login": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "created_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "created_at",
+        "scope",
+        "token",
+        "type"
+      ]
+    },
+    "IIssue": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "Issue",
+            "PullRequest"
+          ],
+          "type": "string"
+        },
+        "active_lock_reason": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "author_association": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "closed_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_via_email": {
+          "type": "boolean"
+        },
+        "database_id": {
+          "type": "number"
+        },
+        "editor": {
+          "type": "string"
+        },
+        "includes_created_edit": {
+          "type": "boolean"
+        },
+        "last_edited_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "milestone": {
+          "type": "string"
+        },
+        "number": {
+          "type": "number"
+        },
+        "published_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "updated_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "assignees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reaction_groups": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "_metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "_id",
+        "repository",
+        "type"
+      ]
+    },
+    "IMilestone": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "progress_percentage": {
+          "type": "number"
+        },
+        "dueOn": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "number": {
+          "type": "number"
+        },
+        "state": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "_id",
+        "repository"
+      ]
+    },
+    "IPullRequest": {
+      "type": "object",
+      "properties": {
+        "suggested_reviewers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "additions": {
+          "type": "number"
+        },
+        "base_ref": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        },
+        "base_ref_name": {
+          "type": "string"
+        },
+        "base_ref_oid": {
+          "type": "string"
+        },
+        "base_repository": {
+          "type": "string"
+        },
+        "can_be_rebased": {
+          "type": "boolean"
+        },
+        "changed_files": {
+          "type": "number"
+        },
+        "deletions": {
+          "type": "number"
+        },
+        "head_ref": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        },
+        "head_ref_name": {
+          "type": "string"
+        },
+        "head_ref_oid": {
+          "type": "string"
+        },
+        "head_repository": {
+          "type": "string"
+        },
+        "head_repository_owner": {
+          "type": "string"
+        },
+        "is_cross_repository": {
+          "type": "boolean"
+        },
+        "is_draft": {
+          "type": "boolean"
+        },
+        "maintainer_can_modify": {
+          "type": "boolean"
+        },
+        "merge_commit": {
+          "type": "string"
+        },
+        "merge_state_status": {
+          "type": "string"
+        },
+        "mergeable": {
+          "type": "string"
+        },
+        "merged": {
+          "type": "boolean"
+        },
+        "merged_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "merged_by": {
+          "type": "string"
+        },
+        "permalink": {
+          "type": "string"
+        },
+        "potential_merge_commit": {
+          "type": "string"
+        },
+        "_id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "Issue",
+            "PullRequest"
+          ],
+          "type": "string"
+        },
+        "active_lock_reason": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "author_association": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "closed_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_via_email": {
+          "type": "boolean"
+        },
+        "database_id": {
+          "type": "number"
+        },
+        "editor": {
+          "type": "string"
+        },
+        "includes_created_edit": {
+          "type": "boolean"
+        },
+        "last_edited_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "milestone": {
+          "type": "string"
+        },
+        "number": {
+          "type": "number"
+        },
+        "published_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "updated_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "assignees": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reaction_groups": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "_metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "_id",
+        "repository",
+        "type"
+      ]
+    },
+    "IReaction": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "issue": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "created_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "user": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "_id",
+        "content",
+        "created_at",
+        "issue",
+        "repository",
+        "user"
+      ]
+    },
+    "IRelease": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "created_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string"
+        },
+        "is_draft": {
+          "type": "boolean"
+        },
+        "is_prerelease": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "published_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "release_assets_count": {
+          "type": "number"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "tag_name": {
+          "type": "string"
+        },
+        "updated_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "_id",
+        "repository"
+      ]
+    },
+    "IRepository": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "assignable_users_count": {
+          "type": "number"
+        },
+        "code_of_conduct": {
+          "type": "string"
+        },
+        "contact_links": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "database_id": {
+          "type": "number"
+        },
+        "default_branch": {
+          "type": "string"
+        },
+        "delete_branch_on_merge": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "disk_usage": {
+          "type": "number"
+        },
+        "forks_count": {
+          "type": "number"
+        },
+        "funding_links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "url"
+            ]
+          }
+        },
+        "has_issues_enabled": {
+          "type": "boolean"
+        },
+        "has_projects_enabled": {
+          "type": "boolean"
+        },
+        "has_wiki_enabled": {
+          "type": "boolean"
+        },
+        "homepage_url": {
+          "type": "string"
+        },
+        "is_archived": {
+          "type": "boolean"
+        },
+        "is_blank_issues_enabled": {
+          "type": "boolean"
+        },
+        "is_disabled": {
+          "type": "boolean"
+        },
+        "is_empty": {
+          "type": "boolean"
+        },
+        "is_fork": {
+          "type": "boolean"
+        },
+        "is_in_organization": {
+          "type": "boolean"
+        },
+        "is_locked": {
+          "type": "boolean"
+        },
+        "is_mirror": {
+          "type": "boolean"
+        },
+        "is_private": {
+          "type": "boolean"
+        },
+        "is_security_policy_enabled": {
+          "type": "boolean"
+        },
+        "is_template": {
+          "type": "boolean"
+        },
+        "is_user_configuration_repository": {
+          "type": "boolean"
+        },
+        "issues_count": {
+          "type": "number"
+        },
+        "labels_count": {
+          "type": "number"
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "language": {
+                "type": "string"
+              },
+              "size": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "language",
+              "size"
+            ]
+          }
+        },
+        "license_info": {
+          "type": "string"
+        },
+        "lock_reason": {
+          "type": "string"
+        },
+        "mentionable_users_count": {
+          "type": "number"
+        },
+        "merge_commit_allowed": {
+          "type": "boolean"
+        },
+        "milestones_count": {
+          "type": "number"
+        },
+        "mirror_url": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "name_with_owner": {
+          "type": "string"
+        },
+        "open_graph_image_url": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "primary_language": {
+          "type": "string"
+        },
+        "pushed_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "pull_requests_count": {
+          "type": "number"
+        },
+        "rebase_merge_allowed": {
+          "type": "boolean"
+        },
+        "releases_count": {
+          "type": "number"
+        },
+        "repository_topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "squash_merge_allowed": {
+          "type": "boolean"
+        },
+        "stargazers_count": {
+          "type": "number"
+        },
+        "template_repository": {
+          "type": "string"
+        },
+        "updated_at": {
+          "description": "Enables basic storage and retrieval of dates and times.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "url": {
+          "type": "string"
+        },
+        "uses_custom_open_graph_image": {
+          "type": "boolean"
+        },
+        "vulnerability_alerts_count": {
+          "type": "number"
+        },
+        "watchers_count": {
+          "type": "number"
+        },
+        "_metadata": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "_id",
+        "name_with_owner",
+        "owner"
+      ]
+    },
+    "IStargazer": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "object",
+          "properties": {
+            "repository": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            },
+            "starred_at": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "repository",
+            "starred_at",
+            "user"
+          ]
+        }
+      },
+      "required": [
+        "_id"
+      ]
+    },
+    "ITag": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "oid": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "tagger": {
+          "type": "object",
+          "properties": {
+            "date": {
+              "description": "Enables basic storage and retrieval of dates and times.",
+              "type": "string",
+              "format": "date-time"
+            },
+            "email": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "date"
+          ]
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "_id",
+        "name",
+        "repository"
+      ]
+    },
+    "ITimelineEvent": {
+      "additionalProperties": true,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "issue": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "_id",
+        "issue",
+        "repository",
+        "type"
+      ]
+    },
+    "IWatcher": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "object",
+          "properties": {
+            "repository": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "user"
+          ]
+        }
+      },
+      "required": [
+        "_id"
+      ]
+    }
+  }
+}

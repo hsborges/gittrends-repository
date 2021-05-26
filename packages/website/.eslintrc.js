@@ -1,21 +1,33 @@
 module.exports = {
+  root: true,
+  parser: 'babel-eslint',
+  extends: [
+    '../../.eslintrc.js',
+    'plugin:react/recommended',
+    'plugin:import/errors',
+    'plugin:import/warnings',
+    'plugin:jsx-a11y/recommended',
+    'plugin:react-hooks/recommended'
+  ],
   env: {
     browser: true,
+    commonjs: true,
+    es6: true,
     node: true
   },
   parserOptions: {
-    parser: 'babel-eslint'
+    ecmaVersion: 2018,
+    sourceType: 'module',
+    ecmaFeatures: { jsx: true }
   },
-  extends: [
-    '@nuxtjs',
-    'prettier',
-    'prettier/vue',
-    'plugin:prettier/recommended',
-    'plugin:nuxt/recommended'
-  ],
-  plugins: ['prettier'],
-  // add your custom rules here
+  settings: {
+    react: { version: 'detect' },
+    'import/resolver': {
+      node: { extensions: ['.js', '.jsx', '.ts', '.tsx'] }
+    }
+  },
+  plugins: [],
   rules: {
-    'vue/no-v-html': 'off'
+    'jsx-a11y/anchor-is-valid': 'off'
   }
 };

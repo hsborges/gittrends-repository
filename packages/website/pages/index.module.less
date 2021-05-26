@@ -1,0 +1,112 @@
+@import '../styles/less/antd-custom.less';
+
+.github-index-page {
+  width: 100%;
+
+  & > header {
+    padding: 5vh 0;
+    text-align: center;
+    font-size: 3.25em;
+    color: @primary-color;
+    font-weight: bolder;
+  }
+
+  & > section {
+    text-align: center;
+    font-size: 1.25em;
+
+    & > span {
+      display: block;
+      margin: 25px;
+      font-weight: bolder;
+    }
+
+    .search-box {
+      width: 50%;
+      margin: auto;
+    }
+
+    .project-samples {
+      display: grid;
+      grid-template-columns: repeat(4, auto);
+      grid-template-rows: auto;
+      justify-content: center;
+      gap: 10px;
+      width: 90%;
+      margin: auto;
+      padding: 50px;
+    }
+
+    .db-statistics {
+      width: 90%;
+      margin: auto;
+      padding: 50px;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-evenly;
+
+      .db-stats {
+        .ant-statistic-title {
+          font-size: 1.25em;
+        }
+
+        .ant-statistic-content-value {
+          color: @text-color;
+        }
+
+        .ant-statistic-content-prefix {
+          color: @primary-color;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .github-index-page {
+    & > header {
+      width: 95vw;
+      margin: 5vh auto;
+      padding: 0px;
+      font-size: 2.5em;
+    }
+
+    & > section {
+      font-size: 1.15em;
+
+      .search-box {
+        width: 90%;
+      }
+
+      .project-samples {
+        grid-template-columns: repeat(2, 175px);
+        grid-template-rows: auto;
+        justify-content: center;
+        gap: 5px;
+        width: 95%;
+        padding: 0px;
+      }
+
+      .db-statistics {
+        padding: 25px;
+        display: grid;
+        grid-template-columns: repeat(4, auto);
+        grid-template-rows: auto;
+
+        .db-stats {
+          .ant-statistic-title {
+            display: none;
+          }
+
+          .ant-statistic-content-value {
+            font-size: 0.75em;
+          }
+
+          .ant-statistic-content-prefix {
+            font-size: 0.75em;
+          }
+        }
+      }
+    }
+  }
+}
