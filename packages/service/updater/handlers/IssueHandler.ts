@@ -64,7 +64,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
     this.resource = type;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 50 : 20;
+    this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 10;
     this.rBatchSize = this.defaultRBatchSize = 100;
     this.issues = { items: [], hasNextPage: true };
   }
@@ -324,7 +324,12 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         case Stages.GET_ISSUES_LIST:
         case Stages.GET_ISSUES_DETAILS:
           const issue = this.pendingIssues[0];
-          issue.details.hasNextPage = issue.assignees.hasNextPage = issue.labels.hasNextPage = issue.participants.hasNextPage = issue.timeline.hasNextPage = false;
+          issue.details.hasNextPage =
+            issue.assignees.hasNextPage =
+            issue.labels.hasNextPage =
+            issue.participants.hasNextPage =
+            issue.timeline.hasNextPage =
+              false;
           issue.error = err;
           return;
         case Stages.GET_REACTIONS:

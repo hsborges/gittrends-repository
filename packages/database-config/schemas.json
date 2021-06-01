@@ -25,7 +25,6 @@
           "type": "string"
         },
         "created_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -48,7 +47,6 @@
           "type": "string"
         },
         "updated_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -104,7 +102,6 @@
           "type": "object",
           "properties": {
             "created_at": {
-              "description": "Enables basic storage and retrieval of dates and times.",
               "type": "string",
               "format": "date-time"
             },
@@ -112,7 +109,6 @@
               "type": "string"
             },
             "expires_at": {
-              "description": "Enables basic storage and retrieval of dates and times.",
               "type": "string",
               "format": "date-time"
             },
@@ -123,7 +119,6 @@
               "type": "string"
             },
             "updated_at": {
-              "description": "Enables basic storage and retrieval of dates and times.",
               "type": "string",
               "format": "date-time"
             }
@@ -182,7 +177,6 @@
           "type": "object",
           "properties": {
             "date": {
-              "description": "Enables basic storage and retrieval of dates and times.",
               "type": "string",
               "format": "date-time"
             },
@@ -204,7 +198,6 @@
           "type": "boolean"
         },
         "authored_date": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -215,7 +208,6 @@
           "type": "number"
         },
         "committed_date": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -226,7 +218,6 @@
           "type": "object",
           "properties": {
             "date": {
-              "description": "Enables basic storage and retrieval of dates and times.",
               "type": "string",
               "format": "date-time"
             },
@@ -254,7 +245,6 @@
           "type": "string"
         },
         "pushed_date": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -296,7 +286,6 @@
                     "type": "string"
                   },
                   "createdAt": {
-                    "description": "Enables basic storage and retrieval of dates and times.",
                     "type": "string",
                     "format": "date-time"
                   }
@@ -400,7 +389,6 @@
           "type": "string"
         },
         "created_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         }
@@ -445,12 +433,10 @@
           "type": "boolean"
         },
         "closed_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
         "created_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -467,7 +453,6 @@
           "type": "boolean"
         },
         "last_edited_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -481,7 +466,6 @@
           "type": "number"
         },
         "published_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -492,7 +476,6 @@
           "type": "string"
         },
         "updated_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -551,7 +534,6 @@
           "type": "number"
         },
         "dueOn": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -656,7 +638,6 @@
           "type": "boolean"
         },
         "merged_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -698,12 +679,10 @@
           "type": "boolean"
         },
         "closed_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
         "created_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -720,7 +699,6 @@
           "type": "boolean"
         },
         "last_edited_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -734,7 +712,6 @@
           "type": "number"
         },
         "published_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -745,7 +722,6 @@
           "type": "string"
         },
         "updated_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -804,7 +780,6 @@
           "type": "string"
         },
         "created_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -835,7 +810,6 @@
           "type": "string"
         },
         "created_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -852,7 +826,6 @@
           "type": "string"
         },
         "published_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -866,7 +839,6 @@
           "type": "string"
         },
         "updated_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         }
@@ -1039,7 +1011,6 @@
           "type": "string"
         },
         "pushed_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -1068,7 +1039,6 @@
           "type": "string"
         },
         "updated_at": {
-          "description": "Enables basic storage and retrieval of dates and times.",
           "type": "string",
           "format": "date-time"
         },
@@ -1110,7 +1080,6 @@
               "type": "string"
             },
             "starred_at": {
-              "description": "Enables basic storage and retrieval of dates and times.",
               "type": "string",
               "format": "date-time"
             }
@@ -1149,7 +1118,6 @@
           "type": "object",
           "properties": {
             "date": {
-              "description": "Enables basic storage and retrieval of dates and times.",
               "type": "string",
               "format": "date-time"
             },
