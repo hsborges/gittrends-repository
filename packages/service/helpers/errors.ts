@@ -1,8 +1,6 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { truncate } from 'lodash';
-
 class ExtendedError extends Error {
   constructor(message: string) {
     super(message);
@@ -34,7 +32,7 @@ export class RequestError extends CustomError {
   constructor(message: string, err?: Error | null, response?: string, query?: TObject | string) {
     const internalMessage =
       message +
-      `\nQuery: ${truncate(JSON.stringify(query), { length: 100 })}` +
+      `\nQuery: ${JSON.stringify(query)}` +
       `\nResponse: ${typeof response === 'string' ? response : JSON.stringify(response)}`;
     super(internalMessage, err || undefined);
     this.response = response;
