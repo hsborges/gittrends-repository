@@ -5,7 +5,7 @@ import Component from '../Component';
 import Fragment from '../Fragment';
 import { SimplifiedRepositoryFragment } from '../fragments/RepositoryFragment';
 
-type Query = { maxStargazers?: number; language?: string; name?: string };
+type Query = { minStargazers?: number; maxStargazers?: number; language?: string; name?: string };
 
 export default class SearchComponent extends Component {
   private after: string | undefined;
@@ -14,6 +14,7 @@ export default class SearchComponent extends Component {
 
   constructor(query?: Query, after?: string, first?: number) {
     super('search');
+    this.query.minStargazers = query?.minStargazers;
     this.query.maxStargazers = query?.maxStargazers;
     this.query.language = query?.language;
     this.query.name = query?.name;
@@ -26,7 +27,8 @@ export default class SearchComponent extends Component {
   }
 
   toString(): string {
-    let query = `stars:1..${this.query.maxStargazers || '*'} sort:stars-desc`;
+    let { minStargazers, maxStargazers } = this.query;
+    let query = `stars:${minStargazers ?? 1}..${maxStargazers ?? '*'} sort:stars-desc`;
     if (this.query.language) query += ` language:${this.query.language}`;
     if (this.query.name) query += ` repo:${this.query.name}`;
 

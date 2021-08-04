@@ -14,19 +14,22 @@ import { BadGatewayError } from './helpers/errors';
 import Query from './github/Query';
 import SearchComponent from './github/components/SearchComponent';
 
-async function search(limit = 1000, language?: string, name?: string) {
+async function search(
+  limit = 1000,
+  opts?: { language?: string; name?: string; minStargazers?: 0; maxStargazers?: number }
+) {
   let repos: TObject[] = [];
   let actors: TObject[] = [];
 
   let after = undefined;
-  let maxStargazers = undefined;
+  let maxStargazers = opts?.maxStargazers ?? undefined;
   let total = Math.min(100, limit);
 
   do {
     await Query.create()
       .compose(
         new SearchComponent(
-          { maxStargazers, language, name },
+          { minStargazers: opts?.minStargazers, maxStargazers, ...opts },
           after,
           Math.min(100, total, limit - repos.length)
         ).setAlias('search')
@@ -43,7 +46,7 @@ async function search(limit = 1000, language?: string, name?: string) {
           after = get(data, 'search.page_info.end_cursor');
         } else {
           after = null;
-          maxStargazers = min(repos.map((r) => r.stargazers_count));
+          maxStargazers = <number>min(repos.map((r) => r.stargazers_count));
         }
 
         total = 100;
@@ -54,7 +57,7 @@ async function search(limit = 1000, language?: string, name?: string) {
         if (err instanceof BadGatewayError) return (total = Math.ceil(total / 2));
         throw err;
       });
-  } while (name ? false : repos.length < limit);
+  } while (opts?.name ? false : repos.length < limit);
 
   return {
     repositories: chain(repos).compact().sortBy('stargazers_count', 'desc').value(),
@@ -68,6 +71,9 @@ program
   .option('--limit [number]', 'Maximun number of repositories', Number, 100)
   .option('--language [string]', 'Major programming language')
   .option('--repository-name [name]', 'Repository name to search')
+  .option('--min-stargazers [number]', 'Minimun number of stars of the repositories')
+  .option('--max-stargazers [number]', 'Maximun number of stars of the repositories')
+  .option('--workers [number]', 'Number of parallel workers', Number, 3)
   .action(async () => {
     const options = program.opts();
 
@@ -77,7 +83,14 @@ program
     );
 
     return Promise.all(
-      [1, 1, 1].map(() => search(options.limit, options.language, options.repositoryName))
+      new Array(options.workers).fill(0).map(() =>
+        search(options.limit, {
+          language: options.language,
+          name: options.repositoryName,
+          minStargazers: options.minStargazers,
+          maxStargazers: options.maxStargazers
+        })
+      )
     )
       .then((results) => {
         const result = results.reduce(
