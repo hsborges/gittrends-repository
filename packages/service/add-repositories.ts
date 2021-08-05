@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import consola from 'consola';
-import { program } from 'commander';
+import { Option, program } from 'commander';
 import { chain, get, min, uniqBy } from 'lodash';
 import { filter } from 'bluebird';
 import mongoClient, { Actor, Repository } from '@gittrends/database-config';
@@ -16,7 +16,14 @@ import SearchComponent from './github/components/SearchComponent';
 
 async function search(
   limit = 1000,
-  opts?: { language?: string; name?: string; minStargazers?: number; maxStargazers?: number }
+  opts?: {
+    language?: string;
+    name?: string;
+    minStargazers?: number;
+    maxStargazers?: number;
+    sort?: 'stars' | 'created' | 'updated' | undefined;
+    order?: 'asc' | 'desc' | undefined;
+  }
 ) {
   if (opts?.minStargazers && opts?.maxStargazers && opts.minStargazers > opts?.maxStargazers)
     throw new Error(
@@ -88,16 +95,26 @@ program
   .option('--limit [number]', 'Maximun number of repositories', Number, 100)
   .option('--language [string]', 'Major programming language')
   .option('--repository-name [name]', 'Repository name to search')
-  .option('--min-stargazers [number]', 'Minimun number of stars of the repositories')
+  .option('--min-stargazers [number]', 'Minimun number of stars of the repositories', Number, 1)
   .option('--max-stargazers [number]', 'Maximun number of stars of the repositories')
   .option('--workers [number]', 'Number of parallel workers', Number, 3)
+  .addOption(
+    new Option('--sort [string]', 'Define the sort fiel')
+      .choices(['stars', 'created', 'updated', 'default'])
+      .default('stars')
+  )
+  .addOption(
+    new Option('--order [string]', 'Define the sort order')
+      .choices(['asc', 'desc', 'default'])
+      .default('desc')
+  )
   .action(async () => {
     const options = program.opts();
 
     const minStr = options.minStargazers || '0';
     const maxStr = options.maxStargazers || '*';
     consola.info(
-      `Searching for the top-%s repositories with ${minStr}..${maxStr} stars on GitHub ...`,
+      `Searching for repositories with ${minStr}..${maxStr} stars on GitHub ...`,
       options.limit
     );
 
@@ -107,7 +124,9 @@ program
           language: options.language,
           name: options.repositoryName,
           minStargazers: options.minStargazers && parseInt(options.minStargazers, 10),
-          maxStargazers: options.maxStargazers && parseInt(options.maxStargazers, 10)
+          maxStargazers: options.maxStargazers && parseInt(options.maxStargazers, 10),
+          sort: options.sort === 'default' ? undefined : options.sort,
+          order: options.order === 'default' ? undefined : options.order
         })
       )
     )
