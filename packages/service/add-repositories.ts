@@ -16,14 +16,20 @@ import SearchComponent from './github/components/SearchComponent';
 
 async function search(
   limit = 1000,
-  opts?: { language?: string; name?: string; minStargazers?: 0; maxStargazers?: number }
+  opts?: { language?: string; name?: string; minStargazers?: number; maxStargazers?: number }
 ) {
+  if (opts?.minStargazers && opts?.maxStargazers && opts.minStargazers > opts?.maxStargazers)
+    throw new Error(
+      `Min must be lower or equal to the max number of stargazers (${opts.minStargazers} > ${opts?.maxStargazers})`
+    );
+
   let repos: TObject[] = [];
   let actors: TObject[] = [];
 
   let after = undefined;
   let maxStargazers = opts?.maxStargazers ?? undefined;
   let total = Math.min(100, limit);
+  let hasMoreRepos = true;
 
   do {
     await Query.create()
@@ -37,8 +43,12 @@ async function search(
       .run()
       .then((response) => parser(response))
       .then(({ data, actors: _actors = [] }) => {
+        const newRepos = get(data, 'search.nodes', []).filter(
+          (nr: any) => repos.findIndex((cr) => cr.id === nr.id) < 0
+        );
+
         actors.push(..._actors);
-        repos.push(...get(data, 'search.nodes', []));
+        repos.push(...newRepos);
 
         if (!repos.length) throw new Error('Repositories not found for the provided parameters.');
 
@@ -46,18 +56,25 @@ async function search(
           after = get(data, 'search.page_info.end_cursor');
         } else {
           after = null;
-          maxStargazers = <number>min(repos.map((r) => r.stargazers_count));
+          const newMaxStargazers = <number>min(repos.map((r) => r.stargazers_count));
+          maxStargazers = maxStargazers != newMaxStargazers ? newMaxStargazers : maxStargazers - 1;
         }
 
         total = 100;
         actors = uniqBy(actors, 'id');
         repos = uniqBy(repos, 'id');
+
+        hasMoreRepos = opts?.name
+          ? false
+          : (opts?.minStargazers ?? 0) <= (maxStargazers ?? Number.MAX_SAFE_INTEGER) &&
+            newRepos.length > 0 &&
+            repos.length < limit;
       })
       .catch((err) => {
         if (err instanceof BadGatewayError) return (total = Math.ceil(total / 2));
         throw err;
       });
-  } while (opts?.name ? false : repos.length < limit);
+  } while (hasMoreRepos);
 
   return {
     repositories: chain(repos).compact().sortBy('stargazers_count', 'desc').value(),
@@ -77,8 +94,10 @@ program
   .action(async () => {
     const options = program.opts();
 
+    const minStr = options.minStargazers || '0';
+    const maxStr = options.maxStargazers || '*';
     consola.info(
-      'Searching for the top-%s repositories with more stars on GitHub ...',
+      `Searching for the top-%s repositories with ${minStr}..${maxStr} stars on GitHub ...`,
       options.limit
     );
 
@@ -87,8 +106,8 @@ program
         search(options.limit, {
           language: options.language,
           name: options.repositoryName,
-          minStargazers: options.minStargazers,
-          maxStargazers: options.maxStargazers
+          minStargazers: options.minStargazers && parseInt(options.minStargazers, 10),
+          maxStargazers: options.maxStargazers && parseInt(options.maxStargazers, 10)
         })
       )
     )
