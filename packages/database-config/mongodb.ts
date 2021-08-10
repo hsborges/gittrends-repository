@@ -39,9 +39,7 @@ const client = new MongoClient(
     ? `mongodb://${USERNAME}:${PASSWORD}@${HOST}:${PORT}?authMechanism=DEFAULT`
     : `mongodb://${HOST}:${PORT}`,
   {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    poolSize: parseInt(POOL_SIZE, 10)
+    maxPoolSize: parseInt(POOL_SIZE, 10)
   }
 );
 

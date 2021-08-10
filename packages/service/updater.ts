@@ -3,10 +3,10 @@
  */
 import axios from 'axios';
 import consola from 'consola';
-import program from 'commander';
-import mongoClient from '@gittrends/database-config';
+import { program } from 'commander';
 import { bold } from 'chalk';
 import { QueueScheduler, Worker, Job } from 'bullmq';
+import mongoClient from '@gittrends/database-config';
 
 import { version } from './package.json';
 import { redisOptions } from './redis';
@@ -79,7 +79,7 @@ program
     );
 
     queue.on('progress', ({ id }, progress) => {
-      const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
+      const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
       const progressStr = `${progress}`.padStart(3);
       consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(id)}.`);
     });

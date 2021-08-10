@@ -3,7 +3,7 @@
  */
 import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
-import { ClientSession, Collection, Cursor, Db } from 'mongodb';
+import { ClientSession, Collection, Db } from 'mongodb';
 import { cloneDeep, isArray, mapValues, isObject, pick, omit } from 'lodash';
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/i;
@@ -77,7 +77,7 @@ export default abstract class Model<T = void> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async find(query: any, session?: ClientSession): Promise<Cursor<any>> {
+  async find(query: any, session?: ClientSession) {
     return this.collection.find(query, { session });
   }
 

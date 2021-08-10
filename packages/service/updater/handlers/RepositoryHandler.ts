@@ -67,7 +67,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
             ...this.details,
             languages: this.languages.items,
             repository_topics: this.topics.items,
-            _metadata: { ...current._metadata, [this.meta.resource]: { updatedAt: new Date() } }
+            _metadata: { ...current?._metadata, [this.meta.resource]: { updatedAt: new Date() } }
           }),
           session
         )

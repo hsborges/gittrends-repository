@@ -8,17 +8,17 @@ export = {
     Promise.all([
       db
         .collection('stargazers')
-        .createIndex([{ key: { repository: 1 }, name: 'stargazers_repository_index' }]),
+        .createIndex({ repository: 1 }, { name: 'stargazers_repository_index' }),
       db
         .collection('watchers')
-        .createIndex([{ key: { repository: 1 }, name: 'watchers_repository_index' }]),
+        .createIndex({ repository: 1 }, { name: 'watchers_repository_index' }),
       db
         .collection('dependencies')
-        .createIndex([{ key: { repository: 1 }, name: 'dependencies_repository_index' }]),
+        .createIndex({ repository: 1 }, { name: 'dependencies_repository_index' }),
       db
         .collection('actors')
-        .createIndex([{ key: { '_metadata.updatedAt': 1 }, name: '_metadata_updatedat_index' }]),
-      db.collection('issues').createIndex([{ key: { type: 1 }, name: 'issues_type_index' }])
+        .createIndex({ '_metadata.updatedAt': 1 }, { name: '_metadata_updatedat_index' }),
+      db.collection('issues').createIndex({ type: 1 }, { name: 'issues_type_index' })
     ]);
   },
 

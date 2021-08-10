@@ -24,7 +24,7 @@ export = {
       while (await cursor.hasNext()) {
         const record = castDates(await cursor.next());
         await collection
-          .insertOne({ ...omit(record, model.idField), _id: pick(record, model.idField) })
+          .insertOne({ ...omit(record, model.idField), _id: <any>pick(record, model.idField) })
           .catch((err) => {
             if (err.code === 11000) return;
             throw err;
@@ -38,13 +38,13 @@ export = {
     await Promise.all([
       db
         .collection('stargazers')
-        .createIndex([{ key: { '_id.repository': 1 }, name: 'stargazers_repository_index' }]),
+        .createIndex({ '_id.repository': 1 }, { name: 'stargazers_repository_index' }),
       db
         .collection('watchers')
-        .createIndex([{ key: { '_id.repository': 1 }, name: 'watchers_repository_index' }]),
+        .createIndex({ '_id.repository': 1 }, { name: 'watchers_repository_index' }),
       db
         .collection('dependencies')
-        .createIndex([{ key: { '_id.repository': 1 }, name: 'dependencies_repository_index' }])
+        .createIndex({ '_id.repository': 1 }, { name: 'dependencies_repository_index' })
     ]);
   },
 
@@ -58,8 +58,8 @@ export = {
         await collection
           .insertOne({
             ...omit(record, '_id'),
-            ...record._id,
-            _id: hash(record._id, { algorithm: 'sha1', encoding: 'hex' })
+            ...record?._id,
+            _id: hash(record?._id, { algorithm: 'sha1', encoding: 'hex' })
           })
           .catch((err) => {
             if (err.code === 11000) return;
@@ -74,13 +74,13 @@ export = {
     await Promise.all([
       db
         .collection('stargazers')
-        .createIndex([{ key: { repository: 1 }, name: 'stargazers_repository_index' }]),
+        .createIndex({ repository: 1 }, { name: 'stargazers_repository_index' }),
       db
         .collection('watchers')
-        .createIndex([{ key: { repository: 1 }, name: 'watchers_repository_index' }]),
+        .createIndex({ repository: 1 }, { name: 'watchers_repository_index' }),
       db
         .collection('dependencies')
-        .createIndex([{ key: { repository: 1 }, name: 'dependencies_repository_index' }])
+        .createIndex({ repository: 1 }, { name: 'dependencies_repository_index' })
     ]);
   }
 };

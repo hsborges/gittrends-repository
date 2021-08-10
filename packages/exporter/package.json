@@ -14,21 +14,21 @@
   "license": "ISC",
   "dependencies": {
     "@gittrends/database-config": "file:../database-config",
-    "async": "^3.2.0",
+    "async": "^3.2.1",
     "bluebird": "^3.7.2",
     "cli-progress": "^3.9.0",
     "colors": "^1.4.0",
-    "commander": "^7.2.0",
+    "commander": "^8.1.0",
     "consola": "^2.15.3",
     "lodash": "^4.17.21",
     "mkdirp": "^1.0.4",
-    "nodemailer": "^6.6.1"
+    "nodemailer": "^6.6.3"
   },
   "devDependencies": {
-    "@types/async": "^3.2.6",
-    "@types/cli-progress": "^3.9.1",
-    "@types/mkdirp": "^1.0.1",
-    "ts-node-dev": "^1.1.6",
-    "tsconfig-paths": "^3.9.0"
+    "@types/async": "^3.2.7",
+    "@types/cli-progress": "^3.9.2",
+    "@types/mkdirp": "^1.0.2",
+    "ts-node-dev": "^1.1.8",
+    "tsconfig-paths": "^3.10.1"
   }
 }

@@ -15,8 +15,8 @@
     "destroy": "claudia destroy --source dist --config .claudia.json"
   },
   "dependencies": {
-    "@types/nodemailer": "^6.4.2",
-    "@vendia/serverless-express": "^4.3.8",
+    "@types/nodemailer": "^6.4.4",
+    "@vendia/serverless-express": "^4.3.9",
     "aws-lambda": "^1.0.6",
     "axios": "^0.21.1",
     "body-parser": "^1.19.0",
@@ -26,17 +26,17 @@
     "express": "^4.17.1",
     "faker": "^5.5.3",
     "lodash": "^4.17.21",
-    "nodemailer": "^6.6.1"
+    "nodemailer": "^6.6.3"
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@types/aws-lambda": "^8.10.76",
-    "@types/compression": "^1.7.0",
-    "@types/cors": "^2.8.10",
-    "@types/faker": "^5.5.5",
-    "@types/lodash": "^4.14.170",
+    "@types/aws-lambda": "^8.10.82",
+    "@types/compression": "^1.7.1",
+    "@types/cors": "^2.8.12",
+    "@types/faker": "^5.5.7",
+    "@types/lodash": "^4.14.172",
     "claudia": "^5.13.1",
-    "ts-node": "^10.0.0",
-    "tsconfig-paths": "^3.9.0"
+    "ts-node": "^10.2.0",
+    "tsconfig-paths": "^3.10.1"
   }
 }

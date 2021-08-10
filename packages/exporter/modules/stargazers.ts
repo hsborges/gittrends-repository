@@ -44,21 +44,23 @@ export default async function (name_with_owner: string, writer: WriterFunction) 
     ])
     .toArray();
 
-  let [first, last]: [IStargazer, IStargazer] = await Promise.all([
-    Stargazer.collection.findOne(
-      { '_id.repository': repo._id },
-      {
-        sort: { '_id.starred_at': 1 },
-        projection: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' }
-      }
-    ),
-    Stargazer.collection.findOne(
-      { '_id.repository': repo._id },
-      {
-        sort: { '_id.starred_at': -1 },
-        projection: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' }
-      }
-    )
+  let [[first], [last]] = await Promise.all([
+    Stargazer.collection
+      .aggregate([
+        { $match: { '_id.repository': repo._id } },
+        { $sort: { '_id.starred_at': 1 } },
+        { $limit: 1 },
+        { $project: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' } }
+      ])
+      .toArray(),
+    Stargazer.collection
+      .aggregate([
+        { $match: { '_id.repository': repo._id } },
+        { $sort: { '_id.starred_at': -1 } },
+        { $limit: 1 },
+        { $project: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' } }
+      ])
+      .toArray()
   ]);
 
   const [firstActor, lastActor] = [first, last].map((data) => data.user);
@@ -73,17 +75,10 @@ export default async function (name_with_owner: string, writer: WriterFunction) 
 
   const object = {
     timeseries: timeseries.reduce(
-      (
-        timeseries: Array<{ week: number; year: number; stargazers_count: number }>,
-        record: { year: number; week: number; stargazers_count: number }
-      ) => ({
+      (timeseries, record) => ({
         ...timeseries,
-        [dayjs
-          .utc()
-          .year(record.year)
-          .week(record.week)
-          .endOf('week')
-          .format('YYYY-MM-DD')]: record.stargazers_count
+        [dayjs.utc().year(record.year).week(record.week).endOf('week').format('YYYY-MM-DD')]:
+          record.stargazers_count
       }),
       {}
     ),

@@ -116,4 +116,9 @@ dist
 .vscode-test
 
 # End of https://www.toptal.com/developers/gitignore/api/yarn,dotenv,node
+
+### OSX ###
+# General
 .DS_Store
+.AppleDouble
+.LSOverride
