@@ -9,16 +9,12 @@ import Divider from '../../../components/explorer/divider';
 import OverviewSection from '../../../components/explorer/overview-section';
 import PopularitySection from '../../../components/explorer/popularity-section';
 
-import fetchTags from '../../../hooks/fetchTags';
 import fetchRepository from '../../../hooks/fetchProject';
-import fetchStargazers from '../../../hooks/fetchStargazers';
 
 import './[name].module.less';
 
 function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
   const { repository } = fetchRepository({ name_with_owner: props.name_with_owner });
-  const { timeseries, first, last } = fetchStargazers({ name_with_owner: props.name_with_owner });
-  const { tags } = fetchTags({ name_with_owner: props.name_with_owner });
 
   return (
     <DefaultLayout id="project-explorer" showSearch>
@@ -52,7 +48,11 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
           >
             <Anchor.Link href="#project-explorer-top" title="Top" />
             <Anchor.Link href="#overview" title="Overview" />
-            {timeseries ? <Anchor.Link href="#popularity" title="Popularity" /> : ''}
+            {repository?.stargazers.timeseries ? (
+              <Anchor.Link href="#popularity" title="Popularity" />
+            ) : (
+              ''
+            )}
           </Anchor>
         </header>
 
@@ -75,9 +75,16 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
           <Divider id="overview" title="Overview" className="divider" />
           <OverviewSection repository={repository} />
 
-          {timeseries && <Divider id="popularity" title="Popularity" className="divider" />}
-          {timeseries && (
-            <PopularitySection timeseries={timeseries} first={first} last={last} tags={tags} />
+          {repository?.stargazers.timeseries && (
+            <Divider id="popularity" title="Popularity" className="divider" />
+          )}
+          {repository?.stargazers.timeseries && (
+            <PopularitySection
+              timeseries={repository?.stargazers.timeseries}
+              first={repository?.stargazers.first}
+              last={repository?.stargazers.last}
+              tags={repository?.tags}
+            />
           )}
         </section>
       </section>

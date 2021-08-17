@@ -8,7 +8,7 @@ import async from 'async';
 import mkdirp from 'mkdirp';
 import cliProgress from 'cli-progress';
 import { cyan } from 'colors';
-import { program } from 'commander';
+import { Option, program } from 'commander';
 import { dirname, join } from 'path';
 import { writeFileSync, existsSync } from 'fs';
 
@@ -19,14 +19,20 @@ import { version } from './package.json';
 program
   .version(version)
   .option('-w, --workers [number]', 'Maximun number of workers', Number, 1)
-  .arguments('<destination>')
-  .description('Exports the website data into json files', {
-    destination: 'Target directory to save the resulting json files'
-  })
+  .option('-l, --limit [number]', 'Maximum number of repositories', Number)
+  .addOption(
+    new Option('-s, --sort [string]', 'Sort repositories by')
+      .choices(['stargazers_count', 'forks_count', 'created_at', 'updated_at', 'pushed_at'])
+      .default('stargazers_count')
+  )
+  .addOption(
+    new Option('-o, --order [string]', 'Sort order').choices(['asc', 'desc']).default('desc')
+  )
+  .argument('<destination>', 'Exports the website data into json files')
   .action(async (dir) => {
     const options = program.opts();
 
-    function writer(content: any, destination: string): void {
+    function writeFile(content: any, destination: string): void {
       const finalDest = join(dir, destination);
       const destDir = dirname(finalDest);
       if (!existsSync(destDir)) mkdirp.sync(destDir);
@@ -43,7 +49,11 @@ program
     const repos = await Repository.collection
       .find(
         {},
-        { projection: { _id: 0, name_with_owner: 1, primary_language: 1, stargazers_count: 1 } }
+        {
+          projection: { _id: 0, name_with_owner: 1, primary_language: 1, stargazers_count: 1 },
+          limit: options.limit ?? undefined,
+          sort: options.sort
+        }
       )
       .toArray();
 
@@ -61,11 +71,21 @@ program
 
     const queue = async.queue((repo: any, callback) => {
       consola.debug(`Exporting resources from ${repo.name_with_owner}`);
+
+      const errorHandler = (err: any) => {
+        consola.debug(err.message);
+        return null;
+      };
+
       return Promise.all([
-        repository(repo.name_with_owner, writer).catch((err) => consola.debug(err.message)),
-        stargazers(repo.name_with_owner, writer).catch((err) => consola.debug(err.message)),
-        tags(repo.name_with_owner, writer).catch((err) => consola.debug(err.message))
-      ]).then(() => {
+        repository(repo.name_with_owner),
+        stargazers(repo.name_with_owner).catch(errorHandler),
+        tags(repo.name_with_owner).catch(errorHandler)
+      ]).then(([repo, stargazers, tags]) => {
+        writeFile(
+          { ...repo, stargazers, tags },
+          join(...`${repo.name_with_owner}.json`.split('/'))
+        );
         progressBar.increment();
         callback();
       });
@@ -75,14 +95,14 @@ program
     await queue.drain().then(() => progressBar.stop());
 
     consola.info(`Exporting repositories list ...`);
-    writer(repos.map(Object.values), 'repos.json');
+    writeFile(repos.map(Object.values), 'repos.json');
 
     consola.info(`Exporting repositories stats ...`);
     async function query<T extends Model>(model: T) {
       return model.collection.estimatedDocumentCount();
     }
 
-    writer(
+    writeFile(
       {
         repositories: await query(Repository),
         users: await query(Actor),
