@@ -1,10 +1,7 @@
-@import '../../../styles/less/antd-custom.less';
-@import '../../../components/explorer/divider.module.less';
-@import '../../../components/explorer/popularity-section.module.less';
-
 .project-explorer {
   width: 95%;
   margin: auto;
+  font-size: 0.9em;
 
   & > header {
     display: flex;
@@ -12,8 +9,11 @@
     justify-content: space-between;
     margin-top: 15px;
 
-    .breadcrumb .icon {
-      margin-right: 5px;
+    & > .breadcrumb {
+      font-size: 0.9em;
+      .icon {
+        margin-right: 5px;
+      }
     }
   }
 
@@ -22,22 +22,24 @@
     margin: auto;
 
     & > .divider {
-      margin-top: 2em;
+      margin-top: 1.75em;
       margin-bottom: 1.5em;
       font-size: 1.75em;
+      color: var(--secondary-color);
     }
 
     & > .title {
       margin: auto;
-      margin-top: -15px;
+      margin-top: 1em;
       text-align: center;
 
-      div {
+      & > div {
         font-size: 1.75em;
         font-weight: bolder;
-        color: @primary-color;
+        color: var(--primary-color);
         padding-bottom: 10px;
-        .ant-avatar {
+
+        .avatar {
           margin-right: 15px;
         }
       }
@@ -60,9 +62,9 @@
 
       .ant-descriptions-item-label {
         font-weight: bolder;
-        color: @secondary-color;
+        color: var(--secondary-color);
         .icon {
-          color: @primary-color;
+          color: var(--primary-color);
           margin-right: 5px;
         }
       }

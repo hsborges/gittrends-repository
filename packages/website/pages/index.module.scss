@@ -1,19 +1,19 @@
-@import '../styles/less/antd-custom.less';
+@import '../styles/variables.scss';
 
-.github-index-page {
+.index-page {
   width: 100%;
 
   & > header {
     padding: 5vh 0;
     text-align: center;
-    font-size: 3.25em;
-    color: @primary-color;
+    font-size: 3em;
+    color: $primary-color;
     font-weight: bolder;
   }
 
   & > section {
     text-align: center;
-    font-size: 1.25em;
+    font-size: 1.15em;
 
     & > span {
       display: block;
@@ -46,16 +46,16 @@
       justify-content: space-evenly;
 
       .db-stats {
-        .ant-statistic-title {
-          font-size: 1.25em;
-        }
+        .db-stats-number {
+          display: flex;
+          align-items: center;
+          justify-content: center;
 
-        .ant-statistic-content-value {
-          color: @text-color;
-        }
-
-        .ant-statistic-content-prefix {
-          color: @primary-color;
+          .db-stats-icon {
+            color: $primary-color;
+            padding-right: 5px;
+            font-size: 1.25em;
+          }
         }
       }
     }
@@ -63,7 +63,7 @@
 }
 
 @media (max-width: 575.98px) {
-  .github-index-page {
+  .index-page {
     & > header {
       width: 95vw;
       margin: 3vh auto;
@@ -96,20 +96,6 @@
         display: grid;
         grid-template-columns: repeat(4, auto);
         grid-template-rows: auto;
-
-        .db-stats {
-          .ant-statistic-title {
-            display: none;
-          }
-
-          .ant-statistic-content-value {
-            font-size: 0.75em;
-          }
-
-          .ant-statistic-content-prefix {
-            font-size: 0.75em;
-          }
-        }
       }
     }
   }

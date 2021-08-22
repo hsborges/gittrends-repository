@@ -1,6 +1,6 @@
-@import '../../styles/less/antd-custom.less';
+@import '../../styles/variables.scss';
 
-.gittrends-explorer-page {
+.explorer-page {
   display: flex;
   flex-direction: column;
 
@@ -18,25 +18,22 @@
     z-index: 1;
     background-color: white;
 
-    .select,
-    .search {
-      width: 300px;
+    & > .select,
+    & > .search {
+      width: 350px;
+      height: 35px;
     }
 
-    .statistic {
+    & > .statistic {
       max-width: 150px;
-    }
+      color: var(--primary-color);
+      margin-top: -5px;
 
-    .ant-statistic-title {
-      line-height: 1em;
-      text-align: center;
-    }
-
-    .ant-statistic-content {
-      color: @primary-color;
-      line-height: 1em;
-      text-align: center;
-      font-weight: bolder;
+      *:first-child > * {
+        text-align: center;
+        font-weight: bold;
+        height: 1.1em;
+      }
     }
   }
 
@@ -73,7 +70,7 @@
 }
 
 @media (max-width: 575.98px) {
-  .gittrends-explorer-page {
+  .explorer-page {
     .header {
       .select,
       .statistic {

@@ -1,20 +1,23 @@
-.gittrends-repository-card {
-  max-width: 225px;
+@import '../styles/variables.scss';
+
+.repository-card {
+  width: 225px;
   height: 200px;
   cursor: pointer;
 
   .card-header {
-    .ant-avatar {
+    font-weight: bolder;
+    padding: 8px 16px;
+
+    .card-header-avatar {
       width: 24px;
       height: 24px;
     }
 
-    .ant-card-meta-title {
-      color: @text-color;
+    .card-header-title {
+      color: $text-color;
       font-weight: bolder;
-      font-size: 0.9rem;
-      line-height: 1.5rem;
-      padding-bottom: 10px;
+      text-align: left;
     }
   }
 
@@ -23,15 +26,14 @@
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-around;
+    color: $text-color;
+    font-size: 0.8rem;
+    color: $text-color-secondary;
+    padding: 8px 16px;
 
-    .ant-statistic-content {
-      font-size: 0.9em;
-      color: @text-color-secondary;
-      text-align: center;
-    }
-
-    .ant-statistic-content-prefix {
-      color: @primary-color;
+    .stat-icon {
+      color: $primary-color;
+      margin-right: 5px;
     }
   }
 
@@ -40,7 +42,9 @@
     justify-content: center;
     align-content: center;
     padding: 5px;
-    color: @text-color;
+    color: $text-color;
+    font-size: 0.8rem;
+    padding: 8px 16px;
 
     .description {
       max-height: 125px;
@@ -86,7 +90,7 @@
 }
 
 @media (max-width: 575.98px) {
-  .gittrends-repository-card {
+  .repository-card {
     height: 185px;
 
     .views {

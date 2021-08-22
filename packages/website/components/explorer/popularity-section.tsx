@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Avatar, Card, Select, Switch } from 'antd';
+import classnames from 'classnames';
+import { Box, Avatar, Select, Switch } from '@chakra-ui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faArrowAltCircleUp, faStar, faTag } from '@fortawesome/free-solid-svg-icons';
@@ -20,6 +21,8 @@ import {
   LineSeries,
   Hint
 } from 'react-vis';
+
+import styles from './popularity-section.module.scss';
 
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
@@ -92,61 +95,77 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
   }, [seriesType, scaleType, timeseries, props.tags]);
 
   return (
-    <section className={`gittrends-repository-popularity-section ${props.className ?? ''}`}>
-      <div className="statistics">
-        <Card title="Oldest stargazer" size="small" className="card">
-          <Card.Meta
-            avatar={<Avatar src={props.first?.user.avatar_url} />}
-            title={
-              <span className="card-title">
-                <Link href={`https://github.com/${props.first?.user.login}`} passHref>
-                  <a target="_blank" rel="noreferrer">
-                    <span>{props.first?.user.name || props.first?.user.login}</span>{' '}
-                    <FontAwesomeIcon icon={faGithub} className="icon" />
-                  </a>
-                </Link>
+    <section className={classnames(styles['popularity-section'], props.className)}>
+      <div className={styles.statistics}>
+        <Box className={styles.card}>
+          <Box className={styles.header}>Oldest stargazer</Box>
+          <Box className={styles.content}>
+            <Avatar className={styles.avatar} src={props.first?.user.avatar_url} size="sm" />
+            <span className={styles.description}>
+              <Link href={`https://github.com/${props.first?.user.login}`} passHref>
+                <a target="_blank" rel="noreferrer">
+                  <span>{props.first?.user.name || props.first?.user.login}</span>{' '}
+                  <FontAwesomeIcon icon={faGithub} className={styles.icon} />
+                </a>
+              </Link>
+              <span>{dayjs(props.first?.starred_at).format('L LT')}</span>
+            </span>
+          </Box>
+        </Box>
+        <Box className={styles.card}>
+          <Box className={styles.header}>Newest stargazer</Box>
+          <Box className={styles.content}>
+            <Avatar className={styles.avatar} src={props.last?.user.avatar_url} size="sm" />
+            <span className={styles.description}>
+              <Link href={`https://github.com/${props.last?.user.login}`} passHref>
+                <a target="_blank" rel="noreferrer">
+                  <span>{props.last?.user.name || props.last?.user.login}</span>{' '}
+                  <FontAwesomeIcon icon={faGithub} className={styles.icon} />
+                </a>
+              </Link>
+              <span>{dayjs(props.last?.starred_at).format('L LT')}</span>
+            </span>
+          </Box>
+        </Box>
+        <Box className={styles.card}>
+          <Box className={styles.header}>Peak (week)</Box>
+          <Box className={styles.content}>
+            <Avatar
+              className={styles.avatar}
+              size="sm"
+              icon={<FontAwesomeIcon icon={faStar} size="2x" />}
+              bg="none"
+              color="var(--primary-color)"
+            />
+            <span className={styles.description}>
+              <span>{numeral(peak.total).format('0,0') + ' stars'}</span>
+              <span>
+                {dayjs.utc(peak.date).subtract(6, 'days').format('[DD') +
+                  '-' +
+                  dayjs.utc(peak.date).format('DD]') +
+                  dayjs.utc(peak.date).format(' MMMM YYYY')}
               </span>
-            }
-            description={dayjs(props.first?.starred_at).format('L LT')}
-          />
-        </Card>
-        <Card title="Newest stargazer" size="small" className="card">
-          <Card.Meta
-            avatar={<Avatar src={props.last?.user.avatar_url} />}
-            title={
-              <span className="card-title">
-                <Link href={`https://github.com/${props.last?.user.login}`} passHref>
-                  <a target="_blank" rel="noreferrer">
-                    <span>{props.last?.user.name || props.last?.user.login}</span>{' '}
-                    <FontAwesomeIcon icon={faGithub} className="icon" />
-                  </a>
-                </Link>
-              </span>
-            }
-            description={dayjs(props.last?.starred_at).format('L LT')}
-          />
-        </Card>
-        <Card title="Peak (week)" size="small" className="card">
-          <Card.Meta
-            avatar={<FontAwesomeIcon icon={faStar} className="avatar-icon" />}
-            title={numeral(peak.total).format('0,0') + ' stars'}
-            description={
-              dayjs.utc(peak.date).subtract(6, 'days').format('[DD') +
-              '-' +
-              dayjs.utc(peak.date).format('DD]') +
-              dayjs.utc(peak.date).format(' MMMM YYYY')
-            }
-          />
-        </Card>
-        <Card title="Recently" size="small" className="card">
-          <Card.Meta
-            avatar={<FontAwesomeIcon icon={faArrowAltCircleUp} className="avatar-icon" />}
-            title={numeral(gainedRecently).format('0,0') + ' stars'}
-            description={'this year'}
-          />
-        </Card>
+            </span>
+          </Box>
+        </Box>
+        <Box className={styles.card}>
+          <Box className={styles.header}>Recently</Box>
+          <Box className={styles.content}>
+            <Avatar
+              className={styles.avatar}
+              size="sm"
+              icon={<FontAwesomeIcon icon={faArrowAltCircleUp} size="2x" />}
+              bg="none"
+              color="var(--primary-color)"
+            />
+            <span className={styles.description}>
+              <span>{numeral(gainedRecently).format('0,0') + ' stars'}</span>
+              <span>this year</span>
+            </span>
+          </Box>
+        </Box>
       </div>
-      <div className="plot-area">
+      <div className={styles['plot-area']}>
         <FlexibleWidthXYPlot
           height={window.innerWidth >= 576 ? 300 : 200}
           animation={{ duration: 1 }}
@@ -170,42 +189,46 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
                 key={`tag_${index}`}
                 value={{ x: tag.x, y: tag.y }}
                 align={{ vertical: 'top' }}
-                className="hint"
+                className={styles.hint}
               >
                 <FontAwesomeIcon icon={faTag} rotation={270} color="gray" />
-                <span className="tooltip">{tag.names.join(', ')}</span>
+                <span className={styles.tooltip}>{tag.names.join(', ')}</span>
               </Hint>
             ))}
         </FlexibleWidthXYPlot>
-        <div className="controls">
-          <div className="control">
-            <span className="label">Series</span>
+        <div className={styles.controls}>
+          <div className={styles.control}>
+            <span className={styles.label}>Series</span>
             <Select
               value={seriesType}
-              size="small"
-              className="select"
-              onChange={(value) => setSeriesType(value)}
+              size="sm"
+              className={styles.select}
+              onChange={(event) => setSeriesType(event.target.value)}
             >
-              <Select.Option value="weekly">By week</Select.Option>
-              <Select.Option value="cumulative">Cumulative</Select.Option>
+              <option value="weekly">By week</option>
+              <option value="cumulative">Cumulative</option>
             </Select>
           </div>
-          <div className="control">
-            <span className="label">Scale</span>
+          <div className={styles.control}>
+            <span className={styles.label}>Scale</span>
             <Select
               defaultValue="linear"
-              size="small"
-              className="select"
-              onChange={(value) => setScaleType(value)}
+              size="sm"
+              className={styles.select}
+              onChange={(event) => setScaleType(event.target.value)}
             >
-              <Select.Option value="linear">Linear</Select.Option>
-              <Select.Option value="log">Logarithm</Select.Option>
+              <option value="linear">Linear</option>
+              <option value="log">Logarithm</option>
             </Select>
           </div>
           {tags && tags.length ? (
-            <div className="control">
-              <span className="label">Show tags</span>
-              <Switch size="small" onChange={(checked) => setShowTags(checked)} />
+            <div className={styles.control}>
+              <span className={styles.label}>Show tags</span>
+              <Switch
+                color="var(--primary-color)"
+                ml={1}
+                onChange={(event) => setShowTags(event.target.checked)}
+              />
             </div>
           ) : (
             ''

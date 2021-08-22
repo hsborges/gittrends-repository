@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import React from 'react';
-import App from 'next/app';
+import { ChakraProvider } from '@chakra-ui/react';
 
-import '../styles/globals.css';
-import '../styles/less/index.less';
+import '../styles/globals.scss';
+import 'react-vis/dist/style.css';
 
-class MyApp extends App {
-  render() {
-    const { Component, pageProps } = this.props;
-    return <Component {...pageProps} />;
-  }
+export default function MyApp({ Component, pageProps }) {
+  return (
+    <ChakraProvider>
+      <Component {...pageProps} />
+    </ChakraProvider>
+  );
 }
-
-export default MyApp;

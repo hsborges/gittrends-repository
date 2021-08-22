@@ -1,6 +1,4 @@
-@import '../../styles/less/antd-custom.less';
-
-.gittrends-repository-popularity-section {
+.popularity-section {
   .statistics {
     display: flex;
     flex-direction: row;
@@ -11,20 +9,35 @@
       max-width: 225px;
       min-width: 225px;
       margin-right: 5px;
+      border: 1px solid rgb(240, 240, 240);
 
-      .card-title {
-        a {
-          color: inherit;
-        }
-
-        .icon {
-          color: @primary-color;
-        }
+      & > .header {
+        padding: 10px 15px;
+        border-bottom: 1px solid rgb(240, 240, 240);
+        font-weight: bold;
       }
 
-      .avatar-icon {
-        color: @primary-color;
-        font-size: 1.5em;
+      & > .content {
+        padding: 10px 15px;
+        display: flex;
+
+        & > .description {
+          margin-left: 10px;
+
+          & > * {
+            display: block;
+          }
+
+          & > a,
+          & > span:first-child {
+            font-weight: bold;
+            margin-bottom: 3px;
+          }
+
+          .icon {
+            color: var(--primary-color);
+          }
+        }
       }
     }
 
@@ -47,7 +60,7 @@
       .tooltip {
         display: none;
         color: white;
-        background-color: @primary-color;
+        background-color: var(--primary-color);
         font-weight: bolder;
         cursor: pointer;
         padding: 5px 10px;
@@ -66,20 +79,21 @@
     }
 
     .controls {
-      display: block;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
       padding: 10px 0;
 
       .control {
-        display: inline;
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
         span.label {
-          color: @primary-color;
+          color: var(--primary-color);
           font-weight: bolder;
           padding-right: 5px;
-        }
-
-        .select {
-          width: 125px;
         }
       }
 
@@ -91,7 +105,7 @@
 }
 
 @media (max-width: 575.98px) {
-  .gittrends-repository-popularity-section {
+  .popularity-section {
     .statistics {
       display: grid;
       grid-template-columns: repeat(2, 1fr);

@@ -1,0 +1,17 @@
+.under-construction {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+  width: 100%;
+  color: var(--primary-color);
+  padding: 25vh 0;
+
+  .text {
+    font-size: 1.25em;
+    padding-top: 25px;
+    font-weight: bold;
+  }
+}

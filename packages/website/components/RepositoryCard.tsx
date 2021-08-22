@@ -1,10 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
-import { truncate } from 'lodash';
-import { Card, Avatar, Divider, Statistic, Row, Col, Empty } from 'antd';
+import numeral from 'numeral';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faCodeBranch } from '@fortawesome/free-solid-svg-icons';
 import { FlexibleWidthXYPlot, XAxis, LineSeries } from 'react-vis';
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import { Avatar, Card, CardHeader, CardContent, Divider } from '@material-ui/core';
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -14,6 +15,7 @@ dayjs.extend(utc);
 dayjs.extend(customParseFormat);
 
 import fetchProject from '../hooks/fetchProject';
+import styles from './RepositoryCard.module.scss';
 
 const stats: { field: string; icon: any }[] = [
   { field: 'stargazers_count', icon: faStar },
@@ -29,10 +31,35 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
   const { repository } = fetchProject({ name_with_owner: props.repository });
 
   return (
-    <Card {...cardProps} className={`gittrends-repository-card ${cardProps.className ?? ''}`}>
+    <Card {...cardProps} className={`${styles['repository-card']} ${cardProps.className ?? ''}`}>
       <Link href={`/explorer/${repository?.name_with_owner}`} passHref>
         <a>
-          <Card.Meta
+          <CardHeader
+            avatar={
+              <Avatar
+                src={repository?.open_graph_image_url}
+                className={styles['card-header-avatar']}
+              />
+            }
+            title={<span className={styles['card-header-title']}>{repository?.name}</span>}
+            className={styles['card-header']}
+          />
+          <Divider />
+          <CardContent className={styles.stats}>
+            {stats.map((stat) => (
+              <span key={stat.field} className={styles.stat}>
+                <FontAwesomeIcon icon={stat.icon} className={styles['stat-icon']} />
+                {numeral(repository?.[stat.field]).format('0,0')}
+              </span>
+            ))}
+          </CardContent>
+          <Divider />
+          <CardContent className={styles.views}>
+            <span className={styles.description}>
+              {repository?.description || '<no_description_available>'}
+            </span>
+          </CardContent>
+          {/* <Card.Meta
             avatar={<Avatar src={repository?.open_graph_image_url} />}
             title={repository?.name}
             className="card-header"
@@ -81,7 +108,7 @@ export default function RepositoryCard(props: RepositoryCardProps): JSX.Element 
             <Col span={24} className="extra" hidden={repository?.stargazers?.timeseries}>
               <Empty description="stars history not avaliable yet" className="not-available" />
             </Col>
-          </Row>
+          </Row> */}
         </a>
       </Link>
     </Card>

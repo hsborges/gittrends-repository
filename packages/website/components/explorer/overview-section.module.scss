@@ -1,0 +1,18 @@
+.table {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  & .cell {
+    text-align: center;
+    margin: 10px 25px;
+
+    .title {
+      color: var(--primary-color);
+      font-weight: bold;
+      border-bottom: 1px solid;
+      padding-bottom: 2px;
+      padding: 0 5px;
+    }
+  }
+}

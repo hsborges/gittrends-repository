@@ -1,0 +1,34 @@
+:root {
+  --font-size: 16px;
+  --primary-color: rgb(104, 178, 177);
+  --secondary-color: rgba(80, 80, 80);
+  --link-color: var(--primary-color);
+  --text-color: rgb(90, 90, 90);
+  --text-color-secondary: rgb(90, 90, 90);
+  --border-color-base: var(--primary-color);
+
+  // --chakra-fontSizes-lg: var(--font-size);
+  --chakra-themes-shadows-outline: var(--primary-color);
+}
+
+html,
+body {
+  min-height: 100vh;
+  width: 100vw;
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell,
+    Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  color: var(--text-color);
+  font-size: var(--font-size);
+}
+
+a {
+  text-decoration: none;
+  color: var(--link-color);
+}
+
+* {
+  box-sizing: border-box;
+}

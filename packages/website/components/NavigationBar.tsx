@@ -18,6 +18,8 @@ import Logo from './Logo';
 import Search from './Search';
 import BetaBadge from './BetaBadge';
 
+import styles from './NavigationBar.module.scss';
+
 type TMenuItem = { title: string; link: string; icon: any };
 type TMenu = Array<TMenuItem>;
 
@@ -40,10 +42,10 @@ export default function NavigationBar(
     return (
       <Link key={item.title} href={item.link} passHref>
         <a
-          className={`item ${active ? 'active' : ''}`}
-          onClick={() => document.querySelector('.menu').classList.remove('visible')}
+          className={`${styles.item} ${active ? styles.active : ''}`}
+          onClick={() => document.querySelector('.menu')?.classList.remove(styles.visible)}
         >
-          <FontAwesomeIcon icon={item.icon} className="icon" /> <span>{item.title}</span>
+          <FontAwesomeIcon icon={item.icon} className={styles.icon} /> <span>{item.title}</span>
         </a>
       </Link>
     );
@@ -52,43 +54,58 @@ export default function NavigationBar(
   const { showSearch, ...sectionProps } = props;
 
   return (
-    <section {...sectionProps} className={`gittrends-navigation-bar ${props.className ?? ''}`}>
-      <BetaBadge className="badge" />
+    <section {...sectionProps} className={`${styles['navigation-bar']} ${props.className ?? ''}`}>
+      <BetaBadge className={styles.badge} />
       <header>
         <Logo />
       </header>
       <FontAwesomeIcon
         icon={faBars}
-        className="menu-icon"
-        onClick={() => document.querySelector('.menu').classList.add('visible')}
+        className={styles['menu-icon']}
+        onClick={() => document.querySelector('.menu').classList.add(styles.visible)}
       />
-      <section className="menu">
+      <section className={styles.menu}>
         <FontAwesomeIcon
           icon={faTimes}
-          className="close-menu-icon"
-          onClick={() => document.querySelector('.menu').classList.remove('visible')}
+          className={styles['close-menu-icon']}
+          onClick={() => document.querySelector('.menu').classList.remove(styles.visible)}
         />
-        <div className="item search-area" hidden={!showSearch}>
-          <Search
-            placeholder="Search"
-            onSearch={(query) => Router.push({ pathname: '/explorer', query: { query } })}
-          />
-        </div>
+        {showSearch ? (
+          <div className={`${styles.item} ${styles['search-area']}`}>
+            <Search
+              placeholder="Search"
+              onSearch={(query) => Router.push({ pathname: '/explorer', query: { query } })}
+            />
+          </div>
+        ) : (
+          <></>
+        )}
+
         {links.map((item) => renderMenuItem(item))}
       </section>
       <footer>
-        <a href="https://github.com/hsborges" className="icon" target="_blank" rel="noreferrer">
+        <a
+          href="https://github.com/hsborges"
+          className={styles.icon}
+          target="_blank"
+          rel="noreferrer"
+        >
           <FontAwesomeIcon icon={faGithub} />
         </a>
         <a
           href="https://twitter.com/hudsonsilbor"
-          className="icon"
+          className={styles.icon}
           target="_blank"
           rel="noreferrer"
         >
           <FontAwesomeIcon icon={faTwitter} />
         </a>
-        <a href="mailTo:hudsonsilbor@gmail.com" className="icon" target="_blank" rel="noreferrer">
+        <a
+          href="mailTo:hudsonsilbor@gmail.com"
+          className={styles.icon}
+          target="_blank"
+          rel="noreferrer"
+        >
           <FontAwesomeIcon icon={faEnvelope} />
         </a>
       </footer>

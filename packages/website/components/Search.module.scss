@@ -1,0 +1,12 @@
+@import '../styles/variables.scss';
+
+.autocomplete {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100% !important;
+
+  & > .hidden {
+    height: 0px;
+  }
+}

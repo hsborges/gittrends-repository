@@ -1,6 +1,6 @@
-@import '../../styles/less/antd-custom.less';
+@import '../../styles/variables.scss';
 
-.gittrends-about-page {
+.about {
   width: 100%;
   margin-bottom: 10vh;
 
@@ -17,18 +17,20 @@
     }
   }
 
-  #references {
-    .reference {
-      .pdf {
-        color: red;
-        padding-right: 10px;
-      }
-      .title {
-        font-weight: bolder;
-      }
-      span {
-        padding-right: 0.5em;
-      }
+  .reference {
+    &:not(:last-child) {
+      padding-bottom: 15px;
+    }
+
+    .pdf {
+      color: red;
+      padding-right: 10px;
+    }
+    .title {
+      font-weight: bolder;
+    }
+    span {
+      padding-right: 0.5em;
     }
   }
 
@@ -39,7 +41,7 @@
     text-align: justify;
 
     h1 {
-      color: @primary-color;
+      color: $primary-color;
       border-bottom: 1px solid;
       font-size: 1.5em;
       padding-top: 25px;
