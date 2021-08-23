@@ -1,0 +1,22 @@
+{
+  "name": "locations-research",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "rm -rf dist && yarn tsc",
+    "dev:update-locations": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config -T update-locations.ts"
+  },
+  "dependencies": {
+    "@gittrends/database-config": "file:../../packages/database-config",
+    "commander": "^8.1.0",
+    "consola": "^2.15.3",
+    "fast-csv": "^4.3.6",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@gittrends/env-config": "file:../../packages/env-config",
+    "ts-node-dev": "^1.1.8",
+    "tsconfig-paths": "^3.10.1"
+  }
+}

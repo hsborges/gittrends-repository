@@ -36,8 +36,8 @@ const TUNNEL = {
 
 const client = new MongoClient(
   USERNAME
-    ? `mongodb://${USERNAME}:${PASSWORD}@${HOST}:${PORT}?authMechanism=DEFAULT`
-    : `mongodb://${HOST}:${PORT}`,
+    ? `mongodb://${USERNAME}:${PASSWORD}@${HOST}:${PORT}/${DB}?authSource=admin&authMechanism=DEFAULT`
+    : `mongodb://${HOST}:${PORT}/${DB}`,
   {
     maxPoolSize: parseInt(POOL_SIZE, 10)
   }
