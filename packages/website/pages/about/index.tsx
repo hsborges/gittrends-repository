@@ -38,7 +38,7 @@ export default function Info(): JSX.Element {
     <Layout>
       <section className={styles.about}>
         <article>
-          <h1>What is GitTrends.app?</h1>
+          <h2>What is GitTrends.app?</h2>
           <p>
             GitTrends is a tool created to support developers, project maintainers and software
             engineering researchers by providing useful insights on popular open source projects
@@ -50,7 +50,7 @@ export default function Info(): JSX.Element {
           </p>
         </article>
         <article>
-          <h1>How it works?</h1>
+          <h2>How it works?</h2>
           <p>
             To keep our database updated we have a web service running on background making millions
             of requests per hour to GitHub service API. The data obtained from these requests are
@@ -65,7 +65,7 @@ export default function Info(): JSX.Element {
           </p>
         </article>
         <article>
-          <h1>Why is my project not listed in this tool?</h1>
+          <h2>Why is my project not listed in this tool?</h2>
           <p>
             Although GitHub hosts millions of repositories, GitTrends only monitor popular
             repositories (i.e., those ones with a large number of stars). If your repository is not
@@ -74,24 +74,24 @@ export default function Info(): JSX.Element {
           </p>
         </article>
         <article>
-          <h1>Who is maintaining this tool?</h1>
+          <h2>Who is maintaining?</h2>
           <section>
-            <div className={styles.picture}>
-              <img src="/images/hudson.jpg" alt="" />
-            </div>
-            <div className={styles.description}>
-              <span> Hudson Silva Borges </span>
-              <span>
-                Assistant professor at
-                <abbr title="Faculty of Computer Science">FACOM</abbr>/
-                <abbr title="Federal University of Mato Grosso do Sul">UFMS</abbr>, Brazil.
+            <div className={styles.maintainer}>
+              <img className={styles.picture} src="/images/hudson.jpg" alt="" />
+              <span className={styles.description}>
+                <span> Hudson Silva Borges </span>
+                <span>
+                  Assistant professor at
+                  <abbr title="Faculty of Computer Science">FACOM</abbr>/
+                  <abbr title="Federal University of Mato Grosso do Sul">UFMS</abbr>, Brazil.
+                </span>
+                <span> Email: hsborges [a] facom.ufms.br </span>
               </span>
-              <span> Email: hsborges [a] facom.ufms.br </span>
             </div>
           </section>
         </article>
         <article id="references">
-          <h1>Academic Publications</h1>
+          <h2>Academic Publications</h2>
           <dl>
             {references.map((reference, index) => (
               <dd key={index} className={styles.reference}>

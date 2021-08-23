@@ -87,7 +87,7 @@ function Explorer(props: ISearch): JSX.Element {
               </option>
               {Object.entries(data?.meta.languages_count ?? {}).map((entry) => (
                 <option
-                  key={entry[0]}
+                  key={`language_${entry[0]}`}
                   value={entry[0]}
                   selected={query.language === entry[0]}
                 >{`${entry[0]} (${entry[1]})`}</option>
@@ -176,7 +176,7 @@ function Explorer(props: ISearch): JSX.Element {
             onChange={(event) => setPageSize(Number(event.currentTarget.value))}
           >
             {[12, 24, 48, 96].map((size) => (
-              <option value={size} selected={Number(pageSize) === size}>
+              <option key={`size_${size}`} value={size} selected={Number(pageSize) === size}>
                 {size} / page
               </option>
             ))}

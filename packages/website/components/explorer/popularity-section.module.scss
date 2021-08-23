@@ -1,4 +1,6 @@
 .popularity-section {
+  padding-bottom: 50px;
+
   .statistics {
     display: flex;
     flex-direction: row;
@@ -51,12 +53,9 @@
     flex-direction: column;
     align-items: center;
 
-    .rv-crosshair,
-    .rv-hint {
-      pointer-events: auto;
-    }
-
     .hint {
+      pointer-events: auto;
+
       .tooltip {
         display: none;
         color: white;
@@ -94,6 +93,11 @@
           color: var(--primary-color);
           font-weight: bolder;
           padding-right: 5px;
+        }
+
+        & > .checkbox span[aria-hidden][data-checked] {
+          background-color: var(--primary-color);
+          border-color: var(--primary-color);
         }
       }
 

@@ -47,6 +47,7 @@ export default function Home(): JSX.Element {
             onSearch={(value: string) =>
               Router.push({ pathname: '/explorer', query: { query: value } })
             }
+            onSelectOption={(value: string) => Router.push({ pathname: `/explorer/${value}` })}
           />
         </div>
         <span>or explore the popular ones</span>
@@ -70,19 +71,6 @@ export default function Home(): JSX.Element {
                   : numeral(stats.value).format('0a').toUpperCase()}
               </StatNumber>
             </Stat>
-            // <div className={styles['db-stats']} key={stats.title}>
-            //   <div className={styles['db-stats-title']}>{stats.title}</div>
-            //   <div className={styles['db-stats-content']}>
-            //     <span className={styles['db-stats-content-icon']}>
-            //       <FontAwesomeIcon icon={stats.icon} />
-            //     </span>
-            //     <span className={styles['db-stats-content-value']}>
-            //       {width > 600
-            //         ? numeral(stats.value).format('0,0')
-            //         : numeral(stats.value).format('0a').toUpperCase()}
-            //     </span>
-            //   </div>
-            // </div>
           ))}
         </div>
         <div hidden={!isError}>

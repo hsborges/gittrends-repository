@@ -9,7 +9,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
 import Layout from '../../layouts/DefaultLayout';
 
-import './index.module.less';
+import styles from './index.module.scss';
 
 type TAuthorizationResponse = { success?: boolean; login?: string };
 
@@ -26,22 +26,22 @@ function Authorization(props: TAuthorizationResponse): JSX.Element {
 
   return (
     <Layout>
-      <section className="gittrends-authorization">
+      <section className={styles.authorization}>
         <header hidden={props.success}>
           Donate an GitHub access token <FontAwesomeIcon icon={faThumbsUp} />
         </header>
-        <section className="feedback-text" hidden={!props.success}>
-          Hey <span className="login">{props.login}</span>, we received your token. <br />
-          Thank you very much <FontAwesomeIcon icon={faSmile} className="smile" />
+        <section className={styles['feedback-text']} hidden={!props.success}>
+          Hey <span className={styles.login}>{props.login}</span>, we received your token. <br />
+          Thank you very much <FontAwesomeIcon icon={faSmile} className={styles.smile} />
         </section>
-        <section className="main-text" hidden={props.success}>
+        <section className={styles['main-text']} hidden={props.success}>
           We make thousands of GitHub API requests to keep our database updated. With more tokens we
           can add expand our dataset and speedup the data processing.
         </section>
         <a href={URL} hidden={props.success}>
           <FontAwesomeIcon icon={faGithub} /> Donate
         </a>
-        <section className="ps" hidden={props.success}>
+        <section className={styles.ps} hidden={props.success}>
           * you can revoke this authorization later on the GitHub website
         </section>
 

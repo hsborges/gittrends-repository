@@ -18,20 +18,21 @@
   }
 
   & > section {
-    width: 75%;
+    width: 80%;
     margin: auto;
 
     & > .divider {
-      margin-top: 1.75em;
-      margin-bottom: 1.5em;
-      font-size: 1.75em;
+      margin: 3em 0;
+      font-size: 1.25em;
       color: var(--secondary-color);
+      opacity: 80%;
     }
 
     & > .title {
       margin: auto;
-      margin-top: 1em;
+      margin-top: 2em;
       text-align: center;
+      margin-bottom: 3em;
 
       & > div {
         font-size: 1.75em;
@@ -47,26 +48,15 @@
       .description,
       .topics {
         display: block;
+
+        a {
+          color: var(--secondary-color);
+          text-decoration: underline;
+        }
       }
 
       .topics .topic {
         margin-top: 10px;
-      }
-    }
-
-    & > .overview {
-      .ant-descriptions-item-label,
-      .ant-descriptions-item-content {
-        padding: 0.5em 1em;
-      }
-
-      .ant-descriptions-item-label {
-        font-weight: bolder;
-        color: var(--secondary-color);
-        .icon {
-          color: var(--primary-color);
-          margin-right: 5px;
-        }
       }
     }
 
@@ -90,12 +80,13 @@
       & > .divider {
         margin-top: 1.25em;
         margin-bottom: 1.25em;
-        font-size: 1.75em;
+        font-size: 1.5em;
       }
 
       & > .title {
         margin: auto;
-        padding-top: 25px;
+        padding: 25px 0;
+        font-size: small;
 
         .topics {
           margin-top: 10px;

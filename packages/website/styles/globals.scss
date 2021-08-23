@@ -32,3 +32,8 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.chakra-ui-light {
+  overflow-y: hidden;
+  max-height: 100vh;
+}

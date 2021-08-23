@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Anchor, Tag } from 'antd';
-import { Avatar, Breadcrumb, BreadcrumbItem } from '@chakra-ui/react';
+import { Avatar, Breadcrumb, BreadcrumbItem, Tag } from '@chakra-ui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome } from '@fortawesome/free-solid-svg-icons';
 
@@ -49,7 +48,10 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
               <Avatar src={repository?.open_graph_image_url} size="md" className={styles.avatar} />
               <span>{repository?.name_with_owner}</span>
             </div>
-            <span className={styles.description}>{repository?.description}</span>
+            <span className={styles.description}>
+              {repository?.description} <br />
+              <a href={repository?.homepage_url}>{repository?.homepage_url}</a>
+            </span>
             <span className={styles.topics} hidden={!repository?.repository_topics}>
               {repository?.repository_topics?.map((topic, index) => (
                 <Tag key={index} className={styles.topic}>
@@ -59,7 +61,6 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
             </span>
           </section>
 
-          <Divider id="overview" title="Overview" className={styles.divider} />
           <OverviewSection repository={repository} />
 
           {repository?.stargazers.timeseries && (

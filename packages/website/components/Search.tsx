@@ -1,10 +1,10 @@
-import Router from 'next/router';
 import React, { useState, useRef } from 'react';
-import SearchIcon from '@material-ui/icons/Search';
 import classnames from 'classnames';
 import { Box, InputGroup, Input, InputRightElement, Button } from '@chakra-ui/react';
-import { Menu, MenuButton, MenuList, MenuItem, useControllableState } from '@chakra-ui/react';
+import { Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
 import { useDetectClickOutside } from 'react-detect-click-outside';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
 import fetchProjects from '../hooks/searchProjects';
 import styles from './Search.module.scss';
@@ -63,7 +63,7 @@ export default function Search(props?: ISearchProps): JSX.Element {
               color="var(--primary-color)"
               onClick={() => props.onSearch && props.onSearch(query)}
             >
-              <SearchIcon />
+              <FontAwesomeIcon icon={faSearch} />
             </Button>
           </InputRightElement>
         </InputGroup>

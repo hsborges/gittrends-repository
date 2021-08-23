@@ -4,8 +4,12 @@
   align-items: center;
   margin-top: 95px;
 
+  img {
+    height: 4em;
+  }
+
   span {
-    font-size: 2em;
+    font-size: 1.75em;
     color: white;
     font-weight: bolder;
   }
@@ -19,8 +23,8 @@
     margin: auto;
 
     img {
-      height: 3em;
-      margin-right: 10px;
+      height: 2.5em;
+      margin-right: 0.5em;
     }
   }
 }

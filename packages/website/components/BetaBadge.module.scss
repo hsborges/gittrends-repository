@@ -1,7 +1,7 @@
-.beta-badge {
+.badge {
   color: white;
   font-weight: bolder;
-  font-size: 1.25em;
+  font-size: 1.15em;
   background-color: #505050;
   padding: 5px 50px;
   transform: rotate(-45deg);
@@ -11,7 +11,7 @@
 }
 
 @media (max-width: 575.98px) {
-  .beta-badge {
+  .badge {
     font-size: 1em;
     padding: 5px 50px;
     margin: -150px -110px;

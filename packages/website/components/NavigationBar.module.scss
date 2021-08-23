@@ -1,11 +1,9 @@
-@import '../styles/variables.scss';
-
 .navigation-bar {
   display: flex;
   flex-direction: column;
   height: 100vh;
   min-width: 100%;
-  background-color: $primary-color;
+  background-color: var(--primary-color);
   box-shadow: 2px 0 2px 0 #888888;
 
   header {
@@ -37,11 +35,13 @@
 
     .search-area {
       padding: 0.75em 10px;
+      color: var(--text-color);
     }
 
     .item.active {
       background-color: white;
-      color: $primary-color;
+      color: var(--primary-color);
+      font-weight: bold;
     }
   }
 
@@ -102,10 +102,10 @@
         display: none;
       }
 
-      &.visible {
+      &.mobile-menu {
         width: 100vw;
         height: 100vh;
-        background-color: $primary-color;
+        background-color: var(--primary-color);
         color: white;
         z-index: 2;
         opacity: 0.95;

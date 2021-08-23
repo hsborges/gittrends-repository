@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import classnames from 'classnames';
 import Router, { useRouter } from 'next/router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -27,6 +28,7 @@ export default function NavigationBar(
   props: { showSearch: boolean } & React.HTMLAttributes<HTMLElement>
 ): JSX.Element {
   const router = useRouter();
+  const [showMenu, setShowMenu] = useState(false);
 
   const links: TMenu = [
     { title: 'Home', link: '/', icon: faHome },
@@ -42,8 +44,8 @@ export default function NavigationBar(
     return (
       <Link key={item.title} href={item.link} passHref>
         <a
-          className={`${styles.item} ${active ? styles.active : ''}`}
-          onClick={() => document.querySelector('.menu')?.classList.remove(styles.visible)}
+          className={classnames(styles.item, { [styles.active]: active })}
+          onClick={() => setShowMenu(false)}
         >
           <FontAwesomeIcon icon={item.icon} className={styles.icon} /> <span>{item.title}</span>
         </a>
@@ -62,19 +64,20 @@ export default function NavigationBar(
       <FontAwesomeIcon
         icon={faBars}
         className={styles['menu-icon']}
-        onClick={() => document.querySelector('.menu').classList.add(styles.visible)}
+        onClick={() => setShowMenu(true)}
       />
-      <section className={styles.menu}>
+      <section className={classnames(styles.menu, { [styles['mobile-menu']]: showMenu })}>
         <FontAwesomeIcon
           icon={faTimes}
           className={styles['close-menu-icon']}
-          onClick={() => document.querySelector('.menu').classList.remove(styles.visible)}
+          onClick={() => setShowMenu(false)}
         />
         {showSearch ? (
           <div className={`${styles.item} ${styles['search-area']}`}>
             <Search
               placeholder="Search"
               onSearch={(query) => Router.push({ pathname: '/explorer', query: { query } })}
+              onSelectOption={(option) => Router.push({ pathname: `/explorer/${option}` })}
             />
           </div>
         ) : (

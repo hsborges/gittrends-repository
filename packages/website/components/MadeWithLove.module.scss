@@ -1,6 +1,4 @@
-@import '../styles/variables.scss';
-
-.gittrends-love {
+.love {
   width: 100%;
   height: 20px;
   line-height: 14px;
@@ -9,7 +7,7 @@
 
   & > span {
     .heart {
-      color: $primary-color;
+      color: var(--primary-color);
       margin: 0 5px;
     }
 

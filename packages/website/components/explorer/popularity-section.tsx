@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import classnames from 'classnames';
-import { Box, Avatar, Select, Switch } from '@chakra-ui/react';
+import { Box, Avatar, Select, Checkbox } from '@chakra-ui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faArrowAltCircleUp, faStar, faTag } from '@fortawesome/free-solid-svg-icons';
@@ -37,7 +37,7 @@ interface PopularitySectionAttributes extends React.HTMLAttributes<HTMLElement> 
 
 export default function PopularitySection(props: PopularitySectionAttributes): JSX.Element {
   const [tags, setTags] = useState([]);
-  const [showTags, setShowTags] = useState(false);
+  const [showTags, setShowTags] = useState(true);
   const [timeseries, setTimeseries] = useState([]);
   const [seriesType, setSeriesType] = useState('weekly');
   const [scaleType, setScaleType] = useState('linear');
@@ -221,17 +221,16 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
               <option value="log">Logarithm</option>
             </Select>
           </div>
-          {tags && tags.length ? (
+          {tags && tags.length && (
             <div className={styles.control}>
-              <span className={styles.label}>Show tags</span>
-              <Switch
-                color="var(--primary-color)"
+              <span className={styles.label}>Git tags</span>
+              <Checkbox
+                className={styles.checkbox}
+                defaultChecked={showTags}
                 ml={1}
                 onChange={(event) => setShowTags(event.target.checked)}
               />
             </div>
-          ) : (
-            ''
           )}
         </div>
       </div>
