@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import numeral from 'numeral';
 import camelCase from 'lodash/camelCase';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { Descriptions } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBalanceScale,
@@ -16,7 +15,6 @@ import {
   faEye,
   faHandsHelping,
   faHdd,
-  faHome,
   faNetworkWired,
   faRocket,
   faStar,
@@ -24,6 +22,8 @@ import {
   faUnlock,
   faUpload
 } from '@fortawesome/free-solid-svg-icons';
+
+import styles from './overview-section.module.scss';
 
 dayjs.extend(utc);
 dayjs.extend(relativeTime);
@@ -35,18 +35,8 @@ interface OverviewSectionAttributes extends React.HTMLAttributes<HTMLElement> {
 
 export default function OverviewSection(props: OverviewSectionAttributes): JSX.Element {
   const { repository } = props;
-  const [columns, setColumns] = useState(3);
-
-  useEffect(() => setColumns(window.innerWidth >= 576 ? 4 : 3), []);
 
   const overviewInfo = [
-    {
-      label: 'Homepage',
-      icon: faHome,
-      value: repository?.homepage_url,
-      span: 2,
-      link: true
-    },
     {
       label: 'Stargazers',
       icon: faStar,
@@ -118,26 +108,20 @@ export default function OverviewSection(props: OverviewSectionAttributes): JSX.E
 
   return (
     <section {...props}>
-      <Descriptions layout="vertical" bordered colon={false} column={columns} size="small">
+      <div className={styles.table}>
         {overviewInfo
           .filter((info) => info.value)
           .map((info, index) => (
-            <Descriptions.Item
-              key={index}
-              span={info.span}
-              label={
-                <span title={info.title ?? info.label}>
+            <span key={index} className={styles.cell}>
+              <div>
+                <span title={info.title ?? info.label} className={styles.title}>
                   <FontAwesomeIcon icon={info.icon} className="icon" /> {info.label}
                 </span>
-              }
-            >
-              <a href={info.value} target="_blank" rel="noopener noreferrer" hidden={!info.link}>
-                {info.value}
-              </a>
-              <span hidden={info.link}>{info.value}</span>
-            </Descriptions.Item>
+              </div>
+              <div>{info.value}</div>
+            </span>
           ))}
-      </Descriptions>
+      </div>
     </section>
   );
 }

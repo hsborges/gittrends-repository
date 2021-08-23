@@ -7,7 +7,7 @@ import consola from 'consola';
 import { join } from 'path';
 import { Repository } from '@gittrends/database-config';
 
-export default async function (name_with_owner: string, writer: WriterFunction): Promise<void> {
+export default async function (name_with_owner: string) {
   const repo = await Repository.collection.findOne(
     { name_with_owner },
     {
@@ -38,8 +38,7 @@ export default async function (name_with_owner: string, writer: WriterFunction):
   );
 
   if (!repo) throw new Error(`Repository "${name_with_owner}" not found!`);
+  else repo.owner = await actor(repo.owner);
 
-  await actor(repo.owner, writer)
-    .catch(consola.warn)
-    .finally(() => writer(repo, join(...name_with_owner.split('/'), 'repo.json')));
+  return repo;
 }

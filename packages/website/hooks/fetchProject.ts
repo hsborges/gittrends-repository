@@ -9,7 +9,7 @@ interface FetchActorResult {
 }
 
 export default function FetchProject(args: { name_with_owner: string }): FetchActorResult {
-  const { data, error } = useSWR(`/${args.name_with_owner}/repo.json`, axios);
+  const { data, error } = useSWR(`/${args.name_with_owner}.json`, axios);
 
   return {
     repository: data?.data,

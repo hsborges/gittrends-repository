@@ -2,9 +2,9 @@
  *  Author: Hudson S. Borges
  */
 import { join } from 'path';
-import { Actor } from '@gittrends/database-config';
+import { Actor, IActor } from '@gittrends/database-config';
 
-export default async function (id: string, writer: WriterFunction): Promise<void> {
+export default async function (id: string) {
   const actor = await Actor.collection.findOne(
     { _id: id },
     {
@@ -22,5 +22,5 @@ export default async function (id: string, writer: WriterFunction): Promise<void
 
   if (!actor) throw new Error(`Actor "${id}" , not found!`);
 
-  writer(actor, join(actor.login, 'actor.json'));
+  return actor;
 }

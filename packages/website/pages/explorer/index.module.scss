@@ -1,6 +1,4 @@
-@import '../../styles/less/antd-custom.less';
-
-.gittrends-explorer-page {
+.explorer-page {
   display: flex;
   flex-direction: column;
 
@@ -12,37 +10,34 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 0 5px #aaaaaa;
+    box-shadow: 0 0 5px rgb(240, 240, 240);
     position: sticky;
     top: 0;
     z-index: 1;
     background-color: white;
 
-    .select,
-    .search {
-      width: 300px;
+    & > .select,
+    & > .search {
+      width: 350px;
+      height: 35px;
     }
 
-    .statistic {
+    & > .statistic {
       max-width: 150px;
-    }
+      color: var(--primary-color);
+      margin-top: -5px;
 
-    .ant-statistic-title {
-      line-height: 1em;
-      text-align: center;
-    }
-
-    .ant-statistic-content {
-      color: @primary-color;
-      line-height: 1em;
-      text-align: center;
-      font-weight: bolder;
+      *:first-child > * {
+        text-align: center;
+        font-weight: bold;
+        height: 1.1em;
+      }
     }
   }
 
   .content {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, auto);
     justify-content: center;
     gap: 15px;
     margin: 5vw 5vw 0 5vw;
@@ -73,7 +68,7 @@
 }
 
 @media (max-width: 575.98px) {
-  .gittrends-explorer-page {
+  .explorer-page {
     .header {
       .select,
       .statistic {
@@ -86,6 +81,7 @@
     }
 
     .content {
+      grid-template-columns: repeat(2, auto);
       gap: 10px;
       margin: 25px 5px;
 

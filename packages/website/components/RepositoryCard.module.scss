@@ -1,0 +1,90 @@
+.repository-card {
+  width: 225px;
+  height: 225px;
+  cursor: pointer;
+  border: 1px solid rgb(240, 240, 240);
+
+  .card-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-weight: bolder;
+    padding: 8px 16px;
+    max-height: 2.5em;
+
+    .card-header-avatar {
+      width: 24px;
+      height: 24px;
+    }
+
+    .card-header-title {
+      color: var(--text-color);
+      text-align: left;
+      font-size: 0.9em;
+      margin-left: 10px;
+      hyphens: auto;
+      max-height: 1.5em;
+      overflow: hidden;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .stats {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    font-size: 0.8em;
+    color: var(--text-color-secondary);
+    padding: 4px 16px;
+    margin: 4px 0;
+    border-top: 1px solid rgb(240, 240, 240);
+    border-bottom: 1px solid rgb(240, 240, 240);
+
+    .stat-icon {
+      color: var(--primary-color);
+      margin-right: 5px;
+    }
+  }
+
+  .views {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    padding: 5px;
+    color: var(--text-color);
+    font-size: 0.8rem;
+    padding: 8px 16px;
+
+    .description {
+      max-height: 125px;
+      overflow: hidden;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      overflow-y: hidden;
+    }
+
+    .plot {
+      padding-top: 5px;
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .repository-card {
+    width: auto;
+    height: auto;
+
+    .stats {
+      font-size: 0.7em;
+      color: var(--text-color-secondary);
+      padding: 4px;
+      margin: 0;
+    }
+
+    .views {
+      display: none;
+    }
+  }
+}

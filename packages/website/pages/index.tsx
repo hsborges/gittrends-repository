@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import Router from 'next/router';
 import numeral from 'numeral';
-import { Statistic } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub, faGithubAlt } from '@fortawesome/free-brands-svg-icons';
 import { faStar, faTag, faUser } from '@fortawesome/free-solid-svg-icons';
+import { Stat, StatLabel, StatNumber } from '@chakra-ui/react';
 
 import ServerError from '../components/ServerError';
 import ProjectCard from '../components/RepositoryCard';
@@ -14,16 +14,15 @@ import fetchProjects from '../hooks/searchProjects';
 import fetchStatistics from '../hooks/fetchStatistics';
 import useWindowDimensions from '../hooks/useWindowDimensions';
 
-import './index.module.less';
+import styles from './index.module.scss';
 
 export default function Home(): JSX.Element {
   const { data: sData } = fetchStatistics();
   const { data, isError } = fetchProjects({ limit: 8, sortBy: 'random' });
   const { width } = useWindowDimensions();
 
-  const [statistics, setStatistics] = useState<
-    { title: string; value: number | null; icon: any }[]
-  >();
+  const [statistics, setStatistics] =
+    useState<{ title: string; value: number | null; icon: any }[]>();
 
   useEffect(() => {
     setStatistics([
@@ -35,41 +34,43 @@ export default function Home(): JSX.Element {
   }, [sData]);
 
   return (
-    <Layout className="github-index-page">
+    <Layout className={styles['index-page']}>
       <header>
-        Monitoring popular <FontAwesomeIcon icon={faGithub} className="icon" /> projects
+        Monitoring popular <FontAwesomeIcon icon={faGithub} className={styles.icon} /> projects
       </header>
       <section>
         <span>Find your favorite project ....</span>
-        <div className="search-box">
+        <div className={styles['search-box']}>
           <Search
             placeholder="e.g., twbs/bootstrap"
             size="large"
             onSearch={(value: string) =>
               Router.push({ pathname: '/explorer', query: { query: value } })
             }
+            onSelectOption={(value: string) => Router.push({ pathname: `/explorer/${value}` })}
           />
         </div>
         <span>or explore the popular ones</span>
-        <div className="project-samples" hidden={isError}>
+        <div className={styles['project-samples']} hidden={isError}>
           {data?.repositories.map((sample) => (
             <ProjectCard
-              key={sample.name_with_ownerid}
+              key={`repository_card_${sample.name_with_owner}`}
               repository={sample.name_with_owner}
               className="card"
             />
           ))}
         </div>
-        <div className="db-statistics">
+        <div className={styles['db-statistics']}>
           {statistics?.map((stats) => (
-            <Statistic
-              key={stats.title}
-              title={stats.title}
-              value={width > 600 ? stats.value : numeral(stats.value).format('0a').toUpperCase()}
-              prefix={<FontAwesomeIcon icon={stats.icon} />}
-              className="db-stats"
-              loading={!stats.value}
-            />
+            <Stat key={stats.title} className={styles['db-stats']}>
+              <StatLabel>{stats.title}</StatLabel>
+              <StatNumber className={styles['db-stats-number']}>
+                <FontAwesomeIcon icon={stats.icon} className={styles['db-stats-icon']} />
+                {width > 600
+                  ? numeral(stats.value).format('0,0')
+                  : numeral(stats.value).format('0a').toUpperCase()}
+              </StatNumber>
+            </Stat>
           ))}
         </div>
         <div hidden={!isError}>

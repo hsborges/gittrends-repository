@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 
 const hasWindow = typeof window !== 'undefined';
 
-function getWindowDimensions() {
+type WindowDimention = { height: number; width: number };
+
+function getWindowDimensions(): WindowDimention {
   const width = hasWindow ? window.innerWidth : null;
   const height = hasWindow ? window.innerHeight : null;
   return {
@@ -11,7 +13,7 @@ function getWindowDimensions() {
   };
 }
 
-export default function useWindowDimensions() {
+export default function useWindowDimensions(): WindowDimention {
   const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
   useEffect(() => {

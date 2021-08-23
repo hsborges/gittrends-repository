@@ -1,6 +1,8 @@
 import React from 'react';
-import Router from 'next/router';
-import { Button, Result, Progress } from 'antd';
+import classnames from 'classnames';
+import { CircularProgress, CircularProgressLabel } from '@chakra-ui/react';
+
+import styles from './UnderConstruction.module.scss';
 
 interface UnderConstructionAttributes extends React.HTMLAttributes<HTMLElement> {
   percent?: number;
@@ -8,24 +10,16 @@ interface UnderConstructionAttributes extends React.HTMLAttributes<HTMLElement> 
 
 export default function Topics(props: UnderConstructionAttributes): JSX.Element {
   return (
-    <section className={`gittrends-under-construction ${props.className ?? ''}`}>
-      <Result
-        icon={
-          <Progress
-            type="circle"
-            percent={props.percent ?? 0}
-            status="active"
-            strokeColor="rgba(104, 178, 177, 0.85)"
-            {...props}
-          />
-        }
-        title="Page under construction"
-        extra={
-          <Button onClick={() => Router.push('/')} type="primary" size="large">
-            Home
-          </Button>
-        }
-      />
+    <section className={classnames(styles['under-construction'], props.className)}>
+      <CircularProgress
+        value={props.percent}
+        color="var(--primary-color)"
+        size="140px"
+        thickness={12}
+      >
+        <CircularProgressLabel>{props.percent}</CircularProgressLabel>
+      </CircularProgress>
+      <div className={styles.text}>Page Under Construction</div>
     </section>
   );
 }

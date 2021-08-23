@@ -8,15 +8,9 @@ module.exports = {
     node: true,
     jest: true
   },
-  extends: [
-    'plugin:@typescript-eslint/recommended',
-    'prettier/@typescript-eslint',
-    'plugin:prettier/recommended'
-  ],
+  extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended', 'prettier'],
   rules: {
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': {
-      allowArgumentsExplicitlyTypedAsAny: true
-    }
+    '@typescript-eslint/explicit-module-boundary-types': 'warn'
   }
 };

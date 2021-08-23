@@ -3,21 +3,19 @@
  */
 import actor from './actor';
 
-import consola from 'consola';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import utc from 'dayjs/plugin/utc';
 
-import { join } from 'path';
 import { get } from 'lodash';
-import { Actor, Repository, IStargazer, Stargazer } from '@gittrends/database-config';
+import { Actor, Repository, Stargazer } from '@gittrends/database-config';
 
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
 dayjs.extend(utc);
 
-export default async function (name_with_owner: string, writer: WriterFunction) {
+export default async function (name_with_owner: string) {
   const repo = await Repository.collection.findOne(
     { name_with_owner },
     { projection: { _id: 1, _metadata: 1 } }
@@ -44,7 +42,9 @@ export default async function (name_with_owner: string, writer: WriterFunction) 
     ])
     .toArray();
 
-  let [[first], [last]] = await Promise.all([
+  if (!timeseries) return;
+
+  const [[first], [last]] = await Promise.all([
     Stargazer.collection
       .aggregate([
         { $match: { '_id.repository': repo._id } },
@@ -63,17 +63,7 @@ export default async function (name_with_owner: string, writer: WriterFunction) 
       .toArray()
   ]);
 
-  const [firstActor, lastActor] = [first, last].map((data) => data.user);
-
-  [first, last] = await Promise.all(
-    [first, last].map((data) =>
-      Actor.collection
-        .findOne({ _id: data.user }, { projection: { _id: 0, name: 1, login: 1, avatar_url: 1 } })
-        .then((result) => ({ ...data, user: result }))
-    )
-  );
-
-  const object = {
+  return {
     timeseries: timeseries.reduce(
       (timeseries, record) => ({
         ...timeseries,
@@ -82,11 +72,7 @@ export default async function (name_with_owner: string, writer: WriterFunction) 
       }),
       {}
     ),
-    first,
-    last
+    first: { ...first, user: await actor(first.user) },
+    last: { ...last, user: await actor(last.user) }
   };
-
-  await Promise.all([actor(firstActor as string, writer), actor(lastActor as string, writer)])
-    .catch(consola.warn)
-    .finally(() => writer(object, join(...name_with_owner.split('/'), 'stargazers.json')));
 }

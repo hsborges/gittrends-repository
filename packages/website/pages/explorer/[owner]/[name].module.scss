@@ -1,10 +1,7 @@
-@import '../../../styles/less/antd-custom.less';
-@import '../../../components/explorer/divider.module.less';
-@import '../../../components/explorer/popularity-section.module.less';
-
 .project-explorer {
   width: 95%;
   margin: auto;
+  font-size: 0.9em;
 
   & > header {
     display: flex;
@@ -12,32 +9,38 @@
     justify-content: space-between;
     margin-top: 15px;
 
-    .breadcrumb .icon {
-      margin-right: 5px;
+    & > .breadcrumb {
+      font-size: 0.9em;
+      .icon {
+        margin-right: 5px;
+      }
     }
   }
 
   & > section {
-    width: 75%;
+    width: 80%;
     margin: auto;
 
     & > .divider {
-      margin-top: 2em;
-      margin-bottom: 1.5em;
-      font-size: 1.75em;
+      margin: 3em 0;
+      font-size: 1.25em;
+      color: var(--secondary-color);
+      opacity: 80%;
     }
 
     & > .title {
       margin: auto;
-      margin-top: -15px;
+      margin-top: 2em;
       text-align: center;
+      margin-bottom: 3em;
 
-      div {
+      & > div {
         font-size: 1.75em;
         font-weight: bolder;
-        color: @primary-color;
+        color: var(--primary-color);
         padding-bottom: 10px;
-        .ant-avatar {
+
+        .avatar {
           margin-right: 15px;
         }
       }
@@ -45,26 +48,15 @@
       .description,
       .topics {
         display: block;
+
+        a {
+          color: var(--secondary-color);
+          text-decoration: underline;
+        }
       }
 
       .topics .topic {
         margin-top: 10px;
-      }
-    }
-
-    & > .overview {
-      .ant-descriptions-item-label,
-      .ant-descriptions-item-content {
-        padding: 0.5em 1em;
-      }
-
-      .ant-descriptions-item-label {
-        font-weight: bolder;
-        color: @secondary-color;
-        .icon {
-          color: @primary-color;
-          margin-right: 5px;
-        }
       }
     }
 
@@ -88,12 +80,13 @@
       & > .divider {
         margin-top: 1.25em;
         margin-bottom: 1.25em;
-        font-size: 1.75em;
+        font-size: 1.5em;
       }
 
       & > .title {
         margin: auto;
-        padding-top: 25px;
+        padding: 25px 0;
+        font-size: small;
 
         .topics {
           margin-top: 10px;

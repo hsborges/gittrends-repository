@@ -1,0 +1,73 @@
+.about {
+  width: 100%;
+  margin-bottom: 5vh;
+
+  .maintainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    & > .picture {
+      height: 150px;
+      width: fit-content;
+    }
+
+    & > .description {
+      text-align: center;
+      font-size: 0.85em;
+      padding-top: 15px;
+      span {
+        display: block;
+      }
+    }
+  }
+
+  .reference {
+    &:not(:last-child) {
+      padding-bottom: 15px;
+    }
+
+    .pdf {
+      color: red;
+      padding-right: 10px;
+    }
+    .title {
+      font-weight: bolder;
+    }
+    span {
+      padding-right: 0.5em;
+    }
+  }
+
+  article {
+    width: 75%;
+    margin: auto;
+    text-align: justify;
+    margin: 2em auto;
+
+    h2 {
+      color: var(--primary-color);
+      font-size: 1.5em;
+      text-align: center;
+      margin: 25px 0;
+      font-weight: bold;
+    }
+
+    p {
+      margin-bottom: 10px;
+      text-indent: 2em;
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .about article {
+    width: 85%;
+
+    p {
+      margin-bottom: 10px;
+      text-indent: 1em;
+    }
+  }
+}

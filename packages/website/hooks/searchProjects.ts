@@ -27,14 +27,12 @@ interface IRepository {
 
 export default function FetchProjects(args?: ISearch): FetchProjectsResult {
   const { data, error } = useSWR('/repos.json', (url) =>
-    axios.get(url).then(
-      (result): Array<IRepository> => {
-        return result.data.map((d: any) => {
-          const [name_with_owner, primary_language, stargazers_count] = d;
-          return { name_with_owner, primary_language, stargazers_count };
-        });
-      }
-    )
+    axios.get(url).then((result): Array<IRepository> => {
+      return result.data.map((d: any) => {
+        const [name_with_owner, primary_language, stargazers_count] = d;
+        return { name_with_owner, primary_language, stargazers_count };
+      });
+    })
   );
 
   const [response, setResponse] = useState<{

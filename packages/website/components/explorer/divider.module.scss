@@ -1,37 +1,31 @@
-@import '../../styles/less/antd-custom.less';
-
-.gittrends-section-divider {
+.section-divider {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  font-size: 1.25em;
   font-weight: bolder;
-  color: @primary-color;
-  margin: 1.25em 0;
-  opacity: 0.75;
   width: 100%;
 
-  .line {
+  & > .line {
     max-width: 15%;
     height: 0.5em;
-    border-bottom: 2px solid @primary-color;
+    border-bottom: 2px solid;
     flex-grow: 1;
   }
 
-  .title {
-    padding: 0 0.5em;
+  & > .title {
+    margin: 0 0.5em;
   }
 }
 
 @media (max-width: 575.98px) {
-  .gittrends-section-divider {
-    .line {
+  .section-divider {
+    & > .line {
       max-width: 25%;
       height: 0em;
     }
 
-    .title {
+    & > .title {
       margin: auto 15px;
       padding: 0 0em;
     }
