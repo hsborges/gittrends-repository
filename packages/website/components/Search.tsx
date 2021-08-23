@@ -1,14 +1,22 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import classnames from 'classnames';
-import { Box, InputGroup, Input, InputRightElement, Button } from '@chakra-ui/react';
-import { Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import {
+  Box,
+  InputGroup,
+  Input,
+  InputRightElement,
+  Button,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem
+} from '@chakra-ui/react';
 import { useDetectClickOutside } from 'react-detect-click-outside';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
 import fetchProjects from '../hooks/searchProjects';
 import styles from './Search.module.scss';
-import { useEffect } from 'react';
 
 interface ISearchProps extends React.HTMLAttributes<HTMLElement> {
   placeholder?: string;
@@ -28,7 +36,7 @@ export default function Search(props?: ISearchProps): JSX.Element {
   const inputGroupRef = useRef<HTMLDivElement>();
   const menuRef = useDetectClickOutside({ onTriggered: () => setIsOpen(false) });
 
-  useEffect(() => isOpen && !data?.repositories?.length && setIsOpen(false), [data]);
+  useEffect(() => isOpen && !data?.repositories?.length && setIsOpen(false), [data, isOpen]);
 
   return (
     <Menu isOpen={isOpen}>
@@ -36,16 +44,17 @@ export default function Search(props?: ISearchProps): JSX.Element {
         <InputGroup
           variant="outline"
           borderColor="var(--primary-color)"
-          size={`${props.size === 'large' ? 'lg' : 'md'}`}
+          size={`${size === 'large' ? 'lg' : 'md'}`}
           ref={inputGroupRef}
         >
           <Input
             ref={inputRef}
-            placeholder={props.placeholder}
+            placeholder={placeholder}
             focusBorderColor="var(--primary-color)"
             bg="white"
             _hover={{ borderColor: 'var(--primary-color)' }}
             value={query}
+            defaultValue={defaultValue}
             onChange={(event) => {
               setQuery(event.target.value);
               if (!isOpen && event.target.value) setIsOpen(true);
@@ -54,14 +63,14 @@ export default function Search(props?: ISearchProps): JSX.Element {
               setIsOpen(!!event.target.value);
             }}
             onKeyPress={(event) => {
-              if (event.key === 'Enter' && props.onSearch) props?.onSearch(query);
+              if (event.key === 'Enter' && onSearch) onSearch(query);
             }}
           />
           <InputRightElement>
             <Button
               variant="unstyled"
               color="var(--primary-color)"
-              onClick={() => props.onSearch && props.onSearch(query)}
+              onClick={() => onSearch && onSearch(query)}
             >
               <FontAwesomeIcon icon={faSearch} />
             </Button>
@@ -87,42 +96,5 @@ export default function Search(props?: ISearchProps): JSX.Element {
         </MenuList>
       </Box>
     </Menu>
-    // <Autocomplete
-    //   {...aprops}
-    //   freeSolo
-    //   options={data?.repositories.map((repo) => repo?.name_with_owner) || []}
-    //   disableClearable
-    //   className={classnames(aprops.className, styles.search)}
-    //   renderInput={({ InputLabelProps, InputProps, ...params }) => (
-    //     <Paper
-    //       ref={InputProps.ref}
-    //       variant="outlined"
-    //       className={classnames([classes.root, { [classes.large]: props.size === 'large' }])}
-    //       style={{ width: '100%' }}
-    //     >
-    //       <InputBase {...params} {...InputProps} fullWidth />
-    //       <IconButton className={classes.iconButton}>
-    //         <SearchIcon />
-    //       </IconButton>
-    //     </Paper>
-    //   )}
-    //   onChange={(_, value, event) => {
-    //     if (event === 'select-option') Router.push({ pathname: `/explorer/${value}` });
-    //   }}
-    // />
-    /* <AutoComplete
-        options={!query ? [] : data?.repositories.map((repo) => ({ value: repo.name_with_owner }))}
-        onSearch={(searchText: string) => searchText && setQuery(searchText)}
-        onSelect={(searchText: string) => Router.push({ pathname: `/explorer/${searchText}` })}
-        style={{ height: '100%', width: '100%' }}
-      >
-        <Input.Search
-          placeholder={placeholder ?? 'e.g., facebook/react'}
-          size={size}
-          defaultValue={defaultValue}
-          allowClear
-          onSearch={(...args) => onSearch(...args)}
-        />
-      </AutoComplete> */
   );
 }

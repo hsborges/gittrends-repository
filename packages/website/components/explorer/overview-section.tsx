@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import numeral from 'numeral';
 import camelCase from 'lodash/camelCase';
 import dayjs from 'dayjs';
@@ -15,7 +15,6 @@ import {
   faEye,
   faHandsHelping,
   faHdd,
-  faHome,
   faNetworkWired,
   faRocket,
   faStar,
@@ -36,18 +35,8 @@ interface OverviewSectionAttributes extends React.HTMLAttributes<HTMLElement> {
 
 export default function OverviewSection(props: OverviewSectionAttributes): JSX.Element {
   const { repository } = props;
-  const [columns, setColumns] = useState(3);
-
-  useEffect(() => setColumns(window.innerWidth >= 576 ? 4 : 3), []);
 
   const overviewInfo = [
-    // {
-    //   label: 'Homepage',
-    //   icon: faHome,
-    //   value: repository?.homepage_url,
-    //   span: 2,
-    //   link: true
-    // },
     {
       label: 'Stargazers',
       icon: faStar,

@@ -13,27 +13,27 @@ export default function DonateAlert(props: HTMLAttributes<HTMLElement>): JSX.Ele
 
   useEffect(() => {
     setHidden(cookie.get('dismissed') == 1);
-  }, []);
+  }, [cookie]);
 
-  return hidden ? (
-    <></>
-  ) : (
-    <div {...props} className={classnames(styles.donate, props.className)}>
-      <Link href="/authorization" as="/authorization" passHref>
-        <a>
-          <FontAwesomeIcon icon={faBullhorn} className={styles.bullhorn} />
-          Hey, we need your support to expand our database. Click here to donate a GitHub access
-          token
-        </a>
-      </Link>
-      <FontAwesomeIcon
-        icon={faTimes}
-        className={styles.close}
-        onClick={() => {
-          cookie.set('dismissed', 1, { maxAge: 24 * 60 * 60 });
-          setHidden(true);
-        }}
-      />
-    </div>
+  return (
+    !hidden && (
+      <div {...props} className={classnames(styles.donate, props.className)}>
+        <Link href="/authorization" as="/authorization" passHref>
+          <a>
+            <FontAwesomeIcon icon={faBullhorn} className={styles.bullhorn} />
+            Hey, we need your support to expand our database. Click here to donate a GitHub access
+            token
+          </a>
+        </Link>
+        <FontAwesomeIcon
+          icon={faTimes}
+          className={styles.close}
+          onClick={() => {
+            cookie.set('dismissed', 1, { maxAge: 24 * 60 * 60 });
+            setHidden(true);
+          }}
+        />
+      </div>
+    )
   );
 }
