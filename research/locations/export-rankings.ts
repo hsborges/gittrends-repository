@@ -16,6 +16,7 @@ import mongoClient, {
 } from '@gittrends/database-config';
 
 import { version } from './package.json';
+import mkdirp from 'mkdirp';
 
 async function computeStargazersOrWatchersRanking(
   repositoryId: string,
@@ -82,11 +83,12 @@ async function computePullRequestsRanking(repositoryId: string) {
 program
   .version(version)
   .addOption(
-    new Option('-f, --format [string]', 'Format to print the result')
+    new Option('--format [string]', 'Format to print the result')
       .default('csv')
       .choices(['csv', 'json'])
   )
-  .addOption(new Option('-o, --output [file-name]', 'Output result to a file'))
+  .addOption(new Option('--output [file-name]', 'Output result to a file'))
+  .addOption(new Option('--makedir', 'Automatically creates destination folder if it not exists'))
   .addOption(new Option('--verbose', 'Display logging information').default(false))
   .addArgument(
     new Argument('<repository>', 'Repository name, or id, to generate the rankings').argRequired()
@@ -150,8 +152,14 @@ program
         ? await csv.writeToString(records, { headers: fields })
         : JSON.stringify(records);
 
-    if (options.output) fs.writeFileSync(path.resolve('./', options.output), result);
-    else process.stdout.write(result);
+    if (options.output) {
+      const destPath = path.resolve('./', options.output);
+      const destFolder = path.dirname(destPath);
+      if (!fs.existsSync(destFolder) && options.makedir) await mkdirp(destFolder);
+      fs.writeFileSync(path.resolve('./', options.output), result);
+    } else {
+      process.stdout.write(result);
+    }
 
     consola.success('Done!');
   })

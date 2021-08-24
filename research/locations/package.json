@@ -15,7 +15,8 @@
     "commander": "^8.1.0",
     "consola": "^2.15.3",
     "fast-csv": "^4.3.6",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "mkdirp": "^1.0.4"
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../../packages/env-config",
