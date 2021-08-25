@@ -107,7 +107,7 @@ program
       .choices(['asc', 'desc', 'default'])
       .default('desc')
   )
-  .addArgument(new Argument('<name>', 'Find using a repository name (or fragment)'))
+  .addArgument(new Argument('[name]', 'Find using a repository name (or fragment)'))
   .action(async (repositoryName, options) => {
     const minStr = options.minStargazers || '0';
     const maxStr = options.maxStargazers || '*';

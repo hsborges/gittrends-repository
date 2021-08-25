@@ -37,6 +37,6 @@
     "@types/lodash": "^4.14.172",
     "claudia": "^5.13.1",
     "ts-node": "^10.2.1",
-    "tsconfig-paths": "^3.10.1"
+    "tsconfig-paths": "^3.11.0"
   }
 }

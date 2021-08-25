@@ -29,6 +29,6 @@
     "@types/cli-progress": "^3.9.2",
     "@types/mkdirp": "^1.0.2",
     "ts-node-dev": "^1.1.8",
-    "tsconfig-paths": "^3.10.1"
+    "tsconfig-paths": "^3.11.0"
   }
 }

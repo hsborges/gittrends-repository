@@ -19,7 +19,7 @@
     "glob": "^7.1.7",
     "lodash": "^4.17.21",
     "migrate-mongo": "^8.2.3",
-    "mongodb": "4.1.0",
+    "mongodb": "4.1.1",
     "object-hash": "^2.2.0",
     "tunnel-ssh": "^4.1.4",
     "typescript-json-schema": "^0.50.1"
