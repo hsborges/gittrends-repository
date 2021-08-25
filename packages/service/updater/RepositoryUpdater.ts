@@ -56,7 +56,7 @@ export default class RepositoryUpdater implements Updater {
   }
 
   async update(handlers = this.pendingHandlers, isRetry?: boolean): Promise<void> {
-    await Query.create()
+    return Query.create()
       .compose(...flatten(await map(handlers, (handler) => handler.component())))
       .run()
       .then(async (data) => {
@@ -81,33 +81,34 @@ export default class RepositoryUpdater implements Updater {
       .finally(() => {
         if (isRetry) return;
 
-        const doneHandlers = handlers.filter((handler) =>
-          this.job && handler.isDone() ? true : false
-        );
-
-        if (this.job && doneHandlers.length) {
-          const totalDone = this.handlers.reduce((acc: number, h) => acc + (h.isDone() ? 1 : 0), 0);
-          const pendingResources = this.pendingHandlers.map((handler) => handler.meta.resource);
-          this.job.updateProgress(Math.ceil((totalDone / this.handlers.length) * 100));
+        if (this.job && handlers.find((h) => h.isDone())) {
+          this.job.updateProgress(
+            Math.ceil((this.doneHandlers.length / this.handlers.length) * 100)
+          );
           this.job.update({
             ...this.job.data,
-            resources: pendingResources,
-            done: this.handlers
-              .map((handler) => handler.meta.resource)
-              .filter((resource) => pendingResources.indexOf(resource) < 0)
+            resources: this.pendingHandlers.map((handler) => handler.meta.resource),
+            done: this.doneHandlers.map((handler) => handler.meta.resource)
           });
         }
-
-        if (this.pendingHandlers.length) return this.update();
+      })
+      .then(() => {
+        if (isRetry) return;
+        if (this.pendingHandlers.length) return this.update(this.pendingHandlers);
+        if (this.errors.length)
+          throw new ResourceUpdateError(this.errors.map((e) => e.error.message).join(', '));
       });
-
-    if (this.errors.length)
-      throw new ResourceUpdateError(this.errors.map((e) => e.error.message).join(', '));
   }
 
   private get pendingHandlers(): AbstractRepositoryHandler[] {
     return this.handlers.filter(
-      (handler) => handler.hasNextPage() && !this.errors.find((e) => e.handler === handler)
+      (handler) => !handler.isDone() && !this.errors.find((e) => e.handler === handler)
+    );
+  }
+
+  private get doneHandlers(): AbstractRepositoryHandler[] {
+    return this.handlers.filter(
+      (handler) => handler.isDone() || this.errors.find((e) => e.handler === handler)
     );
   }
 }

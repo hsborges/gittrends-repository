@@ -1,6 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
+import debug from 'debug';
 import { filter } from 'bluebird';
 import { ClientSession } from 'mongodb';
 import { Actor, Commit, Milestone } from '@gittrends/database-config';
@@ -14,6 +15,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   readonly id: string;
   readonly meta: { id: string; resource: string };
 
+  protected debug;
   protected actors: TObject[] = [];
   protected commits: TObject[] = [];
   protected milestones: TObject[] = [];
@@ -29,6 +31,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     this.meta = { id, resource };
     this.batchSize = this.defaultBatchSize = 100;
     this.writeBatchSize = parseInt(process.env.GITTRENDS_WRITE_BATCH_SIZE ?? '500', 10);
+    this.debug = debug(`gittrends:updater:handler:${resource}`);
   }
 
   protected parseResponse(response: any): any {

@@ -27,7 +27,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     return this._component.includeReleases(this.releases.hasNextPage, {
       first: this.batchSize,
       after: this.releases.endCursor,
-      alias: 'releases'
+      alias: '_releases'
     });
   }
 
@@ -35,13 +35,13 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     const data = super.parseResponse(response[this.alias as string]);
 
     this.releases.items.push(
-      ...get(data, 'releases.nodes', []).map((release: TObject) => ({
+      ...get(data, '_releases.nodes', []).map((release: TObject) => ({
         repository: this.id,
         ...release
       }))
     );
 
-    const pageInfo = get(data, 'releases.page_info', {});
+    const pageInfo = get(data, '_releases.page_info', {});
     this.releases.hasNextPage = pageInfo.has_next_page ?? false;
     this.releases.endCursor = pageInfo.end_cursor ?? this.releases.endCursor;
 

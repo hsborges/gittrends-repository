@@ -8,7 +8,7 @@ import consola from 'consola';
 import { each } from 'bluebird';
 import { program } from 'commander';
 import { difference, chunk, intersection, get } from 'lodash';
-import mongoClient, { Actor, IActor, IRepository, Repository } from '@gittrends/database-config';
+import mongoClient, { Actor, IRepository, Repository } from '@gittrends/database-config';
 
 import { redisOptions } from './redis';
 import { version, config } from './package.json';
@@ -107,7 +107,8 @@ program
       await queue.clean(1000 * 60 * 60 * options.wait, Number.MAX_SAFE_INTEGER, 'completed');
       await queue.clean(0, Number.MAX_SAFE_INTEGER, 'failed');
 
-      if (options.destroyQueue) await queue.drain();
+      if (options.destroyQueue)
+        await Promise.all([queue.clean(0, Number.MAX_SAFE_INTEGER, 'active'), queue.drain()]);
 
       return queue;
     }

@@ -27,7 +27,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     return this._component.includeWatchers(this.watchers.hasNextPage, {
       first: this.batchSize,
       after: this.watchers.endCursor,
-      alias: 'watchers'
+      alias: '_watchers'
     });
   }
 
@@ -35,13 +35,13 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     const data = super.parseResponse(response[this.alias as string]);
 
     this.watchers.items.push(
-      ...get(data, 'watchers.nodes', []).map((watcher: string) => ({
+      ...get(data, '_watchers.nodes', []).map((watcher: string) => ({
         repository: this.id,
         user: watcher
       }))
     );
 
-    const pageInfo = get(data, 'watchers.page_info', {});
+    const pageInfo = get(data, '_watchers.page_info', {});
     this.watchers.hasNextPage = pageInfo.has_next_page ?? false;
     this.watchers.endCursor = pageInfo.end_cursor ?? this.watchers.endCursor;
 
