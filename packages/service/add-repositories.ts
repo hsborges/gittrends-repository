@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import consola from 'consola';
-import { Option, program } from 'commander';
+import { Argument, Option, program } from 'commander';
 import { chain, get, min, uniqBy } from 'lodash';
 import { filter } from 'bluebird';
 import mongoClient, { Actor, Repository } from '@gittrends/database-config';
@@ -94,7 +94,6 @@ program
   .version(version)
   .option('--limit [number]', 'Maximun number of repositories', Number, 100)
   .option('--language [string]', 'Major programming language')
-  .option('--repository-name [name]', 'Repository name to search')
   .option('--min-stargazers [number]', 'Minimun number of stars of the repositories', Number, 1)
   .option('--max-stargazers [number]', 'Maximun number of stars of the repositories')
   .option('--workers [number]', 'Number of parallel workers', Number, 3)
@@ -108,9 +107,8 @@ program
       .choices(['asc', 'desc', 'default'])
       .default('desc')
   )
-  .action(async () => {
-    const options = program.opts();
-
+  .addArgument(new Argument('<name>', 'Find using a repository name (or fragment)'))
+  .action(async (repositoryName, options) => {
     const minStr = options.minStargazers || '0';
     const maxStr = options.maxStargazers || '*';
     consola.info(
@@ -122,7 +120,7 @@ program
       new Array(options.workers).fill(0).map(() =>
         search(options.limit, {
           language: options.language,
-          name: options.repositoryName,
+          name: repositoryName,
           minStargazers: options.minStargazers && parseInt(options.minStargazers, 10),
           maxStargazers: options.maxStargazers && parseInt(options.maxStargazers, 10),
           sort: options.sort === 'default' ? undefined : options.sort,
