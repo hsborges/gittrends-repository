@@ -44,14 +44,14 @@
     "promise-retry": "^2.0.1",
     "redis-lru": "^0.6.0",
     "table": "^6.7.1",
-    "user-agents": "^1.0.754"
+    "user-agents": "^1.0.755"
   },
   "devDependencies": {
     "@babel/core": "^7.15.0",
     "@babel/preset-env": "^7.15.0",
     "@babel/preset-typescript": "^7.15.0",
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^3.2.9",
+    "@hsborges/github-proxy-server": "^3.2.10",
     "@types/bluebird": "^3.5.36",
     "@types/debug": "^4.1.7",
     "@types/express": "^4.17.13",

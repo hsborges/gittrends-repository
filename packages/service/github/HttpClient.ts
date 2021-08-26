@@ -16,13 +16,12 @@ const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
 const HOST = process.env.GITTRENDS_PROXY_HOST ?? 'localhost';
 const PORT = parseInt(process.env.GITTRENDS_PROXY_PORT ?? '3000', 10);
 const TIMEOUT = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT ?? '15000', 10);
-const RETRIES = parseInt(process.env.GITTRENDS_PROXY_RETRIES ?? '0', 10);
+const RETRIES = parseInt(process.env.GITTRENDS_PROXY_RETRIES ?? '0', 5);
 const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT ?? new UserAgent().random().toString();
 
 const requestClient: AxiosInstance = axios.create({
   baseURL: `${PROTOCOL}://${HOST}:${PORT}/graphql`,
   responseType: 'json',
-  timeout: TIMEOUT,
   headers: {
     'user-agent': USER_AGENT,
     'accept-encoding': 'gzip',
@@ -34,13 +33,39 @@ const requestClient: AxiosInstance = axios.create({
   }
 });
 
+requestClient.interceptors.request.use((config) => {
+  if (config.timeout === undefined || config.timeout === 0) return config;
+
+  const source = axios.CancelToken.source();
+
+  setTimeout(() => {
+    source.cancel(
+      `Cancelled request. Took longer than ${config.timeout}ms to get complete response.`
+    );
+  }, config.timeout);
+
+  // If caller configures cancelToken, preserve cancelToken behaviour.
+  if (config.cancelToken)
+    config.cancelToken.promise.then((cancel) => source.cancel(cancel.message));
+
+  return { ...config, cancelToken: source.token };
+});
+
+let count = 0;
+
 /* exports */
 export default async function (query: TObject): Promise<AxiosResponse> {
+  const requestId = ++count;
+  debug('Incomming request ... (id: %d)', requestId);
   return promiseRetry(
     (retry) =>
-      requestClient({ method: 'post', data: query }).catch((err) => {
+      requestClient({ method: 'post', data: query, timeout: TIMEOUT }).catch((err) => {
         const status = err.response && err.response.status;
-        debug(`Error detect when performing request (status: ${status})`);
+        debug(
+          `Error detect when performing request (status: %d, type: %s)`,
+          status,
+          err?.constructor.name || typeof err
+        );
         if (status === 500)
           throw new Errors.InternalServerError(err.message, err, err.response && err.response.data);
         if (status === 502)
@@ -58,6 +83,7 @@ export default async function (query: TObject): Promise<AxiosResponse> {
       }),
     { retries: RETRIES }
   ).then((response) => {
+    debug('Response received (id: %d).', requestId);
     const data = normalize(compact(response.data));
 
     if (data && data.errors && data.errors.length) {

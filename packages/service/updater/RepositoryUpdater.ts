@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bullmq';
-import { map } from 'bluebird';
 import { flatten } from 'lodash';
 
 import Cache from './Cache';
@@ -57,24 +56,24 @@ export default class RepositoryUpdater implements Updater {
 
   async update(handlers = this.pendingHandlers, isRetry?: boolean): Promise<void> {
     return Query.create()
-      .compose(...flatten(await map(handlers, (handler) => handler.component())))
+      .compose(...flatten(await Promise.all(handlers.map((handler) => handler.component()))))
       .run()
-      .then(async (data) => {
-        await map(handlers, async (handler) => handler.update(data));
-      })
+      .then((data) => Promise.all(handlers.map((handler) => handler.update(data))))
       .catch(async (err) => {
         if (isRetry || err instanceof ValidationError) throw err;
 
-        return map(handlers, (handler) =>
-          this.update([handler], true).catch((err) =>
-            handler.error(err).catch((err2) => {
-              this.errors.push({ handler, error: err2 });
-              this.job?.update({
-                ...this.job.data,
-                resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
-                errors: [...(this.job.data.errors || []), handler.meta.resource]
-              });
-            })
+        return Promise.all(
+          handlers.map((handler) =>
+            this.update([handler], true).catch((err) =>
+              handler.error(err).catch((err2) => {
+                this.errors.push({ handler, error: err2 });
+                this.job?.update({
+                  ...this.job.data,
+                  resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
+                  errors: [...(this.job.data.errors || []), handler.meta.resource]
+                });
+              })
+            )
           )
         );
       })

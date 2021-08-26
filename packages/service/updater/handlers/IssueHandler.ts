@@ -96,7 +96,11 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     }
 
     if (this.pendingIssues.length) {
-      this.debug('Updating component (stage: %s)', Stages[Stages.GET_ISSUES_DETAILS]);
+      this.debug(
+        'Updating component (stage: %s, items: %d)',
+        Stages[Stages.GET_ISSUES_DETAILS],
+        this.pendingIssues.length
+      );
       this.currentStage = Stages.GET_ISSUES_DETAILS;
 
       return this.pendingIssues.map((issue) =>
@@ -137,6 +141,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, session?: ClientSession): Promise<void> {
+    this.debug('Processing %s information.', this.resource);
     return this._update(response, session).finally(() => {
       this.debug('Information updated. %o', {
         ...this.issues,
