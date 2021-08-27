@@ -2022,10 +2022,10 @@
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.2.0.tgz#f3933a44e365864f4dad5db94158106d511e8131"
   integrity sha512-sqKVVVOe5ivCaXDWivIJYVSaEgdQK9ul7a4Kity5Iw7u9+wBAPbX1RMSnLLmp7O4Vzj0WOWwMAJsTL00xwaNug==
 
-"@hsborges/github-proxy-server@^3.2.10":
-  version "3.2.10"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.2.10.tgz#4d2848dac7ababccca304f0ccd2b6327524f1239"
-  integrity sha512-RbgT1nxMr4r27bQ0Z59Xio6Ny5Lh46/qScJdgL0SIrc4tmgpUyX7tZM4PAYcPn/ECcqYNUtVUb3S1Khf0x+oWg==
+"@hsborges/github-proxy-server@^3.2.11":
+  version "3.2.11"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.2.11.tgz#92351aa43d32c74c77c9658389f76f2aa4cc6126"
+  integrity sha512-Mv9pkTWt8NQ3nGXlXnheg5Zyj1pGL8TV/SWJUL82dq3q6eFGKs1lKhrW3BivEfTi7yx+I4USbeDsVEN7y6cjow==
   dependencies:
     bottleneck "^2.19.5"
     chalk "^4.1.2"
@@ -4533,10 +4533,10 @@ bull-board@^2.1.3:
     express "4.17.1"
     redis-info "^3.0.8"
 
-bullmq@^1.43.0:
-  version "1.43.0"
-  resolved "https://registry.yarnpkg.com/bullmq/-/bullmq-1.43.0.tgz#4a16ac0b0aebc48263203ecf72fcda10d42e1606"
-  integrity sha512-nnMz1PyWThy5fsZRT2h9eoa4U17TEDMOwJ6aued7L5iqG//2hJ9MI46fRjwPjAIhtdKOyTCPtEQG38XWLP0zGQ==
+bullmq@^1.44.0:
+  version "1.44.0"
+  resolved "https://registry.yarnpkg.com/bullmq/-/bullmq-1.44.0.tgz#7a04972a5400d2d8a77c93a52882171858e81a9c"
+  integrity sha512-fGRirxQBnpHyfd1i/VFZntwRFKxyY6jRUlN+fhMfdpoCI5L3ywULvCJH3A0dnwbpW4cOhm+ztTrCRLjNDxtuTA==
   dependencies:
     "@types/ioredis" "^4.26.4"
     cron-parser "^2.7.3"
@@ -13271,6 +13271,11 @@ typescript@^4.3.5:
   version "4.3.5"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.3.5.tgz#4d1c37cc16e893973c45a06886b7113234f119f4"
   integrity sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==
+
+typescript@^4.4.2:
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.2.tgz#6d618640d430e3569a1dfb44f7d7e600ced3ee86"
+  integrity sha512-gzP+t5W4hdy4c+68bfcv0t400HVJMMd2+H9B7gae1nQlBzCqvrXX+6GL/b3GAgyTH966pzrZ70/fRjwAtZksSQ==
 
 typescript@~4.2.3:
   version "4.2.4"
