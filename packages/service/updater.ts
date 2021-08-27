@@ -3,9 +3,8 @@
  */
 import axios from 'axios';
 import consola from 'consola';
-import { map } from 'bluebird';
-import { program } from 'commander';
 import { bold } from 'chalk';
+import { program } from 'commander';
 import { QueueScheduler, Worker, Job } from 'bullmq';
 import mongoClient from '@gittrends/database-config';
 
@@ -59,7 +58,10 @@ program
           case 'repositories':
             const id = job.data.id as string;
             const resources = job.data.resources as THandler[];
-            await new RepositoryUpdater(id, resources, { job, cache }).update();
+            const errors = (job.data.errors || []) as THandler[];
+            if (errors.length) resources.push(...errors);
+            if (resources.length)
+              await new RepositoryUpdater(id, resources, { job, cache }).update();
             break;
           default:
             consola.error(new Error('Invalid "type" option!'));
