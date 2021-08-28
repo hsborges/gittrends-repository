@@ -9,5 +9,5 @@ export default interface IReaction extends Record<string, unknown> {
   event?: string;
   content: string;
   created_at: Date;
-  user: string;
+  user?: string;
 }
