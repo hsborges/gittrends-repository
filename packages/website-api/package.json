@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@types/nodemailer": "^6.4.4",
-    "@vendia/serverless-express": "^4.3.9",
+    "@vendia/serverless-express": "^4.3.10",
     "aws-lambda": "^1.0.6",
     "axios": "^0.21.1",
     "body-parser": "^1.19.0",
