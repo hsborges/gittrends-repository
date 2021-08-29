@@ -42,7 +42,7 @@ async function search(
     await Query.create()
       .compose(
         new SearchComponent(
-          { minStargazers: opts?.minStargazers, maxStargazers, ...opts },
+          { ...opts, maxStargazers },
           after,
           Math.min(100, total, limit - repos.length)
         ).setAlias('search')
