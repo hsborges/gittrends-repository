@@ -51,13 +51,7 @@ const repositoriesScheduler = async (queue: Queue, resources: string[], wait = 2
 
 const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
   // get jobs on queue
-  const waiting = await queue
-    .getJobs('waiting', 0, Number.MAX_SAFE_INTEGER)
-    .then((jobs) =>
-      jobs
-        .filter(({ id }) => /users@.+/i.test(id as string))
-        .reduce((acc, j) => acc.concat(j.data.id || []), [])
-    );
+  await queue.drain();
 
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hour').toISOString();
@@ -65,7 +59,6 @@ const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
   const usersIds = await Actor.collection
     .find(
       {
-        _id: { $nin: waiting },
         $or: [
           { '_metadata.updatedAt': { $exists: false } },
           { '_metadata.updatedAt': { $lt: before } }
