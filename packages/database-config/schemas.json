@@ -792,8 +792,7 @@
         "content",
         "created_at",
         "issue",
-        "repository",
-        "user"
+        "repository"
       ]
     },
     "IRelease": {

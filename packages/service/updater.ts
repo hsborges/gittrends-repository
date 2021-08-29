@@ -67,7 +67,7 @@ program
             consola.error(new Error('Invalid "type" option!'));
             process.exit(1);
         }
-      } catch (err) {
+      } catch (err: any) {
         consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
         throw err;
       }
