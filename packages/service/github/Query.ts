@@ -2,6 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
+import compress from 'graphql-query-compress';
 
 import client from './HttpClient';
 import Component from './Component';
@@ -74,7 +75,7 @@ export default class Query {
 
   async run(interceptor?: (args: string) => string): Promise<any> {
     return client({
-      query: interceptor ? interceptor(this.toString()) : this.toString()
+      query: compress(interceptor ? interceptor(this.toString()) : this.toString())
     }).then((response) => get(response, 'data.data', null));
   }
 }
