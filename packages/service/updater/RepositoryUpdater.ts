@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bullmq';
+import { Job } from 'bee-queue';
 import { flatten } from 'lodash';
 
 import Cache from './Cache';
@@ -65,31 +65,17 @@ export default class RepositoryUpdater implements Updater {
         return Promise.all(
           handlers.map((handler) =>
             this.update([handler], true).catch((err) =>
-              handler.error(err).catch((err2) => {
-                this.errors.push({ handler, error: err2 });
-                this.job?.update({
-                  ...this.job.data,
-                  resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
-                  errors: [...(this.job.data.errors || []), handler.meta.resource]
-                });
-              })
+              handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
             )
           )
         );
       })
       .finally(() => {
         if (isRetry) return;
-
-        if (this.job && handlers.find((h) => h.isDone())) {
-          this.job.updateProgress(
+        if (this.job && handlers.find((h) => h.isDone()))
+          this.job.reportProgress(
             Math.ceil((this.doneHandlers.length / this.handlers.length) * 100)
           );
-          this.job.update({
-            ...this.job.data,
-            resources: this.pendingHandlers.map((handler) => handler.meta.resource),
-            done: this.doneHandlers.map((handler) => handler.meta.resource)
-          });
-        }
       })
       .then(() => {
         if (isRetry) return;

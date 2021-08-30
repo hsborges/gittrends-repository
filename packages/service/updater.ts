@@ -3,9 +3,9 @@
  */
 import axios from 'axios';
 import consola from 'consola';
+import BeeQueue from 'bee-queue';
 import { bold } from 'chalk';
-import { program } from 'commander';
-import { QueueScheduler, Worker, Job } from 'bullmq';
+import { program, Option } from 'commander';
 import mongoClient from '@gittrends/database-config';
 
 import { version } from './package.json';
@@ -28,8 +28,12 @@ async function proxyServerHealthCheck(): Promise<boolean> {
 program
   .version(version)
   .description('Update repositories metadata')
-  .option('-t, --type [type]', 'Update "repositories" or "users"', 'repositories')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
+  .addOption(
+    new Option('-t, --type [type]', 'Update "repositories" or "users"')
+      .choices(['repositories', 'users'])
+      .default('repositories')
+  )
   .action(async () => {
     if (!(await proxyServerHealthCheck())) {
       consola.error('Proxy server not responding, exiting ...');
@@ -43,13 +47,19 @@ program
 
     const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '25000', 10));
 
-    new QueueScheduler(options.type, {
-      connection: redisOptions,
-      stalledInterval: 15000,
-      maxStalledCount: Number.MAX_SAFE_INTEGER
+    type RepositoryQueue = { id: string; resources: string[] };
+    type UsersQueue = { id: string | string[] };
+
+    const queue = new BeeQueue<RepositoryQueue | UsersQueue>(options.type, {
+      redis: redisOptions,
+      isWorker: true,
+      getEvents: true,
+      sendEvents: true
     });
 
-    const WorkerProcessor = async (job: Job) => {
+    queue.checkStalledJobs(5000);
+
+    queue.process(options.workers, async (job: BeeQueue.Job<any>) => {
       try {
         switch (options.type) {
           case 'users':
@@ -71,23 +81,12 @@ program
         consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
         throw err;
       }
-    };
+    });
 
-    Array(options.workers)
-      .fill(null)
-      .map(() =>
-        new Worker(options.type, WorkerProcessor, {
-          connection: redisOptions,
-          concurrency: 1,
-          lockDuration: 15000
-        }).on('progress', ({ id }, progress) => {
-          const bar = new Array(Math.ceil(<number>progress / 10))
-            .fill('=')
-            .join('')
-            .padEnd(10, '-');
-          const progressStr = `${progress}`.padStart(3);
-          consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(id)}.`);
-        })
-      );
+    queue.on('job progress', (jobId, progress) => {
+      const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
+      const progressStr = `${progress}`.padStart(3);
+      consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(jobId)}.`);
+    });
   })
   .parse(process.argv);

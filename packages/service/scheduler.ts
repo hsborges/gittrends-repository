@@ -1,9 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Queue } from 'bullmq';
 import dayjs from 'dayjs';
 import consola from 'consola';
+import BeeQueue from 'bee-queue';
 
 import { each } from 'bluebird';
 import { program } from 'commander';
@@ -21,7 +21,7 @@ function resourcesParser(resources: string[]): string[] {
   throw new Error("Invalid 'resources' argument values!");
 }
 
-const repositoriesScheduler = async (queue: Queue, resources: string[], wait = 24) => {
+const repositoriesScheduler = async (queue: BeeQueue, resources: string[], wait = 24) => {
   // find and save jobs on queue
   let count = 0;
 
@@ -38,20 +38,20 @@ const repositoriesScheduler = async (queue: Queue, resources: string[], wait = 2
       const _resources = difference(resources, exclude);
 
       if (_resources.length) {
-        await queue.add(
-          'update',
-          { id: data._id, resources: _resources },
-          { jobId: (data.name_with_owner as string).toLowerCase() }
-        );
+        await queue
+          .createJob({ id: data._id, resources: _resources })
+          .setId((data.name_with_owner as string).toLowerCase())
+          .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10))
+          .save();
         count += 1;
       }
     }
   ).then(async () => consola.success(`Number of repositories scheduled: ${count}`));
 };
 
-const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
+const usersScheduler = async (queue: BeeQueue, wait = 24, limit = 100000) => {
   // get jobs on queue
-  await queue.drain();
+  await queue.destroy();
 
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hour').toISOString();
@@ -71,7 +71,13 @@ const usersScheduler = async (queue: Queue, wait = 24, limit = 100000) => {
     .then((users) => users.map((r) => r._id));
   // add to queue
   return Promise.all(
-    chunk(usersIds, 25).map((id) => queue.add('update', { id }, { jobId: `users@${id[0]}+` }))
+    chunk(usersIds, 25).map((id) =>
+      queue
+        .createJob({ id })
+        .setId(`users@${id[0]}+`)
+        .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10))
+        .save()
+    )
   ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
 
@@ -88,20 +94,24 @@ program
     const resources = resourcesParser([resource, ...other]);
 
     async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
-      const queue = new Queue<T>(name, {
-        connection: redisOptions,
-        defaultJobOptions: {
-          attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
-          removeOnComplete,
-          removeOnFail
-        }
+      const queue = new BeeQueue<T>(name, {
+        redis: redisOptions,
+        isWorker: false,
+        getEvents: false,
+        sendEvents: false,
+        removeOnSuccess: removeOnComplete,
+        removeOnFailure: removeOnFail
       });
 
-      await queue.clean(1000 * 60 * 60 * options.wait, Number.MAX_SAFE_INTEGER, 'completed');
-      await queue.clean(0, Number.MAX_SAFE_INTEGER, 'failed');
-
-      if (options.destroyQueue)
-        await Promise.all([queue.clean(0, Number.MAX_SAFE_INTEGER, 'active'), queue.drain()]);
+      await (options.destroyQueue
+        ? queue.destroy()
+        : Promise.all(
+            ['succeeded', 'failed'].map((type) =>
+              queue
+                .getJobs(type, { size: Number.MAX_SAFE_INTEGER })
+                .then((jobs) => Promise.all(jobs.map((job) => job.remove())))
+            )
+          ));
 
       return queue;
     }
@@ -115,13 +125,13 @@ program
     // schedule repositories updates
     const reposResources = resources.filter((r) => r !== 'users');
     if (reposResources) {
-      const queue = await prepareQueue('repositories');
+      const queue = await prepareQueue<{ id: string; resources: string[] }>('repositories');
       promises.push(repositoriesScheduler(queue, reposResources, options.wait));
     }
 
     // schedule users updates
     if (resources.indexOf('users') >= 0) {
-      const queue = await prepareQueue('users', true, true);
+      const queue = await prepareQueue<{ id: string | string[] }>('users', true, true);
       promises.push(usersScheduler(queue, options.wait, options.limit));
     }
 
