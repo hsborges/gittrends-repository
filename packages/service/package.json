@@ -52,7 +52,7 @@
     "@babel/preset-env": "^7.15.0",
     "@babel/preset-typescript": "^7.15.0",
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^3.2.13",
+    "@hsborges/github-proxy-server": "^3.2.14",
     "@types/bluebird": "^3.5.36",
     "@types/bull-arena": "^3.0.4",
     "@types/debug": "^4.1.7",
