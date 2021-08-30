@@ -2,7 +2,8 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bee-queue';
-import { flatten } from 'lodash';
+import { flatten, shuffle } from 'lodash';
+import { each } from 'bluebird';
 
 import Cache from './Cache';
 import Updater from './Updater';
@@ -62,11 +63,9 @@ export default class RepositoryUpdater implements Updater {
       .catch(async (err) => {
         if (isRetry || err instanceof ValidationError) throw err;
 
-        return Promise.all(
-          handlers.map((handler) =>
-            this.update([handler], true).catch((err) =>
-              handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
-            )
+        return each(shuffle(handlers), (handler) =>
+          this.update([handler], true).catch((err) =>
+            handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
           )
         );
       })
