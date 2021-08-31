@@ -53,13 +53,21 @@ program
     const queue = new BeeQueue<RepositoryQueue | UsersQueue>(options.type, {
       redis: redisOptions,
       isWorker: true,
-      getEvents: true,
-      sendEvents: true
+      getEvents: false,
+      sendEvents: false
     });
 
     queue.checkStalledJobs(5000);
 
     queue.process(options.workers, async (job: BeeQueue.Job<any>) => {
+      const reportProgress = job.reportProgress.bind(job);
+      job.reportProgress = (progress: any) => {
+        const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
+        const progressStr = `${progress}`.padStart(3);
+        consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(job.id)}.`);
+        return reportProgress(progress);
+      };
+
       try {
         switch (options.type) {
           case 'users':
@@ -81,12 +89,6 @@ program
         consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
         throw err;
       }
-    });
-
-    queue.on('job progress', (jobId, progress) => {
-      const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
-      const progressStr = `${progress}`.padStart(3);
-      consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(jobId)}.`);
     });
   })
   .parse(process.argv);
