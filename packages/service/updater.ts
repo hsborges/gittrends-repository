@@ -57,7 +57,7 @@ program
       sendEvents: false
     });
 
-    queue.checkStalledJobs(5000);
+    queue.checkStalledJobs(15000);
 
     queue.process(options.workers, async (job: BeeQueue.Job<any>) => {
       const reportProgress = job.reportProgress.bind(job);
