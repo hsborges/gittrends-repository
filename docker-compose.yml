@@ -1,0 +1,68 @@
+version: '3.7'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    command: --wiredTigerCacheSizeGB 1 --wiredTigerJournalCompressor zstd --directoryperdb --auth
+    ports:
+      - ${GITTRENDS_DATABASE_PORT}:27017
+    volumes:
+      - db:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${GITTRENDS_DATABASE_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
+      MONGO_INITDB_DATABASE: ${GITTRENDS_DATABASE_DB}
+
+  mongoku:
+    image: huggingface/mongoku:latest
+    container_name: mongoku
+    restart: always
+    ports:
+      - ${GITTRENDS_MONGOKU_PORT}:8080
+    volumes:
+      - mongoku-db:/data
+    environment:
+      MONGOKU_SERVER_PORT: 8080
+      MONGOKU_DATABASE_FILE: /data/mongoku.db
+      MONGOKU_DEFAULT_HOST: mongodb://${GITTRENDS_DATABASE_USERNAME}:${GITTRENDS_DATABASE_PASSWORD}@mongo:${GITTRENDS_DATABASE_PORT}
+    depends_on:
+      - mongo
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    ports:
+      - ${GITTRENDS_REDIS_PORT}:6379
+    command: --maxmemory 100mb --maxmemory-policy allkeys-lru
+
+  service:
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    container_name: gittrends-service
+    restart: always
+    volumes:
+      - ./data/tokens.txt:/app/data/tokens.txt:ro
+      - ./packages/service/pm2-ecosystem.yml:/app/packages/service/pm2-ecosystem.yml:ro
+    ports:
+      - ${GITTRENDS_PROXY_PORT}:${GITTRENDS_PROXY_PORT}
+      - ${GITTRENDS_QUEUE_BOARD_PORT}:${GITTRENDS_QUEUE_BOARD_PORT}
+    env_file:
+      - .env
+    environment:
+      GITTRENDS_DATABASE_HOST: mongo
+      GITTRENDS_DATABASE_PORT: 27017
+      GITTRENDS_REDIS_HOST: redis
+      GITTRENDS_REDIS_PORT: 6379
+    depends_on:
+      - mongo
+      - redis
+
+volumes:
+  db:
+    name: gittrends.app
+  mongoku-db:
+    name: gittrends.app
