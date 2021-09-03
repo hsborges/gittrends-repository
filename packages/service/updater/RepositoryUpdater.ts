@@ -85,7 +85,14 @@ export default class RepositoryUpdater implements Updater {
         if (isRetry) return;
         if (this.pendingHandlers.length) return this.update(this.pendingHandlers);
         if (this.errors.length)
-          throw new ResourceUpdateError(this.errors.map((e) => e.error.message).join(', '));
+          throw new ResourceUpdateError(
+            JSON.stringify(
+              this.errors.reduce(
+                (m, e) => ({ ...m, [e.handler.constructor.name]: e.error.message }),
+                {}
+              )
+            )
+          );
       });
   }
 
