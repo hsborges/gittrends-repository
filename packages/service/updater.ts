@@ -3,7 +3,7 @@
  */
 import axios from 'axios';
 import consola from 'consola';
-import BeeQueue from 'bee-queue';
+import BullQueue from 'bull';
 import { bold } from 'chalk';
 import { program, Option } from 'commander';
 import mongoClient from '@gittrends/database-config';
@@ -47,39 +47,25 @@ program
 
     const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '25000', 10));
 
-    type RepositoryQueue = { id: string; resources: string[] };
+    type RepositoryQueue = { id: string; resources: string[]; errors: string[]; done: string[] };
     type UsersQueue = { id: string | string[] };
 
-    const queue = new BeeQueue<RepositoryQueue | UsersQueue>(options.type, {
-      redis: redisOptions,
-      isWorker: true,
-      getEvents: false,
-      sendEvents: false
+    const queue = new BullQueue<RepositoryQueue & UsersQueue>(options.type, {
+      redis: redisOptions
     });
 
-    queue.checkStalledJobs(15000);
-
-    queue.process(options.workers, async (job: BeeQueue.Job<any>) => {
-      const reportProgress = job.reportProgress.bind(job);
-      job.reportProgress = (progress: any) => {
-        const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
-        const progressStr = `${progress}`.padStart(3);
-        consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(job.id)}.`);
-        return reportProgress(progress);
-      };
-
+    queue.process(options.workers, async (job) => {
       try {
         switch (options.type) {
           case 'users':
             await new ActorsUpdater(job.data.id, { job }).update();
             break;
           case 'repositories':
-            const id = job.data.id as string;
             const resources = job.data.resources as THandler[];
             const errors = (job.data.errors || []) as THandler[];
             if (errors.length) resources.push(...errors);
             if (resources.length)
-              await new RepositoryUpdater(id, resources, { job, cache }).update();
+              await new RepositoryUpdater(job.data.id, resources, { job, cache }).update();
             break;
           default:
             consola.error(new Error('Invalid "type" option!'));
@@ -89,6 +75,12 @@ program
         consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
         throw err;
       }
+    });
+
+    queue.on('progress', (job, progress) => {
+      const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
+      const progressStr = `${progress}`.padStart(3);
+      consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(job.id)}.`);
     });
   })
   .parse(process.argv);

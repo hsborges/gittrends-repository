@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bee-queue';
+import { Job } from 'bull';
 import { chunk } from 'lodash';
 import { mapSeries } from 'bluebird';
 import { NotFoundError, RetryableError } from '../helpers/errors';
@@ -48,7 +48,7 @@ export default class ActorsUpdater implements Updater {
 
   async update(): Promise<void> {
     return this._update(Array.isArray(this.id) ? this.id : [this.id]).then(() => {
-      if (this.job) this.job.reportProgress(100);
+      if (this.job) this.job.progress(100);
     });
   }
 }

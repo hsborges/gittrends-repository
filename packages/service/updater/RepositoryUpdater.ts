@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bee-queue';
+import { Job } from 'bull';
 import { flatten, shuffle } from 'lodash';
 import { each } from 'bluebird';
 
@@ -29,7 +29,7 @@ export type THandler =
   | 'tags'
   | 'watchers';
 
-type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
+type TJob = { id: string | string[]; resources: string[]; done?: string[]; errors?: string[] };
 type TOptions = { job?: Job<TJob>; cache?: Cache };
 
 export default class RepositoryUpdater implements Updater {
@@ -69,12 +69,17 @@ export default class RepositoryUpdater implements Updater {
           )
         );
       })
-      .finally(() => {
+      .finally(async () => {
         if (isRetry) return;
-        if (this.job && handlers.find((h) => h.isDone()))
-          this.job.reportProgress(
-            Math.ceil((this.doneHandlers.length / this.handlers.length) * 100)
-          );
+        if (this.job && handlers.find((h) => h.isDone())) {
+          this.job?.progress(Math.ceil((this.doneHandlers.length / this.handlers.length) * 100));
+          await this.job?.update({
+            ...this.job.data,
+            resources: this.pendingHandlers.map((h) => h.meta.resource),
+            done: this.doneHandlers.map((h) => h.meta.resource),
+            errors: this.errors.map((e) => e.handler.meta.resource)
+          });
+        }
       })
       .then(() => {
         if (isRetry) return;

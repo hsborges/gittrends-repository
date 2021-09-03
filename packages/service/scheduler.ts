@@ -3,7 +3,7 @@
  */
 import dayjs from 'dayjs';
 import consola from 'consola';
-import BeeQueue from 'bee-queue';
+import BullQueue from 'bull';
 
 import { each } from 'bluebird';
 import { program } from 'commander';
@@ -21,7 +21,7 @@ function resourcesParser(resources: string[]): string[] {
   throw new Error("Invalid 'resources' argument values!");
 }
 
-const repositoriesScheduler = async (queue: BeeQueue, resources: string[], wait = 24) => {
+const repositoriesScheduler = async (queue: BullQueue.Queue, resources: string[], wait = 24) => {
   // find and save jobs on queue
   let count = 0;
 
@@ -38,21 +38,17 @@ const repositoriesScheduler = async (queue: BeeQueue, resources: string[], wait 
       const _resources = difference(resources, exclude);
 
       if (_resources.length) {
-        await queue
-          .createJob({ id: data._id, resources: _resources })
-          .setId((data.name_with_owner as string).toLowerCase())
-          .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10))
-          .save();
         count += 1;
+        return queue.add(
+          { id: data._id, resources: _resources },
+          { jobId: (data.name_with_owner as string).toLowerCase() }
+        );
       }
     }
   ).then(async () => consola.success(`Number of repositories scheduled: ${count}`));
 };
 
-const usersScheduler = async (queue: BeeQueue, wait = 24, limit = 100000) => {
-  // get jobs on queue
-  await queue.destroy();
-
+const usersScheduler = async (queue: BullQueue.Queue, wait = 24, limit = 100000) => {
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hour').toISOString();
   // get metadata
@@ -71,13 +67,7 @@ const usersScheduler = async (queue: BeeQueue, wait = 24, limit = 100000) => {
     .then((users) => users.map((r) => r._id));
   // add to queue
   return Promise.all(
-    chunk(usersIds, 25).map((id) =>
-      queue
-        .createJob({ id })
-        .setId(`users@${id[0]}+`)
-        .retries(parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10))
-        .save()
-    )
+    chunk(usersIds, 25).map((id) => queue.add({ id }, { jobId: `users@${id[0]}+` }))
   ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
 
@@ -94,24 +84,22 @@ program
     const resources = resourcesParser([resource, ...other]);
 
     async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
-      const queue = new BeeQueue<T>(name, {
+      const queue = new BullQueue<T>(name, {
         redis: redisOptions,
-        isWorker: false,
-        getEvents: false,
-        sendEvents: false,
-        removeOnSuccess: removeOnComplete,
-        removeOnFailure: removeOnFail
+        defaultJobOptions: {
+          attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
+          removeOnComplete,
+          removeOnFail
+        },
+        settings: {
+          maxStalledCount: 10
+        }
       });
 
-      await (options.destroyQueue
-        ? queue.destroy()
-        : Promise.all(
-            ['succeeded', 'failed'].map((type) =>
-              queue
-                .getJobs(type, { size: Number.MAX_SAFE_INTEGER })
-                .then((jobs) => Promise.all(jobs.map((job) => job.remove())))
-            )
-          ));
+      await queue.clean(1000 * 60 * 60 * options.wait, 'completed');
+      await queue.clean(0, 'failed');
+
+      if (options.destroyQueue) await queue.empty();
 
       return queue;
     }

@@ -23,11 +23,12 @@
     "test": "jest --no-cache"
   },
   "dependencies": {
+    "@bull-board/api": "^3.5.4",
+    "@bull-board/express": "^3.5.4",
     "@gittrends/database-config": "file:../database-config",
     "axios": "^0.21.1",
-    "bee-queue": "^1.4.0",
     "bluebird": "^3.7.2",
-    "bull-arena": "^3.29.2",
+    "bull": "^3.29.1",
     "chalk": "^4.1.2",
     "collections": "^5.1.12",
     "commander": "^8.1.0",
@@ -54,6 +55,7 @@
     "@gittrends/env-config": "file:../env-config",
     "@hsborges/github-proxy-server": "^3.2.17",
     "@types/bluebird": "^3.5.36",
+    "@types/bull": "^3.15.4",
     "@types/bull-arena": "^3.0.4",
     "@types/debug": "^4.1.7",
     "@types/express": "^4.17.13",
