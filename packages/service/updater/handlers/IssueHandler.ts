@@ -66,7 +66,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     super(id, alias, type);
     this.resource = type;
     this.resourceAlias = `_${type}`;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 10;
+    this.batchSize = this.defaultBatchSize = type === 'issues' ? 75 : 35;
     this.rBatchSize = this.defaultRBatchSize = 100;
     this.issues = { items: [], hasNextPage: true };
     this.debug('Issue handler built for %s (%s)', id, type);
