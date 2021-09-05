@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import { get, omit } from 'lodash';
-import { map } from 'bluebird';
 import { ClientSession } from 'mongodb';
 import {
   Issue,
@@ -156,27 +155,33 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     switch (this.currentStage) {
       case Stages.GET_ISSUES_LIST: {
         const data = super.parseResponse(response[super.alias as string]);
+        const newIssues = get(data, `${this.resourceAlias}.nodes`, []);
 
-        this.issues.items = await map(
-          get(data, `${this.resourceAlias}.nodes`, []),
-          async (issue: TObject) => ({
-            data: { repository: this.id, ...issue },
-            component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
-              issue.id as string,
-              `issue_${issue.number}`
-            ),
-            details: { hasNextPage: true },
-            assignees: { hasNextPage: true },
-            labels: { hasNextPage: true },
-            participants: { hasNextPage: true },
-            timeline: {
-              hasNextPage: true,
-              endCursor: await Issue.collection
-                .findOne({ _id: issue.id }, { projection: { _metadata: 1 } })
-                .then((result) => result && get(result, '_metadata.endCursor'))
-            }
-          })
-        );
+        const newIssuesMetadata = await Issue.collection
+          .find(
+            { _id: { $in: newIssues.map((ni: any) => ni.id) } },
+            { projection: { _id: 1, _metadata: 1 } }
+          )
+          .toArray();
+
+        this.issues.items = newIssues.map((issue: TObject) => ({
+          data: { repository: this.id, ...issue },
+          component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
+            issue.id as string,
+            `issue_${issue.number}`
+          ),
+          details: { hasNextPage: true },
+          assignees: { hasNextPage: true },
+          labels: { hasNextPage: true },
+          participants: { hasNextPage: true },
+          timeline: {
+            hasNextPage: true,
+            endCursor: get(
+              newIssuesMetadata.find((ni) => ni._id === issue.id),
+              '_metadata.endCursor'
+            )
+          }
+        }));
 
         const pageInfo = get(data, `${this.resourceAlias}.page_info`, {});
         this.issues.hasNextPage = pageInfo.has_next_page ?? false;
