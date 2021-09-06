@@ -3,7 +3,7 @@
  */
 import { Job } from 'bull';
 import { flatten, shuffle } from 'lodash';
-import { each } from 'bluebird';
+import { map } from 'bluebird';
 
 import Cache from './Cache';
 import Updater from './Updater';
@@ -63,7 +63,7 @@ export default class RepositoryUpdater implements Updater {
       .catch(async (err) => {
         if (isRetry || err instanceof ValidationError) throw err;
 
-        return each(shuffle(handlers), (handler) =>
+        return map(shuffle(handlers), (handler) =>
           this.update([handler], true).catch((err) =>
             handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
           )

@@ -55,8 +55,10 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
     if (this.stargazers.items.length >= this.writeBatchSize || this.isDone()) {
-      await super.saveReferences(session);
-      await Stargazer.upsert(this.stargazers.items, session);
+      await Promise.all([
+        super.saveReferences(session),
+        Stargazer.upsert(this.stargazers.items, session)
+      ]);
       await Repository.collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } },

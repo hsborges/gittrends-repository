@@ -46,8 +46,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     this.tags.endCursor = pageInfo.end_cursor ?? this.tags.endCursor;
 
     if (this.tags.items.length >= this.writeBatchSize || this.isDone()) {
-      await super.saveReferences(session);
-      await Tag.upsert(this.tags.items, session);
+      await Promise.all([super.saveReferences(session), Tag.upsert(this.tags.items, session)]);
       await Repository.collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.tags.endCursor } },

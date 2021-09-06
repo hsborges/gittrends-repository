@@ -298,15 +298,12 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       []
     );
 
-    await super
-      .saveReferences(session)
-      .then(() =>
-        Promise.all([
-          (this.resource === 'issues' ? Issue : PullRequest).upsert(issues, session),
-          TimelineEvent.upsert(timeline, session),
-          Reaction.upsert(reactions, session)
-        ])
-      );
+    await Promise.all([
+      super.saveReferences(session),
+      (this.resource === 'issues' ? Issue : PullRequest).upsert(issues, session),
+      TimelineEvent.upsert(timeline, session),
+      Reaction.upsert(reactions, session)
+    ]);
 
     await Repository.collection.updateOne(
       { _id: this.meta.id },

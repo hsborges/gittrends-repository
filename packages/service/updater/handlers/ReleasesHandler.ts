@@ -46,8 +46,10 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     this.releases.endCursor = pageInfo.end_cursor ?? this.releases.endCursor;
 
     if (this.releases.items.length >= this.writeBatchSize || this.isDone()) {
-      await super.saveReferences(session);
-      await Release.upsert(this.releases.items, session);
+      await Promise.all([
+        super.saveReferences(session),
+        Release.upsert(this.releases.items, session)
+      ]);
       await Repository.collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.releases.endCursor } },
