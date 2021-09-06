@@ -45,8 +45,6 @@ program
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
-    const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '25000', 10));
-
     type RepositoryQueue = { id: string; resources: string[]; errors: string[]; done: string[] };
     type UsersQueue = { id: string | string[] };
 
@@ -55,6 +53,8 @@ program
     });
 
     queue.process(options.workers, async (job) => {
+      const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '1000', 10));
+
       try {
         switch (options.type) {
           case 'users':
