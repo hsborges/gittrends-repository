@@ -5,7 +5,7 @@ services:
     image: mongo:latest
     container_name: mongo
     restart: always
-    command: --wiredTigerCacheSizeGB 1 --wiredTigerJournalCompressor zstd --directoryperdb --auth
+    command: --wiredTigerCacheSizeGB ${GITTRENDS_DATABASE_CACHE_SIZE-1} --wiredTigerJournalCompressor zstd --directoryperdb --auth
     ports:
       - ${GITTRENDS_DATABASE_PORT-27017}:27017
     volumes:
@@ -67,7 +67,7 @@ services:
       service: service
     container_name: gittrends-service-updater
     restart: unless-stopped
-    command: yarn update --type repositories --workers 1
+    command: yarn update --type repositories --workers ${GITTRENDS_UPDATER_REPOS_WORKERS-1}
     environment:
       GITTRENDS_DATABASE_POOL_SIZE: ${GITTRENDS_DATABASE_POOL_SIZE-1}
     depends_on:
@@ -81,7 +81,7 @@ services:
       service: service
     container_name: gittrends-service-users-updater
     restart: unless-stopped
-    command: yarn update --type users --workers 1
+    command: yarn update --type users --workers ${GITTRENDS_UPDATER_USERS_WORKERS-1}
     environment:
       GITTRENDS_DATABASE_POOL_SIZE: ${GITTRENDS_DATABASE_POOL_SIZE-1}
     depends_on:
