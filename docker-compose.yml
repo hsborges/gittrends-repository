@@ -15,21 +15,6 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${GITTRENDS_DATABASE_PASSWORD}
       MONGO_INITDB_DATABASE: ${GITTRENDS_DATABASE_DB}
 
-  mongoku:
-    image: huggingface/mongoku:latest
-    container_name: mongoku
-    restart: always
-    ports:
-      - ${GITTRENDS_MONGOKU_PORT}:8080
-    volumes:
-      - mongoku-db:/data
-    environment:
-      MONGOKU_SERVER_PORT: 8080
-      MONGOKU_DATABASE_FILE: /data/mongoku.db
-      MONGOKU_DEFAULT_HOST: mongodb://${GITTRENDS_DATABASE_USERNAME}:${GITTRENDS_DATABASE_PASSWORD}@mongo:${GITTRENDS_DATABASE_PORT}
-    depends_on:
-      - mongo
-
   redis:
     image: redis:alpine
     container_name: redis
@@ -38,31 +23,64 @@ services:
       - ${GITTRENDS_REDIS_PORT}:6379
     command: --maxmemory 100mb --maxmemory-policy allkeys-lru
 
-  service:
-    build:
-      context: .
-      dockerfile: packages/service/Dockerfile
-    container_name: gittrends-service
-    restart: always
+  proxy-server:
+    image: node:alpine
+    container_name: gittrends-proxy-server
+    entrypoint: npx @hsborges/github-proxy-server --tokens tokens.txt --request-interval 250
+    restart: unless-stopped
     volumes:
-      - ./data/tokens.txt:/app/data/tokens.txt:ro
-      - ./packages/service/pm2-ecosystem.yml:/app/packages/service/pm2-ecosystem.yml:ro
+      - ./data/tokens.dev.txt:/tokens.txt:ro
     ports:
-      - ${GITTRENDS_PROXY_PORT}:${GITTRENDS_PROXY_PORT}
-      - ${GITTRENDS_QUEUE_BOARD_PORT}:${GITTRENDS_QUEUE_BOARD_PORT}
-    env_file:
-      - .env
+      - 3000:3000
     environment:
-      GITTRENDS_DATABASE_HOST: mongo
-      GITTRENDS_DATABASE_PORT: 27017
-      GITTRENDS_REDIS_HOST: redis
-      GITTRENDS_REDIS_PORT: 6379
+      PORT: 3000
+
+  queue-board:
+    extends:
+      file: docker-compose.service.yml
+      service: service
+    container_name: gittrends-service-queue-board
+    restart: unless-stopped
+    command: yarn queue-board
+    ports:
+      - ${GITTRENDS_QUEUE_BOARD_PORT}:${GITTRENDS_QUEUE_BOARD_PORT}
+    depends_on:
+      - redis
+
+  scheduler:
+    extends:
+      file: docker-compose.service.yml
+      service: service
+    container_name: gittrends-service-scheduler
+    command: yarn schedule all --wait 168
     depends_on:
       - mongo
       - redis
 
+  updater:
+    extends:
+      file: docker-compose.service.yml
+      service: service
+    container_name: gittrends-service-updater
+    restart: unless-stopped
+    command: yarn update --type repositories --workers 1
+    depends_on:
+      - mongo
+      - redis
+      - proxy-server
+
+  users-updater:
+    extends:
+      file: docker-compose.service.yml
+      service: service
+    container_name: gittrends-service-users-updater
+    restart: unless-stopped
+    command: yarn update --type users --workers 1
+    depends_on:
+      - mongo
+      - redis
+      - proxy-server
+
 volumes:
   db:
-    name: gittrends.app
-  mongoku-db:
     name: gittrends.app
