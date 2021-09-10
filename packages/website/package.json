@@ -20,12 +20,12 @@
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.15",
     "add": "^2.0.6",
-    "axios": "^0.21.1",
+    "axios": "^0.21.4",
     "classnames": "^2.3.1",
     "dayjs": "^1.10.6",
     "framer-motion": "^4",
     "lodash": "^4.17.21",
-    "next": "11.1.1",
+    "next": "11.1.2",
     "numeral": "^2.0.6",
     "react": "17.0.2",
     "react-detect-click-outside": "^1.1.1",
@@ -36,9 +36,9 @@
     "vercel": "^23.1.2"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^11.1.1",
+    "@next/eslint-plugin-next": "^11.1.2",
     "@types/numeral": "^2.0.1",
-    "@types/react": "^17.0.19",
+    "@types/react": "^17.0.20",
     "babel-eslint": "^10.1.0",
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",
@@ -46,8 +46,8 @@
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.25.1",
     "eslint-plugin-react-hooks": "^4.2.0",
-    "sass": "^1.38.2",
+    "sass": "^1.39.2",
     "styled-jsx-plugin-sass": "^1.0.0",
-    "webpack": "5.51.1"
+    "webpack": "5.52.0"
   }
 }
