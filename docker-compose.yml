@@ -3,8 +3,8 @@ version: '3.7'
 services:
   mongo:
     image: mongo:latest
-    restart: always
     command: --wiredTigerCacheSizeGB ${GITTRENDS_DATABASE_CACHE_SIZE-1} --wiredTigerJournalCompressor zstd --directoryperdb --auth
+    restart: always
     ports:
       - ${GITTRENDS_DATABASE_PORT-27017}:27017
     volumes:
@@ -16,15 +16,16 @@ services:
 
   redis:
     image: redis:alpine
-    restart: always
     command: --maxmemory 100mb --maxmemory-policy allkeys-lru
+    restart: always
     ports:
       - ${GITTRENDS_REDIS_PORT-6379}:6379
 
   proxy-server:
-    extends:
-      file: docker-compose.service.yml
-      service: service
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
     entrypoint: npx @hsborges/github-proxy-server --tokens /tokens.txt --request-interval 250
     restart: unless-stopped
     volumes:
@@ -35,48 +36,75 @@ services:
       PORT: 80
 
   queue-board:
-    extends:
-      file: docker-compose.service.yml
-      service: service
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
     command: yarn queue-board
+    restart: unless-stopped
     ports:
       - ${GITTRENDS_QUEUE_BOARD_PORT-8082}:80
     environment:
+      GITTRENDS_REDIS_HOST: redis
+      GITTRENDS_REDIS_PORT: 6379
       GITTRENDS_QUEUE_BOARD_PORT: 80
     depends_on:
       - redis
 
   scheduler:
-    extends:
-      file: docker-compose.service.yml
-      service: service
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
     command: yarn schedule all --wait 168
+    env_file:
+      - .env
+    environment:
+      GITTRENDS_DATABASE_HOST: mongo
+      GITTRENDS_DATABASE_PORT: 27017
+      GITTRENDS_REDIS_HOST: redis
+      GITTRENDS_REDIS_PORT: 6379
     depends_on:
       - mongo
       - redis
 
   updater:
-    extends:
-      file: docker-compose.service.yml
-      service: service
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
     command: yarn update --type repositories --workers ${GITTRENDS_UPDATER_REPOS_WORKERS-1}
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      GITTRENDS_DATABASE_POOL_SIZE: ${GITTRENDS_DATABASE_POOL_SIZE-1}
+      GITTRENDS_DATABASE_HOST: mongo
+      GITTRENDS_DATABASE_PORT: 27017
+      GITTRENDS_REDIS_HOST: redis
+      GITTRENDS_REDIS_PORT: 6379
+      GITTRENDS_PROXY_HOST: proxy-server
+      GITTRENDS_PROXY_PORT: 80
     depends_on:
       - mongo
       - redis
       - proxy-server
 
   users-updater:
-    extends:
-      file: docker-compose.service.yml
-      service: service
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
     command: yarn update --type users --workers ${GITTRENDS_UPDATER_USERS_WORKERS-1}
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      GITTRENDS_DATABASE_POOL_SIZE: ${GITTRENDS_DATABASE_POOL_SIZE-1}
+      GITTRENDS_DATABASE_HOST: mongo
+      GITTRENDS_DATABASE_PORT: 27017
+      GITTRENDS_REDIS_HOST: redis
+      GITTRENDS_REDIS_PORT: 6379
+      GITTRENDS_PROXY_HOST: proxy-server
+      GITTRENDS_PROXY_PORT: 80
     depends_on:
       - mongo
       - redis
