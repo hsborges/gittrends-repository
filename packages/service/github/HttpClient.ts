@@ -72,14 +72,9 @@ export default async function (query: TObject): Promise<AxiosResponse> {
           throw new Errors.BadGatewayError(err.message, err, err.response && err.response.data);
         if (status === 408)
           throw new Errors.TimedoutError(err.message, err, err.response && err.response.data);
-        const error = new Errors.RequestError(
-          err.message,
-          err,
-          JSON.stringify(err.response?.data),
-          query
+        return retry(
+          new Errors.RequestError(err.message, err, JSON.stringify(err.response?.data), query)
         );
-        if (!status) return retry(error);
-        else throw error;
       }),
     { retries: RETRIES }
   ).then((response) => {
