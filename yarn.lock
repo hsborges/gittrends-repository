@@ -2231,10 +2231,10 @@
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.2.0.tgz#f3933a44e365864f4dad5db94158106d511e8131"
   integrity sha512-sqKVVVOe5ivCaXDWivIJYVSaEgdQK9ul7a4Kity5Iw7u9+wBAPbX1RMSnLLmp7O4Vzj0WOWwMAJsTL00xwaNug==
 
-"@hsborges/github-proxy-server@^3.2.18":
-  version "3.2.18"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.2.18.tgz#5607453f86a2f8b89297e3e4b0607d191bcd1378"
-  integrity sha512-PZAiIQnOAgWVu3xMWUoScKfEaPBh47AymtQuO2TxPDgX4FP+QGpVapzQwnvv3vLGTPVKxUhRdfgLF/PMK1ywhQ==
+"@hsborges/github-proxy-server@^3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.3.0.tgz#c9e856ad30be18543b3423adb2a5daad203cb8b1"
+  integrity sha512-YQo30QzvC3vgsTSwUrpZ7SlgDvvVrMfbTjlaZriTHmqvp3xJA1frRs3CSwCBoMPedQOW9r6DZ84V4IPYRVc4Ow==
   dependencies:
     bottleneck "^2.19.5"
     chalk "^4.1.2"
@@ -5288,6 +5288,11 @@ commander@^8.1.0:
   resolved "https://registry.yarnpkg.com/commander/-/commander-8.1.0.tgz#db36e3e66edf24ff591d639862c6ab2c52664362"
   integrity sha512-mf45ldcuHSYShkplHHGKWb4TrmwQadxOn7v4WuhDJy0ZVoY5JFajaRDKD0PNe5qXzBX0rhovjTnP6Kz9LETcuA==
 
+commander@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-8.2.0.tgz#37fe2bde301d87d47a53adeff8b5915db1381ca8"
+  integrity sha512-LLKxDvHeL91/8MIyTAD5BFMNtoIwztGPMiM/7Bl8rIPmHCZXRxmSWr91h57dpOpnQ6jIUqEWdXE/uBYMfiVZDA==
+
 commist@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/commist/-/commist-1.1.0.tgz#17811ec6978f6c15ee4de80c45c9beb77cee35d5"
@@ -6047,6 +6052,11 @@ dayjs@^1.10.6:
   version "1.10.6"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.6.tgz#288b2aa82f2d8418a6c9d4df5898c0737ad02a63"
   integrity sha512-AztC/IOW4L1Q41A86phW5Thhcrco3xuAA+YX/BLpLWWjRcTj5TOt/QImBLmCKlrF7u7k47arTnOyL6GnbG8Hvw==
+
+dayjs@^1.10.7:
+  version "1.10.7"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.7.tgz#2cf5f91add28116748440866a0a1d26f3a6ce468"
+  integrity sha512-P6twpd70BcPK34K26uJ1KT3wlhpuOAPoMwJzpsIWUxHZ7wpmbdZL/hQqBDfz7hGurYSa5PhzdhDHtt319hL3ig==
 
 dayjs@~1.8.24, dayjs@~1.8.25:
   version "1.8.36"
@@ -13645,6 +13655,11 @@ typescript@^4.4.2:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.2.tgz#6d618640d430e3569a1dfb44f7d7e600ced3ee86"
   integrity sha512-gzP+t5W4hdy4c+68bfcv0t400HVJMMd2+H9B7gae1nQlBzCqvrXX+6GL/b3GAgyTH966pzrZ70/fRjwAtZksSQ==
 
+typescript@^4.4.3:
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.3.tgz#bdc5407caa2b109efd4f82fe130656f977a29324"
+  integrity sha512-4xfscpisVgqqDfPaJo5vkd+Qd/ItkoagnHpufr+i2QCHBsNYp+G7UAoyFl8aPtx879u38wPV65rZ8qbGZijalA==
+
 typescript@~4.2.3:
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.2.4.tgz#8610b59747de028fda898a8aef0e103f156d0961"
@@ -13845,10 +13860,10 @@ use-subscription@1.5.1:
   dependencies:
     object-assign "^4.1.1"
 
-user-agents@^1.0.770:
-  version "1.0.770"
-  resolved "https://registry.yarnpkg.com/user-agents/-/user-agents-1.0.770.tgz#413d97bb920af7e10921ec88c16bf3d7828a848c"
-  integrity sha512-XsIUXmOkAnU/rEz3eeqYsOAMS+02xq6tG7dfkpWP2t5PCqqBEd/SQJ2nUnHWDT+LfLakJCZfmV8fT0T9v16GQA==
+user-agents@^1.0.771:
+  version "1.0.771"
+  resolved "https://registry.yarnpkg.com/user-agents/-/user-agents-1.0.771.tgz#a61736dfa023d3c3ae0bfd03046a0ed292970c25"
+  integrity sha512-NGho9AzjbWa2GTkz3QtvA+qmMn2NMMiN09nGirXxwGL+D9EhQj9dKjSo7tzfZecO1EoCU8Gk10UVReW5QLwV5A==
   dependencies:
     dot-json "^1.2.2"
     lodash.clonedeep "^4.5.0"
@@ -14091,10 +14106,10 @@ webpack-sources@^3.2.0:
   resolved "https://registry.yarnpkg.com/webpack-sources/-/webpack-sources-3.2.0.tgz#b16973bcf844ebcdb3afde32eda1c04d0b90f89d"
   integrity sha512-fahN08Et7P9trej8xz/Z7eRu8ltyiygEo/hnRi9KqBUs80KeDcnf96ZJo++ewWd84fEf3xSX9bp4ZS9hbw0OBw==
 
-webpack@5.52.0:
-  version "5.52.0"
-  resolved "https://registry.yarnpkg.com/webpack/-/webpack-5.52.0.tgz#88d997c2c3ebb62abcaa453d2a26e0fd917c71a3"
-  integrity sha512-yRZOat8jWGwBwHpco3uKQhVU7HYaNunZiJ4AkAVQkPCUGoZk/tiIXiwG+8HIy/F+qsiZvSOa+GLQOj3q5RKRYg==
+webpack@5.52.1:
+  version "5.52.1"
+  resolved "https://registry.yarnpkg.com/webpack/-/webpack-5.52.1.tgz#2dc1d9029ecb7acfb80da7bf67baab67baa517a7"
+  integrity sha512-wkGb0hLfrS7ML3n2xIKfUIwHbjB6gxwQHyLmVHoAqEQBw+nWo+G6LoHL098FEXqahqximsntjBLuewStrnJk0g==
   dependencies:
     "@types/eslint-scope" "^3.7.0"
     "@types/estree" "^0.0.50"
