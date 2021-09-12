@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import tunnel from 'tunnel-ssh';
-import debug from 'debug';
 import { Server } from 'net';
 import { readFileSync } from 'fs';
 import { promisify } from 'util';
@@ -11,7 +10,6 @@ import { MongoClient } from 'mongodb';
 import Model from './models/Model';
 
 const tunnelAsync = promisify(tunnel);
-const debugError = debug('gittrends:database-config');
 
 const HOST = process.env.GITTRENDS_DATABASE_HOST ?? 'localhost';
 const PORT = process.env.GITTRENDS_DATABASE_PORT ?? '27017';
@@ -71,9 +69,7 @@ client.connect = async function () {
     };
 
     server = await tunnelAsync(options);
-    server.on('error', async (err) => {
-      debugError('Tunneling error: ', err);
-      debugError('Reconnecting ...');
+    server.on('error', async () => {
       server.close();
       server = await tunnelAsync(options);
     });
