@@ -2,6 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import debug from 'debug';
+import { map, filter } from 'bluebird';
 import { ClientSession } from 'mongodb';
 import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
@@ -42,8 +43,9 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   }
 
   protected async saveReferences(session?: ClientSession): Promise<void> {
-    const [actors, commits, milestones] = [this.actors, this.commits, this.milestones].map(
-      (values) => values.filter((object) => !this.cache?.has(object))
+    const [actors, commits, milestones] = await map(
+      [this.actors, this.commits, this.milestones],
+      (values) => filter(values, async (object) => !(await this.cache?.has(object)))
     );
 
     await Promise.all([
