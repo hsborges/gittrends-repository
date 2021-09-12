@@ -2231,10 +2231,10 @@
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.2.0.tgz#f3933a44e365864f4dad5db94158106d511e8131"
   integrity sha512-sqKVVVOe5ivCaXDWivIJYVSaEgdQK9ul7a4Kity5Iw7u9+wBAPbX1RMSnLLmp7O4Vzj0WOWwMAJsTL00xwaNug==
 
-"@hsborges/github-proxy-server@^3.3.0":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.3.0.tgz#c9e856ad30be18543b3423adb2a5daad203cb8b1"
-  integrity sha512-YQo30QzvC3vgsTSwUrpZ7SlgDvvVrMfbTjlaZriTHmqvp3xJA1frRs3CSwCBoMPedQOW9r6DZ84V4IPYRVc4Ow==
+"@hsborges/github-proxy-server@^3.4.0":
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/@hsborges/github-proxy-server/-/github-proxy-server-3.4.0.tgz#3e08d217dba813f827f2d0b5204994e65feea488"
+  integrity sha512-xtQhWERTspIWZuUZM9/wlXtPybY37IvrL77o+/iiDvd2PHTTjQx6zNs2M57Et66CEwDNziJ/rDaXjplJLBEHZw==
   dependencies:
     bottleneck "^2.19.5"
     chalk "^4.1.2"
@@ -13650,11 +13650,6 @@ typescript@4.3.4:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.3.4.tgz#3f85b986945bcf31071decdd96cf8bfa65f9dcbc"
   integrity sha512-uauPG7XZn9F/mo+7MrsRjyvbxFpzemRjKEZXS4AK83oP2KKOJPvb+9cO/gmnv8arWZvhnjVOXz7B49m1l0e9Ew==
 
-typescript@^4.4.2:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.2.tgz#6d618640d430e3569a1dfb44f7d7e600ced3ee86"
-  integrity sha512-gzP+t5W4hdy4c+68bfcv0t400HVJMMd2+H9B7gae1nQlBzCqvrXX+6GL/b3GAgyTH966pzrZ70/fRjwAtZksSQ==
-
 typescript@^4.4.3:
   version "4.4.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.3.tgz#bdc5407caa2b109efd4f82fe130656f977a29324"
@@ -13860,10 +13855,10 @@ use-subscription@1.5.1:
   dependencies:
     object-assign "^4.1.1"
 
-user-agents@^1.0.771:
-  version "1.0.771"
-  resolved "https://registry.yarnpkg.com/user-agents/-/user-agents-1.0.771.tgz#a61736dfa023d3c3ae0bfd03046a0ed292970c25"
-  integrity sha512-NGho9AzjbWa2GTkz3QtvA+qmMn2NMMiN09nGirXxwGL+D9EhQj9dKjSo7tzfZecO1EoCU8Gk10UVReW5QLwV5A==
+user-agents@^1.0.772:
+  version "1.0.772"
+  resolved "https://registry.yarnpkg.com/user-agents/-/user-agents-1.0.772.tgz#99c13ca3b5d73c7c6a8667f2859b8b1a86d121c7"
+  integrity sha512-kktcAAm40aTB+ucm9bd/5qP4kU0yD5Y2ha7hycn5k9Eo66pYdXCWvnuqlsXNO/tOfynEmBCYsx0HpZ3PPt08HQ==
   dependencies:
     dot-json "^1.2.2"
     lodash.clonedeep "^4.5.0"
