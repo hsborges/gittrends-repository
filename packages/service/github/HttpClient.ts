@@ -26,40 +26,38 @@ const requestClient: AxiosInstance = axios.create({
       'application/vnd.github.starfox-preview+json',
       'application/vnd.github.hawkgirl-preview+json',
       'application/vnd.github.merge-info-preview+json'
-    ].join(', ')
+    ].join(', '),
+    timeout: TIMEOUT
   }
-});
-
-requestClient.interceptors.request.use((config) => {
-  if (config.timeout === undefined || config.timeout === 0) return config;
-
-  const source = axios.CancelToken.source();
-
-  setTimeout(() => {
-    source.cancel(
-      `Cancelled request. Took longer than ${config.timeout}ms to get complete response.`
-    );
-  }, config.timeout);
-
-  // If caller configures cancelToken, preserve cancelToken behaviour.
-  if (config.cancelToken)
-    config.cancelToken.promise.then((cancel) => source.cancel(cancel.message));
-
-  return { ...config, cancelToken: source.token };
 });
 
 /* exports */
 export default async function (query: TObject): Promise<AxiosResponse> {
   return pRetry(
-    () =>
-      requestClient({ method: 'post', data: query, timeout: TIMEOUT }).catch((err) => {
-        const status = err.response?.status;
-        if (status === 500)
-          throw new Errors.InternalServerError(err.message, err, err.response?.data);
-        if (status === 502) throw new Errors.BadGatewayError(err.message, err, err.response?.data);
-        if (status === 408) throw new Errors.TimedoutError(err.message, err, err.response?.data);
-        throw new Errors.RequestError(err.message, err, err.response?.data, query);
-      }),
+    () => {
+      const source = axios.CancelToken.source();
+
+      const timeout = setTimeout(() => {
+        source.cancel(
+          `Cancelled request, took longer than ${(TIMEOUT * 2) / 1000}s to get complete response.`
+        );
+      }, TIMEOUT * 2);
+
+      return requestClient({ method: 'post', data: query, cancelToken: source.token })
+        .catch((err) => {
+          switch (err.response?.status) {
+            case 408:
+              throw new Errors.TimedoutError(err.message, err, err.response?.data);
+            case 500:
+              throw new Errors.InternalServerError(err.message, err, err.response?.data);
+            case 502:
+              throw new Errors.BadGatewayError(err.message, err, err.response?.data);
+            default:
+              throw new Errors.RequestError(err.message, err, err.response?.data, query);
+          }
+        })
+        .finally(() => clearTimeout(timeout));
+    },
     { retries: RETRIES, minTimeout: 100, maxTimeout: 500, randomize: true }
   ).then((response) => {
     const data = normalize(compact(response.data));
