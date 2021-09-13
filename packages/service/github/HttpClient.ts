@@ -2,8 +2,8 @@
  *  Author: Hudson S. Borges
  */
 import UserAgent from 'user-agents';
-import pRetry from 'p-retry';
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import pRetry from 'promise-retry';
+import axios, { AxiosResponse } from 'axios';
 
 import compact from '../helpers/compact';
 import normalize from '../helpers/normalize';
@@ -16,37 +16,40 @@ const TIMEOUT = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT ?? '15000', 10);
 const RETRIES = parseInt(process.env.GITTRENDS_PROXY_RETRIES ?? '0', 5);
 const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT ?? new UserAgent().random().toString();
 
-const requestClient: AxiosInstance = axios.create({
-  baseURL: `${PROTOCOL}://${HOST}:${PORT}/graphql`,
-  responseType: 'json',
-  headers: {
-    'user-agent': USER_AGENT,
-    'Accept-Encoding': '*',
-    accept: [
-      'application/vnd.github.starfox-preview+json',
-      'application/vnd.github.hawkgirl-preview+json',
-      'application/vnd.github.merge-info-preview+json'
-    ].join(', '),
-    timeout: TIMEOUT
-  }
-});
-
 /* exports */
 export default async function (query: TObject): Promise<AxiosResponse> {
   return pRetry(
-    () => {
+    (retry) => {
       const source = axios.CancelToken.source();
 
-      const timeout = setTimeout(() => {
-        source.cancel(`Cancelled request. Took longer than ${TIMEOUT}ms to get complete response.`);
-      }, TIMEOUT);
+      const timeout = setTimeout(
+        () =>
+          source?.cancel(
+            `Cancelled request. Took longer than ${TIMEOUT}ms to get complete response.`
+          ),
+        TIMEOUT
+      );
 
-      return requestClient({ method: 'post', data: query, cancelToken: source.token })
-        .catch((err) => {
-          if (!err.response?.status || /^6\d{2}$/.test(err.response?.status)) throw err;
-          throw new pRetry.AbortError(err);
+      return axios
+        .post('/graphql', query, {
+          baseURL: `${PROTOCOL}://${HOST}:${PORT}`,
+          responseType: 'json',
+          headers: {
+            'user-agent': USER_AGENT,
+            'Accept-Encoding': '*',
+            accept: [
+              'application/vnd.github.starfox-preview+json',
+              'application/vnd.github.hawkgirl-preview+json',
+              'application/vnd.github.merge-info-preview+json'
+            ].join(', ')
+          },
+          timeout: TIMEOUT,
+          cancelToken: source?.token
         })
-
+        .catch((err) => {
+          if (!err.response?.status || /^6\d{2}$/.test(err.response?.status)) retry(err);
+          throw err;
+        })
         .finally(() => clearTimeout(timeout));
     },
     { retries: RETRIES, minTimeout: 100, maxTimeout: 500, randomize: true }
@@ -59,9 +62,8 @@ export default async function (query: TObject): Promise<AxiosResponse> {
           throw new Errors.InternalServerError(err.message, err, err.response?.data);
         case 502:
           throw new Errors.BadGatewayError(err.message, err, err.response?.data);
-        default: {
+        default:
           throw new Errors.RequestError(err.message, err, err.response?.data, query);
-        }
       }
     })
     .then((response) => {

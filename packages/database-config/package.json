@@ -28,7 +28,7 @@
     "@types/glob": "^7.1.4",
     "@types/lodash": "^4.14.172",
     "@types/mongodb": "^4.0.7",
-    "@types/object-hash": "^2.1.1",
+    "@types/object-hash": "^2.2.0",
     "@types/tunnel-ssh": "^4.1.1",
     "@types/webgl2": "^0.0.6",
     "ts-node": "^10.2.1"
