@@ -27,7 +27,10 @@ const repositoriesScheduler = async (queue: BullQueue.Queue, resources: string[]
 
   return each(
     Repository.collection
-      .find({}, { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } })
+      .find(
+        { '_metadata.removed': { $exists: false } },
+        { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
+      )
       .toArray(),
     async (data) => {
       const exclude: string[] = resources.filter((resource) => {
