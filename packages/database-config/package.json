@@ -13,8 +13,8 @@
     "migrate": "ts-node -r @gittrends/env-config node_modules/.bin/migrate-mongo up -f migrate-mongo-config.ts"
   },
   "dependencies": {
-    "ajv": "8.5.0",
-    "ajv-formats": "2.1.0",
+    "ajv": "8.5",
+    "ajv-formats": "2.1.1",
     "glob": "^7.1.7",
     "lodash": "^4.17.21",
     "migrate-mongo": "^8.2.3",

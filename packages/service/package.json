@@ -6,7 +6,7 @@
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "scripts": {
     "build": "rm -rf dist && yarn tsc",
-    "proxy-server": "github-proxy-server --api graphql --tokens ../../data/tokens.txt",
+    "proxy-server": "github-proxy-server --api graphql --tokens ../../tokens.txt",
     "add-repositories": "node -r @gittrends/env-config dist/add-repositories.js",
     "schedule": "node -r @gittrends/env-config dist/scheduler.js",
     "update": "node -r @gittrends/env-config dist/updater.js",
@@ -52,7 +52,7 @@
     "@babel/preset-env": "^7.15.6",
     "@babel/preset-typescript": "^7.15.0",
     "@gittrends/env-config": "file:../env-config",
-    "@hsborges/github-proxy-server": "^3.4.0",
+    "@hsborges/github-proxy-server": "^4.1.0",
     "@types/bluebird": "^3.5.36",
     "@types/bull": "^3.15.4",
     "@types/debug": "^4.1.7",

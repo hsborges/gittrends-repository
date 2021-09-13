@@ -26,10 +26,10 @@ services:
       context: .
       dockerfile: packages/service/Dockerfile
     image: gittrends-service:latest
-    entrypoint: npx @hsborges/github-proxy-server --tokens /tokens.txt --request-interval 250
+    entrypoint: yarn github-proxy-server --tokens /tokens.txt --request-interval 250
     restart: unless-stopped
     volumes:
-      - ./data/tokens.txt:/tokens.txt:ro
+      - ./tokens.txt:/tokens.txt:ro
     ports:
       - ${GITTRENDS_PROXY_PORT-8081}:80
     environment:

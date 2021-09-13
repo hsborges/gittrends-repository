@@ -21,7 +21,7 @@ const requestClient: AxiosInstance = axios.create({
   responseType: 'json',
   headers: {
     'user-agent': USER_AGENT,
-    'accept-encoding': 'gzip',
+    'Accept-Encoding': '*',
     accept: [
       'application/vnd.github.starfox-preview+json',
       'application/vnd.github.hawkgirl-preview+json',
