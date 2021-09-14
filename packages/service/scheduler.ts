@@ -11,7 +11,7 @@ import { program } from 'commander';
 import { difference, chunk, intersection, get } from 'lodash';
 import mongoClient, { Actor, Repository } from '@gittrends/database-config';
 
-import { redisOptions } from './redis';
+import * as redis from './redis';
 import { version, config } from './package.json';
 
 /* COMMANDS */
@@ -87,7 +87,7 @@ const scheduler = async (options: SchedulerOptions) => {
 
   async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
     const queue = new BullQueue<T>(name, {
-      redis: redisOptions,
+      redis: redis.scheduler.options,
       defaultJobOptions: {
         attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
         removeOnComplete,
@@ -142,31 +142,21 @@ program
     // connect to database
     await mongoClient.connect();
 
+    const schedulerFn = () =>
+      scheduler({
+        resources,
+        limit: options.limit,
+        wait: options.wait,
+        destroyQueue: options.destroyQueue
+      });
+
     // await promises and finish script
-    await (options.cron
-      ? new Promise(
-          () =>
-            new CronJob(
-              options.cron,
-              () =>
-                scheduler({
-                  resources,
-                  limit: options.limit,
-                  wait: options.wait,
-                  destroyQueue: options.destroyQueue
-                }),
-              null,
-              true,
-              'UTC'
-            )
-        )
-      : scheduler({
-          resources,
-          limit: options.limit,
-          wait: options.wait,
-          destroyQueue: options.destroyQueue
-        })
-    )
+    await schedulerFn()
+      .then(() =>
+        options.cron
+          ? new Promise(() => new CronJob(options.cron, schedulerFn, null, true, 'UTC'))
+          : Promise.resolve()
+      )
       .catch((err) => consola.error(err))
       .finally(() => mongoClient.close())
       .finally(() => process.exit(0));

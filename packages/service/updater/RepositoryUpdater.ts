@@ -56,12 +56,24 @@ export default class RepositoryUpdater implements Updater {
   }
 
   async update(handlers = this.pendingHandlers, isRetry?: boolean): Promise<void> {
+    if (handlers.length === 0) return;
+
+    await this.job?.log(
+      `${new Date().toISOString()} - RepositoryUpdater.update started with ${handlers
+        .map((h) => h.meta.resource)
+        .join(', ')} (retry: ${!!isRetry})`
+    );
+
     return Query.create()
       .compose(...flatten(await Promise.all(handlers.map((handler) => handler.component()))))
       .run()
       .then((data) => Promise.all(handlers.map((handler) => handler.update(data))))
       .catch(async (err) => {
         if (isRetry || err instanceof ValidationError) throw err;
+
+        await this.job?.log(
+          `${new Date().toISOString()} - RepositoryUpdater.update error: ${err.message}`
+        );
 
         return map(shuffle(handlers), (handler) =>
           this.update([handler], true).catch((err) =>
@@ -73,12 +85,21 @@ export default class RepositoryUpdater implements Updater {
         if (isRetry) return;
         if (this.job && handlers.find((h) => h.isDone())) {
           this.job?.progress(Math.ceil((this.doneHandlers.length / this.handlers.length) * 100));
-          await this.job?.update({
-            ...this.job.data,
-            resources: this.pendingHandlers.map((h) => h.meta.resource),
-            done: this.doneHandlers.map((h) => h.meta.resource),
-            errors: this.errors.map((e) => e.handler.meta.resource)
-          });
+
+          await Promise.all([
+            this.job?.update({
+              ...this.job.data,
+              resources: this.pendingHandlers.map((h) => h.meta.resource),
+              done: this.doneHandlers.map((h) => h.meta.resource),
+              errors: this.errors.map((e) => e.handler.meta.resource)
+            }),
+            this.job?.log(
+              `${new Date().toISOString()} - RepositoryUpdater.update done for ${handlers
+                .filter((h) => h.isDone())
+                .map((h) => h.meta.resource)
+                .join(', ')} (retry: ${!!isRetry})`
+            )
+          ]);
         }
       })
       .then(() => {

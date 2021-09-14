@@ -4,14 +4,14 @@
 import { map } from 'bluebird';
 import lru from 'redis-lru';
 import hasher from 'node-object-hash';
-import redis from '../redis';
+import * as redis from '../redis';
 
 export default class UpdaterCache {
   readonly cache: ReturnType<typeof lru>;
   readonly hashSortCoerce = hasher({ sort: true, coerce: true });
 
   constructor(cacheSize: number) {
-    this.cache = lru(redis, {
+    this.cache = lru(redis.cache, {
       max: cacheSize,
       namespace: 'gittrends:cache',
       maxAge: 24 * 60 * 60 * 1000

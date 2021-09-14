@@ -8,14 +8,14 @@ import { createBullBoard } from '@bull-board/api';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 
-import { redisOptions } from '../redis';
+import * as redis from '../redis';
 
 const app = express();
 const serverAdapter = new ExpressAdapter();
 
 createBullBoard({
   queues: ['repositories', 'users'].map(
-    (queue) => new BullAdapter(new BullQueue(queue, { redis: redisOptions }))
+    (queue) => new BullAdapter(new BullQueue(queue, { redis: redis.scheduler.options }))
   ),
   serverAdapter
 });

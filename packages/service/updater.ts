@@ -9,7 +9,7 @@ import { program, Option } from 'commander';
 import mongoClient from '@gittrends/database-config';
 
 import { version } from './package.json';
-import { redisOptions } from './redis';
+import * as redis from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
 import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
@@ -49,7 +49,7 @@ program
     type UsersQueue = { id: string | string[] };
 
     const queue = new BullQueue<RepositoryQueue & UsersQueue>(options.type, {
-      redis: redisOptions
+      redis: redis.scheduler.options
     });
 
     queue.process(options.workers, async (job) => {
@@ -57,19 +57,21 @@ program
 
       try {
         switch (options.type) {
-          case 'users':
+          case 'users': {
             await new ActorsUpdater(job.data.id, { job }).update();
             break;
-          case 'repositories':
-            const resources = job.data.resources as THandler[];
-            const errors = (job.data.errors || []) as THandler[];
-            if (errors.length) resources.push(...errors);
+          }
+          case 'repositories': {
+            const resources = (job.data.resources || []) as THandler[];
+            if (job.data?.errors?.length) resources.push(...(job.data.errors as THandler[]));
             if (resources.length)
               await new RepositoryUpdater(job.data.id, resources, { job, cache }).update();
             break;
-          default:
+          }
+          default: {
             consola.error(new Error('Invalid "type" option!'));
             process.exit(1);
+          }
         }
       } catch (err: any) {
         consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
