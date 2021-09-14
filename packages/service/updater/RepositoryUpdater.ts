@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bull';
-import { flatten, shuffle } from 'lodash';
+import { flatten, shuffle, truncate } from 'lodash';
 import { map } from 'bluebird';
 
 import Cache from './Cache';
@@ -72,7 +72,9 @@ export default class RepositoryUpdater implements Updater {
         if (isRetry || err instanceof ValidationError) throw err;
 
         await this.job?.log(
-          `${new Date().toISOString()} - RepositoryUpdater.update error: ${err.message}`
+          `${new Date().toISOString()} - RepositoryUpdater.update error: ${truncate(err.message, {
+            length: 96
+          })}`
         );
 
         return map(shuffle(handlers), (handler) =>

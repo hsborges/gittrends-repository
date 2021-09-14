@@ -112,7 +112,7 @@ const scheduler = async (options: SchedulerOptions) => {
   // schedule repositories updates
   const reposResources = options.resources.filter((r) => r !== 'users');
   if (reposResources) {
-    const queue = await prepareQueue<{ id: string; resources: string[] }>('repositories');
+    const queue = await prepareQueue<{ id: string; resources: string[] }>('repositories', true);
     promises.push(repositoriesScheduler(queue, reposResources, options.wait));
   }
 
