@@ -58,24 +58,12 @@ export default class RepositoryUpdater implements Updater {
   async update(handlers = this.pendingHandlers, isRetry?: boolean): Promise<void> {
     if (handlers.length === 0) return;
 
-    await this.job?.log(
-      `${new Date().toISOString()} - RepositoryUpdater.update started with ${handlers
-        .map((h) => h.meta.resource)
-        .join(', ')} (retry: ${!!isRetry})`
-    );
-
     return Query.create()
       .compose(...flatten(await Promise.all(handlers.map((handler) => handler.component()))))
       .run()
       .then((data) => Promise.all(handlers.map((handler) => handler.update(data))))
       .catch(async (err) => {
         if (isRetry || err instanceof ValidationError) throw err;
-
-        await this.job?.log(
-          `${new Date().toISOString()} - RepositoryUpdater.update error: ${truncate(err.message, {
-            length: 96
-          })}`
-        );
 
         return map(shuffle(handlers), (handler) =>
           this.update([handler], true).catch((err) =>
@@ -88,34 +76,42 @@ export default class RepositoryUpdater implements Updater {
         if (this.job && handlers.find((h) => h.isDone())) {
           this.job?.progress(Math.ceil((this.doneHandlers.length / this.handlers.length) * 100));
 
-          await Promise.all([
-            this.job?.update({
-              ...this.job.data,
-              resources: this.pendingHandlers.map((h) => h.meta.resource),
-              done: this.doneHandlers.map((h) => h.meta.resource),
-              errors: this.errors.map((e) => e.handler.meta.resource)
-            }),
-            this.job?.log(
-              `${new Date().toISOString()} - RepositoryUpdater.update done for ${handlers
-                .filter((h) => h.isDone())
-                .map((h) => h.meta.resource)
-                .join(', ')} (retry: ${!!isRetry})`
-            )
-          ]);
+          await this.job?.update({
+            ...this.job.data,
+            resources: this.pendingHandlers.map((h) => h.meta.resource),
+            done: this.doneHandlers.map((h) => h.meta.resource),
+            errors: this.errors.map((e) => e.handler.meta.resource)
+          });
         }
       })
       .then(() => {
         if (isRetry) return;
         if (this.pendingHandlers.length) return this.update(this.pendingHandlers);
-        if (this.errors.length)
+        if (this.errors.length === 1) {
           throw new ResourceUpdateError(
+            truncate(this.errors[0].error.message, { length: 144 }),
+            this.errors[0].error
+          );
+        }
+        if (this.errors.length > 1) {
+          const error = new ResourceUpdateError(
             JSON.stringify(
               this.errors.reduce(
-                (m, e) => ({ ...m, [e.handler.constructor.name]: e.error.message }),
+                (m, e) => ({
+                  ...m,
+                  [e.handler.constructor.name]: truncate(e.error.message, { length: 144 })
+                }),
                 {}
               )
             )
           );
+
+          error.stack = this.errors
+            .map((error) => `From previous error: ${error.error.stack}`)
+            .join('\n');
+
+          throw error;
+        }
       });
   }
 
