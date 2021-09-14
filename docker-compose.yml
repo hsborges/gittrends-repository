@@ -56,7 +56,7 @@ services:
       context: .
       dockerfile: packages/service/Dockerfile
     image: gittrends-service:latest
-    command: yarn schedule all --wait 168
+    command: yarn schedule all --wait 168 --cron "${GITTRENDS_SCHEDULER_CRON-0 */6 * * *}"
     env_file:
       - .env
     environment:

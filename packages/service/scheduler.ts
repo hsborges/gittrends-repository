@@ -4,6 +4,7 @@
 import dayjs from 'dayjs';
 import consola from 'consola';
 import BullQueue from 'bull';
+import { CronJob } from 'cron';
 
 import { each } from 'bluebird';
 import { program } from 'commander';
@@ -74,6 +75,57 @@ const usersScheduler = async (queue: BullQueue.Queue, wait = 24, limit = 100000)
   ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
 
+type SchedulerOptions = {
+  resources: string[];
+  limit?: number;
+  wait?: number;
+  destroyQueue?: boolean;
+};
+
+const scheduler = async (options: SchedulerOptions) => {
+  consola.info(`Scheduling ${options.resources.join(', ')} ...`);
+
+  async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
+    const queue = new BullQueue<T>(name, {
+      redis: redisOptions,
+      defaultJobOptions: {
+        attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
+        removeOnComplete,
+        removeOnFail
+      },
+      settings: {
+        maxStalledCount: 10
+      }
+    });
+
+    await queue.clean(1000 * 60 * 60 * (options.wait || 0), 'completed');
+    await queue.clean(0, 'failed');
+
+    if (options.destroyQueue) await queue.empty();
+
+    return queue;
+  }
+
+  // store promises running
+  const promises = [];
+
+  // schedule repositories updates
+  const reposResources = options.resources.filter((r) => r !== 'users');
+  if (reposResources) {
+    const queue = await prepareQueue<{ id: string; resources: string[] }>('repositories');
+    promises.push(repositoriesScheduler(queue, reposResources, options.wait));
+  }
+
+  // schedule users updates
+  if (options.resources.indexOf('users') >= 0) {
+    const queue = await prepareQueue<{ id: string | string[] }>('users', true, true);
+    promises.push(usersScheduler(queue, options.wait, options.limit));
+  }
+
+  // await promises and finish script
+  return Promise.all(promises);
+};
+
 /* Script entry point */
 program
   .version(version)
@@ -81,53 +133,40 @@ program
   .description('Schedule jobs on queue to further processing')
   .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
   .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
+  .option('--cron [pattern]', 'Execute scheduler according to the pattern')
   .option('--destroy-queue', 'Destroy queue before scheduling resources')
   .action(async (resource: string, other: string[]): Promise<void> => {
     const options = program.opts();
     const resources = resourcesParser([resource, ...other]);
 
-    async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
-      const queue = new BullQueue<T>(name, {
-        redis: redisOptions,
-        defaultJobOptions: {
-          attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
-          removeOnComplete,
-          removeOnFail
-        },
-        settings: {
-          maxStalledCount: 10
-        }
-      });
-
-      await queue.clean(1000 * 60 * 60 * options.wait, 'completed');
-      await queue.clean(0, 'failed');
-
-      if (options.destroyQueue) await queue.empty();
-
-      return queue;
-    }
-
     // connect to database
     await mongoClient.connect();
 
-    // store promises running
-    const promises = [];
-
-    // schedule repositories updates
-    const reposResources = resources.filter((r) => r !== 'users');
-    if (reposResources) {
-      const queue = await prepareQueue<{ id: string; resources: string[] }>('repositories');
-      promises.push(repositoriesScheduler(queue, reposResources, options.wait));
-    }
-
-    // schedule users updates
-    if (resources.indexOf('users') >= 0) {
-      const queue = await prepareQueue<{ id: string | string[] }>('users', true, true);
-      promises.push(usersScheduler(queue, options.wait, options.limit));
-    }
-
     // await promises and finish script
-    await Promise.all(promises)
+    await (options.cron
+      ? new Promise(
+          () =>
+            new CronJob(
+              options.cron,
+              () =>
+                scheduler({
+                  resources,
+                  limit: options.limit,
+                  wait: options.wait,
+                  destroyQueue: options.destroyQueue
+                }),
+              null,
+              true,
+              'UTC'
+            )
+        )
+      : scheduler({
+          resources,
+          limit: options.limit,
+          wait: options.wait,
+          destroyQueue: options.destroyQueue
+        })
+    )
       .catch((err) => consola.error(err))
       .finally(() => mongoClient.close())
       .finally(() => process.exit(0));
