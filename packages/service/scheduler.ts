@@ -22,7 +22,11 @@ function resourcesParser(resources: string[]): string[] {
   throw new Error("Invalid 'resources' argument values!");
 }
 
-const repositoriesScheduler = async (queue: BullQueue.Queue, resources: string[], wait = 24) => {
+const repositoriesScheduler = async (
+  queue: BullQueue.Queue<RepositoryJob>,
+  resources: string[],
+  wait = 24
+) => {
   // find and save jobs on queue
   let count = 0;
 
@@ -43,8 +47,11 @@ const repositoriesScheduler = async (queue: BullQueue.Queue, resources: string[]
 
       if (_resources.length) {
         count += 1;
-        return queue.add(
-          { id: data._id, resources: _resources },
+        await queue
+          .getJob((data.name_with_owner as string).toLowerCase())
+          .then((job) => job?.remove());
+        await queue.add(
+          { id: data._id, resources: _resources, excluded: exclude },
           { jobId: (data.name_with_owner as string).toLowerCase() }
         );
       }
@@ -52,7 +59,7 @@ const repositoriesScheduler = async (queue: BullQueue.Queue, resources: string[]
   ).then(async () => consola.success(`Number of repositories scheduled: ${count}`));
 };
 
-const usersScheduler = async (queue: BullQueue.Queue, wait = 24, limit = 100000) => {
+const usersScheduler = async (queue: BullQueue.Queue<UsersJob>, wait = 24, limit = 100000) => {
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hour').toISOString();
   // get metadata
@@ -82,6 +89,18 @@ type SchedulerOptions = {
   destroyQueue?: boolean;
 };
 
+type RepositoryJob = {
+  id: string;
+  resources: string[];
+  done?: string[];
+  errors?: string[];
+  excluded?: string[];
+};
+
+type UsersJob = {
+  id: string | string[];
+};
+
 const scheduler = async (options: SchedulerOptions) => {
   consola.info(`Scheduling ${options.resources.join(', ')} ...`);
 
@@ -92,14 +111,8 @@ const scheduler = async (options: SchedulerOptions) => {
         attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
         removeOnComplete,
         removeOnFail
-      },
-      settings: {
-        maxStalledCount: 10
       }
     });
-
-    await queue.clean(1000 * 60 * 60 * (options.wait || 0), 'completed');
-    await queue.clean(0, 'failed');
 
     if (options.destroyQueue) await queue.empty();
 
@@ -112,13 +125,13 @@ const scheduler = async (options: SchedulerOptions) => {
   // schedule repositories updates
   const reposResources = options.resources.filter((r) => r !== 'users');
   if (reposResources) {
-    const queue = await prepareQueue<{ id: string; resources: string[] }>('repositories', true);
+    const queue = await prepareQueue<RepositoryJob>('repositories');
     promises.push(repositoriesScheduler(queue, reposResources, options.wait));
   }
 
   // schedule users updates
   if (options.resources.indexOf('users') >= 0) {
-    const queue = await prepareQueue<{ id: string | string[] }>('users', true, true);
+    const queue = await prepareQueue<UsersJob>('users', true);
     promises.push(usersScheduler(queue, options.wait, options.limit));
   }
 
@@ -154,7 +167,7 @@ program
     await schedulerFn()
       .then(() =>
         options.cron
-          ? new Promise(() => new CronJob(options.cron, schedulerFn, null, true, 'UTC'))
+          ? new Promise(() => new CronJob(options.cron, schedulerFn, null, true))
           : Promise.resolve()
       )
       .catch((err) => consola.error(err))

@@ -38,7 +38,8 @@ beforeEach(async () => {
     else if (req.body.status === 300) res.status(300).json({ data: 300 });
     else if (req.body.status === 400) res.status(400).json({ data: 400 });
     else if (req.body.status === 500) res.status(500).json({ data: 500 });
-    else setTimeout(() => res.status(600).json({ data: 600 }), timeout + 1000);
+    else if (req.body.status === 600) res.status(600).json({ data: 600 });
+    else setTimeout(() => res.destroy(), timeout);
   });
 
   server = app.listen(port);
@@ -75,6 +76,6 @@ test("it shouldn't retry the request when it fails with 4xx or 5xx", async () =>
 });
 
 test('it should abort long time running requests', async () => {
-  await expect(client({ status: 600 })).rejects.toThrowError(RequestError);
+  await expect(client({})).rejects.toThrowError(RequestError);
   expect(mokedAxios.post.mock.calls.length).toEqual(retries + 1);
 });
