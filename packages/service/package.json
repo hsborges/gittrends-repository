@@ -29,7 +29,7 @@
     "@gittrends/database-config": "file:../database-config",
     "axios": "^0.21.4",
     "bluebird": "^3.7.2",
-    "bull": "^3.29.2",
+    "bullmq": "^1.47.0",
     "chalk": "^4.1.2",
     "commander": "^8.2.0",
     "consola": "^2.15.3",

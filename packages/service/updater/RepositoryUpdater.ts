@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bull';
+import { Job } from 'bullmq';
 import { flatten, shuffle, truncate } from 'lodash';
 import { map } from 'bluebird';
 
@@ -74,7 +74,9 @@ export default class RepositoryUpdater implements Updater {
       .finally(async () => {
         if (isRetry) return;
         if (this.job && handlers.find((h) => h.isDone())) {
-          this.job?.progress(Math.ceil((this.doneHandlers.length / this.handlers.length) * 100));
+          this.job?.updateProgress(
+            Math.ceil((this.doneHandlers.length / this.handlers.length) * 100)
+          );
 
           await this.job?.update({
             ...this.job.data,

@@ -3,7 +3,7 @@
  */
 import dayjs from 'dayjs';
 import consola from 'consola';
-import BullQueue from 'bull';
+import { Queue } from 'bullmq';
 import { CronJob } from 'cron';
 
 import { each } from 'bluebird';
@@ -23,7 +23,7 @@ function resourcesParser(resources: string[]): string[] {
 }
 
 const repositoriesScheduler = async (
-  queue: BullQueue.Queue<RepositoryJob>,
+  queue: Queue<RepositoryJob>,
   resources: string[],
   wait = 24
 ) => {
@@ -51,6 +51,7 @@ const repositoriesScheduler = async (
           .getJob((data.name_with_owner as string).toLowerCase())
           .then(async (job) => !(await job?.isActive()) && job?.remove());
         await queue.add(
+          '__default__',
           { id: data._id, resources: _resources, excluded: exclude },
           { jobId: (data.name_with_owner as string).toLowerCase() }
         );
@@ -59,7 +60,7 @@ const repositoriesScheduler = async (
   ).then(async () => consola.success(`Number of repositories scheduled: ${count}`));
 };
 
-const usersScheduler = async (queue: BullQueue.Queue<UsersJob>, wait = 24, limit = 100000) => {
+const usersScheduler = async (queue: Queue<UsersJob>, wait = 24, limit = 100000) => {
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hour').toISOString();
   // get metadata
@@ -78,7 +79,7 @@ const usersScheduler = async (queue: BullQueue.Queue<UsersJob>, wait = 24, limit
     .then((users) => users.map((r) => r._id));
   // add to queue
   return Promise.all(
-    chunk(usersIds, 25).map((id) => queue.add({ id }, { jobId: `users@${id[0]}+` }))
+    chunk(usersIds, 25).map((id) => queue.add('__default__', { id }, { jobId: `users@${id[0]}+` }))
   ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
 
@@ -105,8 +106,9 @@ const scheduler = async (options: SchedulerOptions) => {
   consola.info(`Scheduling ${options.resources.join(', ')} ...`);
 
   async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
-    const queue = new BullQueue<T>(name, {
-      redis: redis.scheduler.options,
+    const queue = new Queue<T>(name, {
+      connection: redis.scheduler,
+      sharedConnection: true,
       defaultJobOptions: {
         attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
         removeOnComplete,
@@ -114,7 +116,13 @@ const scheduler = async (options: SchedulerOptions) => {
       }
     });
 
-    if (options.destroyQueue) await queue.empty();
+    if (options.destroyQueue) {
+      await Promise.all([
+        queue.clean(0, Number.MAX_SAFE_INTEGER, 'completed'),
+        queue.clean(0, Number.MAX_SAFE_INTEGER, 'failed'),
+        queue.drain(true)
+      ]);
+    }
 
     return queue;
   }

@@ -3,7 +3,7 @@
  */
 import axios from 'axios';
 import consola from 'consola';
-import BullQueue from 'bull';
+import { Worker, QueueScheduler } from 'bullmq';
 import { bold } from 'chalk';
 import { program, Option } from 'commander';
 import mongoClient from '@gittrends/database-config';
@@ -48,42 +48,49 @@ program
     type RepositoryQueue = { id: string; resources: string[]; errors: string[]; done: string[] };
     type UsersQueue = { id: string | string[] };
 
-    const queue = new BullQueue<RepositoryQueue & UsersQueue>(options.type, {
-      redis: redis.scheduler.options,
-      settings: { stalledInterval: 60 * 1000 }
-    });
+    const queue = new Worker<RepositoryQueue & UsersQueue>(
+      options.type,
+      async (job) => {
+        const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '1000', 10));
 
-    queue.process(options.workers, async (job) => {
-      const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '1000', 10));
-
-      try {
-        switch (options.type) {
-          case 'users': {
-            await new ActorsUpdater(job.data.id, { job }).update();
-            break;
+        try {
+          switch (options.type) {
+            case 'users': {
+              await new ActorsUpdater(job.data.id, { job }).update();
+              break;
+            }
+            case 'repositories': {
+              const resources = (job.data.resources || []) as THandler[];
+              if (job.data?.errors?.length) resources.push(...(job.data.errors as THandler[]));
+              if (resources.length)
+                await new RepositoryUpdater(job.data.id, resources, { job, cache }).update();
+              break;
+            }
+            default: {
+              consola.error(new Error('Invalid "type" option!'));
+              process.exit(1);
+            }
           }
-          case 'repositories': {
-            const resources = (job.data.resources || []) as THandler[];
-            if (job.data?.errors?.length) resources.push(...(job.data.errors as THandler[]));
-            if (resources.length)
-              await new RepositoryUpdater(job.data.id, resources, { job, cache }).update();
-            break;
-          }
-          default: {
-            consola.error(new Error('Invalid "type" option!'));
-            process.exit(1);
-          }
+        } catch (err: any) {
+          consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
+          throw err;
         }
-      } catch (err: any) {
-        consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
-        throw err;
+      },
+      {
+        connection: redis.scheduler,
+        concurrency: options.workers,
+        autorun: true,
+        lockDuration: 30000,
+        lockRenewTime: 5000
       }
-    });
+    );
 
     queue.on('progress', (job, progress) => {
       const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
       const progressStr = `${progress}`.padStart(3);
       consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(job.id)}.`);
     });
+
+    new QueueScheduler(options.type, { connection: redis.scheduler, autorun: true });
   })
   .parse(process.argv);

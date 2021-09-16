@@ -3,9 +3,9 @@
  */
 import express from 'express';
 import consola from 'consola';
-import BullQueue from 'bull';
+import { Queue } from 'bullmq';
 import { createBullBoard } from '@bull-board/api';
-import { BullAdapter } from '@bull-board/api/bullAdapter';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 
 import * as redis from '../redis';
@@ -15,7 +15,10 @@ const serverAdapter = new ExpressAdapter();
 
 createBullBoard({
   queues: ['repositories', 'users'].map(
-    (queue) => new BullAdapter(new BullQueue(queue, { redis: redis.scheduler.options }))
+    (queue) =>
+      new BullMQAdapter(
+        new Queue(queue, { connection: redis.scheduler.options, sharedConnection: true })
+      )
   ),
   serverAdapter
 });
