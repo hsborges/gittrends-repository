@@ -49,7 +49,8 @@ program
     type UsersQueue = { id: string | string[] };
 
     const queue = new BullQueue<RepositoryQueue & UsersQueue>(options.type, {
-      redis: redis.scheduler.options
+      redis: redis.scheduler.options,
+      settings: { stalledInterval: 60 * 1000 }
     });
 
     queue.process(options.workers, async (job) => {

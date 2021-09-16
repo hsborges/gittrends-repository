@@ -49,7 +49,7 @@ const repositoriesScheduler = async (
         count += 1;
         await queue
           .getJob((data.name_with_owner as string).toLowerCase())
-          .then((job) => job?.remove());
+          .then(async (job) => !(await job?.isActive()) && job?.remove());
         await queue.add(
           { id: data._id, resources: _resources, excluded: exclude },
           { jobId: (data.name_with_owner as string).toLowerCase() }
