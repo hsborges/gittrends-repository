@@ -16,7 +16,7 @@ services:
 
   redis:
     image: redis:alpine
-    command: --maxmemory 100mb --maxmemory-policy allkeys-lru
+    command: --maxmemory ${GITTRENDS_REDIS_MAX_MEMORY-50}mb --maxmemory-policy allkeys-lru
     restart: always
     ports:
       - ${GITTRENDS_REDIS_PORT-6379}:6379
@@ -29,7 +29,7 @@ services:
     entrypoint: yarn github-proxy-server --tokens /tokens.txt --request-interval 250
     restart: unless-stopped
     volumes:
-      - ./tokens.txt:/tokens.txt:ro
+      - ./${GITTRENDS_PROXY_TOKENS_FILE-./tokens.txt}:/tokens.txt:ro
     ports:
       - ${GITTRENDS_PROXY_PORT-8081}:80
     environment:
@@ -56,7 +56,8 @@ services:
       context: .
       dockerfile: packages/service/Dockerfile
     image: gittrends-service:latest
-    command: yarn schedule all --wait 168 --cron "${GITTRENDS_SCHEDULER_CRON-0 */6 * * *}"
+    command: yarn schedule all --wait 48 --cron "${GITTRENDS_SCHEDULER_CRON-0 */6 * * *}"
+    restart: unless-stopped
     env_file:
       - .env
     environment:
