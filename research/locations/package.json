@@ -5,10 +5,12 @@
   "license": "MIT",
   "scripts": {
     "build": "rm -rf dist && yarn tsc",
+    "dev:export-locations": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config -T export-locations.ts",
     "dev:update-locations": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config -T update-locations.ts",
     "dev:export-rankings": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config -T export-rankings.ts",
-    "update-locations": "node -r @gittrends/env-config dist/update-locations.js",
-    "export-rankings": "node -r @gittrends/env-config dist/export-rankings.js"
+    "export-locations": "node -r @gittrends/env-config dist/export-locations.js",
+    "export-rankings": "node -r @gittrends/env-config dist/export-rankings.js",
+    "update-locations": "node -r @gittrends/env-config dist/update-locations.js"
   },
   "dependencies": {
     "@gittrends/database-config": "file:../../packages/database-config",

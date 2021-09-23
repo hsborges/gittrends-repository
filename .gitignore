@@ -122,6 +122,5 @@ dist
 **/.DS_Store
 .AppleDouble
 .LSOverride
-research
 tokens.*.txt
 mongo-backup
