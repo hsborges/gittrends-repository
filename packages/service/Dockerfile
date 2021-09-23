@@ -1,6 +1,6 @@
-FROM node:14-alpine
+FROM node:alpine
 
-RUN apk add --update make gcc g++ python
+RUN apk add --update make gcc g++ python3
 
 WORKDIR /app
 COPY . .
@@ -20,6 +20,3 @@ WORKDIR /app/packages/service
 RUN yarn install --force && yarn build
 
 WORKDIR /app/packages/service
-EXPOSE 3000 8000-8010
-
-CMD [ "./node_modules/.bin/pm2-runtime", "pm2-ecosystem.yml" ]

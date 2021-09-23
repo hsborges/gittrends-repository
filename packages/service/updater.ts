@@ -3,20 +3,16 @@
  */
 import axios from 'axios';
 import consola from 'consola';
-import { program } from 'commander';
+import { Worker, QueueScheduler } from 'bullmq';
 import { bold } from 'chalk';
-import { QueueScheduler, Worker, Job } from 'bullmq';
+import { program, Option } from 'commander';
 import mongoClient from '@gittrends/database-config';
 
 import { version } from './package.json';
-import { redisOptions } from './redis';
+import * as redis from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
 import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
-import Updater from './updater/Updater';
-
-type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
-type TUpdaterType = 'users' | 'repositories';
 
 async function proxyServerHealthCheck(): Promise<boolean> {
   const protocol = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
@@ -32,8 +28,12 @@ async function proxyServerHealthCheck(): Promise<boolean> {
 program
   .version(version)
   .description('Update repositories metadata')
-  .option('-t, --type [type]', 'Update "repositories" or "users"', 'repositories')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
+  .addOption(
+    new Option('-t, --type [type]', 'Update "repositories" or "users"')
+      .choices(['repositories', 'users'])
+      .default('repositories')
+  )
   .action(async () => {
     if (!(await proxyServerHealthCheck())) {
       consola.error('Proxy server not responding, exiting ...');
@@ -45,43 +45,52 @@ program
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
-    const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '25000', 10));
+    type RepositoryQueue = { id: string; resources: string[]; errors: string[]; done: string[] };
+    type UsersQueue = { id: string | string[] };
 
-    new QueueScheduler(options.type, {
-      connection: redisOptions,
-      stalledInterval: 15000,
-      maxStalledCount: Number.MAX_SAFE_INTEGER
-    });
-
-    const queue = new Worker(
+    const queue = new Worker<RepositoryQueue & UsersQueue>(
       options.type,
-      async (job: Job) => {
+      async (job) => {
+        const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '1000', 10));
+
         try {
           switch (options.type) {
-            case 'users':
+            case 'users': {
               await new ActorsUpdater(job.data.id, { job }).update();
               break;
-            case 'repositories':
-              const id = job.data.id as string;
-              const resources = job.data.resources as THandler[];
-              await new RepositoryUpdater(id, resources, { job, cache }).update();
+            }
+            case 'repositories': {
+              const resources = (job.data.resources || []) as THandler[];
+              if (job.data?.errors?.length) resources.push(...(job.data.errors as THandler[]));
+              if (resources.length)
+                await new RepositoryUpdater(job.data.id, resources, { job, cache }).update();
               break;
-            default:
+            }
+            default: {
               consola.error(new Error('Invalid "type" option!'));
               process.exit(1);
+            }
           }
-        } catch (err) {
+        } catch (err: any) {
           consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
           throw err;
         }
       },
-      { connection: redisOptions, concurrency: options.workers, lockDuration: 15000 }
+      {
+        connection: redis.scheduler,
+        concurrency: options.workers,
+        autorun: true,
+        lockDuration: 30000,
+        lockRenewTime: 5000
+      }
     );
 
-    queue.on('progress', ({ id }, progress) => {
+    queue.on('progress', (job, progress) => {
       const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
       const progressStr = `${progress}`.padStart(3);
-      consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(id)}.`);
+      consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(job.id)}.`);
     });
+
+    new QueueScheduler(options.type, { connection: redis.scheduler, autorun: true });
   })
   .parse(process.argv);

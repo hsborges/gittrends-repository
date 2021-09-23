@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import { get, omit } from 'lodash';
-import { map } from 'bluebird';
 import { ClientSession } from 'mongodb';
 import {
   Issue,
@@ -55,6 +54,7 @@ enum Stages {
 
 export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   private resource: TResource;
+  private resourceAlias: string;
   private issues: { items: TIssueMetadata[]; hasNextPage: boolean; endCursor?: string };
   private reactions?: TReactableMetadata[];
   private currentStage?: Stages;
@@ -64,19 +64,22 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
     this.resource = type;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 10;
+    this.resourceAlias = `_${type}`;
+    this.batchSize = this.defaultBatchSize = type === 'issues' ? 50 : 20;
     this.rBatchSize = this.defaultRBatchSize = 100;
     this.issues = { items: [], hasNextPage: true };
+    this.debug('Issue handler built for %s (%s)', id, type);
   }
 
   async component(): Promise<RepositoryComponent | Component[]> {
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
+      this.debug('Updating component (stage: %s)', Stages[Stages.GET_ISSUES_LIST]);
       this.currentStage = Stages.GET_ISSUES_LIST;
 
       if (!this.issues.endCursor) {
         this.issues.endCursor = await Repository.collection
           .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
-          .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
+          .then((result) => get(result, ['_metadata', this.meta.resource, 'endCursor']));
       }
 
       const method =
@@ -87,11 +90,16 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       return method.bind(this._component)(true, {
         first: this.batchSize,
         after: this.issues.endCursor,
-        alias: `_${this.resource}`
+        alias: this.resourceAlias
       });
     }
 
     if (this.pendingIssues.length) {
+      this.debug(
+        'Updating component (stage: %s, items: %d)',
+        Stages[Stages.GET_ISSUES_DETAILS],
+        this.pendingIssues.length
+      );
       this.currentStage = Stages.GET_ISSUES_DETAILS;
 
       return this.pendingIssues.map((issue) =>
@@ -117,6 +125,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     }
 
     if (this.pendingReactables.length) {
+      this.debug('Updating component (stage: %s)', Stages[Stages.GET_REACTIONS]);
       this.currentStage = Stages.GET_REACTIONS;
 
       return this.pendingReactables.map((reactable) =>
@@ -131,7 +140,12 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: TObject, session?: ClientSession): Promise<void> {
+    this.debug('Processing %s information.', this.resource);
     return this._update(response, session).finally(() => {
+      this.debug('Information updated. %o', {
+        ...this.issues,
+        items: this.issues.items.length
+      });
       this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
       this.rBatchSize = Math.min(this.defaultRBatchSize, this.rBatchSize * 2);
     });
@@ -141,29 +155,35 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     switch (this.currentStage) {
       case Stages.GET_ISSUES_LIST: {
         const data = super.parseResponse(response[super.alias as string]);
+        const newIssues = get(data, `${this.resourceAlias}.nodes`, []);
 
-        this.issues.items = await map(
-          get(data, `${this.resource}.nodes`, []),
-          async (issue: TObject) => ({
-            data: { repository: this.id, ...issue },
-            component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
-              issue.id as string,
-              `issue_${issue.number}`
-            ),
-            details: { hasNextPage: true },
-            assignees: { hasNextPage: true },
-            labels: { hasNextPage: true },
-            participants: { hasNextPage: true },
-            timeline: {
-              hasNextPage: true,
-              endCursor: await Issue.collection
-                .findOne({ _id: issue.id }, { projection: { _metadata: 1 } })
-                .then((result) => result && get(result, '_metadata.endCursor'))
-            }
-          })
-        );
+        const newIssuesMetadata = await Issue.collection
+          .find(
+            { _id: { $in: newIssues.map((ni: any) => ni.id) } },
+            { projection: { _id: 1, _metadata: 1 } }
+          )
+          .toArray();
 
-        const pageInfo = get(data, `${this.resource}.page_info`, {});
+        this.issues.items = newIssues.map((issue: TObject) => ({
+          data: { repository: this.id, ...issue },
+          component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
+            issue.id as string,
+            `issue_${issue.number}`
+          ),
+          details: { hasNextPage: true },
+          assignees: { hasNextPage: true },
+          labels: { hasNextPage: true },
+          participants: { hasNextPage: true },
+          timeline: {
+            hasNextPage: true,
+            endCursor: get(
+              newIssuesMetadata.find((ni) => ni._id === issue.id),
+              '_metadata.endCursor'
+            )
+          }
+        }));
+
+        const pageInfo = get(data, `${this.resourceAlias}.page_info`, {});
         this.issues.hasNextPage = pageInfo.has_next_page ?? false;
         this.issues.endCursor = pageInfo.end_cursor ?? this.issues.endCursor;
 
@@ -278,15 +298,12 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       []
     );
 
-    await super
-      .saveReferences(session)
-      .then(() =>
-        Promise.all([
-          (this.resource === 'issues' ? Issue : PullRequest).upsert(issues, session),
-          TimelineEvent.upsert(timeline, session),
-          Reaction.upsert(reactions, session)
-        ])
-      );
+    await Promise.all([
+      super.saveReferences(session),
+      (this.resource === 'issues' ? Issue : PullRequest).upsert(issues, session),
+      TimelineEvent.upsert(timeline, session),
+      Reaction.upsert(reactions, session)
+    ]);
 
     await Repository.collection.updateOne(
       { _id: this.meta.id },

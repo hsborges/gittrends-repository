@@ -1,7 +1,8 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { filter } from 'bluebird';
+import debug from 'debug';
+import { map, filter } from 'bluebird';
 import { ClientSession } from 'mongodb';
 import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
@@ -14,6 +15,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   readonly id: string;
   readonly meta: { id: string; resource: string };
 
+  protected debug;
   protected actors: TObject[] = [];
   protected commits: TObject[] = [];
   protected milestones: TObject[] = [];
@@ -29,6 +31,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     this.meta = { id, resource };
     this.batchSize = this.defaultBatchSize = 100;
     this.writeBatchSize = parseInt(process.env.GITTRENDS_WRITE_BATCH_SIZE ?? '500', 10);
+    this.debug = debug(`gittrends:updater:handler:${resource}`);
   }
 
   protected parseResponse(response: any): any {
@@ -40,13 +43,10 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   }
 
   protected async saveReferences(session?: ClientSession): Promise<void> {
-    const objectIsNotInCache = (object: any) => !this.cache?.has(object);
-
-    const [actors, commits, milestones] = await Promise.all([
-      filter(this.actors, objectIsNotInCache),
-      filter(this.commits, objectIsNotInCache),
-      filter(this.milestones, objectIsNotInCache)
-    ]);
+    const [actors, commits, milestones] = await map(
+      [this.actors, this.commits, this.milestones],
+      (values) => filter(values, async (object) => !(await this.cache?.has(object)))
+    );
 
     await Promise.all([
       Actor.insert(actors, session).then(() => this.cache?.add(actors)),

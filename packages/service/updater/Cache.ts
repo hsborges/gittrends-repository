@@ -1,24 +1,30 @@
 /*
  *  Author: Hudson S. Borges
  */
-import LfuSet from 'collections/lfu-set';
+import { map } from 'bluebird';
+import lru from 'redis-lru';
 import hasher from 'node-object-hash';
+import * as redis from '../redis';
 
 export default class UpdaterCache {
-  readonly cache: LfuSet<string>;
+  readonly cache: ReturnType<typeof lru>;
   readonly hashSortCoerce = hasher({ sort: true, coerce: true });
 
   constructor(cacheSize: number) {
-    this.cache = new LfuSet<string>([], cacheSize);
+    this.cache = lru(redis.cache, {
+      max: cacheSize,
+      namespace: 'gittrends:cache',
+      maxAge: 24 * 60 * 60 * 1000
+    });
   }
 
-  add(object: TObject | TObject[]): void {
-    (Array.isArray(object) ? object : [object]).forEach((obj) =>
-      this.cache.add(this.hashSortCoerce.hash(obj.id ? { id: obj.id } : obj))
+  async add(object: TObject | TObject[]): Promise<void> {
+    await map(Array.isArray(object) ? object : [object], (object) =>
+      this.cache.set(object.id ? (object.id as string) : this.hashSortCoerce.hash(object), 1)
     );
   }
 
-  has(object: TObject): boolean {
-    return this.cache.has(this.hashSortCoerce.hash(object.id ? { id: object.id } : object));
+  async has(object: TObject): Promise<boolean> {
+    return !!(await this.cache.get((object.id as string) || this.hashSortCoerce.hash(object)));
   }
 }

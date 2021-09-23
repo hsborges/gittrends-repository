@@ -2,7 +2,7 @@ declare module 'redis-lru' {
   import IORedis from 'ioredis';
 
   export class LRU {
-    async set(key: string, value: any, maxAge?: number): Promise<void>;
+    async set(key: string, value?: any, maxAge?: number): Promise<void>;
     async get(key: string): Promise<any>;
     async has(key: string): Promise<boolean>;
   }

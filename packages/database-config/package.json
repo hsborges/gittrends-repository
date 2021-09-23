@@ -13,24 +13,22 @@
     "migrate": "ts-node -r @gittrends/env-config node_modules/.bin/migrate-mongo up -f migrate-mongo-config.ts"
   },
   "dependencies": {
-    "ajv": "8.5.0",
-    "ajv-formats": "2.1.0",
-    "debug": "^4.3.2",
+    "ajv": "8.5",
+    "ajv-formats": "2.1.1",
     "glob": "^7.1.7",
     "lodash": "^4.17.21",
     "migrate-mongo": "^8.2.3",
-    "mongodb": "4.1.0",
+    "mongodb": "4.1.1",
     "object-hash": "^2.2.0",
     "tunnel-ssh": "^4.1.4",
     "typescript-json-schema": "^0.50.1"
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
-    "@types/debug": "^4.1.7",
     "@types/glob": "^7.1.4",
     "@types/lodash": "^4.14.172",
     "@types/mongodb": "^4.0.7",
-    "@types/object-hash": "^2.1.1",
+    "@types/object-hash": "^2.2.0",
     "@types/tunnel-ssh": "^4.1.1",
     "@types/webgl2": "^0.0.6",
     "ts-node": "^10.2.1"

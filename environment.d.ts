@@ -33,6 +33,8 @@ declare global {
       GITTRENDS_REDIS_HOST?: string;
       GITTRENDS_REDIS_PORT?: string;
       GITTRENDS_REDIS_DB?: string;
+      GITTRENDS_REDIS_SCHEDULER_DB?: string;
+      GITTRENDS_REDIS_CACHE_DB?: string;
       GITTRENDS_CACHE_SIZE?: string;
       GITTRENDS_WRITE_BATCH_SIZE?: string;
       GITTRENDS_QUEUE_ATTEMPS?: string;

@@ -2,8 +2,8 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bullmq';
+import { flatten, shuffle, truncate } from 'lodash';
 import { map } from 'bluebird';
-import { flatten } from 'lodash';
 
 import Cache from './Cache';
 import Updater from './Updater';
@@ -29,7 +29,7 @@ export type THandler =
   | 'tags'
   | 'watchers';
 
-type TJob = { id: string | string[]; resources: string[]; done: string[]; errors: string[] };
+type TJob = { id: string | string[]; resources: string[]; done?: string[]; errors?: string[] };
 type TOptions = { job?: Job<TJob>; cache?: Cache };
 
 export default class RepositoryUpdater implements Updater {
@@ -56,58 +56,76 @@ export default class RepositoryUpdater implements Updater {
   }
 
   async update(handlers = this.pendingHandlers, isRetry?: boolean): Promise<void> {
-    await Query.create()
-      .compose(...flatten(await map(handlers, (handler) => handler.component())))
+    if (handlers.length === 0) return;
+
+    return Query.create()
+      .compose(...flatten(await Promise.all(handlers.map((handler) => handler.component()))))
       .run()
-      .then(async (data) => {
-        await map(handlers, async (handler) => handler.update(data));
-      })
+      .then((data) => Promise.all(handlers.map((handler) => handler.update(data))))
       .catch(async (err) => {
         if (isRetry || err instanceof ValidationError) throw err;
 
-        return map(handlers, (handler) =>
+        return map(shuffle(handlers), (handler) =>
           this.update([handler], true).catch((err) =>
-            handler.error(err).catch((err2) => {
-              this.errors.push({ handler, error: err2 });
-              this.job?.update({
-                ...this.job.data,
-                resources: this.job.data.resources.filter((r) => r !== handler.meta.resource),
-                errors: [...(this.job.data.errors || []), handler.meta.resource]
-              });
-            })
+            handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
           )
         );
       })
-      .finally(() => {
+      .finally(async () => {
         if (isRetry) return;
+        if (this.job && handlers.find((h) => h.isDone())) {
+          this.job?.updateProgress(
+            Math.ceil((this.doneHandlers.length / this.handlers.length) * 100)
+          );
 
-        const doneHandlers = handlers.filter((handler) =>
-          this.job && handler.isDone() ? true : false
-        );
-
-        if (this.job && doneHandlers.length) {
-          const totalDone = this.handlers.reduce((acc: number, h) => acc + (h.isDone() ? 1 : 0), 0);
-          const pendingResources = this.pendingHandlers.map((handler) => handler.meta.resource);
-          this.job.updateProgress(Math.ceil((totalDone / this.handlers.length) * 100));
-          this.job.update({
+          await this.job?.update({
             ...this.job.data,
-            resources: pendingResources,
-            done: this.handlers
-              .map((handler) => handler.meta.resource)
-              .filter((resource) => pendingResources.indexOf(resource) < 0)
+            resources: this.pendingHandlers.map((h) => h.meta.resource),
+            done: this.doneHandlers.map((h) => h.meta.resource),
+            errors: this.errors.map((e) => e.handler.meta.resource)
           });
         }
+      })
+      .then(() => {
+        if (isRetry) return;
+        if (this.pendingHandlers.length) return this.update(this.pendingHandlers);
+        if (this.errors.length === 1) {
+          throw new ResourceUpdateError(
+            truncate(this.errors[0].error.message, { length: 144 }),
+            this.errors[0].error
+          );
+        }
+        if (this.errors.length > 1) {
+          const error = new ResourceUpdateError(
+            JSON.stringify(
+              this.errors.reduce(
+                (m, e) => ({
+                  ...m,
+                  [e.handler.constructor.name]: truncate(e.error.message, { length: 144 })
+                }),
+                {}
+              )
+            )
+          );
 
-        if (this.pendingHandlers.length) return this.update();
+          error.stack = this.errors
+            .map((error) => `From previous error: ${error.error.stack}`)
+            .join('\n');
+
+          throw error;
+        }
       });
-
-    if (this.errors.length)
-      throw new ResourceUpdateError(this.errors.map((e) => e.error.message).join(', '));
   }
 
   private get pendingHandlers(): AbstractRepositoryHandler[] {
     return this.handlers.filter(
-      (handler) => handler.hasNextPage() && !this.errors.find((e) => e.handler === handler)
+      (handler) => !handler.isDone() && !this.errors.find((e) => e.handler === handler)
+    );
+  }
+
+  private get doneHandlers(): AbstractRepositoryHandler[] {
+    return this.handlers.filter(
+      (handler) => handler.isDone() || this.errors.find((e) => e.handler === handler)
     );
   }
 }

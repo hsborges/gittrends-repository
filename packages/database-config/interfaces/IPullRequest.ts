@@ -15,7 +15,7 @@ export default interface IPullRequest extends IIssue {
   can_be_rebased?: boolean;
   changed_files?: number;
   deletions?: number;
-  head_ref?: { name?: string; target?: string };
+  head_ref?: { name?: string; target?: string } | string;
   head_ref_name?: string;
   head_ref_oid?: string;
   head_repository?: string;

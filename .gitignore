@@ -119,6 +119,9 @@ dist
 
 ### OSX ###
 # General
-.DS_Store
+**/.DS_Store
 .AppleDouble
 .LSOverride
+research
+tokens.*.txt
+mongo-backup

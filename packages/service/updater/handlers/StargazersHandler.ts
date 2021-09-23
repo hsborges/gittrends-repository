@@ -28,7 +28,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     return this._component.includeStargazers(this.stargazers.hasNextPage, {
       first: this.batchSize,
       after: this.stargazers.endCursor,
-      alias: 'stargazers'
+      alias: '_stargazers'
     });
   }
 
@@ -42,19 +42,23 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     const data = super.parseResponse(response[this.alias as string]);
 
     this.stargazers.items.push(
-      ...get(data, 'stargazers.edges', []).map((stargazer: { user: string; starred_at: Date }) => ({
-        repository: this.id,
-        ...stargazer
-      }))
+      ...get(data, '_stargazers.edges', []).map(
+        (stargazer: { user: string; starred_at: Date }) => ({
+          repository: this.id,
+          ...stargazer
+        })
+      )
     );
 
-    const pageInfo = get(data, 'stargazers.page_info', {});
+    const pageInfo = get(data, '_stargazers.page_info', {});
     this.stargazers.hasNextPage = pageInfo.has_next_page ?? false;
     this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
     if (this.stargazers.items.length >= this.writeBatchSize || this.isDone()) {
-      await super.saveReferences(session);
-      await Stargazer.upsert(this.stargazers.items, session);
+      await Promise.all([
+        super.saveReferences(session),
+        Stargazer.upsert(this.stargazers.items, session)
+      ]);
       await Repository.collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } },
@@ -78,12 +82,12 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
       const data = super.parseResponse(get(err, `response.data.${this.alias as string}`));
 
       this.stargazers.items.push(
-        ...get(data, 'stargazers.edges', [])
+        ...get(data, '_stargazers.edges', [])
           .filter((star: TObject) => star && star.starred_at)
           .map((star: TObject) => ({ repository: this.id, ...star }))
       );
 
-      const pageInfo = get(data, 'stargazers.page_info');
+      const pageInfo = get(data, '_stargazers.page_info');
       this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
 
       return;

@@ -1,7 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { isArray, isPlainObject, snakeCase, has, size, mapValues, mapKeys } from 'lodash';
+import { isArray, isPlainObject, has, size, mapValues, mapKeys } from 'lodash';
+
+const camelToSnakeCase = (str: string) =>
+  str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/i;
 
@@ -10,7 +13,7 @@ export default function normalize(object: any): any {
 
   if (isPlainObject(object)) {
     const _object = mapValues(
-      mapKeys(object, (_, key) => snakeCase(key)),
+      mapKeys(object, (_, key) => camelToSnakeCase(key)),
       normalize
     );
 

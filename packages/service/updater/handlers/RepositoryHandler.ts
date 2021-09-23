@@ -8,7 +8,7 @@ import { Repository } from '@gittrends/database-config';
 import compact from '../../helpers/compact';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
-import { ResourceUpdateError } from '../../helpers/errors';
+import { ResourceUpdateError, NotFoundError } from '../../helpers/errors';
 
 type TObject = Record<string, unknown>;
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
@@ -76,6 +76,14 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
   }
 
   async error(err: Error): Promise<void> {
+    if (err instanceof NotFoundError) {
+      await Repository.collection.updateOne(
+        { _id: this.id },
+        { $set: { '_metadata.removed': true, '_metadata.removed_at': new Date() } }
+      );
+      return;
+    }
+
     throw new ResourceUpdateError(err.message, err);
   }
 

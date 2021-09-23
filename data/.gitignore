@@ -1,9 +1,0 @@
-*
-!acme
-!nginx
-!mongo
-!.gitignore
-!.dockerignore
-!tokens.txt.example
-!pm2-*.yml
-!tokens.txt

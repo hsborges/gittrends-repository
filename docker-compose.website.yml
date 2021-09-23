@@ -3,7 +3,6 @@ version: '3.7'
 services:
   traefik:
     image: traefik
-    container_name: traefik
     command:
       - '--api.insecure=true'
       - '--providers.docker=true'
@@ -18,7 +17,6 @@ services:
     build:
       context: .
       dockerfile: packages/website-api/Dockerfile
-    container_name: gittrends-website-api
     restart: always
     env_file:
       - .env
@@ -26,6 +24,7 @@ services:
       - 'traefik.enable=true'
       - 'traefik.http.routers.api.rule=Host(`api.localhost`)'
       - 'traefik.http.routers.api.entrypoints=web'
+
   website:
     build:
       context: .
@@ -34,7 +33,6 @@ services:
         GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
         GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI}
         GITTRENDS_WEBSITE_DATASOURCE_URL: ${GITTRENDS_WEBSITE_DATASOURCE_URL}
-    container_name: gittrends-website
     command: yarn start -H 0.0.0.0 --port 80
     restart: always
     environment:

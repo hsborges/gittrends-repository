@@ -103,8 +103,10 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
       );
 
       if (dependencies.length > 0) {
-        await super.saveReferences(session);
-        await Dependency.upsert(dependencies, session);
+        await Promise.all([
+          super.saveReferences(session),
+          Dependency.upsert(dependencies, session)
+        ]);
       }
 
       if (this.hasNextPage()) return;
