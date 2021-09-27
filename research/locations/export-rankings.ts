@@ -27,7 +27,7 @@ async function computeStargazersOrWatchersRanking(
       { $match: { '_id.repository': repositoryId } },
       { $lookup: { from: 'actors', localField: '_id.user', foreignField: '_id', as: '_id.user' } },
       { $unwind: { path: '$_id.user' } },
-      { $project: { _id: { $toLower: '$_id.user.location' } } },
+      { $project: { _id: { $toLower: { $trim: { input: '$_id.user.location' } } } } },
       { $lookup: { from: 'locations', localField: '_id', foreignField: '_id', as: 'location' } },
       { $unwind: { path: '$location' } },
       { $group: { _id: '$location.countryCode', count: { $sum: 1 } } },
@@ -44,9 +44,10 @@ async function computeIssuesOrPullsRanking(
   return model.collection
     .aggregate([
       { $match: { repository: repositoryId, type: model === Issue ? 'Issue' : 'PullRequest' } },
+      { $match: { author_association: { $nin: ['MEMBER', 'COLLABORATOR'] } } },
       { $lookup: { from: 'actors', localField: 'author', foreignField: '_id', as: 'author' } },
       { $unwind: { path: '$author' } },
-      { $project: { _id: { $toLower: '$author.location' } } },
+      { $project: { _id: { $toLower: { $trim: { input: '$author.location' } } } } },
       {
         $lookup: {
           from: 'locations',
