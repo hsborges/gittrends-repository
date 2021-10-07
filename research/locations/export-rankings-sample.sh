@@ -1,7 +1,3 @@
 #!/bin/bash
 yarn build;
-
-while read LINE; do
-    echo "=> $LINE";
-    yarn export-rankings "$LINE" --output ".rankings/$LINE.csv" --makedir </dev/null;
-done < "export-rankings-sample.txt"
+parallel -j 5 yarn export-rankings '{1}' --output '.rankings/{1}.csv' --makedir </dev/null  ::: $(cat export-rankings-sample.txt)
