@@ -12,17 +12,25 @@
     "build": "yarn clean && tsc && cp package.json dist/package.json && yarn dotenv-to-json",
     "deploy": "yarn build && claudia create --source dist --region us-east-1 --handler lambda.handler --set-env-from-json dist/env.json --config .claudia.json --deploy-proxy-api --no-optional-dependencies",
     "update": "yarn build && claudia update --source dist --update-env-from-json dist/env.json --config .claudia.json --no-optional-dependencies",
-    "destroy": "claudia destroy --source dist --config .claudia.json"
+    "destroy": "claudia destroy --source dist --config .claudia.json",
+    "dev:import-database": "ts-node -r tsconfig-paths/register -r @gittrends/env-config database/index.ts"
   },
   "dependencies": {
+    "@mikro-orm/core": "^4.5.9",
+    "@mikro-orm/sqlite": "^4.5.9",
     "@types/nodemailer": "^6.4.4",
     "@vendia/serverless-express": "^4.3.11",
+    "async": "^3.2.1",
     "aws-lambda": "^1.0.6",
     "axios": "^0.21.4",
     "body-parser": "^1.19.0",
+    "cli-progress": "^3.9.1",
+    "colors": "^1.4.0",
+    "commander": "^8.2.0",
     "compression": "^1.7.4",
     "consola": "^2.15.3",
     "cors": "^2.8.5",
+    "dayjs": "^1.10.7",
     "express": "^4.17.1",
     "faker": "^5.5.3",
     "lodash": "^4.17.21",
@@ -36,7 +44,15 @@
     "@types/faker": "^5.5.8",
     "@types/lodash": "^4.14.172",
     "claudia": "^5.13.1",
+    "mikro-orm": "^4.5.9",
     "ts-node": "^10.2.1",
     "tsconfig-paths": "^3.11.0"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }
