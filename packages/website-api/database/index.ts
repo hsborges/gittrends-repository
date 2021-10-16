@@ -3,24 +3,14 @@
  */
 import async from 'async';
 import consola from 'consola';
-import dayjs from 'dayjs';
 import { cyan, bold } from 'colors';
 import { omit, pick } from 'lodash';
 import cliProgress from 'cli-progress';
 import { Option, program } from 'commander';
 
-import mikroConfig from '../mikro-orm.config';
-import { MikroORM, wrap } from '@mikro-orm/core';
+import { PrismaClient } from '@prisma/client';
 
 import mongo, * as MongoModels from '@gittrends/database-config';
-import {
-  Actor,
-  Repository,
-  Tag,
-  StargazerTimeseries,
-  Stargazer,
-  RepositoryMetadata
-} from '../models';
 
 import * as dataImport from './import';
 import { version } from '../package.json';
@@ -61,87 +51,99 @@ program
     await mongo.connect();
 
     consola.info('Preparing sqlite file database ...');
-    const orm = await MikroORM.init(mikroConfig);
+    const prisma = new PrismaClient();
 
-    const queue = async.queue(async (id: string, callback) => {
+    const queue = async.queue(async (id: string) => {
       const data = await dataImport.repository(id);
       if (!data) throw new Error('Repository not fond!');
 
-      await orm.em
-        .transactional(async (em) => {
-          // eslint-disable-next-line prefer-const
-          let [_owner, _repo] = await Promise.all([
-            em.findOne(Actor, { id: data.owner?.id }),
-            em.findOne(Repository, { id: data.id })
-          ]);
+      const metadata = await prisma.repositoryMetadata.findMany({
+        where: { repository_id: data.id }
+      });
 
-          if (_owner) data.owner = wrap(_owner).assign(data.owner);
-          if (_repo) wrap(_repo).assign(omit(data, 'metadata'));
+      const operations = [];
 
-          await em.persist(_repo || data).flush();
+      if (data.owner) {
+        operations.push(
+          prisma.actor.upsert({
+            where: { id: data.owner?.id },
+            create: data.owner,
+            update: data.owner
+          })
+        );
+      }
 
-          const metadata = await _repo?.metadata.loadItems();
-          await em.nativeDelete(RepositoryMetadata, { repository: id });
-          await em
-            .persist(
-              data.metadata
-                .toArray()
-                .map((meta) => new RepositoryMetadata({ ...meta, repository: _repo || data }))
-            )
-            .flush();
-
-          const ltm = metadata?.find((m) => m.resource === 'tags');
-          const tm = data.metadata.getItems().find((m) => m.resource === 'tags');
-
-          if (!ltm || !dayjs(ltm?.updated_at).isSame(tm?.updated_at)) {
-            try {
-              await em.nativeDelete(Tag, { repository: id });
-              const tags = await dataImport.tags(id);
-              tags.forEach((tag) => (tag.repository = _repo || data));
-
-              em.persist(tags);
-            } catch (error) {
-              consola.error(error);
-            }
-          }
-
-          const lsm = metadata?.find((m) => m.resource === 'stargazers');
-          const sm = data.metadata.getItems().find((m) => m.resource === 'stargazers');
-
-          if (!lsm || !dayjs(lsm?.updated_at).isSame(sm?.updated_at)) {
-            try {
-              const [timeseries, first, last] = await dataImport.stargazersTimeseries(id);
-              timeseries.forEach((ts) => (ts.repository = _repo || data));
-
-              await Promise.all(
-                [first, last].map(async (stargazer) => {
-                  if (!stargazer) return;
-                  stargazer.repository = _repo || data;
-                  const actor = await em.findOne(Actor, { id: stargazer.user.id });
-                  stargazer.user = actor ? wrap(actor).assign(stargazer.user) : stargazer.user;
-                })
-              );
-
-              await Promise.all([
-                em.nativeDelete(StargazerTimeseries, { repository: id }),
-                em.nativeDelete(Stargazer, { repository: id })
-              ]);
-
-              em.persist([...timeseries, first, last]);
-            } catch (error) {
-              consola.error(error);
-            }
+      operations.push(
+        prisma.repository.upsert({
+          where: { id: data.id },
+          create: omit(data, 'owner', 'metadata'),
+          update: {
+            ...omit(data, 'owner', 'metadata'),
+            owner: { connect: { id: data.owner?.id } }
           }
         })
-        .catch(consola.error);
+      );
+
+      operations.push(prisma.repositoryMetadata.deleteMany({ where: { repository_id: data.id } }));
+
+      operations.push(
+        ...data.metadata.map((meta) =>
+          prisma.repositoryMetadata.create({
+            data: { ...meta, repository: { connect: { id: data.id } } }
+          })
+        )
+      );
+
+      const ltm = metadata?.find((m) => m.resource === 'tags');
+      const tm = data.metadata.find((m) => m.resource === 'tags');
+
+      if (ltm?.end_cursor != tm?.end_cursor) {
+        operations.push(
+          prisma.tag.deleteMany({ where: { repository_id: data.id } }),
+          ...(await dataImport.tags(id)).map((tag) =>
+            prisma.tag.create({ data: { repository_id: data.id, ...tag } })
+          )
+        );
+      }
+
+      const lsm = metadata?.find((m) => m.resource === 'stargazers');
+      const sm = data.metadata.find((m) => m.resource === 'stargazers');
+
+      if (lsm?.end_cursor != sm?.end_cursor) {
+        const [timeseries, first, last] = await dataImport.stargazersTimeseries(id);
+
+        operations.push(
+          prisma.stargazerTimeseries.deleteMany({ where: { repository_id: data.id } }),
+          ...timeseries.map((ts) =>
+            prisma.stargazerTimeseries.create({ data: { repository_id: data.id, ...ts } })
+          )
+        );
+
+        operations.push(prisma.stargazer.deleteMany({ where: { repository_id: data.id } }));
+        [first, last].forEach(async (stargazer) => {
+          if (!stargazer) return;
+          operations.push(
+            prisma.stargazer.create({
+              data: {
+                ...stargazer,
+                repository: { connect: { id: data.id } },
+                user: {
+                  connectOrCreate: { where: { id: stargazer.user.id }, create: stargazer.user }
+                }
+              }
+            })
+          );
+        });
+      }
+
+      await prisma.$transaction(operations);
 
       progressBar.increment();
-      callback();
     }, options.workers);
 
     consola.info('Getting list of repositories to export ...');
     await MongoModels.Repository.collection
-      .find()
+      .find({ '_metadata.repository': { $exists: true } })
       .sort(options.sort, options.order)
       .limit(options.limit || Number.MAX_SAFE_INTEGER)
       .project(['_id'])
@@ -150,13 +152,14 @@ program
       .then((ids) => {
         consola.info('Preparing progress bar and task queue ...');
         if (!process.env.DEBUG) progressBar.start(ids.length, 0);
-        queue.push(ids);
+        for (const id of ids) queue.pushAsync(id).catch(consola.error);
       })
       .then(() => queue.drain())
       .finally(() => progressBar.stop());
 
     consola.success('Done! Closing connections.');
-    await orm.close();
+
+    await prisma.$disconnect();
     await mongo.close();
   })
   .parse(process.argv);

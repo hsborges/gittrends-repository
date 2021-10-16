@@ -3,10 +3,18 @@
  */
 import { Actor as MongoActor } from '@gittrends/database-config';
 
-import { Actor } from '../../models';
+export type Actor = {
+  id: string;
+  type: string;
+  login: string;
+  name: string;
+  avatar_url: string;
+  created_at: Date;
+  updated_at: Date;
+};
 
 export default async function (id: string): Promise<Actor | null> {
-  const document = await MongoActor.collection.findOne(
+  return MongoActor.collection.findOne<Actor>(
     { _id: id },
     {
       projection: {
@@ -21,6 +29,4 @@ export default async function (id: string): Promise<Actor | null> {
       }
     }
   );
-
-  return document && new Actor(document);
 }

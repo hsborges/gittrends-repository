@@ -5,33 +5,32 @@ import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import utc from 'dayjs/plugin/utc';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
-import { get } from 'lodash';
 
 import * as MongoModels from '@gittrends/database-config';
 
-import { Stargazer, StargazerTimeseries } from '../../models';
-import actor from './actor';
+import importActor, { Actor } from './actor';
 
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
 dayjs.extend(utc);
 
+export type StargazerTimeseries = {
+  date: Date;
+  stargazers_count: number;
+};
+
+export type Stargazer = {
+  user: Actor;
+  starred_at: Date;
+  type: string;
+};
+
 export default async function (
   id: string
 ): Promise<[StargazerTimeseries[], Stargazer | null, Stargazer | null]> {
-  const repo = await MongoModels.Repository.collection.findOne(
-    { _id: id },
-    { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
-  );
-
-  if (!repo) throw new Error(`Repository "${id}" not found!`);
-
-  if (!get(repo, '_metadata.stargazers.updatedAt'))
-    throw new Error(`Stargazers from "${repo.name_with_owner}" are not updated!`);
-
   const timeseries = await MongoModels.Stargazer.collection
     .aggregate([
-      { $match: { '_id.repository': repo._id } },
+      { $match: { '_id.repository': id } },
       {
         $project: {
           _id: 0,
@@ -41,38 +40,47 @@ export default async function (
       { $group: { _id: '$date', stargazers_count: { $sum: 1 } } },
       { $sort: { _id: 1 } }
     ])
-    .map((doc) => new StargazerTimeseries({ ...doc, date: new Date(`${doc._id}T00:00:00.000Z`) }))
+    .map((doc) => ({
+      date: new Date(`${doc._id}T00:00:00.000Z`),
+      stargazers_count: doc.stargazers_count
+    }))
     .toArray();
 
-  if (!timeseries) return [[], null, null];
+  if (!(timeseries || []).length) return [[], null, null];
 
-  const [first, last] = await Promise.all([
+  const [first, last]: [Stargazer | null, Stargazer | null] = await Promise.all([
     MongoModels.Stargazer.collection
       .aggregate([
-        { $match: { '_id.repository': repo._id } },
+        { $match: { '_id.repository': id } },
         { $sort: { '_id.starred_at': 1 } },
         { $limit: 1 },
         { $project: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' } }
       ])
       .next()
-      .then(
-        async (doc) =>
-          doc &&
-          new Stargazer({ user: await actor(doc.user), starred_at: doc.starred_at, type: 'first' })
-      ),
+      .then(async (doc) => {
+        if (!doc) return null;
+        return {
+          user: await importActor(doc.user),
+          starred_at: doc.starred_at,
+          type: 'first'
+        } as Stargazer;
+      }),
     MongoModels.Stargazer.collection
       .aggregate([
-        { $match: { '_id.repository': repo._id } },
+        { $match: { '_id.repository': id } },
         { $sort: { '_id.starred_at': -1 } },
         { $limit: 1 },
         { $project: { _id: 0, user: '$_id.user', starred_at: '$_id.starred_at' } }
       ])
       .next()
-      .then(
-        async (doc) =>
-          doc &&
-          new Stargazer({ user: await actor(doc.user), starred_at: doc.starred_at, type: 'last' })
-      )
+      .then(async (doc) => {
+        if (!doc) return null;
+        return {
+          user: await importActor(doc.user),
+          starred_at: doc.starred_at,
+          type: 'last'
+        } as Stargazer;
+      })
   ]);
 
   return [timeseries, first, last];

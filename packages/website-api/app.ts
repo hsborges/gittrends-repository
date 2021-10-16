@@ -1,27 +1,35 @@
 /*
  *  Author: Hudson S. Borges
  */
-import express, { Express } from 'express';
-import cors from 'cors';
-import compression from 'compression';
-
 import axios from 'axios';
-import faker from 'faker';
-import qs from 'querystring';
-import consola from 'consola';
-import nodemailer from 'nodemailer';
-import { capitalize } from 'lodash';
 import { json, urlencoded } from 'body-parser';
-
+import compression from 'compression';
+import consola from 'consola';
+import cors from 'cors';
+import express, { Express } from 'express';
+import faker from 'faker';
+import { capitalize } from 'lodash';
+import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import qs from 'querystring';
+
+import { PrismaClient } from '@prisma/client';
+
+import repositoryRouter from './routes/repository.routes';
+
 const ENV = capitalize(process.env.NODE_ENV || 'development');
+
+export const prisma = new PrismaClient();
 
 export function configureApp(): Express {
   const app = express();
+
   app.use(compression());
   app.use(cors());
   app.use(json());
   app.use(urlencoded({ extended: true }));
+
+  app.use('/repo', repositoryRouter);
 
   app.get('/authorize', async (req, res) => {
     if (!req.query.code) return res.status(400).json({ message: 'Parameter "code" is missing!' });

@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node -r @gittrends/env-config dist/local.js",
-    "dev": "ts-node -r tsconfig-paths/register -r @gittrends/env-config local.ts",
+    "dev": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --respawn --transpile-only local.ts",
     "clean": "rm -rf dist",
     "dotenv-to-json": "node -r @gittrends/env-config dist/util/dotenv-to-json.js > dist/env.json",
     "pack": "yarn build && claudia pack --source dist --output dist/gittrends-serverless-api.zip --no-optional-dependencies",
@@ -16,8 +16,7 @@
     "dev:import-database": "ts-node -r tsconfig-paths/register -r @gittrends/env-config database/index.ts"
   },
   "dependencies": {
-    "@mikro-orm/core": "^4.5.9",
-    "@mikro-orm/sqlite": "^4.5.9",
+    "@prisma/client": "^3.2.1",
     "@types/nodemailer": "^6.4.4",
     "@vendia/serverless-express": "^4.3.11",
     "async": "^3.2.1",
@@ -44,15 +43,9 @@
     "@types/faker": "^5.5.8",
     "@types/lodash": "^4.14.172",
     "claudia": "^5.13.1",
-    "mikro-orm": "^4.5.9",
+    "prisma": "^3.2.1",
     "ts-node": "^10.2.1",
+    "ts-node-dev": "^1.1.8",
     "tsconfig-paths": "^3.11.0"
-  },
-  "mikro-orm": {
-    "useTsNode": true,
-    "configPaths": [
-      "./mikro-orm.config.ts",
-      "./dist/mikro-orm.config.js"
-    ]
   }
 }

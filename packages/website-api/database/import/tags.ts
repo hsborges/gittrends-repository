@@ -1,26 +1,21 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { get } from 'lodash';
+import { Tag as MongoTag } from '@gittrends/database-config';
 
-import { Repository as MongoRepo, Tag as MongoTag } from '@gittrends/database-config';
-
-import { Tag } from '../../models';
+export type Tag = {
+  id: string;
+  name: string;
+  committed_date: Date;
+  additions: number;
+  deletions: number;
+  changed_files: number;
+};
 
 export default async function (id: string): Promise<Tag[]> {
-  const repo = await MongoRepo.collection.findOne(
-    { _id: id },
-    { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
-  );
-
-  if (!repo) throw new Error(`Repository "${id}" not found!`);
-
-  if (!get(repo, '_metadata.tags.updatedAt'))
-    throw new Error(`Tags from "${repo.name_with_owner}" are not updated!`);
-
-  return await MongoTag.collection
-    .aggregate([
-      { $match: { repository: repo._id } },
+  return MongoTag.collection
+    .aggregate<Tag>([
+      { $match: { repository: id } },
       { $lookup: { from: 'commits', localField: 'target', foreignField: '_id', as: 'commit' } },
       { $unwind: { path: '$commit' } },
       {
@@ -35,6 +30,5 @@ export default async function (id: string): Promise<Tag[]> {
         }
       }
     ])
-    .map((doc) => new Tag(doc))
     .toArray();
 }

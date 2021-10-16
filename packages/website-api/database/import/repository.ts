@@ -5,8 +5,38 @@ import { omit } from 'lodash';
 
 import { Repository as MongoRepository } from '@gittrends/database-config';
 
-import { Repository, RepositoryMetadata } from '../../models';
-import actor from './actor';
+import importActor, { Actor } from './actor';
+
+export type RepositoryMetadata = {
+  resource: string;
+  updated_at: Date;
+  end_cursor: string;
+};
+
+export type Repository = {
+  id: string;
+  name: string;
+  owner?: Actor;
+  name_with_owner: string;
+  homepage_url?: string;
+  stargazers_count?: number;
+  watchers_count?: number;
+  forks_count?: number;
+  primary_language?: string;
+  default_branch?: string;
+  code_of_conduct?: string;
+  license_info?: string;
+  issues_count?: number;
+  pull_requests_count_count?: number;
+  releases_count?: number;
+  vulnerability_alerts_count?: number;
+  created_at?: Date;
+  updated_at?: Date;
+  disk_usage?: number;
+  open_graph_image_url?: string;
+  description?: string;
+  metadata: RepositoryMetadata[];
+};
 
 export default async function (id: string): Promise<Repository | null> {
   const document = await MongoRepository.collection.findOne(
@@ -42,19 +72,19 @@ export default async function (id: string): Promise<Repository | null> {
 
   if (!document) return null;
 
-  const repo = new Repository(omit(document, '_metadata'));
-  repo.owner = (await actor(document.owner)) || undefined;
+  const repo = omit(document, '_metadata') as Repository;
+  repo.owner = (await importActor(document.owner)) || undefined;
+  repo.metadata = ['repository', 'tags', 'stargazers']
+    .map((resource) => {
+      if (!document._metadata[resource]) return;
 
-  ['repository', 'tags', 'stargazers'].forEach((resource) => {
-    if (!document._metadata[resource]) return;
-    repo.metadata.add(
-      new RepositoryMetadata({
-        repository: repo,
+      return {
         resource,
-        updated_at: document._metadata[resource]?.updatedAt
-      })
-    );
-  });
+        updated_at: document._metadata[resource]?.updatedAt,
+        end_cursor: document._metadata[resource]?.endCursor
+      } as RepositoryMetadata;
+    })
+    .filter((meta) => !!meta) as RepositoryMetadata[];
 
   return repo;
 }
