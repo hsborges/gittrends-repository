@@ -19,6 +19,8 @@ model Actor {
 
   Repositories Repository[]
   Stargazer    Stargazer[]
+
+  @@map("actors")
 }
 
 model Repository {
@@ -42,8 +44,8 @@ model Repository {
   disk_usage                 Int?
   open_graph_image_url       String?
   description                String?
-  owner                      Actor?    @relation(fields: [actor_id], references: [id])
-  actor_id                   String?
+  owner                      Actor?    @relation(fields: [owner_id], references: [id])
+  owner_id                   String?
 
   metadata              RepositoryMetadata[]
   stargazers            Stargazer[]
@@ -51,6 +53,7 @@ model Repository {
   tags                  Tag[]
 
   @@index([name_with_owner])
+  @@map("repositories")
 }
 
 model RepositoryMetadata {
@@ -61,6 +64,7 @@ model RepositoryMetadata {
   end_cursor    String?
 
   @@id([repository_id, resource])
+  @@map("repositories_metadata")
 }
 
 model Stargazer {
@@ -72,6 +76,7 @@ model Stargazer {
   type          String
 
   @@id([repository_id, user_id, starred_at, type])
+  @@map("stargazers")
 }
 
 model StargazerTimeseries {
@@ -81,6 +86,7 @@ model StargazerTimeseries {
   stargazers_count Int?
 
   @@id([repository_id, date])
+  @@map("stargazers_timeseries")
 }
 
 model Tag {
@@ -94,4 +100,5 @@ model Tag {
   changed_files  Int?
 
   @@index([repository_id])
+  @@map("tags")
 }

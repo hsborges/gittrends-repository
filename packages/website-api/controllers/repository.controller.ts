@@ -14,10 +14,14 @@ export const get = async (req: Request, res: Response): Promise<void> => {
     include: { metadata: true }
   });
 
-  res.json({
-    ...repo,
-    metadata: repo?.metadata.reduce((m, d) => ({ ...m, [d.resource]: d.updated_at }), {})
-  });
+  if (repo) {
+    res.json({
+      ...repo,
+      metadata: repo?.metadata.reduce((m, d) => ({ ...m, [d.resource]: d.updated_at }), {})
+    });
+  } else {
+    res.sendStatus(404);
+  }
 };
 
 export const search = async (req: Request, res: Response): Promise<void> => {
@@ -33,7 +37,7 @@ export const search = async (req: Request, res: Response): Promise<void> => {
 
   const prismaSQL = Prisma.sql`
     SELECT r.primary_language AS language, COUNT(r.id) AS count
-    FROM Repository r
+    FROM repositories r
     WHERE LOWER(r.name_with_owner) LIKE ${`%${query.toLowerCase()}%`}
     GROUP BY r.primary_language
     ORDER BY count DESC

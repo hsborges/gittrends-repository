@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node -r @gittrends/env-config dist/local.js",
-    "dev": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --respawn --transpile-only local.ts",
+    "dev": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --respawn --transpile-only --exit-child --rs local.ts",
     "clean": "rm -rf dist",
     "dotenv-to-json": "node -r @gittrends/env-config dist/util/dotenv-to-json.js > dist/env.json",
     "pack": "yarn build && claudia pack --source dist --output dist/gittrends-serverless-api.zip --no-optional-dependencies",
@@ -13,7 +13,8 @@
     "deploy": "yarn build && claudia create --source dist --region us-east-1 --handler lambda.handler --set-env-from-json dist/env.json --config .claudia.json --deploy-proxy-api --no-optional-dependencies",
     "update": "yarn build && claudia update --source dist --update-env-from-json dist/env.json --config .claudia.json --no-optional-dependencies",
     "destroy": "claudia destroy --source dist --config .claudia.json",
-    "dev:import-database": "ts-node -r tsconfig-paths/register -r @gittrends/env-config database/index.ts"
+    "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.ts'",
+    "dev:import": "ts-node -r tsconfig-paths/register -r @gittrends/env-config database/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^3.2.1",
@@ -38,14 +39,18 @@
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
     "@types/aws-lambda": "^8.10.83",
+    "@types/body-parser": "^1.19.1",
     "@types/compression": "^1.7.2",
     "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
     "@types/faker": "^5.5.8",
     "@types/lodash": "^4.14.172",
+    "@typescript-eslint/parser": "^4.31.0",
     "claudia": "^5.13.1",
     "prisma": "^3.2.1",
     "ts-node": "^10.2.1",
     "ts-node-dev": "^1.1.8",
-    "tsconfig-paths": "^3.11.0"
+    "tsconfig-paths": "^3.11.0",
+    "typescript": "^4.4.3"
   }
 }

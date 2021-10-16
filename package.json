@@ -19,6 +19,7 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^2.0.4",
     "@typescript-eslint/eslint-plugin": "4.31.0",
     "@typescript-eslint/parser": "^4.31.0",
     "commitizen": "^4.2.4",

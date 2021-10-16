@@ -1,19 +1,18 @@
 /*
  *  Author: Hudson S. Borges
  */
-import async from 'async';
-import consola from 'consola';
-import { cyan, bold } from 'colors';
-import { omit, pick } from 'lodash';
-import cliProgress from 'cli-progress';
-import { Option, program } from 'commander';
-
 import { PrismaClient } from '@prisma/client';
+import async from 'async';
+import cliProgress from 'cli-progress';
+import { bold, cyan } from 'colors';
+import { Option, program } from 'commander';
+import consola from 'consola';
+import { omit, pick } from 'lodash';
 
 import mongo, * as MongoModels from '@gittrends/database-config';
 
-import * as dataImport from './import';
 import { version } from '../package.json';
+import * as dataImport from './import';
 
 function jsonFormatter(object: Record<string, any>): string {
   return Object.entries(object)

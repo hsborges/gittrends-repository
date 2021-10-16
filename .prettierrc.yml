@@ -4,3 +4,5 @@ singleQuote: true
 trailingComma: 'none'
 arrowParens: 'always'
 printWidth: 100
+importOrderSeparation: true
+importOrder: ["^@gittrends/(.*)$", "^[./]"]
