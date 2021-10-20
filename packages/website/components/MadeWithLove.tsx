@@ -1,7 +1,7 @@
-import React from 'react';
-import classnames from 'classnames';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import classnames from 'classnames';
+import React from 'react';
 
 import styles from './MadeWithLove.module.scss';
 

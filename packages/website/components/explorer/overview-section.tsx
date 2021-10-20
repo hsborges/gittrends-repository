@@ -1,11 +1,3 @@
-import React from 'react';
-import numeral from 'numeral';
-import camelCase from 'lodash/camelCase';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBalanceScale,
   faBug,
@@ -22,6 +14,14 @@ import {
   faUnlock,
   faUpload
 } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import utc from 'dayjs/plugin/utc';
+import camelCase from 'lodash/camelCase';
+import numeral from 'numeral';
+import React from 'react';
 
 import styles from './overview-section.module.scss';
 

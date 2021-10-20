@@ -1,6 +1,6 @@
-import React from 'react';
-import Link from 'next/link';
 import classnames from 'classnames';
+import Link from 'next/link';
+import React from 'react';
 
 import styles from './Logo.module.scss';
 

@@ -1,20 +1,20 @@
-import React from 'react';
-import Link from 'next/link';
 import { Avatar, Breadcrumb, BreadcrumbItem, Tag } from '@chakra-ui/react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Link from 'next/link';
+import React from 'react';
 
-import DefaultLayout from '../../../layouts/DefaultLayout';
 import Divider from '../../../components/explorer/divider';
 import OverviewSection from '../../../components/explorer/overview-section';
 import PopularitySection from '../../../components/explorer/popularity-section';
-
-import fetchRepository from '../../../hooks/fetchProject';
-
+import { useRepository } from '../../../hooks/api/useRepository';
+import { useStargazerTimeseries } from '../../../hooks/api/useStargazerTimeseries';
+import DefaultLayout from '../../../layouts/DefaultLayout';
 import styles from './[name].module.scss';
 
-function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
-  const { repository } = fetchRepository({ name_with_owner: props.name_with_owner });
+function ProjectDetails(props: { owner: string; name: string }): JSX.Element {
+  const { data: repo } = useRepository({ idOrOwner: props.owner, name: props.name });
+  const { data: tsResult } = useStargazerTimeseries({ idOrOwner: props.owner, name: props.name });
 
   return (
     <DefaultLayout showSearch>
@@ -37,7 +37,7 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
               </Link>
             </BreadcrumbItem>
             <BreadcrumbItem>
-              <span>{repository?.name}</span>
+              <span>{repo?.name}</span>
             </BreadcrumbItem>
           </Breadcrumb>
         </header>
@@ -45,15 +45,15 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
         <section className={styles.content}>
           <section className={styles.title}>
             <div>
-              <Avatar src={repository?.open_graph_image_url} size="md" className={styles.avatar} />
-              <span>{repository?.name_with_owner}</span>
+              <Avatar src={repo?.open_graph_image_url} size="md" className={styles.avatar} />
+              <span>{repo?.name_with_owner}</span>
             </div>
             <span className={styles.description}>
-              {repository?.description} <br />
-              <a href={repository?.homepage_url}>{repository?.homepage_url}</a>
+              {repo?.description} <br />
+              <a href={repo?.homepage_url}>{repo?.homepage_url}</a>
             </span>
-            <span className={styles.topics} hidden={!repository?.repository_topics}>
-              {repository?.repository_topics?.map((topic, index) => (
+            <span className={styles.topics} hidden={!repo?.repository_topics}>
+              {repo?.repository_topics?.map((topic, index) => (
                 <Tag key={index} className={styles.topic}>
                   {topic}
                 </Tag>
@@ -61,18 +61,20 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
             </span>
           </section>
 
-          <OverviewSection repository={repository} />
+          <OverviewSection repository={repo} />
 
-          {repository?.stargazers.timeseries && (
+          {tsResult ? (
             <>
               <Divider id="popularity" title="Popularity" className={styles.divider} />
               <PopularitySection
-                timeseries={repository?.stargazers.timeseries}
-                first={repository?.stargazers.first}
-                last={repository?.stargazers.last}
-                tags={repository?.tags}
+                timeseries={tsResult.timeseries}
+                first={tsResult.first}
+                last={tsResult.last}
+                // tags={repo?.tags}
               />
             </>
+          ) : (
+            <></>
           )}
         </section>
       </section>
@@ -80,8 +82,8 @@ function ProjectDetails(props: { name_with_owner: string }): JSX.Element {
   );
 }
 
-ProjectDetails.getInitialProps = ({ query }): { name_with_owner: string } => {
-  return { name_with_owner: `${query.owner}/${query.name}` };
+ProjectDetails.getInitialProps = ({ query: { name, owner } }) => {
+  return { name, owner };
 };
 
 export default ProjectDetails;

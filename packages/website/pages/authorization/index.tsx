@@ -1,14 +1,13 @@
 /* eslint-disable react/jsx-no-target-blank */
+import { faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faSmile } from '@fortawesome/free-regular-svg-icons';
+import { faThumbsUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { stringify } from 'querystring';
 import React from 'react';
 import Cookie from 'universal-cookie';
-import { stringify } from 'querystring';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faThumbsUp } from '@fortawesome/free-solid-svg-icons';
-import { faSmile } from '@fortawesome/free-regular-svg-icons';
-import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
 import Layout from '../../layouts/DefaultLayout';
-
 import styles from './index.module.scss';
 
 type TAuthorizationResponse = { success?: boolean; login?: string };

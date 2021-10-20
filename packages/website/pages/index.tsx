@@ -1,37 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import Router from 'next/router';
-import numeral from 'numeral';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Stat, StatLabel, StatNumber } from '@chakra-ui/react';
 import { faGithub, faGithubAlt } from '@fortawesome/free-brands-svg-icons';
 import { faStar, faTag, faUser } from '@fortawesome/free-solid-svg-icons';
-import { Stat, StatLabel, StatNumber } from '@chakra-ui/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { shuffle } from 'lodash';
+import Router from 'next/router';
+import numeral from 'numeral';
+import React, { useEffect, useState } from 'react';
 
-import ServerError from '../components/ServerError';
 import ProjectCard from '../components/RepositoryCard';
 import Search from '../components/Search';
-import Layout from '../layouts/DefaultLayout';
-import fetchProjects from '../hooks/searchProjects';
-import fetchStatistics from '../hooks/fetchStatistics';
+import ServerError from '../components/ServerError';
+import { useSearch } from '../hooks/api/useSearch';
+import { useStats } from '../hooks/api/useStats';
 import useWindowDimensions from '../hooks/useWindowDimensions';
-
+import Layout from '../layouts/DefaultLayout';
 import styles from './index.module.scss';
 
 export default function Home(): JSX.Element {
-  const { data: sData } = fetchStatistics();
-  const { data, isError } = fetchProjects({ limit: 8, sortBy: 'random' });
+  const { data: stats } = useStats();
+  const { data: search, error } = useSearch({ limit: 25 });
   const { width } = useWindowDimensions();
 
   const [statistics, setStatistics] =
     useState<{ title: string; value: number | null; icon: any }[]>();
 
   useEffect(() => {
+    const statsSummary: Record<string, number> = stats?.reduce(
+      (m, d) => ({ ...m, [d.resource]: d.count }),
+      {}
+    );
+
     setStatistics([
-      { title: 'Projects', icon: faGithubAlt, value: sData?.repositories },
-      { title: 'Users', icon: faUser, value: sData?.users },
-      { title: 'Stargazers', icon: faStar, value: sData?.stargazers },
-      { title: 'Tags', icon: faTag, value: sData?.tags }
+      { title: 'Projects', icon: faGithubAlt, value: statsSummary?.repositories },
+      { title: 'Users', icon: faUser, value: statsSummary?.actors },
+      { title: 'Stargazers', icon: faStar, value: statsSummary?.stargazers },
+      { title: 'Tags', icon: faTag, value: statsSummary?.tags }
     ]);
-  }, [sData]);
+  }, [stats]);
 
   return (
     <Layout className={styles['index-page']}>
@@ -51,14 +56,16 @@ export default function Home(): JSX.Element {
           />
         </div>
         <span>or explore the popular ones</span>
-        <div className={styles['project-samples']} hidden={isError}>
-          {data?.repositories.map((sample) => (
-            <ProjectCard
-              key={`repository_card_${sample.name_with_owner}`}
-              repository={sample.name_with_owner}
-              className="card"
-            />
-          ))}
+        <div className={styles['project-samples']} hidden={!!error}>
+          {shuffle(search?.repos)
+            .slice(0, 8)
+            .map((sample) => (
+              <ProjectCard
+                key={`repository_card_${sample.name_with_owner}`}
+                repository={sample}
+                className={styles.card}
+              />
+            ))}
         </div>
         <div className={styles['db-statistics']}>
           {statistics?.map((stats) => (
@@ -73,7 +80,7 @@ export default function Home(): JSX.Element {
             </Stat>
           ))}
         </div>
-        <div hidden={!isError}>
+        <div hidden={!error}>
           <ServerError />
         </div>
       </section>

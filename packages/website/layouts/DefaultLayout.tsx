@@ -1,10 +1,10 @@
-import React from 'react';
-import Head from 'next/head';
 import classnames from 'classnames';
-import NavigationBar from '../components/NavigationBar';
-import MadeWithLove from '../components/MadeWithLove';
-import DonateAlert from '../components/DonateAlert';
+import Head from 'next/head';
+import React from 'react';
 
+import DonateAlert from '../components/DonateAlert';
+import MadeWithLove from '../components/MadeWithLove';
+import NavigationBar from '../components/NavigationBar';
 import styles from './DefaultLayout.module.scss';
 
 export default function DefaultLayout(

@@ -1,10 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import Router from 'next/router';
-import pickBy from 'lodash/pickBy';
-import isEqual from 'lodash/isEqual';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { Select, Stat, StatLabel, StatNumber } from '@chakra-ui/react';
 import {
   usePagination,
   Pagination,
@@ -15,13 +8,19 @@ import {
   PaginationPage,
   PaginationSeparator
 } from '@ajna/pagination';
+import { Select, Stat, StatLabel, StatNumber } from '@chakra-ui/react';
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import isEqual from 'lodash/isEqual';
+import pickBy from 'lodash/pickBy';
+import Router from 'next/router';
+import React, { useEffect, useState } from 'react';
 
-import DefaultLayout from '../../layouts/DefaultLayout';
-import ServerError from '../../components/ServerError';
-import Search from '../../components/Search';
 import Card from '../../components/RepositoryCard';
-import fetchProjects, { ISearch } from '../../hooks/searchProjects';
-
+import Search from '../../components/Search';
+import ServerError from '../../components/ServerError';
+import { useSearch, Search as ISearch } from '../../hooks/api/useSearch';
+import DefaultLayout from '../../layouts/DefaultLayout';
 import styles from './index.module.scss';
 
 function Explorer(props: ISearch): JSX.Element {
@@ -30,7 +29,7 @@ function Explorer(props: ISearch): JSX.Element {
   const [page, setPage] = useState((props.offset ?? 0) / pageSize + 1);
   const [query, setQuery] = useState<ISearch>({ limit: pageSize, ...props });
 
-  const { data, isLoading, isError } = fetchProjects(query);
+  const { data: search, isLoading, isError } = useSearch(query);
 
   useEffect(() => {
     setQuery({ ...query, offset: (Number(page) - 1) * Number(pageSize), limit: Number(pageSize) });
@@ -42,13 +41,6 @@ function Explorer(props: ISearch): JSX.Element {
     Router.push({ query: pickBy(query, (v) => v) });
   }, [query]);
 
-  // useEffect(() => {
-  //   Router.events.on('routeChangeComplete', (newUrl) => {
-  //     const parsedURL = new urlParse(newUrl);
-  //     if (!parsedURL.query && Router.pathname == parsedURL.pathname) setQuery({ limit: pageSize });
-  //   });
-  // });
-
   const {
     pages,
     pagesCount,
@@ -57,12 +49,12 @@ function Explorer(props: ISearch): JSX.Element {
     isDisabled,
     setPageSize: setPaginatorPageSize
   } = usePagination({
-    total: data?.meta?.repositories_count ?? 0,
+    total: search?.meta?.repositories_count ?? 0,
     initialState: { pageSize, currentPage: page },
     limits: { inner: 2, outer: 2 }
   });
 
-  const updateQuery = (data, concat = false) => {
+  const updateQuery = (data: Record<string, any>, concat = false) => {
     if (isEqual({ ...query, ...data }, query)) return;
     setQuery({ ...query, offset: concat ? query.offset : 0, ...data });
   };
@@ -85,7 +77,7 @@ function Explorer(props: ISearch): JSX.Element {
               <option key="all" value="" selected={!query.language}>
                 All
               </option>
-              {Object.entries(data?.meta.languages_count ?? {}).map((entry) => (
+              {Object.entries(search?.meta.languages_count ?? {}).map((entry) => (
                 <option
                   key={`language_${entry[0]}`}
                   value={entry[0]}
@@ -96,7 +88,7 @@ function Explorer(props: ISearch): JSX.Element {
           </div>
           <Stat className={styles.statistic}>
             <StatLabel>Total Repositories</StatLabel>
-            <StatNumber>{data?.meta.repositories_count}</StatNumber>
+            <StatNumber>{search?.meta.repositories_count}</StatNumber>
           </Stat>
 
           <Search
@@ -107,16 +99,16 @@ function Explorer(props: ISearch): JSX.Element {
         </header>
         <section
           className={styles.content}
-          hidden={data?.meta.repositories_count === 0 || isLoading || isError}
+          hidden={search?.meta.repositories_count === 0 || isLoading || isError}
           ref={container}
         >
-          {data?.repositories.map((repo) => (
-            <Card key={repo.name_with_owner} repository={repo.name_with_owner} className="card" />
+          {search?.repos?.map((repo) => (
+            <Card key={repo.name_with_owner} repository={repo} className="card" />
           ))}
         </section>
         <section
           className={styles.content}
-          hidden={data?.meta.repositories_count > 0 || isLoading || isError}
+          hidden={search?.meta.repositories_count > 0 || isLoading || isError}
         >
           {/* <Empty style={{ fontSize: '1.5em' }} /> */}
         </section>

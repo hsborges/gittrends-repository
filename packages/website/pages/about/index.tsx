@@ -1,9 +1,8 @@
-import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React from 'react';
 
 import Layout from '../../layouts/DefaultLayout';
-
 import styles from './index.module.scss';
 
 const references: Record<string, string>[] = [
