@@ -8,22 +8,12 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 
 import * as MongoModels from '@gittrends/database-config';
 
-import importActor, { Actor } from './actor';
+import { Stargazer, StargazerTimeseries } from '../types';
+import importActor from './actor';
 
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
 dayjs.extend(utc);
-
-export type StargazerTimeseries = {
-  date: Date;
-  stargazers_count: number;
-};
-
-export type Stargazer = {
-  user: Actor;
-  starred_at: Date;
-  type: string;
-};
 
 export default async function (
   id: string

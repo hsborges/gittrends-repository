@@ -3,14 +3,7 @@
  */
 import { Tag as MongoTag } from '@gittrends/database-config';
 
-export type Tag = {
-  id: string;
-  name: string;
-  committed_date: Date;
-  additions: number;
-  deletions: number;
-  changed_files: number;
-};
+import { Tag } from '../types';
 
 export default async function (id: string): Promise<Tag[]> {
   return MongoTag.collection

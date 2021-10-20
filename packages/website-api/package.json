@@ -1,7 +1,8 @@
 {
   "name": "@gittrends/website-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/local.js",
+  "types": "dist/local.d.ts",
   "license": "MIT",
   "scripts": {
     "start": "node -r @gittrends/env-config dist/local.js",
@@ -14,6 +15,7 @@
     "update": "yarn build && claudia update --source dist --update-env-from-json dist/env.json --config .claudia.json --no-optional-dependencies",
     "destroy": "claudia destroy --source dist --config .claudia.json",
     "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.ts'",
+    "import": "node -r @gittrends/env-config dist/database/index.js",
     "dev:import": "ts-node -r tsconfig-paths/register -r @gittrends/env-config database/index.ts"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "express": "^4.17.1",
     "faker": "^5.5.3",
     "lodash": "^4.17.21",
+    "morgan": "^1.10.0",
     "nodemailer": "^6.6.3"
   },
   "devDependencies": {
@@ -45,6 +48,7 @@
     "@types/express": "^4.17.13",
     "@types/faker": "^5.5.8",
     "@types/lodash": "^4.14.172",
+    "@types/morgan": "^1.9.3",
     "@typescript-eslint/parser": "^4.31.0",
     "claudia": "^5.13.1",
     "prisma": "^3.2.1",

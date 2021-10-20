@@ -3,15 +3,7 @@
  */
 import { Actor as MongoActor } from '@gittrends/database-config';
 
-export type Actor = {
-  id: string;
-  type: string;
-  login: string;
-  name: string;
-  avatar_url: string;
-  created_at: Date;
-  updated_at: Date;
-};
+import { Actor } from '../types';
 
 export default async function (id: string): Promise<Actor | null> {
   return MongoActor.collection.findOne<Actor>(

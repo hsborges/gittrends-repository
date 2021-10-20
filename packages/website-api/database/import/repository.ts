@@ -5,38 +5,8 @@ import { omit } from 'lodash';
 
 import { Repository as MongoRepository } from '@gittrends/database-config';
 
-import importActor, { Actor } from './actor';
-
-export type RepositoryMetadata = {
-  resource: string;
-  updated_at: Date;
-  end_cursor: string;
-};
-
-export type Repository = {
-  id: string;
-  name: string;
-  owner?: Actor;
-  name_with_owner: string;
-  homepage_url?: string;
-  stargazers_count?: number;
-  watchers_count?: number;
-  forks_count?: number;
-  primary_language?: string;
-  default_branch?: string;
-  code_of_conduct?: string;
-  license_info?: string;
-  issues_count?: number;
-  pull_requests_count_count?: number;
-  releases_count?: number;
-  vulnerability_alerts_count?: number;
-  created_at?: Date;
-  updated_at?: Date;
-  disk_usage?: number;
-  open_graph_image_url?: string;
-  description?: string;
-  metadata: RepositoryMetadata[];
-};
+import { Repository, RepositoryMetadata } from '../types';
+import importActor from './actor';
 
 export default async function (id: string): Promise<Repository | null> {
   const document = await MongoRepository.collection.findOne(
@@ -65,6 +35,7 @@ export default async function (id: string): Promise<Repository | null> {
         disk_usage: 1,
         open_graph_image_url: 1,
         description: 1,
+        repository_topics: 1,
         _metadata: 1
       }
     }

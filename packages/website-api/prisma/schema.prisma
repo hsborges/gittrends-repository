@@ -51,9 +51,20 @@ model Repository {
   stargazers            Stargazer[]
   stargazers_timeseries StargazerTimeseries[]
   tags                  Tag[]
+  topics                RepositoryTopic[]
 
   @@index([name_with_owner])
   @@map("repositories")
+}
+
+model RepositoryTopic {
+  repository    Repository @relation(fields: [repository_id], references: [id])
+  repository_id String
+  topic         String
+
+  @@id([repository_id, topic])
+  @@index([topic])
+  @@map("repositories_topics")
 }
 
 model RepositoryMetadata {
@@ -101,4 +112,11 @@ model Tag {
 
   @@index([repository_id])
   @@map("tags")
+}
+
+model ResourceStat {
+  resource String @id
+  count    Int?
+
+  @@map("resources_stats")
 }

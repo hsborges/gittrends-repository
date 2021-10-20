@@ -62,33 +62,35 @@ program
 
       const operations = [];
 
-      if (data.owner) {
-        operations.push(
-          prisma.actor.upsert({
-            where: { id: data.owner?.id },
-            create: data.owner,
-            update: data.owner
-          })
-        );
-      }
-
       operations.push(
         prisma.repository.upsert({
           where: { id: data.id },
-          create: omit(data, 'owner', 'metadata'),
+          create: {
+            ...omit(data, ['owner', 'metadata', 'repository_topics']),
+            owner: data.owner && {
+              connectOrCreate: { where: { id: data.owner.id }, create: data.owner }
+            }
+          },
           update: {
-            ...omit(data, 'owner', 'metadata'),
-            owner: { connect: { id: data.owner?.id } }
+            ...omit(data, ['owner', 'metadata', 'repository_topics']),
+            owner: data.owner && {
+              connectOrCreate: { where: { id: data.owner.id }, create: data.owner }
+            }
           }
         })
       );
 
-      operations.push(prisma.repositoryMetadata.deleteMany({ where: { repository_id: data.id } }));
-
       operations.push(
+        prisma.repositoryMetadata.deleteMany({ where: { repository_id: data.id } }),
         ...data.metadata.map((meta) =>
           prisma.repositoryMetadata.create({
             data: { ...meta, repository: { connect: { id: data.id } } }
+          })
+        ),
+        prisma.repositoryTopic.deleteMany({ where: { repository_id: data.id } }),
+        ...(data.repository_topics || []).map((topic) =>
+          prisma.repositoryTopic.create({
+            data: { topic, repository: { connect: { id: data.id } } }
           })
         )
       );
@@ -148,7 +150,24 @@ program
       .project(['_id'])
       .map((doc) => doc._id)
       .toArray()
-      .then((ids) => {
+      .then(async (ids) => {
+        consola.info('Exporting database resources stats ...');
+        await Promise.all(
+          [MongoModels.Repository, MongoModels.Actor, MongoModels.Stargazer, MongoModels.Tag].map(
+            (model) => model.collection.estimatedDocumentCount()
+          )
+        ).then(([reposCount, actorsCount, stargazersCount, tagsCount]) =>
+          prisma.$transaction([
+            prisma.resourceStat.deleteMany({ where: {} }),
+            prisma.resourceStat.create({ data: { resource: 'repositories', count: reposCount } }),
+            prisma.resourceStat.create({ data: { resource: 'actors', count: actorsCount } }),
+            prisma.resourceStat.create({
+              data: { resource: 'stargazers', count: stargazersCount }
+            }),
+            prisma.resourceStat.create({ data: { resource: 'tags', count: tagsCount } })
+          ])
+        );
+
         consola.info('Preparing progress bar and task queue ...');
         if (!process.env.DEBUG) progressBar.start(ids.length, 0);
         for (const id of ids) queue.pushAsync(id).catch(consola.error);
