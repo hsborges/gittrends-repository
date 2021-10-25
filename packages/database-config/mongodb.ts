@@ -1,13 +1,13 @@
 /*
  *  Author: Hudson S. Borges
  */
-import tunnel from 'tunnel-ssh';
-import { Server } from 'net';
 import { readFileSync } from 'fs';
-import { promisify } from 'util';
 import { MongoClient } from 'mongodb';
+import { Server } from 'net';
+import tunnel from 'tunnel-ssh';
+import { promisify } from 'util';
 
-import Model from './models/Model';
+import { MongoRepository } from './MongoRepository';
 
 const tunnelAsync = promisify(tunnel);
 
@@ -76,7 +76,7 @@ client.connect = async function () {
   }
 
   return oldConnect().then((db) => {
-    Model.db = client.db(DB);
+    MongoRepository.db = client.db(DB);
     return db;
   });
 };
