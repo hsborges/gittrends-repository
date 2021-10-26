@@ -1,12 +1,12 @@
 /*
  *  Author: Hudson S. Borges
  */
-import express from 'express';
-import consola from 'consola';
-import { Queue } from 'bullmq';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
+import { Queue } from 'bullmq';
+import consola from 'consola';
+import express from 'express';
 
 import * as redis from '../redis';
 

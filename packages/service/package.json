@@ -21,7 +21,8 @@
     "dev:queue-board": "ts-node -r tsconfig-paths/register -r @gittrends/env-config -T extra/queue-board.ts",
     "dev:repos-stats": "ts-node -r tsconfig-paths/register -r @gittrends/env-config -T extra/repos-stats.ts",
     "test": "node -r @gittrends/env-config node_modules/.bin/jest",
-    "jest": "node -r @gittrends/env-config node_modules/.bin/jest"
+    "jest": "node -r @gittrends/env-config node_modules/.bin/jest",
+    "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.ts'"
   },
   "dependencies": {
     "@bull-board/api": "^3.5.4",

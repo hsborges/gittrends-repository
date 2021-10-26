@@ -2,9 +2,9 @@
  *  Author: Hudson S. Borges
  */
 import Fragment from '../Fragment';
-import ReactableFragment from './ReactableFragment';
 import CommentFragment from './CommentFragment';
 import CommitFragment from './CommitFragment';
+import ReactableFragment from './ReactableFragment';
 
 export class CommitCommentFragment extends Fragment {
   code = 'commitComment';

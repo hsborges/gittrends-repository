@@ -2,10 +2,10 @@
  *  Author: Hudson S. Borges
  */
 import Component from '../Component';
-import IssueFragment from '../fragments/IssueFragment';
+import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from '../fragments/ActorFragment';
 import IssueCommentFragment from '../fragments/IssueCommentFragment';
-
+import IssueFragment from '../fragments/IssueFragment';
 import AddedToProjectEvent from '../fragments/events/AddedToProjectEvent';
 import AssignedEvent from '../fragments/events/AssignedEvent';
 import ClosedEvent from '../fragments/events/ClosedEvent';
@@ -35,7 +35,6 @@ import UnmarkedAsDuplicateEvent from '../fragments/events/UnmarkedAsDuplicateEve
 import UnpinnedEvent from '../fragments/events/UnpinnedEvent';
 import UnsubscribedEvent from '../fragments/events/UnsubscribedEvent';
 import UserBlockedEvent from '../fragments/events/UserBlockedEvent';
-import Fragment from '../Fragment';
 
 type TOptions = { first: number; after?: string; alias?: string };
 

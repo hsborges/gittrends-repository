@@ -2,8 +2,8 @@
  *  Author: Hudson S. Borges
  */
 import Fragment from '../Fragment';
-import CommitFragment from './CommitFragment';
 import CommitCommentFragment from './CommitCommentFragment';
+import CommitFragment from './CommitFragment';
 
 export class PullRequestCommitCommentThreadFragment extends Fragment {
   code = 'pullRequestCommitCommentThread';

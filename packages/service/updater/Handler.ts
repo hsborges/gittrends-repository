@@ -1,7 +1,6 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { ClientSession } from 'mongodb';
 import Component from '../github/Component';
 
 export default abstract class AbstractHandler<T extends Component> {
@@ -16,7 +15,7 @@ export default abstract class AbstractHandler<T extends Component> {
   }
 
   abstract component(): Promise<T | Component[]>;
-  abstract update(response: Record<string, unknown>, session?: ClientSession): Promise<void>;
+  abstract update(response: Record<string, unknown>): Promise<void>;
   abstract hasNextPage(): boolean;
 
   isDone(): boolean {

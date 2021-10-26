@@ -2,11 +2,12 @@
  *  Author: Hudson S. Borges
  */
 import chalk from 'chalk';
+import { startCase, difference, get } from 'lodash';
 import numeral from 'numeral';
 import { table } from 'table';
-import { startCase, difference, get } from 'lodash';
 
-import mongoClient, { Repository } from '@gittrends/database-config';
+import mongoClient, { RepositoryRepository } from '@gittrends/database-config';
+
 import packageJson from '../package.json';
 
 (async () => {
@@ -14,7 +15,7 @@ import packageJson from '../package.json';
 
   const reposResources = difference(packageJson.config.resources, ['users']);
 
-  const repositories = await Repository.collection
+  const repositories = await RepositoryRepository.collection
     .find({}, { projection: { _id: 1, _metadata: 1 } })
     .toArray();
 

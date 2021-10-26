@@ -1,13 +1,13 @@
 /*
  *  Author: Hudson S. Borges
  */
-import UserAgent from 'user-agents';
-import pRetry from 'promise-retry';
 import axios, { AxiosResponse } from 'axios';
+import pRetry from 'promise-retry';
+import UserAgent from 'user-agents';
 
 import compact from '../helpers/compact';
-import normalize from '../helpers/normalize';
 import * as Errors from '../helpers/errors';
+import normalize from '../helpers/normalize';
 
 const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
 const HOST = process.env.GITTRENDS_PROXY_HOST ?? 'localhost';

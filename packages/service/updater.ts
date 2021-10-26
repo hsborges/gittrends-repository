@@ -2,17 +2,18 @@
  *  Author: Hudson S. Borges
  */
 import axios from 'axios';
-import consola from 'consola';
 import { Worker, QueueScheduler } from 'bullmq';
 import { bold } from 'chalk';
 import { program, Option } from 'commander';
+import consola from 'consola';
+
 import mongoClient from '@gittrends/database-config';
 
 import { version } from './package.json';
 import * as redis from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
-import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
+import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 
 async function proxyServerHealthCheck(): Promise<boolean> {
   const protocol = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
@@ -86,7 +87,10 @@ program
     );
 
     queue.on('progress', (job, progress) => {
-      const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
+      const bar = new Array(Math.ceil((progress as number) / 10))
+        .fill('=')
+        .join('')
+        .padEnd(10, '-');
       const progressStr = `${progress}`.padStart(3);
       consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(job.id)}.`);
     });

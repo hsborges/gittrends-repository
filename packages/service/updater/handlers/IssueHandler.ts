@@ -2,30 +2,32 @@
  *  Author: Hudson S. Borges
  */
 import { get, omit } from 'lodash';
-import { ClientSession } from 'mongodb';
+
 import {
   Issue,
+  IssueRepository,
   PullRequest,
+  PullRequestRepository,
   Reaction,
-  Repository,
-  TimelineEvent
+  ReactionRepository,
+  RepositoryRepository,
+  TimelineEvent,
+  TimelineEventRepository
 } from '@gittrends/database-config';
 
-import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import Component from '../../github/Component';
 import IssueComponent from '../../github/components/IssueComponent';
 import PullRequestComponent from '../../github/components/PullRequestComponent';
 import ReactionComponent from '../../github/components/ReactionComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-
-import compact from '../../helpers/compact';
 import { RetryableError, ForbiddenError, ResourceUpdateError } from '../../helpers/errors';
+import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TComponent = IssueComponent | PullRequestComponent;
 type TPaginable = { hasNextPage: boolean; endCursor?: string };
 
 type TIssueMetadata = {
-  data: TObject;
+  data: Record<string, unknown>;
   component: TComponent;
   details: TPaginable;
   assignees: TPaginable;
@@ -36,9 +38,9 @@ type TIssueMetadata = {
 };
 
 type TReactableMetadata = {
-  reactable: TObject;
+  reactable: Record<string, unknown>;
   component: ReactionComponent;
-  reactions: TObject[];
+  reactions: Record<string, unknown>[];
   hasNextPage: boolean;
   endCursor?: string;
   error?: Error;
@@ -77,7 +79,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       this.currentStage = Stages.GET_ISSUES_LIST;
 
       if (!this.issues.endCursor) {
-        this.issues.endCursor = await Repository.collection
+        this.issues.endCursor = await RepositoryRepository.collection
           .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
           .then((result) => get(result, ['_metadata', this.meta.resource, 'endCursor']));
       }
@@ -139,9 +141,9 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     throw new ResourceUpdateError('Invalid condition reached!');
   }
 
-  async update(response: TObject, session?: ClientSession): Promise<void> {
+  async update(response: Record<string, unknown>): Promise<void> {
     this.debug('Processing %s information.', this.resource);
-    return this._update(response, session).finally(() => {
+    return this._update(response).finally(() => {
       this.debug('Information updated. %o', {
         ...this.issues,
         items: this.issues.items.length
@@ -151,20 +153,20 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     });
   }
 
-  private async _update(response: TObject, session?: ClientSession): Promise<void> {
+  private async _update(response: Record<string, unknown>): Promise<void> {
     switch (this.currentStage) {
       case Stages.GET_ISSUES_LIST: {
         const data = super.parseResponse(response[super.alias as string]);
         const newIssues = get(data, `${this.resourceAlias}.nodes`, []);
 
-        const newIssuesMetadata = await Issue.collection
+        const newIssuesMetadata = await IssueRepository.collection
           .find(
             { _id: { $in: newIssues.map((ni: any) => ni.id) } },
             { projection: { _id: 1, _metadata: 1 } }
           )
           .toArray();
 
-        this.issues.items = newIssues.map((issue: TObject) => ({
+        this.issues.items = newIssues.map((issue: Record<string, unknown>) => ({
           data: { repository: this.id, ...issue },
           component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
             issue.id as string,
@@ -228,17 +230,17 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
         if (this.pendingIssues.length) return;
 
-        const reactables: TObject[] = this.issues.items
+        const reactables: Record<string, unknown>[] = this.issues.items
           .filter((issue) => issue.data.reaction_groups)
           .map((issue) => ({ repository: this.id, issue: issue.data.id }));
 
         reactables.push(
-          ...this.issues.items.reduce((eReactables: TObject[], issue) => {
+          ...this.issues.items.reduce((eReactables: Record<string, unknown>[], issue) => {
             if (!issue.data.timeline) return eReactables;
             return eReactables.concat(
               (issue.data.timeline as [])
-                .filter((event: TObject) => event.reaction_groups)
-                .map((event: TObject) => ({
+                .filter((event: Record<string, unknown>) => event.reaction_groups)
+                .map((event: Record<string, unknown>) => ({
                   repository: this.id,
                   issue: issue.data.id,
                   event: event.id
@@ -280,45 +282,45 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     const issues = this.issues.items.map((issue) => {
       if (issue.error) issue.data._metadata = { error: JSON.stringify(issue.error) };
       else issue.data._metadata = { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
-      return compact(omit(issue.data, 'timeline'));
+      return new (this.resource === 'issues' ? Issue : PullRequest)(omit(issue.data, 'timeline'));
     });
 
-    const timeline = this.issues.items.reduce((acc: TObject[], issue) => {
+    const timeline = this.issues.items.reduce((acc: TimelineEvent[], issue) => {
       if (!issue.data.timeline) return acc;
       return acc.concat(
-        (issue.data.timeline as TObject[]).map((tl) =>
-          compact({ repository: this.id, issue: issue.data.id, ...tl })
+        (issue.data.timeline as Record<string, unknown>[]).map(
+          (tl) => new TimelineEvent({ repository: this.id, issue: issue.data.id, ...tl })
         )
       );
     }, []);
 
     const reactions = (this.reactions || []).reduce(
-      (reactions: TObject[], meta) =>
-        reactions.concat(meta.reactions.map((reaction) => ({ ...meta.reactable, ...reaction }))),
+      (reactions: Reaction[], meta) =>
+        reactions.concat(
+          meta.reactions.map((reaction) => new Reaction({ ...meta.reactable, ...reaction }))
+        ),
       []
     );
 
     await Promise.all([
-      super.saveReferences(session),
-      (this.resource === 'issues' ? Issue : PullRequest).upsert(issues, session),
-      TimelineEvent.upsert(timeline, session),
-      Reaction.upsert(reactions, session)
+      super.saveReferences(),
+      (this.resource === 'issues' ? IssueRepository : PullRequestRepository).upsert(issues),
+      TimelineEventRepository.upsert(timeline),
+      ReactionRepository.upsert(reactions)
     ]);
 
-    await Repository.collection.updateOne(
+    await RepositoryRepository.collection.updateOne(
       { _id: this.meta.id },
-      { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.issues.endCursor } },
-      { session }
+      { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.issues.endCursor } }
     );
 
     this.issues.items = [];
     this.reactions = [];
 
     if (this.isDone()) {
-      await Repository.collection.updateOne(
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
-        { session }
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );
     }
   }

@@ -3,13 +3,13 @@
  */
 import Component from '../Component';
 import Fragment from '../Fragment';
-import RepositoryFragment from '../fragments/RepositoryFragment';
 import { SimplifiedActorFragment } from '../fragments/ActorFragment';
 import CommitFragment from '../fragments/CommitFragment';
-import TagFragment from '../fragments/TagFragment';
-import ReleaseFragment from '../fragments/ReleaseFragment';
 import { SimplifiedIssueFragment } from '../fragments/IssueFragment';
 import { SimplifiedPullRequest } from '../fragments/PullRequestFragment';
+import ReleaseFragment from '../fragments/ReleaseFragment';
+import RepositoryFragment from '../fragments/RepositoryFragment';
+import TagFragment from '../fragments/TagFragment';
 
 type TIncludes = Record<string, { include: boolean; textFragment: string }>;
 type TIncludeOpts = { first: number; after?: string; alias?: string };

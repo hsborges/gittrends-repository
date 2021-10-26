@@ -1,18 +1,19 @@
 /*
  *  Author: Hudson S. Borges
  */
-import consola from 'consola';
-import { Argument, Option, program } from 'commander';
-import { chain, get, min, uniqBy } from 'lodash';
 import { filter } from 'bluebird';
-import mongoClient, { Actor, Repository } from '@gittrends/database-config';
+import { Argument, Option, program } from 'commander';
+import consola from 'consola';
+import { chain, get, min, uniqBy } from 'lodash';
 
-import parser from './helpers/response-parser';
-import { version } from './package.json';
-import { BadGatewayError } from './helpers/errors';
+import mongoClient, { Actor, Repository } from '@gittrends/database-config';
+import { ActorRepository, RepositoryRepository } from '@gittrends/database-config';
 
 import Query from './github/Query';
 import SearchComponent from './github/components/SearchComponent';
+import { BadGatewayError } from './helpers/errors';
+import parser from './helpers/response-parser';
+import { version } from './package.json';
 
 async function search(
   limit = 1000,
@@ -63,8 +64,9 @@ async function search(
           after = get(data, 'search.page_info.end_cursor');
         } else {
           after = null;
-          const newMaxStargazers = <number>min(repos.map((r) => r.stargazers_count));
-          maxStargazers = maxStargazers != newMaxStargazers ? newMaxStargazers : maxStargazers - 1;
+          const newMaxStargazers = min(repos.map((r) => r.stargazers_count as number));
+          if (newMaxStargazers != maxStargazers) maxStargazers = newMaxStargazers;
+          else if (maxStargazers) maxStargazers -= 1;
         }
 
         total = 100;
@@ -155,12 +157,12 @@ program
 
         return Promise.all([
           filter(repos, (repo) =>
-            Repository.collection
+            RepositoryRepository.collection
               .findOne({ _id: repo.id }, { projection: { _id: 1 } })
               .then((data) => !data)
           ),
           filter(users, (user) =>
-            Actor.collection
+            ActorRepository.collection
               .findOne({ _id: user.id }, { projection: { _id: 1 } })
               .then((data) => !data)
           )
@@ -168,8 +170,8 @@ program
       })
       .then(async ([repos, users]) => {
         consola.info('Adding repositories to database ...');
-        await Actor.insert(users);
-        await Repository.insert(repos);
+        await ActorRepository.insert(users.map((user) => new Actor(user)));
+        await RepositoryRepository.insert(repos.map((repo) => new Repository(repo)));
       })
       .then(() => consola.success('Repositories successfully added!'))
       .catch((err) => consola.error(err))

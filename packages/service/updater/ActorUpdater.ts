@@ -1,16 +1,17 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { mapSeries } from 'bluebird';
 import { Job } from 'bullmq';
 import { chunk } from 'lodash';
-import { mapSeries } from 'bluebird';
-import { NotFoundError, RetryableError } from '../helpers/errors';
-import { Actor } from '@gittrends/database-config';
 
-import Updater from './Updater';
+import { Actor, ActorRepository } from '@gittrends/database-config';
+
 import Query from '../github/Query';
-import parser from '../helpers/response-parser';
 import ActorComponent from '../github/components/ActorComponent';
+import { NotFoundError, RetryableError } from '../helpers/errors';
+import parser from '../helpers/response-parser';
+import Updater from './Updater';
 
 export default class ActorsUpdater implements Updater {
   readonly id: string[] | string;
@@ -29,14 +30,16 @@ export default class ActorsUpdater implements Updater {
       .run()
       .then((response) => parser(response))
       .then(async ({ actors }) =>
-        Actor.upsert(actors.map((actor) => ({ ...actor, _metadata: { updatedAt: new Date() } })))
+        ActorRepository.upsert(
+          actors.map((actor) => new Actor({ ...actor, _metadata: { updatedAt: new Date() } }))
+        )
       )
       .catch(async (err) => {
         if (err instanceof RetryableError || err instanceof NotFoundError) {
           if (ids.length > 1)
             return mapSeries(chunk(ids, Math.ceil(ids.length / 2)), (_ids) => this._update(_ids));
 
-          return Actor.collection.updateOne(
+          return ActorRepository.collection.updateOne(
             { _id: ids[0] },
             { $set: { _metadata: { updatedAt: new Date(), error: err.message } } }
           );

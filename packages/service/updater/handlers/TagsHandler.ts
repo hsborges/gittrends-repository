@@ -2,15 +2,15 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { ClientSession } from 'mongodb';
-import { Repository, Tag } from '@gittrends/database-config';
 
-import AbstractRepositoryHandler from './AbstractRepositoryHandler';
+import { RepositoryRepository, Tag, TagRepository } from '@gittrends/database-config';
+
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ResourceUpdateError } from '../../helpers/errors';
+import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 export default class TagsHandler extends AbstractRepositoryHandler {
-  tags: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
+  tags: { items: Tag[]; hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
     super(id, alias, 'tags');
@@ -19,7 +19,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.tags.endCursor) {
-      this.tags.endCursor = await Repository.collection
+      this.tags.endCursor = await RepositoryRepository.collection
         .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
         .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
@@ -31,14 +31,17 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: TObject, session?: ClientSession): Promise<void> {
+  async update(response: Record<string, unknown>): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
     this.tags.items.push(
-      ...get(data, '_tags.nodes', []).map((tag: TObject) => ({
-        repository: this.id,
-        ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as TObject)
-      }))
+      ...get<Record<string, unknown>[]>(data, '_tags.nodes', []).map(
+        (tag) =>
+          new Tag({
+            repository: this.id,
+            ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as Record<string, unknown>)
+          })
+      )
     );
 
     const pageInfo = get(data, '_tags.page_info', {});
@@ -46,20 +49,18 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     this.tags.endCursor = pageInfo.end_cursor ?? this.tags.endCursor;
 
     if (this.tags.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([super.saveReferences(session), Tag.upsert(this.tags.items, session)]);
-      await Repository.collection.updateOne(
+      await Promise.all([super.saveReferences(), TagRepository.upsert(this.tags.items)]);
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.tags.endCursor } },
-        { session }
+        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.tags.endCursor } }
       );
       this.tags.items = [];
     }
 
     if (this.isDone()) {
-      await Repository.collection.updateOne(
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
-        { session }
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );
     }
   }

@@ -3,8 +3,8 @@
  */
 import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from './ActorFragment';
-import PullRequestReviewCommentFragment from './PullRequestReviewCommentFragment';
 import CommitFragment from './CommitFragment';
+import PullRequestReviewCommentFragment from './PullRequestReviewCommentFragment';
 import ReactableFragment from './ReactableFragment';
 
 export class PullRequestReviewFragment extends Fragment {

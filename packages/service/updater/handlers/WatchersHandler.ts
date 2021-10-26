@@ -2,15 +2,15 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { ClientSession } from 'mongodb';
-import { Repository, Watcher } from '@gittrends/database-config';
 
-import AbstractRepositoryHandler from './AbstractRepositoryHandler';
+import { RepositoryRepository, Watcher, WatcherRepository } from '@gittrends/database-config';
+
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ResourceUpdateError } from '../../helpers/errors';
+import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 export default class WatchersHandler extends AbstractRepositoryHandler {
-  watchers: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
+  watchers: { items: Watcher[]; hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
     super(id, alias, 'watchers');
@@ -19,7 +19,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.watchers.endCursor) {
-      this.watchers.endCursor = await Repository.collection
+      this.watchers.endCursor = await RepositoryRepository.collection
         .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
         .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
@@ -31,14 +31,13 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: TObject, session?: ClientSession): Promise<void> {
+  async update(response: Record<string, unknown>): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
     this.watchers.items.push(
-      ...get(data, '_watchers.nodes', []).map((watcher: string) => ({
-        repository: this.id,
-        user: watcher
-      }))
+      ...get<string[]>(data, '_watchers.nodes', []).map(
+        (watcher) => new Watcher({ repository: this.id, user: watcher })
+      )
     );
 
     const pageInfo = get(data, '_watchers.page_info', {});
@@ -46,23 +45,18 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     this.watchers.endCursor = pageInfo.end_cursor ?? this.watchers.endCursor;
 
     if (this.watchers.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([
-        super.saveReferences(session),
-        Watcher.upsert(this.watchers.items, session)
-      ]);
-      await Repository.collection.updateOne(
+      await Promise.all([super.saveReferences(), WatcherRepository.upsert(this.watchers.items)]);
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.watchers.endCursor } },
-        { session }
+        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.watchers.endCursor } }
       );
       this.watchers.items = [];
     }
 
     if (this.isDone()) {
-      await Repository.collection.updateOne(
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
-        { session }
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );
     }
   }

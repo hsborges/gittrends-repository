@@ -1,18 +1,18 @@
 /*
  *  Author: Hudson S. Borges
  */
-import dayjs from 'dayjs';
-import consola from 'consola';
-import { Queue } from 'bullmq';
-import { CronJob } from 'cron';
-
 import { each } from 'bluebird';
+import { Queue } from 'bullmq';
 import { program } from 'commander';
+import consola from 'consola';
+import { CronJob } from 'cron';
+import dayjs from 'dayjs';
 import { difference, chunk, intersection, get } from 'lodash';
-import mongoClient, { Actor, Repository } from '@gittrends/database-config';
 
-import * as redis from './redis';
+import mongoClient, { ActorRepository, RepositoryRepository } from '@gittrends/database-config';
+
 import { version, config } from './package.json';
+import * as redis from './redis';
 
 /* COMMANDS */
 function resourcesParser(resources: string[]): string[] {
@@ -31,7 +31,7 @@ const repositoriesScheduler = async (
   let count = 0;
 
   return each(
-    Repository.collection
+    RepositoryRepository.collection
       .find(
         { '_metadata.removed': { $exists: false } },
         { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
@@ -64,7 +64,7 @@ const usersScheduler = async (queue: Queue<UsersJob>, wait = 24, limit = 100000)
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hour').toISOString();
   // get metadata
-  const usersIds = await Actor.collection
+  const usersIds = await ActorRepository.collection
     .find(
       {
         $or: [
