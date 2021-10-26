@@ -7,7 +7,7 @@ import { Entity } from './Entity';
 
 export class Location extends Entity {
   // Protected fields
-  static readonly __id_fields = 'id';
+  static readonly __id_fields = 'location';
   static readonly __collection = 'locations';
 
   // Entity fields
