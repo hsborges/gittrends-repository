@@ -1,28 +1,32 @@
 /*
  *  Author: Hudson S. Borges
  */
-import fs from 'fs';
-import path from 'path';
+import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import * as csv from 'fast-csv';
+import fs from 'fs';
 import { uniq, compact, omit } from 'lodash';
-import { Argument, Option, program } from 'commander';
+import mkdirp from 'mkdirp';
+import path from 'path';
+
 import mongoClient, {
-  Stargazer,
-  Watcher,
-  Issue,
-  PullRequest,
-  Repository
+  RepositoryRepository,
+  IssueRepository,
+  PullRequestRepository,
+  StargazerRepository,
+  WatcherRepository,
+  MongoRepository,
+  Entity
 } from '@gittrends/database-config';
 
 import { version } from './package.json';
-import mkdirp from 'mkdirp';
 
 async function computeStargazersOrWatchersRanking(
   repositoryId: string,
-  model: typeof Stargazer | typeof Watcher
+  mongoRepository: MongoRepository<Entity>,
+  type: 'stargazers' | 'watchers'
 ) {
-  return model.collection
+  return mongoRepository.collection
     .aggregate([
       { $match: { '_id.repository': repositoryId } },
       { $lookup: { from: 'actors', localField: '_id.user', foreignField: '_id', as: '_id.user' } },
@@ -32,18 +36,24 @@ async function computeStargazersOrWatchersRanking(
       { $unwind: { path: '$location' } },
       { $group: { _id: '$location.countryCode', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-      { $project: { [model === Stargazer ? 'stargazers' : 'watchers']: '$count' } }
+      { $project: { [type]: '$count' } }
     ])
     .toArray();
 }
 
 async function computeIssuesOrPullsRanking(
   repositoryId: string,
-  model: typeof Issue | typeof PullRequest
+  repository: MongoRepository<Entity>,
+  type: 'issues' | 'pull_requests'
 ) {
-  return model.collection
+  return repository.collection
     .aggregate([
-      { $match: { repository: repositoryId, type: model === Issue ? 'Issue' : 'PullRequest' } },
+      {
+        $match: {
+          repository: repositoryId,
+          type: repository === IssueRepository ? 'Issue' : 'PullRequest'
+        }
+      },
       { $match: { author_association: { $nin: ['MEMBER', 'COLLABORATOR'] } } },
       { $lookup: { from: 'actors', localField: 'author', foreignField: '_id', as: 'author' } },
       { $unwind: { path: '$author' } },
@@ -60,25 +70,25 @@ async function computeIssuesOrPullsRanking(
       { $replaceRoot: { newRoot: '$_id' } },
       { $group: { _id: '$countryCode', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-      { $project: { [model === Issue ? 'issues' : 'pull_requests']: '$count' } }
+      { $project: { [type]: '$count' } }
     ])
     .toArray();
 }
 
 async function computeStargazersRanking(repositoryId: string) {
-  return computeStargazersOrWatchersRanking(repositoryId, Stargazer);
+  return computeStargazersOrWatchersRanking(repositoryId, StargazerRepository, 'stargazers');
 }
 
 async function computeWatchersRanking(repositoryId: string) {
-  return computeStargazersOrWatchersRanking(repositoryId, Watcher);
+  return computeStargazersOrWatchersRanking(repositoryId, WatcherRepository, 'watchers');
 }
 
 async function computeIssuesRanking(repositoryId: string) {
-  return computeIssuesOrPullsRanking(repositoryId, Issue);
+  return computeIssuesOrPullsRanking(repositoryId, IssueRepository, 'issues');
 }
 
 async function computePullRequestsRanking(repositoryId: string) {
-  return computeIssuesOrPullsRanking(repositoryId, PullRequest);
+  return computeIssuesOrPullsRanking(repositoryId, PullRequestRepository, 'pull_requests');
 }
 
 program
@@ -102,7 +112,7 @@ program
     await mongoClient.connect();
 
     consola.info('Recovering repository information ...');
-    const repo = await Repository.collection.findOne({
+    const repo = await RepositoryRepository.collection.findOne({
       $or: [{ _id: repository }, { name_with_owner: repository }]
     });
 

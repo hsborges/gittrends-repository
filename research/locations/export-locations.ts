@@ -1,13 +1,15 @@
 /*
  *  Author: Hudson S. Borges
  */
-import fs from 'fs';
-import path from 'path';
+import { Option, program } from 'commander';
 import consola from 'consola';
 import * as csv from 'fast-csv';
+import fs from 'fs';
 import { Document } from 'mongodb';
-import mongoClient, { Actor } from '@gittrends/database-config';
-import { Option, program } from 'commander';
+import path from 'path';
+
+import mongoClient, { ActorRepository } from '@gittrends/database-config';
+
 import { version } from './package.json';
 
 program
@@ -32,7 +34,7 @@ program
 
     consola.info(`Getting locations from database ...`);
     await new Promise(async (resolve) => {
-      const cursor = Actor.collection.aggregate(
+      const cursor = ActorRepository.collection.aggregate(
         [
           { $match: { location: { $exists: true } } },
           { $project: { location: { $toLower: { $trim: { input: '$location' } } } } },

@@ -1,39 +1,40 @@
 /*
  *  Author: Hudson S. Borges
  */
-import fs from 'fs';
-import path from 'path';
+import { each } from 'bluebird';
+import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import * as csv from 'fast-csv';
-import mongoClient from '@gittrends/database-config';
-import { omitBy } from 'lodash';
-import { Argument, Option, program } from 'commander';
+import fs from 'fs';
+import { mapKeys, omitBy, snakeCase } from 'lodash';
+import path from 'path';
+
+import mongoClient, { Location, LocationRepository } from '@gittrends/database-config';
+
 import { version } from './package.json';
 
-type LocationRecord = {
-  location: string;
-  label: string;
-  countryCode: string;
-  countryName: string;
-  stateCode?: string;
-  state?: string;
-  country?: string;
-  city?: string;
-};
-
-async function loadFromCSV(src: string): Promise<LocationRecord[]> {
+async function loadFromCSV(src: string): Promise<Location[]> {
   return new Promise((resolve, reject) => {
-    const locations: LocationRecord[] = [];
+    const locations: Location[] = [];
 
     fs.createReadStream(src)
-      .pipe(csv.parse({ headers: true, ignoreEmpty: true }))
+      .pipe(csv.parse({ headers: true, ignoreEmpty: true, trim: true }))
       .on('error', reject)
-      .on('data', (row) => locations.push(row))
+      .on('data', (row) => {
+        locations.push(
+          new Location(
+            mapKeys(
+              omitBy(row, (value) => value === ''),
+              (_, key) => snakeCase(key)
+            )
+          )
+        );
+      })
       .on('end', () => resolve(locations));
   });
 }
 
-async function loadFromJSON(src: string): Promise<LocationRecord[]> {
+async function loadFromJSON(src: string): Promise<Location[]> {
   return new Promise((resolve, reject) => {
     fs.readFile(src, (error, data) => {
       if (error) return reject(error);
@@ -67,16 +68,7 @@ program
     await mongoClient.connect();
 
     consola.info(`Writing ${locations.length} records to database ...`);
-    await mongoClient
-      .db()
-      .collection('locations')
-      .bulkWrite(
-        locations
-          .map((l) => omitBy({ ...l, _id: l.location }, (v, k) => !v || k === 'location'))
-          .map((l) => ({
-            replaceOne: { filter: { _id: l._id }, replacement: l, upsert: true }
-          }))
-      );
+    await each(locations, (location) => LocationRepository.upsert(location));
 
     consola.info('Closing connection ...');
     await mongoClient.close();

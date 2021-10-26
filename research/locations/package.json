@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "rm -rf dist && yarn tsc",
+    "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.{ts,tsx}'",
     "dev:export-locations": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config -T export-locations.ts",
     "dev:update-locations": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config -T update-locations.ts",
     "dev:export-rankings": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config -T export-rankings.ts",
