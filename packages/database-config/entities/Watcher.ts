@@ -18,7 +18,7 @@ export class WatcherId {
 
 export class Watcher extends Entity {
   // Protected fields
-  static readonly __id_fields = 'id';
+  static readonly __id_fields = ['repository', 'user'];
   static readonly __collection = 'watchers';
 
   // Entity fields

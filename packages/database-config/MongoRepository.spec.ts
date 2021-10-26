@@ -2,7 +2,7 @@ import { IsOptional, IsString } from 'class-validator';
 import { MongoClient } from 'mongodb';
 
 import { MongoRepository } from './MongoRepository';
-import { Entity } from './entities';
+import { Entity, EntityValidationError } from './entities';
 
 class FakeEntity extends Entity {
   public static __collection = 'FakeEntity';
@@ -28,7 +28,7 @@ describe('Test MongoRepository function', () => {
     if (!connectionUrl) throw new Error('Invalid mongodb connection url!');
     connection = await MongoClient.connect(connectionUrl);
     MongoRepository.db = connection.db();
-    entityRepository = MongoRepository.from(FakeEntity);
+    entityRepository = MongoRepository.create(FakeEntity);
   });
 
   afterAll(async () => {
@@ -43,8 +43,12 @@ describe('Test MongoRepository function', () => {
       new FakeEntity()
     ];
 
-    await expect(entityRepository.insert(entity)).rejects.toHaveLength(1);
-    await expect(entityRepository.insert(entities)).rejects.toHaveLength(2);
+    let promise = entityRepository.insert(entity);
+    await expect(promise).rejects.toBeInstanceOf(EntityValidationError);
+    await expect(promise).rejects.toHaveProperty('errors');
+    promise = entityRepository.insert(entities);
+    await expect(promise).rejects.toBeInstanceOf(EntityValidationError);
+    await expect(promise).rejects.toHaveProperty('errors');
   });
 
   it('should not persist extra fields', async () => {
@@ -58,7 +62,7 @@ describe('Test MongoRepository function', () => {
   it('should persist extra fields', async () => {
     const plainData = { _id: 'extra_field', field: '1', extraField: 1 };
     const entity = new FakeNonWhitelistEntity(plainData);
-    const entityExtraRepository = MongoRepository.from(FakeNonWhitelistEntity);
+    const entityExtraRepository = MongoRepository.create(FakeNonWhitelistEntity);
     await expect(entityExtraRepository.insert(entity)).resolves.not.toThrow();
     const insertedEntity = entityExtraRepository.collection.findOne({ _id: 'extra_field' });
     await expect(insertedEntity).resolves.toHaveProperty('extraField', plainData.extraField);

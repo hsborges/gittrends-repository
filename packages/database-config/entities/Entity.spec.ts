@@ -15,7 +15,7 @@ import {
   ValidateNested
 } from 'class-validator';
 
-import { entityToPlain, plainToEntity, validate, Entity } from '.';
+import { Entity } from '.';
 
 class FakeNestedEntity {
   @IsDefined()
@@ -63,16 +63,15 @@ class FakeEntity extends Entity {
 
 describe('Test entity transformations.', () => {
   it('should transform a plain object into a Entity instance', () => {
-    expect(plainToEntity(FakeEntity, { _id: '1' })).toBeInstanceOf(FakeEntity);
+    expect(new FakeEntity({ _id: '1' })).toBeInstanceOf(FakeEntity);
   });
 
   it('should create an "_id" field if not exists', () => {
-    expect(plainToEntity(FakeEntity, { id: '1' })).toHaveProperty('_id', '1');
+    expect(new FakeEntity({ id: '1' })).toHaveProperty('_id', '1');
   });
 
   it('should exclude extraneus values when transforming', () => {
-    const sample = { id: '1', other: 'value' };
-    const fakeEntity = plainToEntity(FakeEntity, sample);
+    const fakeEntity = new FakeEntity({ _id: '1', other: 'value' });
     expect(fakeEntity).not.toHaveProperty('id', 1);
     expect(fakeEntity).not.toHaveProperty('other', 'value');
   });
@@ -81,17 +80,20 @@ describe('Test entity transformations.', () => {
     const fake = new FakeEntity();
     fake._id = '1';
     fake.number = 2;
-    expect(entityToPlain(fake)).toStrictEqual({ _id: fake._id, number: fake.number });
+    expect(fake.toJSON()).toStrictEqual({ _id: fake._id, number: fake.number });
+    fake.date = new Date();
+    (fake as any).extra = 'extra';
+    expect(fake.toJSON()).toStrictEqual({ _id: fake._id, number: fake.number, date: fake.date });
   });
 
   it('should transform string timestamps into Date objects', () => {
-    const entity = plainToEntity(FakeEntity, { _id: '1', date: new Date().toISOString() });
+    const entity = new FakeEntity({ _id: '1', date: new Date().toISOString() });
     expect(entity.date).toBeDefined();
     expect(entity.date).toBeInstanceOf(Date);
   });
 
   it('should transform nested entities', () => {
-    const entity = plainToEntity(FakeEntity, {
+    const entity = new FakeEntity({
       _id: '1',
       nested: { _id: '1', key: 'value', date: new Date().toISOString() }
     });
@@ -101,21 +103,12 @@ describe('Test entity transformations.', () => {
   });
 
   it('should throw an error if required fields are not defined', () => {
-    expect(() => plainToEntity(FakeEntity, { number: 1 })).toThrowError();
-    expect(() => plainToEntity(FakeEntity, { _id: '1', nested: { key: 'value' } })).toThrowError();
+    expect(() => new FakeEntity({ number: 1 })).toThrowError();
+    expect(() => new FakeEntity({ _id: '1', nested: { key: 'value' } })).toThrowError();
   });
 
   it('should accept and multiple types on properties', () => {
-    expect(() => plainToEntity(FakeEntity, { _id: '1', object: { k: 'v' } })).not.toThrowError();
-    expect(() => plainToEntity(FakeEntity, { _id: '1', object: 'value' })).not.toThrowError();
-  });
-});
-
-describe('Test entity validation', () => {
-  it('should validate any entity', () => {
-    const entity = new FakeEntity();
-    expect(validate(entity)).toHaveLength(1);
-    entity._id = 'id';
-    expect(validate(entity)).toHaveLength(0);
+    expect(() => new FakeEntity({ _id: '1', object: { k: 'v' } })).not.toThrowError();
+    expect(() => new FakeEntity({ _id: '1', object: 'value' })).not.toThrowError();
   });
 });

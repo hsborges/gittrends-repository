@@ -19,6 +19,7 @@ import { Entity } from './Entity';
 export class CommitActor {
   @IsDefined()
   @IsDate()
+  @Type(() => Date)
   date!: Date;
 
   @IsOptional()

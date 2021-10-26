@@ -1,4 +1,4 @@
-import { plainToEntity, entityToPlain, TimelineEvent } from '.';
+import { TimelineEvent } from '.';
 
 describe('Test TimelineEvent entity.', () => {
   it('should accept additional properties', () => {
@@ -10,8 +10,8 @@ describe('Test TimelineEvent entity.', () => {
       extra: 'property'
     };
 
-    const event = plainToEntity(TimelineEvent, plainEvent);
+    const event = new TimelineEvent(plainEvent);
     expect(event).toHaveProperty('extra', 'property');
-    expect(entityToPlain(event)).toStrictEqual(plainEvent);
+    expect(event.toJSON()).toStrictEqual(plainEvent);
   });
 });
