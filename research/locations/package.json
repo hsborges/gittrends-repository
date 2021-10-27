@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../../packages/env-config",
+    "@types/mkdirp": "^1.0.2",
     "ts-node-dev": "^1.1.8",
     "tsconfig-paths": "^3.10.1"
   }

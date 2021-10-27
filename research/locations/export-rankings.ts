@@ -34,7 +34,7 @@ async function computeStargazersOrWatchersRanking(
       { $project: { _id: { $toLower: { $trim: { input: '$_id.user.location' } } } } },
       { $lookup: { from: 'locations', localField: '_id', foreignField: '_id', as: 'location' } },
       { $unwind: { path: '$location' } },
-      { $group: { _id: '$location.countryCode', count: { $sum: 1 } } },
+      { $group: { _id: '$location.country_code', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $project: { [type]: '$count' } }
     ])
@@ -68,7 +68,7 @@ async function computeIssuesOrPullsRanking(
       },
       { $unwind: { path: '$_id' } },
       { $replaceRoot: { newRoot: '$_id' } },
-      { $group: { _id: '$countryCode', count: { $sum: 1 } } },
+      { $group: { _id: '$country_code', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $project: { [type]: '$count' } }
     ])
