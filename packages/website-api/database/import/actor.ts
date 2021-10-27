@@ -1,12 +1,12 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Actor as MongoActor } from '@gittrends/database-config';
+import { ActorRepository } from '@gittrends/database-config';
 
 import { Actor } from '../types';
 
 export default async function (id: string): Promise<Actor | null> {
-  return MongoActor.collection.findOne<Actor>(
+  return ActorRepository.collection.findOne<Actor>(
     { _id: id },
     {
       projection: {

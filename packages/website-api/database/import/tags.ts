@@ -1,12 +1,12 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Tag as MongoTag } from '@gittrends/database-config';
+import { TagRepository } from '@gittrends/database-config';
 
 import { Tag } from '../types';
 
 export default async function (id: string): Promise<Tag[]> {
-  return MongoTag.collection
+  return TagRepository.collection
     .aggregate<Tag>([
       { $match: { repository: id } },
       { $lookup: { from: 'commits', localField: 'target', foreignField: '_id', as: 'commit' } },

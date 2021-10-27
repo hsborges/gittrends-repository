@@ -3,13 +3,13 @@
  */
 import { omit } from 'lodash';
 
-import { Repository as MongoRepository } from '@gittrends/database-config';
+import { RepositoryRepository } from '@gittrends/database-config';
 
 import { Repository, RepositoryMetadata } from '../types';
 import importActor from './actor';
 
 export default async function (id: string): Promise<Repository | null> {
-  const document = await MongoRepository.collection.findOne(
+  const document = await RepositoryRepository.collection.findOne(
     { _id: id },
     {
       projection: {

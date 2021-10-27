@@ -9,7 +9,12 @@ import { Option, program } from 'commander';
 import consola from 'consola';
 import { omit, pick } from 'lodash';
 
-import mongo, * as MongoModels from '@gittrends/database-config';
+import mongo, {
+  ActorRepository,
+  RepositoryRepository,
+  StargazerRepository,
+  TagRepository
+} from '@gittrends/database-config';
 
 import { version } from '../package.json';
 import * as dataImport from './import';
@@ -143,7 +148,7 @@ program
     }, options.workers);
 
     consola.info('Getting list of repositories to export ...');
-    await MongoModels.Repository.collection
+    await RepositoryRepository.collection
       .find({ '_metadata.repository': { $exists: true } })
       .sort(options.sort, options.order)
       .limit(options.limit || Number.MAX_SAFE_INTEGER)
@@ -153,8 +158,8 @@ program
       .then(async (ids) => {
         consola.info('Exporting database resources stats ...');
         await Promise.all(
-          [MongoModels.Repository, MongoModels.Actor, MongoModels.Stargazer, MongoModels.Tag].map(
-            (model) => model.collection.estimatedDocumentCount()
+          [RepositoryRepository, ActorRepository, StargazerRepository, TagRepository].map(
+            (DataRepository) => DataRepository.collection.estimatedDocumentCount()
           )
         ).then(([reposCount, actorsCount, stargazersCount, tagsCount]) =>
           prisma.$transaction([

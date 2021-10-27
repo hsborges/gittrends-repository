@@ -6,7 +6,7 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import utc from 'dayjs/plugin/utc';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 
-import * as MongoModels from '@gittrends/database-config';
+import { StargazerRepository } from '@gittrends/database-config';
 
 import { Stargazer, StargazerTimeseries } from '../types';
 import importActor from './actor';
@@ -18,7 +18,7 @@ dayjs.extend(utc);
 export default async function (
   id: string
 ): Promise<[StargazerTimeseries[], Stargazer | null, Stargazer | null]> {
-  const timeseries = await MongoModels.Stargazer.collection
+  const timeseries = await StargazerRepository.collection
     .aggregate([
       { $match: { '_id.repository': id } },
       {
@@ -38,8 +38,8 @@ export default async function (
 
   if (!(timeseries || []).length) return [[], null, null];
 
-  const [first, last]: [Stargazer | null, Stargazer | null] = await Promise.all([
-    MongoModels.Stargazer.collection
+  const [first, last] = await Promise.all([
+    StargazerRepository.collection
       .aggregate([
         { $match: { '_id.repository': id } },
         { $sort: { '_id.starred_at': 1 } },
@@ -55,7 +55,7 @@ export default async function (
           type: 'first'
         } as Stargazer;
       }),
-    MongoModels.Stargazer.collection
+    StargazerRepository.collection
       .aggregate([
         { $match: { '_id.repository': id } },
         { $sort: { '_id.starred_at': -1 } },
