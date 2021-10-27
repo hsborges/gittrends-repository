@@ -9,8 +9,8 @@ import client from './HttpClient';
 jest.mock('axios');
 
 const mokedAxios = mocked(axios, true);
-const timeout = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT ?? '15000', 10);
-const retries = parseInt(process.env.GITTRENDS_PROXY_RETRIES ?? '0', 5);
+const timeout = parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10);
+const retries = parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5);
 
 const actualAxios: typeof axios = jest.requireActual('axios');
 mokedAxios.CancelToken.source.mockImplementation(actualAxios.CancelToken.source);

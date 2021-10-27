@@ -13,9 +13,9 @@ import styles from './index.module.scss';
 type TAuthorizationResponse = { success?: boolean; login?: string };
 
 const URL = `https://github.com/login/oauth/authorize?${stringify({
-  client_id: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
-  ...(process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI
-    ? { redirect_uri: process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI }
+  client_id: process.env.NEXT_PUBLIC_GH_CLIENT_ID,
+  ...(process.env.NEXT_PUBLIC_GH_REDIRECT_URI
+    ? { redirect_uri: process.env.NEXT_PUBLIC_GH_REDIRECT_URI }
     : {}),
   scope: 'public_repo read:org read:user user:email'
 })}`;

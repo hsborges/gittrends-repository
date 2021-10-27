@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../gittrends.app.sqlite"
+  url      = env("GT_WEBSITE_API_PRISMA_URL")
 }
 
 model Actor {

@@ -109,11 +109,7 @@ const scheduler = async (options: SchedulerOptions) => {
     const queue = new Queue<T>(name, {
       connection: redis.scheduler,
       sharedConnection: true,
-      defaultJobOptions: {
-        attempts: parseInt(process.env.GITTRENDS_QUEUE_ATTEMPS ?? '3', 10),
-        removeOnComplete,
-        removeOnFail
-      }
+      defaultJobOptions: { attempts: 3, removeOnComplete, removeOnFail }
     });
 
     if (options.destroyQueue) {

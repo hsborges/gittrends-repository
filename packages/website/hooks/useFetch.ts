@@ -2,7 +2,7 @@ import axios from 'axios';
 import useSWR from 'swr';
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_GITTRENDS_WEBSITE_DATASOURCE_URL
+  baseURL: process.env.NEXT_PUBLIC_GT_WEBSITE_API_URL
 });
 
 export type FetchReturn<T = any, E = any> = {

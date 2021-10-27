@@ -45,20 +45,20 @@ export const authorize = async (req: Request, res: Response): Promise<void> => {
     });
 
   // send mail
-  await (process.env.GITTRENDS_MAIL_TO
+  await (process.env.GT_MAIL_TO
     ? nodemailer
         .createTransport({
-          host: process.env.GITTRENDS_MAIL_HOST,
-          port: process.env.GITTRENDS_MAIL_PORT,
-          secure: process.env.GITTRENDS_MAIL_PORT === '465',
+          host: process.env.GT_MAIL_HOST,
+          port: process.env.GT_MAIL_PORT,
+          secure: process.env.GT_MAIL_PORT === '465',
           auth: {
-            user: process.env.GITTRENDS_MAIL_USER,
-            pass: process.env.GITTRENDS_MAIL_PASS
+            user: process.env.GT_MAIL_USER,
+            pass: process.env.GT_MAIL_PASS
           }
         } as SMTPTransport.Options)
         .sendMail({
           from: `"GitTrends.app - ${ENV} Environment" <root@gittrends.app>`,
-          to: process.env.GITTRENDS_MAIL_TO,
+          to: process.env.GT_MAIL_TO,
           subject: `[GitTrends.app] - New access token donated from ${uInfo.login} ✔`,
           text: `Hey, we have a great news!  donated a token.\n
              Access token: ${token} (${type})\n

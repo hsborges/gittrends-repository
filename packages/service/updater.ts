@@ -16,9 +16,9 @@ import Cache from './updater/Cache';
 import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 
 async function proxyServerHealthCheck(): Promise<boolean> {
-  const protocol = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
-  const host = process.env.GITTRENDS_PROXY_HOST ?? 'localhost';
-  const port = parseInt(process.env.GITTRENDS_PROXY_PORT ?? '3000', 10);
+  const protocol = process.env.GT_PROXY_PROTOCOL ?? 'http';
+  const host = process.env.GT_PROXY_HOST ?? 'localhost';
+  const port = parseInt(process.env.GT_PROXY_PORT ?? '3000', 10);
   return axios
     .get(`${protocol}://${host}:${port}/status`, { timeout: 5000 })
     .then(() => true)
@@ -52,7 +52,7 @@ program
     const queue = new Worker<RepositoryQueue & UsersQueue>(
       options.type,
       async (job) => {
-        const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '1000', 10));
+        const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
 
         try {
           switch (options.type) {

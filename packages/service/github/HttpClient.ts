@@ -9,12 +9,12 @@ import compact from '../helpers/compact';
 import * as Errors from '../helpers/errors';
 import normalize from '../helpers/normalize';
 
-const PROTOCOL = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
-const HOST = process.env.GITTRENDS_PROXY_HOST ?? 'localhost';
-const PORT = parseInt(process.env.GITTRENDS_PROXY_PORT ?? '3000', 10);
-const TIMEOUT = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT ?? '15000', 10);
-const RETRIES = parseInt(process.env.GITTRENDS_PROXY_RETRIES ?? '0', 5);
-const USER_AGENT = process.env.GITTRENDS_PROXY_USER_AGENT ?? new UserAgent().random().toString();
+const PROTOCOL = process.env.GT_PROXY_PROTOCOL ?? 'http';
+const HOST = process.env.GT_PROXY_HOST ?? 'localhost';
+const PORT = parseInt(process.env.GT_PROXY_PORT ?? '3000', 10);
+const TIMEOUT = parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10);
+const RETRIES = parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5);
+const USER_AGENT = process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString();
 
 /* exports */
 export default async function (query: TObject): Promise<AxiosResponse> {

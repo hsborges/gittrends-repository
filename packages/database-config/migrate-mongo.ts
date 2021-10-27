@@ -1,17 +1,11 @@
 /*
  *  Author: Hudson S. Borges
  */
-const HOST = process.env.GITTRENDS_DATABASE_HOST ?? 'localhost';
-const PORT = process.env.GITTRENDS_DATABASE_PORT ?? '27017';
-const DB = process.env.GITTRENDS_DATABASE_DB ?? 'gittrends_app-development';
-const USERNAME = process.env.GITTRENDS_DATABASE_USERNAME;
-const PASSWORD = process.env.GITTRENDS_DATABASE_PASSWORD;
+import { CONNECTION_URL, DB } from './mongo-config';
 
 export = {
   mongodb: {
-    url: USERNAME
-      ? `mongodb://${USERNAME}:${PASSWORD}@${HOST}:${PORT}?authMechanism=DEFAULT`
-      : `mongodb://${HOST}:${PORT}`,
+    url: CONNECTION_URL,
     databaseName: DB,
     options: {
       useNewUrlParser: true,

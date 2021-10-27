@@ -25,5 +25,5 @@ createBullBoard({
 
 app.use('/', serverAdapter.getRouter());
 
-const port = process.env.GITTRENDS_QUEUE_BOARD_PORT || 8082;
+const port = process.env.PORT || 8082;
 app.listen(port, () => consola.success(`Bull board running on http://localhost:${port}`));

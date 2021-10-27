@@ -6,5 +6,5 @@ services:
     volumes:
       - ./mongo-backup:/backup
     environment:
-      MONGO_URI: 'mongodb://${GITTRENDS_DATABASE_USERNAME}:${GITTRENDS_DATABASE_PASSWORD}@mongo:27017/${GITTRENDS_DATABASE_DB}?authSource=admin'
-      CRON_SCHEDULE: ${GITTRENDS_MONGODUMP_CRON_SCHEDULE-0 1 * * 0}
+      MONGO_URI: 'mongodb://${GT_DATABASE_USERNAME}:${GT_DATABASE_PASSWORD}@mongo:27017/${GT_DATABASE_DB}?authSource=admin'
+      CRON_SCHEDULE: ${GT_MONGODUMP_CRON_SCHEDULE-0 1 * * 0}
