@@ -1,18 +1,17 @@
 {
   "name": "@gittrends/service",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "license": "MIT",
   "author": "Hudson Silva Borges <hudsonsilbor@gmail.com>",
   "scripts": {
     "build": "rm -rf dist && yarn tsc",
+    "jest": "node -r @gittrends/env-config node_modules/.bin/jest",
+    "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.ts'",
     "proxy-server": "github-proxy-server --api graphql --tokens ../../tokens.txt",
     "add-repositories": "node -r @gittrends/env-config dist/add-repositories.js",
     "schedule": "node -r @gittrends/env-config dist/scheduler.js",
     "update": "node -r @gittrends/env-config dist/updater.js",
-    "clinic-doctor": "clinic doctor -- node -r @gittrends/env-config dist/updater.js",
-    "clinic-bubbleprof": "clinic bubbleprof -- node -r @gittrends/env-config dist/updater.js",
-    "clinic-flame": "clinic flame -- node -r @gittrends/env-config dist/updater.js",
     "repos-stats": "node -r @gittrends/env-config dist/extra/repos-stats.js",
     "queue-board": "node -r @gittrends/env-config dist/extra/queue-board.js",
     "dev:schedule": "ts-node -r tsconfig-paths/register -r @gittrends/env-config -T scheduler.ts",
@@ -20,9 +19,9 @@
     "dev:update": "ts-node -r tsconfig-paths/register -r @gittrends/env-config -T updater.ts",
     "dev:queue-board": "ts-node -r tsconfig-paths/register -r @gittrends/env-config -T extra/queue-board.ts",
     "dev:repos-stats": "ts-node -r tsconfig-paths/register -r @gittrends/env-config -T extra/repos-stats.ts",
-    "test": "node -r @gittrends/env-config node_modules/.bin/jest",
-    "jest": "node -r @gittrends/env-config node_modules/.bin/jest",
-    "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.ts'"
+    "clinic-doctor": "clinic doctor -- node -r @gittrends/env-config dist/updater.js",
+    "clinic-bubbleprof": "clinic bubbleprof -- node -r @gittrends/env-config dist/updater.js",
+    "clinic-flame": "clinic flame -- node -r @gittrends/env-config dist/updater.js"
   },
   "dependencies": {
     "@bull-board/api": "^3.5.4",
