@@ -1,23 +1,24 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { map } from 'bluebird';
 import { Job } from 'bullmq';
 import { flatten, shuffle, truncate } from 'lodash';
-import { map } from 'bluebird';
 
+import { EntityValidationError } from '@gittrends/database-config';
+
+import Query from '../github/Query';
+import { ResourceUpdateError } from '../helpers/errors';
 import Cache from './Cache';
 import Updater from './Updater';
-import Query from '../github/Query';
-import RepositoryHander from './handlers/RepositoryHandler';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
-import StargazersHandler from './handlers/StargazersHandler';
-import WatchersHandler from './handlers/WatchersHandler';
-import TagsHandler from './handlers/TagsHandler';
-import ReleasesHandler from './handlers/ReleasesHandler';
 import DependenciesHander from './handlers/DependenciesHandler';
 import IssuesHander from './handlers/IssueHandler';
-import { ResourceUpdateError } from '../helpers/errors';
-import { ValidationError } from '@gittrends/database-config/dist/models/Model';
+import ReleasesHandler from './handlers/ReleasesHandler';
+import RepositoryHander from './handlers/RepositoryHandler';
+import StargazersHandler from './handlers/StargazersHandler';
+import TagsHandler from './handlers/TagsHandler';
+import WatchersHandler from './handlers/WatchersHandler';
 
 export type THandler =
   | 'dependencies'
@@ -63,7 +64,7 @@ export default class RepositoryUpdater implements Updater {
       .run()
       .then((data) => Promise.all(handlers.map((handler) => handler.update(data))))
       .catch(async (err) => {
-        if (isRetry || err instanceof ValidationError) throw err;
+        if (isRetry || err instanceof EntityValidationError) throw err;
 
         return map(shuffle(handlers), (handler) =>
           this.update([handler], true).catch((err) =>

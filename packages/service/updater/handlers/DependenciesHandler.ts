@@ -2,17 +2,17 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { ClientSession } from 'mongodb';
-import { Dependency, Repository } from '@gittrends/database-config';
+
+import { Dependency, DependencyRepository, RepositoryRepository } from '@gittrends/database-config';
 
 import Component from '../../github/Component';
-import RepositoryComponent from '../../github/components/RepositoryComponent';
 import DependencyGraphManifestComponent from '../../github/components/DependencyGraphManifestComponent';
-import AbstractRepositoryHandler from './AbstractRepositoryHandler';
+import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ResourceUpdateError, RetryableError } from '../../helpers/errors';
+import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TManifestMetadata = {
-  data: TObject;
+  data: Record<string, unknown>;
   component: DependencyGraphManifestComponent;
   hasNextPage: boolean;
   endCursor?: string;
@@ -47,19 +47,19 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     return pendingManifests.map((c) => c.component);
   }
 
-  async update(response: TObject, session?: ClientSession): Promise<void> {
-    return this._update(response, session).finally(
+  async update(response: Record<string, unknown>): Promise<void> {
+    return this._update(response).finally(
       () => (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2))
     );
   }
 
-  private async _update(response: TObject, session?: ClientSession): Promise<void> {
+  private async _update(response: Record<string, unknown>): Promise<void> {
     if (response && this.manifests.hasNextPage) {
       const data = super.parseResponse(response[this.alias[0]]);
 
       this.manifestsComponents.push(
         ...get(data, 'dependency_graph_manifests.nodes', []).map(
-          (manifest: TObject, index: number) => ({
+          (manifest: Record<string, unknown>, index: number) => ({
             data: manifest,
             component: new DependencyGraphManifestComponent(
               manifest.id as string,
@@ -81,7 +81,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
 
     if (response && !this.manifests.hasNextPage && this.hasNextPage) {
       const dependencies = this.getPendingManifests().reduce(
-        (dependencies: Array<TObject>, manifest) => {
+        (dependencies: Dependency[], manifest) => {
           const piPath = `${manifest.component.alias}.dependencies.page_info`;
           const pageInfo = get(response as unknown, piPath, {});
 
@@ -91,32 +91,31 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
           const nodes = get(response, `${manifest.component.alias}.dependencies.nodes`, []) as [];
 
           return dependencies.concat(
-            nodes.map((dependency: TObject) => ({
-              repository: this.id,
-              manifest: manifest.data.id,
-              filename: manifest.data.filename,
-              ...dependency
-            }))
+            nodes.map(
+              (dependency: Record<string, unknown>) =>
+                new Dependency({
+                  repository: this.id,
+                  manifest: manifest.data.id,
+                  filename: manifest.data.filename,
+                  ...dependency
+                })
+            )
           );
         },
         []
       );
 
       if (dependencies.length > 0) {
-        await Promise.all([
-          super.saveReferences(session),
-          Dependency.upsert(dependencies, session)
-        ]);
+        await Promise.all([super.saveReferences(), DependencyRepository.upsert(dependencies)]);
       }
 
       if (this.hasNextPage()) return;
     }
 
     if (this.isDone()) {
-      await Repository.collection.updateOne(
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
-        { session }
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );
     }
   }
@@ -131,7 +130,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
       const [pending] = this.getPendingManifests();
       pending.hasNextPage = false;
 
-      await Repository.collection.updateOne(
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.error`]: err.message } }
       );

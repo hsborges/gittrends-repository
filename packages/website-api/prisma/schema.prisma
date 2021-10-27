@@ -1,0 +1,122 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("GT_WEBSITE_API_PRISMA_URL")
+}
+
+model Actor {
+  id         String    @id
+  type       String?
+  login      String
+  name       String?
+  avatar_url String?
+  created_at DateTime?
+  updated_at DateTime?
+
+  Repositories Repository[]
+  Stargazer    Stargazer[]
+
+  @@map("actors")
+}
+
+model Repository {
+  id                         String    @id
+  name                       String
+  name_with_owner            String
+  homepage_url               String?
+  stargazers_count           Int?
+  watchers_count             Int?
+  forks_count                Int?
+  primary_language           String?
+  default_branch             String?
+  code_of_conduct            String?
+  license_info               String?
+  issues_count               Int?
+  pull_requests_count_count  Int?
+  releases_count             Int?
+  vulnerability_alerts_count Int?
+  created_at                 DateTime?
+  updated_at                 DateTime?
+  disk_usage                 Int?
+  open_graph_image_url       String?
+  description                String?
+  owner                      Actor?    @relation(fields: [owner_id], references: [id])
+  owner_id                   String?
+
+  metadata              RepositoryMetadata[]
+  stargazers            Stargazer[]
+  stargazers_timeseries StargazerTimeseries[]
+  tags                  Tag[]
+  topics                RepositoryTopic[]
+
+  @@index([name_with_owner])
+  @@map("repositories")
+}
+
+model RepositoryTopic {
+  repository    Repository @relation(fields: [repository_id], references: [id])
+  repository_id String
+  topic         String
+
+  @@id([repository_id, topic])
+  @@index([topic])
+  @@map("repositories_topics")
+}
+
+model RepositoryMetadata {
+  repository    Repository @relation(fields: [repository_id], references: [id])
+  repository_id String
+  resource      String
+  updated_at    DateTime?
+  end_cursor    String?
+
+  @@id([repository_id, resource])
+  @@map("repositories_metadata")
+}
+
+model Stargazer {
+  repository    Repository @relation(fields: [repository_id], references: [id])
+  repository_id String
+  user          Actor      @relation(fields: [user_id], references: [id])
+  user_id       String
+  starred_at    DateTime
+  type          String
+
+  @@id([repository_id, user_id, starred_at, type])
+  @@map("stargazers")
+}
+
+model StargazerTimeseries {
+  repository       Repository @relation(fields: [repository_id], references: [id])
+  repository_id    String
+  date             DateTime
+  stargazers_count Int?
+
+  @@id([repository_id, date])
+  @@map("stargazers_timeseries")
+}
+
+model Tag {
+  id             String     @id
+  repository     Repository @relation(fields: [repository_id], references: [id])
+  repository_id  String
+  name           String
+  committed_date DateTime?
+  additions      Int?
+  deletions      Int?
+  changed_files  Int?
+
+  @@index([repository_id])
+  @@map("tags")
+}
+
+model ResourceStat {
+  resource String @id
+  count    Int?
+
+  @@map("resources_stats")
+}

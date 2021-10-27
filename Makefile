@@ -31,11 +31,8 @@ build:
 		@yarn workspace @gittrends/database-config install
 		@yarn workspace @gittrends/database-config build
 		@echo "Building updater service"
-		@yarn workspace @gittrends/service install --force
+		@yarn workspace @gittrends/service install
 		@yarn workspace @gittrends/service build
-		@echo "Building website database exporter"
-		@yarn workspace @gittrends/exporter install --force
-		@yarn workspace @gittrends/exporter build
 		@echo "Building website"
 		@yarn workspace @gittrends/website install
 		@yarn workspace @gittrends/website build

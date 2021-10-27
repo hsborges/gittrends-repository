@@ -6,7 +6,8 @@
     "dev": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next dev",
     "build": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next build",
     "export": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next export",
-    "start": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next start"
+    "start": "node -r tsconfig-paths/register -r @gittrends/env-config ./node_modules/.bin/next start",
+    "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.{ts,tsx}'"
   },
   "dependencies": {
     "@ajna/pagination": "^1.4.13",
@@ -19,6 +20,7 @@
     "@fortawesome/free-regular-svg-icons": "^5.15.4",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.15",
+    "@gittrends/website-api": "file:../website-api",
     "add": "^2.0.6",
     "axios": "^0.21.4",
     "classnames": "^2.3.1",

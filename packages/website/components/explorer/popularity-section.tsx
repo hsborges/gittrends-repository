@@ -1,17 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import classnames from 'classnames';
 import { Box, Avatar, Select, Checkbox } from '@chakra-ui/react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { faArrowAltCircleUp, faStar, faTag } from '@fortawesome/free-solid-svg-icons';
-
-import numeral from 'numeral';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import classnames from 'classnames';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import localizedFormat from 'dayjs/plugin/localizedFormat';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import utc from 'dayjs/plugin/utc';
+import Link from 'next/link';
+import numeral from 'numeral';
+import React, { useEffect, useState } from 'react';
 import {
   FlexibleWidthXYPlot,
   VerticalGridLines,
@@ -22,18 +20,20 @@ import {
   Hint
 } from 'react-vis';
 
+import { Stargazer, StargazerTimeseries, Tag } from '@gittrends/website-api/database/types.d';
+
 import styles from './popularity-section.module.scss';
 
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
 dayjs.extend(customParseFormat);
 
-interface PopularitySectionAttributes extends React.HTMLAttributes<HTMLElement> {
-  timeseries: Record<string, number>;
-  first: Record<string, any>;
-  last: Record<string, any>;
-  tags?: Array<any>;
-}
+type PopularitySectionAttributes = React.HTMLAttributes<HTMLElement> & {
+  timeseries: StargazerTimeseries[];
+  first: Stargazer;
+  last: Stargazer;
+  tags?: Tag[];
+};
 
 export default function PopularitySection(props: PopularitySectionAttributes): JSX.Element {
   const [tags, setTags] = useState([]);
@@ -45,26 +45,27 @@ export default function PopularitySection(props: PopularitySectionAttributes): J
   const transformValue = (value) => (scaleType === 'linear' ? value : Math.log10(value));
   const transformLabel = (value) => (scaleType === 'linear' ? value : Math.pow(10, value));
 
-  const peak: { date: Date; total: number } = Object.entries(props.timeseries ?? {}).reduce(
+  const peak: { date: Date; total: number } = props.timeseries.reduce(
     (peak, value) => {
-      if (peak.total && peak.total > value[1]) return peak;
-      return { date: dayjs.utc(value[0], 'YYYY-MM-DD').toDate(), total: value[1] };
+      if (peak.total && peak.total > value.stargazers_count) return peak;
+      return { date: dayjs.utc(value.date).toDate(), total: value.stargazers_count };
     },
     { date: null, total: null }
   );
 
-  const gainedRecently = Object.entries(props.timeseries ?? {})
-    .filter(([d]) => dayjs.utc(d, 'YYYY-MM-DD').isSame(new Date(), 'year'))
-    .reduce((acc, v) => acc + v[1], 0);
+  const gainedRecently = props.timeseries
+    .filter((ts) => dayjs.utc(ts.date).isSame(new Date(), 'year'))
+    .reduce((acc, v) => acc + v.stargazers_count, 0);
 
   useEffect(() => {
     setTimeseries(
-      Object.entries(props.timeseries ?? {}).reduce(
+      props.timeseries.reduce(
         (acc, entry) =>
           acc.concat({
-            x: dayjs.utc(entry[0], 'YYYY-MM-DD').toDate().getTime(),
+            x: dayjs.utc(entry.date).toDate().getTime(),
             y: transformValue(
-              entry[1] + (seriesType === 'weekly' || !acc.length ? 0 : acc[acc.length - 1].y)
+              entry.stargazers_count +
+                (seriesType === 'weekly' || !acc.length ? 0 : acc[acc.length - 1].y)
             )
           }),
         []

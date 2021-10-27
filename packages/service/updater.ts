@@ -2,22 +2,23 @@
  *  Author: Hudson S. Borges
  */
 import axios from 'axios';
-import consola from 'consola';
 import { Worker, QueueScheduler } from 'bullmq';
 import { bold } from 'chalk';
 import { program, Option } from 'commander';
+import consola from 'consola';
+
 import mongoClient from '@gittrends/database-config';
 
 import { version } from './package.json';
 import * as redis from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
-import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 import Cache from './updater/Cache';
+import RepositoryUpdater, { THandler } from './updater/RepositoryUpdater';
 
 async function proxyServerHealthCheck(): Promise<boolean> {
-  const protocol = process.env.GITTRENDS_PROXY_PROTOCOL ?? 'http';
-  const host = process.env.GITTRENDS_PROXY_HOST ?? 'localhost';
-  const port = parseInt(process.env.GITTRENDS_PROXY_PORT ?? '3000', 10);
+  const protocol = process.env.GT_PROXY_PROTOCOL ?? 'http';
+  const host = process.env.GT_PROXY_HOST ?? 'localhost';
+  const port = parseInt(process.env.GT_PROXY_PORT ?? '3000', 10);
   return axios
     .get(`${protocol}://${host}:${port}/status`, { timeout: 5000 })
     .then(() => true)
@@ -51,7 +52,7 @@ program
     const queue = new Worker<RepositoryQueue & UsersQueue>(
       options.type,
       async (job) => {
-        const cache = new Cache(parseInt(process.env.GITTRENDS_CACHE_SIZE ?? '1000', 10));
+        const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
 
         try {
           switch (options.type) {
@@ -86,7 +87,10 @@ program
     );
 
     queue.on('progress', (job, progress) => {
-      const bar = new Array(Math.ceil(<number>progress / 10)).fill('=').join('').padEnd(10, '-');
+      const bar = new Array(Math.ceil((progress as number) / 10))
+        .fill('=')
+        .join('')
+        .padEnd(10, '-');
       const progressStr = `${progress}`.padStart(3);
       consola[progress === 100 ? 'success' : 'info'](`[${bar}|${progressStr}%] ${bold(job.id)}.`);
     });

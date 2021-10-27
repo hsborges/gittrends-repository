@@ -32,7 +32,7 @@ services:
       args:
         GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
         GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI}
-        GITTRENDS_WEBSITE_DATASOURCE_URL: ${GITTRENDS_WEBSITE_DATASOURCE_URL}
+        GT_WEBSITE_DATASOURCE_URL: ${GT_WEBSITE_DATASOURCE_URL}
     command: yarn start -H 0.0.0.0 --port 80
     restart: always
     environment:

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, HTMLAttributes } from 'react';
-import Link from 'next/link';
-import Cookie from 'universal-cookie';
-import classnames from 'classnames';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBullhorn, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import classnames from 'classnames';
+import Link from 'next/link';
+import React, { useState, useEffect, useMemo, HTMLAttributes } from 'react';
+import Cookie from 'universal-cookie';
 
 import styles from './DonateAlert.module.scss';
 

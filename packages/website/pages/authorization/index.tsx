@@ -1,22 +1,21 @@
 /* eslint-disable react/jsx-no-target-blank */
+import { faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faSmile } from '@fortawesome/free-regular-svg-icons';
+import { faThumbsUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { stringify } from 'querystring';
 import React from 'react';
 import Cookie from 'universal-cookie';
-import { stringify } from 'querystring';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faThumbsUp } from '@fortawesome/free-solid-svg-icons';
-import { faSmile } from '@fortawesome/free-regular-svg-icons';
-import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
 import Layout from '../../layouts/DefaultLayout';
-
 import styles from './index.module.scss';
 
 type TAuthorizationResponse = { success?: boolean; login?: string };
 
 const URL = `https://github.com/login/oauth/authorize?${stringify({
-  client_id: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
-  ...(process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI
-    ? { redirect_uri: process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI }
+  client_id: process.env.NEXT_PUBLIC_GH_CLIENT_ID,
+  ...(process.env.NEXT_PUBLIC_GH_REDIRECT_URI
+    ? { redirect_uri: process.env.NEXT_PUBLIC_GH_REDIRECT_URI }
     : {}),
   scope: 'public_repo read:org read:user user:email'
 })}`;

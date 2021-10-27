@@ -1,6 +1,6 @@
-import React from 'react';
-import classnames from 'classnames';
 import { CircularProgress, CircularProgressLabel } from '@chakra-ui/react';
+import classnames from 'classnames';
+import React from 'react';
 
 import styles from './UnderConstruction.module.scss';
 

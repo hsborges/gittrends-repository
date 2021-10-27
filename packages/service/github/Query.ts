@@ -1,12 +1,12 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { get } from 'lodash';
 import compress from 'graphql-query-compress';
+import { get } from 'lodash';
 
-import client from './HttpClient';
 import Component from './Component';
 import Fragment from './Fragment';
+import client from './HttpClient';
 
 function getGraphQLType(key: unknown) {
   switch (typeof key) {

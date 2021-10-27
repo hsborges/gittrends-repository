@@ -3,8 +3,8 @@
  */
 import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from './ActorFragment';
-import ReactableFragment from './ReactableFragment';
 import MilestoneFragment from './MilestoneFragment';
+import ReactableFragment from './ReactableFragment';
 
 export class IssueFragment extends Fragment {
   code = 'issue';

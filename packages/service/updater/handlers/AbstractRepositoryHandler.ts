@@ -1,24 +1,32 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { filter } from 'bluebird';
 import debug from 'debug';
-import { map, filter } from 'bluebird';
-import { ClientSession } from 'mongodb';
-import { Actor, Commit, Milestone } from '@gittrends/database-config';
 
+import {
+  Actor,
+  ActorRepository,
+  Commit,
+  CommitRepository,
+  Entity,
+  Milestone,
+  MilestoneRepository
+} from '@gittrends/database-config';
+
+import RepositoryComponent from '../../github/components/RepositoryComponent';
+import parser from '../../helpers/response-parser';
 import Cache from '../Cache';
 import Handler from '../Handler';
-import parser from '../../helpers/response-parser';
-import RepositoryComponent from '../../github/components/RepositoryComponent';
 
 export default abstract class AbstractRepositoryHandler extends Handler<RepositoryComponent> {
   readonly id: string;
   readonly meta: { id: string; resource: string };
 
   protected debug;
-  protected actors: TObject[] = [];
-  protected commits: TObject[] = [];
-  protected milestones: TObject[] = [];
+  protected actors: Actor[] = [];
+  protected commits: Commit[] = [];
+  protected milestones: Milestone[] = [];
 
   cache?: Cache;
   writeBatchSize: number;
@@ -30,28 +38,33 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     this.id = id;
     this.meta = { id, resource };
     this.batchSize = this.defaultBatchSize = 100;
-    this.writeBatchSize = parseInt(process.env.GITTRENDS_WRITE_BATCH_SIZE ?? '500', 10);
+    this.writeBatchSize = 1000;
     this.debug = debug(`gittrends:updater:handler:${resource}`);
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   protected parseResponse(response: any): any {
     const { data, actors, commits, milestones } = parser(response);
-    this.actors.push(...actors);
-    this.commits.push(...commits);
-    this.milestones.push(...milestones);
+    this.actors.push(...actors.map((actor) => new Actor(actor)));
+    this.commits.push(...commits.map((commit) => new Commit(commit)));
+    this.milestones.push(...milestones.map((milestone) => new Milestone(milestone)));
     return data;
   }
 
-  protected async saveReferences(session?: ClientSession): Promise<void> {
-    const [actors, commits, milestones] = await map(
-      [this.actors, this.commits, this.milestones],
-      (values) => filter(values, async (object) => !(await this.cache?.has(object)))
-    );
+  protected async saveReferences(): Promise<void> {
+    const _filter = async <T extends Entity>(entities: T[]) =>
+      await filter(entities, async (object) => !(await this.cache?.has(object)));
+
+    const [actors, commits, milestones] = await Promise.all([
+      _filter(this.actors),
+      _filter(this.commits),
+      _filter(this.milestones)
+    ]);
 
     await Promise.all([
-      Actor.insert(actors, session).then(() => this.cache?.add(actors)),
-      Commit.upsert(commits, session).then(() => this.cache?.add(commits)),
-      Milestone.upsert(milestones, session).then(() => this.cache?.add(milestones))
+      ActorRepository.insert(actors).then(() => this.cache?.add(actors)),
+      CommitRepository.upsert(commits).then(() => this.cache?.add(commits)),
+      MilestoneRepository.upsert(milestones).then(() => this.cache?.add(milestones))
     ]);
 
     this.actors = [];

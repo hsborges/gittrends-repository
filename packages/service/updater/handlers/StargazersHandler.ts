@@ -1,17 +1,16 @@
 /*
  *  Author: Hudson S. Borges
  */
-import consola from 'consola';
 import { get } from 'lodash';
-import { ClientSession } from 'mongodb';
-import { Stargazer, Repository } from '@gittrends/database-config';
+
+import { Stargazer, RepositoryRepository, StargazerRepository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import { InternalError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
+import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
-  stargazers: { items: TObject[]; hasNextPage: boolean; endCursor?: string };
+  stargazers: { items: Stargazer[]; hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
     super(id, alias, 'stargazers');
@@ -20,7 +19,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.stargazers.endCursor) {
-      this.stargazers.endCursor = await Repository.collection
+      this.stargazers.endCursor = await RepositoryRepository.collection
         .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
         .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
@@ -32,21 +31,18 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: TObject, session?: ClientSession): Promise<void> {
-    return this._update(response, session).finally(
+  async update(response: Record<string, unknown>): Promise<void> {
+    return this._update(response).finally(
       () => (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2))
     );
   }
 
-  private async _update(response: TObject, session?: ClientSession): Promise<void> {
+  private async _update(response: Record<string, unknown>): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
     this.stargazers.items.push(
-      ...get(data, '_stargazers.edges', []).map(
-        (stargazer: { user: string; starred_at: Date }) => ({
-          repository: this.id,
-          ...stargazer
-        })
+      ...get<{ user: string; starred_at: Date }[]>(data, '_stargazers.edges', []).map(
+        (stargazer) => new Stargazer({ repository: this.id, ...stargazer })
       )
     );
 
@@ -56,35 +52,32 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
     if (this.stargazers.items.length >= this.writeBatchSize || this.isDone()) {
       await Promise.all([
-        super.saveReferences(session),
-        Stargazer.upsert(this.stargazers.items, session)
+        super.saveReferences(),
+        StargazerRepository.upsert(this.stargazers.items)
       ]);
-      await Repository.collection.updateOne(
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } },
-        { session }
+        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } }
       );
       this.stargazers.items = [];
     }
 
     if (this.isDone()) {
-      await Repository.collection.updateOne(
+      await RepositoryRepository.collection.updateOne(
         { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } },
-        { session }
+        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );
     }
   }
 
   async error(err: Error): Promise<void> {
     if (err instanceof InternalError) {
-      consola.debug(`[StargazersHandler] InternalError detected: ${err.message}`);
       const data = super.parseResponse(get(err, `response.data.${this.alias as string}`));
 
       this.stargazers.items.push(
         ...get(data, '_stargazers.edges', [])
-          .filter((star: TObject) => star && star.starred_at)
-          .map((star: TObject) => ({ repository: this.id, ...star }))
+          .filter((star: Record<string, unknown>) => star && star.starred_at)
+          .map((star: Record<string, unknown>) => ({ repository: this.id, ...star }))
       );
 
       const pageInfo = get(data, '_stargazers.page_info');

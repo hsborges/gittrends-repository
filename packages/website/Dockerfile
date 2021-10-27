@@ -2,7 +2,7 @@ FROM node:14-alpine
 
 ARG GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
 ARG GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
-ARG GITTRENDS_WEBSITE_DATASOURCE_URL=${GITTRENDS_WEBSITE_DATASOURCE_URL}
+ARG GT_WEBSITE_DATASOURCE_URL=${GT_WEBSITE_DATASOURCE_URL}
 
 WORKDIR /app
 COPY . .
@@ -15,7 +15,7 @@ WORKDIR /app/packages/env-config
 RUN yarn install && yarn build
 
 WORKDIR /app/packages/website
-RUN yarn install --force && yarn build
+RUN yarn install && yarn build
 
 ENV PORT=80
 EXPOSE 80

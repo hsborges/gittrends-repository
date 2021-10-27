@@ -1,5 +1,3 @@
-import React, { useState, useRef, useEffect } from 'react';
-import classnames from 'classnames';
 import {
   Box,
   InputGroup,
@@ -11,11 +9,13 @@ import {
   MenuList,
   MenuItem
 } from '@chakra-ui/react';
-import { useDetectClickOutside } from 'react-detect-click-outside';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import classnames from 'classnames';
+import React, { useState, useRef, useEffect } from 'react';
+import { useDetectClickOutside } from 'react-detect-click-outside';
 
-import fetchProjects from '../hooks/searchProjects';
+import { useSearch } from '../hooks/api/useSearch';
 import styles from './Search.module.scss';
 
 interface ISearchProps extends React.HTMLAttributes<HTMLElement> {
@@ -28,7 +28,7 @@ interface ISearchProps extends React.HTMLAttributes<HTMLElement> {
 
 export default function Search(props?: ISearchProps): JSX.Element {
   const [query, setQuery] = useState<string>(props.defaultValue);
-  const { data } = fetchProjects({ query, sortBy: 'stargazers_count', order: 'desc' });
+  const { data } = useSearch({ query, sortBy: 'stargazers_count', order: 'desc', limit: 5 });
   const { placeholder, defaultValue, size, onSearch, ...aprops } = props;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function Search(props?: ISearchProps): JSX.Element {
   const inputGroupRef = useRef<HTMLDivElement>();
   const menuRef = useDetectClickOutside({ onTriggered: () => setIsOpen(false) });
 
-  useEffect(() => isOpen && !data?.repositories?.length && setIsOpen(false), [data, isOpen]);
+  useEffect(() => isOpen && !data?.repos?.length && setIsOpen(false), [data, isOpen]);
 
   return (
     <Menu isOpen={isOpen}>
@@ -81,7 +81,7 @@ export default function Search(props?: ISearchProps): JSX.Element {
           minWidth={inputGroupRef?.current?.offsetWidth ?? 100}
           onFocus={() => inputRef?.current?.focus()}
         >
-          {data?.repositories.slice(0, 5).map((repo) => (
+          {data?.repos.map((repo) => (
             <MenuItem
               key={`recommendation_${repo?.name_with_owner}`}
               onClick={() => {

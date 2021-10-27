@@ -1,9 +1,5 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */
-import React, { useState } from 'react';
-import Link from 'next/link';
-import classnames from 'classnames';
-import Router, { useRouter } from 'next/router';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGithub, faTwitter } from '@fortawesome/free-brands-svg-icons';
 import {
   faEnvelope,
   faThLarge,
@@ -13,13 +9,16 @@ import {
   faBars,
   faTimes
 } from '@fortawesome/free-solid-svg-icons';
-import { faGithub, faTwitter } from '@fortawesome/free-brands-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import classnames from 'classnames';
+import Link from 'next/link';
+import Router, { useRouter } from 'next/router';
+import React, { useState } from 'react';
 
-import Logo from './Logo';
-import Search from './Search';
 import BetaBadge from './BetaBadge';
-
+import Logo from './Logo';
 import styles from './NavigationBar.module.scss';
+import Search from './Search';
 
 type TMenuItem = { title: string; link: string; icon: any };
 type TMenu = Array<TMenuItem>;

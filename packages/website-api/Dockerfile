@@ -12,7 +12,7 @@ WORKDIR /app/packages/env-config
 RUN yarn install && yarn build
 
 WORKDIR /app/packages/website-api
-RUN yarn install --force && yarn build
+RUN yarn install && yarn build
 
 ENV PORT=80
 EXPOSE 80

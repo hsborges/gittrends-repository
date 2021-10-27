@@ -2,8 +2,11 @@
  *  Author: Hudson S. Borges
  */
 import { map } from 'bluebird';
-import lru from 'redis-lru';
 import hasher from 'node-object-hash';
+import lru from 'redis-lru';
+
+import { Entity } from '@gittrends/database-config';
+
 import * as redis from '../redis';
 
 export default class UpdaterCache {
@@ -18,13 +21,13 @@ export default class UpdaterCache {
     });
   }
 
-  async add(object: TObject | TObject[]): Promise<void> {
+  async add(object: Entity | Entity[]): Promise<void> {
     await map(Array.isArray(object) ? object : [object], (object) =>
-      this.cache.set(object.id ? (object.id as string) : this.hashSortCoerce.hash(object), 1)
+      this.cache.set(object._id ? object._id : this.hashSortCoerce.hash(object.toJSON()), 1)
     );
   }
 
-  async has(object: TObject): Promise<boolean> {
-    return !!(await this.cache.get((object.id as string) || this.hashSortCoerce.hash(object)));
+  async has(object: Entity): Promise<boolean> {
+    return !!(await this.cache.get(object._id || this.hashSortCoerce.hash(object.toJSON())));
   }
 }

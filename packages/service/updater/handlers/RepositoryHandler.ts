@@ -2,19 +2,17 @@
  *  Author: Hudson S. Borges
  */
 import { get } from 'lodash';
-import { ClientSession } from 'mongodb';
-import { Repository } from '@gittrends/database-config';
 
-import compact from '../../helpers/compact';
+import { Repository, RepositoryRepository } from '@gittrends/database-config';
+
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 import { ResourceUpdateError, NotFoundError } from '../../helpers/errors';
+import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
-type TObject = Record<string, unknown>;
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
 
 export default class RepositoryHander extends AbstractRepositoryHandler {
-  details?: TObject;
+  details?: Record<string, unknown>;
   languages: TMetadata;
   topics: TMetadata;
 
@@ -37,14 +35,14 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
       });
   }
 
-  async update(response: Record<string, unknown>, session?: ClientSession): Promise<void> {
+  async update(response: Record<string, unknown>): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
     if (!this.details) this.details = data;
 
-    this.languages.items.push(...(get(data, 'languages.edges', []) as []));
+    this.languages.items.push(...get<[]>(data, 'languages.edges', []));
     this.topics.items.push(
-      ...(get(data, 'repository_topics.nodes', []) as []).map((t: TObject) => t.topic)
+      ...get<[]>(data, 'repository_topics.nodes', []).map((t: Record<string, unknown>) => t.topic)
     );
 
     const langPageInfo = get(data, 'languages.page_info', {});
@@ -56,20 +54,19 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
     this.topics.endCursor = topicsPageInfo.end_cursor ?? this.topics.endCursor;
 
     if (this.isDone()) {
-      const current = await Repository.collection.findOne(
+      const current = await RepositoryRepository.collection.findOne(
         { _id: this.id },
-        { projection: { _metadata: 1 }, session }
+        { projection: { _metadata: 1 } }
       );
 
-      await super.saveReferences(session).then(() =>
-        Repository.upsert(
-          compact({
+      await super.saveReferences().then(() =>
+        RepositoryRepository.upsert(
+          new Repository({
             ...this.details,
             languages: this.languages.items,
             repository_topics: this.topics.items,
             _metadata: { ...current?._metadata, [this.meta.resource]: { updatedAt: new Date() } }
-          }),
-          session
+          })
         )
       );
     }
@@ -77,7 +74,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof NotFoundError) {
-      await Repository.collection.updateOne(
+      await RepositoryRepository.collection.updateOne(
         { _id: this.id },
         { $set: { '_metadata.removed': true, '_metadata.removed_at': new Date() } }
       );

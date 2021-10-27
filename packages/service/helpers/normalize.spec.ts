@@ -1,4 +1,5 @@
 import { isEqual } from 'lodash';
+
 import normalize from './normalize';
 
 describe('Normalize response received from GitHub API', () => {

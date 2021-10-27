@@ -1,17 +1,18 @@
 import axios from 'axios';
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import getPort from 'get-port';
 import { mocked } from 'ts-jest/utils';
+
 import { RequestError } from '../helpers/errors';
 import client from './HttpClient';
 
 jest.mock('axios');
 
 const mokedAxios = mocked(axios, true);
-const timeout = parseInt(process.env.GITTRENDS_PROXY_TIMEOUT ?? '15000', 10);
-const retries = parseInt(process.env.GITTRENDS_PROXY_RETRIES ?? '0', 5);
+const timeout = parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10);
+const retries = parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5);
 
-const actualAxios = <typeof axios>jest.requireActual('axios');
+const actualAxios: typeof axios = jest.requireActual('axios');
 mokedAxios.CancelToken.source.mockImplementation(actualAxios.CancelToken.source);
 
 let app: ReturnType<typeof express>;
@@ -21,7 +22,7 @@ beforeEach(async () => {
   const port = await getPort();
 
   app = express();
-  app.use(express.json());
+  app.use(express.json() as RequestHandler);
 
   mokedAxios.post.mockImplementation((url, data, options) => {
     expect(url).toBe('/graphql');
