@@ -31,13 +31,13 @@ build:
 		@yarn workspace @gittrends/database-config install
 		@yarn workspace @gittrends/database-config build
 		@echo "Building updater service"
-		@yarn workspace @gittrends/service install
+		@yarn workspace @gittrends/service install --force
 		@yarn workspace @gittrends/service build
 		@echo "Building website"
-		@yarn workspace @gittrends/website install
+		@yarn workspace @gittrends/website install --force
 		@yarn workspace @gittrends/website build
 		@echo "Building website-api"
-		@yarn workspace @gittrends/website-api install
+		@yarn workspace @gittrends/website-api install --force
 		@yarn workspace @gittrends/website-api build
 
 build-docker:

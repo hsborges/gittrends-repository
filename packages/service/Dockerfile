@@ -17,6 +17,6 @@ WORKDIR /app/packages/database-config
 RUN yarn install && yarn build
 
 WORKDIR /app/packages/service
-RUN yarn install && yarn build
+RUN yarn install --force && yarn build
 
 WORKDIR /app/packages/service
