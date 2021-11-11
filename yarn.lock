@@ -2075,10 +2075,9 @@
   dependencies:
     prop-types "^15.7.2"
 
-"@gittrends-app/github-proxy-server@^6.0.0":
+"@gittrends-app/github-proxy-server@gittrends-app/github-proxy-server":
   version "6.0.0"
-  resolved "https://npm.pkg.github.com/download/@gittrends-app/github-proxy-server/6.0.0/962558bd61f4da58dc2e6f20e046faa97815fcbb998050b51ce81e17d759916c#4e23e5ca9e523ec708366d66b6a5b9ece83ce82e"
-  integrity sha512-XcRNzHQZ9I1HCRXB0hF6kl8IM+G5i39ZHgXUjdy37D+/7CRujOPn4H10kIDGjmUCm6MYc6nWZaxmsUy9WTUKYw==
+  resolved "https://codeload.github.com/gittrends-app/github-proxy-server/tar.gz/05706ca915121c859f9787e34f8afd171357ab77"
   dependencies:
     bottleneck "^2.19.5"
     chalk "^4.1.2"
