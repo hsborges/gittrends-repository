@@ -2,8 +2,12 @@
  *  Author: Hudson S. Borges
  */
 import { config } from 'dotenv';
-import find from 'find-up';
+import findUp from 'findup-sync';
 
-config({ path: find.sync(`.env.${process.env.NODE_ENV || 'development'}`) });
-config({ path: find.sync('.env.local') });
-config({ path: find.sync('.env') });
+const find = function (file: string): string | undefined {
+  return findUp(file, { cwd: __dirname }) || undefined;
+};
+
+config({ path: find(`.env.${process.env.NODE_ENV || 'development'}`) });
+config({ path: find('.env.local') });
+config({ path: find('.env') });

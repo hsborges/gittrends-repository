@@ -18,7 +18,7 @@
     "class-validator": "^0.13.1",
     "es6-shim": "^0.35.6",
     "migrate-mongo": "^8.2.3",
-    "mongodb": "4.1.1",
+    "mongodb": "4.1.4",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
@@ -29,6 +29,6 @@
     "@types/mongodb": "^4.0.7",
     "jest": "^27.3.1",
     "ts-jest": "^27.0.7",
-    "ts-node": "^10.2.1"
+    "ts-node": "^10.4.0"
   }
 }

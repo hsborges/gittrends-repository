@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "dotenv": "^10.0.0",
-    "find-up": "^5.0.0"
+    "findup-sync": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/findup-sync": "^4.0.1"
   }
 }

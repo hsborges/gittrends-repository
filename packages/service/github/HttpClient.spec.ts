@@ -29,7 +29,7 @@ beforeEach(async () => {
     expect(data).toBeDefined();
     expect(options?.baseURL).toBeDefined();
     expect(options?.responseType).toBe('json');
-    expect(options?.headers['user-agent']).toBeDefined();
+    expect(options?.headers?.['user-agent']).toBeDefined();
     expect(options?.timeout).toBeDefined();
     return actualAxios.post(url, data, { ...options, baseURL: `http://localhost:${port}` });
   });
