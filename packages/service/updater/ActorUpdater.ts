@@ -7,8 +7,8 @@ import { chunk } from 'lodash';
 
 import { Actor, ActorRepository } from '@gittrends/database-config';
 
-import Query from '../github/Query';
 import ActorComponent from '../github/components/ActorComponent';
+import Query from '../github/Query';
 import { NotFoundError, RetryableError } from '../helpers/errors';
 import parser from '../helpers/response-parser';
 import Updater from './Updater';

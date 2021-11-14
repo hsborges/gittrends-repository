@@ -3,10 +3,10 @@
  */
 import { get } from 'lodash';
 
-import { Stargazer, RepositoryRepository, StargazerRepository } from '@gittrends/database-config';
+import { RepositoryRepository, Stargazer, StargazerRepository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { InternalError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
+import { InternalError, RetryableError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
@@ -93,7 +93,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
       }
     }
 
-    throw new ResourceUpdateError(err.message, err);
+    throw err;
   }
 
   hasNextPage(): boolean {

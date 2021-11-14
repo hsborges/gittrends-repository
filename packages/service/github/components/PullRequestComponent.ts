@@ -2,19 +2,12 @@
  *  Author: Hudson S. Borges
  */
 import Fragment from '../Fragment';
-import IssueFragment from '../fragments/IssueFragment';
-import PullRequestCommitCommentThreadFragment from '../fragments/PullRequestCommitCommentThreadFragment';
-import PullRequestCommit from '../fragments/PullRequestCommitFragment';
-import PullRequestFragment from '../fragments/PullRequestFragment';
-import PullRequestReviewFragment from '../fragments/PullRequestReviewFragment';
-import PullRequestReviewThreadFragment from '../fragments/PullRequestReviewThreadFragment';
-import PullRequestRevisionMarkerFragment from '../fragments/PullRequestRevisionMarkerFragment';
+import AutomaticBaseChangeFailedEvent from '../fragments/events/AutomaticBaseChangeFailedEvent';
+import AutomaticBaseChangeSucceededEvent from '../fragments/events/AutomaticBaseChangeSucceededEvent';
 import AutoMergeDisabledEvent from '../fragments/events/AutoMergeDisabledEvent';
 import AutoMergeEnabledEvent from '../fragments/events/AutoMergeEnabledEvent';
 import AutoRebaseEnabledEvent from '../fragments/events/AutoRebaseEnabledEvent';
 import AutoSquashEnabledEvent from '../fragments/events/AutoSquashEnabledEvent';
-import AutomaticBaseChangeFailedEvent from '../fragments/events/AutomaticBaseChangeFailedEvent';
-import AutomaticBaseChangeSucceededEvent from '../fragments/events/AutomaticBaseChangeSucceededEvent';
 import BaseRefChangedEvent from '../fragments/events/BaseRefChangedEvent';
 import BaseRefDeletedEvent from '../fragments/events/BaseRefDeletedEvent';
 import BaseRefForcePushedEvent from '../fragments/events/BaseRefForcePushedEvent';
@@ -27,8 +20,15 @@ import HeadRefRestoredEvent from '../fragments/events/HeadRefRestoredEvent';
 import MergedEvent from '../fragments/events/MergedEvent';
 import ReadyForReviewEvent from '../fragments/events/ReadyForReviewEvent';
 import ReviewDismissedEvent from '../fragments/events/ReviewDismissedEvent';
-import ReviewRequestRemovedEvent from '../fragments/events/ReviewRequestRemovedEvent';
 import ReviewRequestedEvent from '../fragments/events/ReviewRequestedEvent';
+import ReviewRequestRemovedEvent from '../fragments/events/ReviewRequestRemovedEvent';
+import IssueFragment from '../fragments/IssueFragment';
+import PullRequestCommitCommentThreadFragment from '../fragments/PullRequestCommitCommentThreadFragment';
+import PullRequestCommit from '../fragments/PullRequestCommitFragment';
+import PullRequestFragment from '../fragments/PullRequestFragment';
+import PullRequestReviewFragment from '../fragments/PullRequestReviewFragment';
+import PullRequestReviewThreadFragment from '../fragments/PullRequestReviewThreadFragment';
+import PullRequestRevisionMarkerFragment from '../fragments/PullRequestRevisionMarkerFragment';
 import IssueComponent from './IssueComponent';
 
 export default class PullRequestComponent extends IssueComponent {
@@ -67,10 +67,10 @@ export default class PullRequestComponent extends IssueComponent {
   get fragments(): Fragment[] {
     const fragments = super.fragments;
 
-    if (this.includes.details.include)
+    if (this.includes.details)
       fragments.splice(fragments.indexOf(IssueFragment), 1, PullRequestFragment);
 
-    if (this.includes.timeline.include) {
+    if (this.includes.timeline) {
       fragments.push(
         AutomaticBaseChangeFailedEvent,
         AutomaticBaseChangeSucceededEvent,
@@ -104,8 +104,7 @@ export default class PullRequestComponent extends IssueComponent {
   }
 
   includeDetails(include: boolean): this {
-    this.includes.details.include = include;
-    this.includes.details.textFragment = include ? `...${PullRequestFragment.code}` : '';
+    this.includes.details = include && { textFragment: `...${PullRequestFragment.code}` };
     return this;
   }
 }

@@ -6,11 +6,8 @@ import Fragment from '../Fragment';
 import ActorFragment from '../fragments/ActorFragment';
 
 export default class ActorComponent extends Component {
-  readonly id: string;
-
   constructor(id: string) {
-    super('actor');
-    this.id = id;
+    super(id, 'actor');
   }
 
   get fragments(): Fragment[] {

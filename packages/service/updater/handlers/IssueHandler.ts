@@ -20,7 +20,7 @@ import IssueComponent from '../../github/components/IssueComponent';
 import PullRequestComponent from '../../github/components/PullRequestComponent';
 import ReactionComponent from '../../github/components/ReactionComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { RetryableError, ForbiddenError, ResourceUpdateError } from '../../helpers/errors';
+import { ForbiddenError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TComponent = IssueComponent | PullRequestComponent;
@@ -138,7 +138,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       );
     }
 
-    throw new ResourceUpdateError('Invalid condition reached!');
+    throw new ResourceUpdateError(new Error('Invalid condition reached!'));
   }
 
   async update(response: Record<string, unknown>): Promise<void> {
@@ -276,7 +276,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       }
 
       default:
-        throw new ResourceUpdateError('Unknown condition reached!');
+        throw new ResourceUpdateError(new Error('Unknown condition reached!'));
     }
 
     const issues = this.issues.items.map((issue) => {
@@ -359,7 +359,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       }
     }
 
-    throw new ResourceUpdateError(err.message, err);
+    throw err;
   }
 
   get pendingIssues(): TIssueMetadata[] {

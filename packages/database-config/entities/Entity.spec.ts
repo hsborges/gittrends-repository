@@ -57,7 +57,7 @@ class FakeEntity extends Entity {
 
   @IsOptional()
   @IsObject()
-  @ValidateIf((o, v) => !isString(v))
+  @ValidateIf((_, v) => !isString(v))
   object?: Record<string, any> | string;
 }
 

@@ -56,7 +56,7 @@ export class Dependency extends Entity {
 
   @IsOptional()
   @IsObject()
-  @ValidateIf((o, v) => !isString(v))
+  @ValidateIf((_, v) => !isString(v))
   target_repository?:
     | {
         id: string;

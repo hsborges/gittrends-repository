@@ -3,14 +3,13 @@
  */
 import { map } from 'bluebird';
 import { Job } from 'bullmq';
-import { flatten, shuffle, truncate } from 'lodash';
+import { flatten, shuffle } from 'lodash';
 
 import { EntityValidationError } from '@gittrends/database-config';
 
 import Query from '../github/Query';
 import { ResourceUpdateError } from '../helpers/errors';
 import Cache from './Cache';
-import Updater from './Updater';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
 import DependenciesHander from './handlers/DependenciesHandler';
 import IssuesHander from './handlers/IssueHandler';
@@ -19,6 +18,7 @@ import RepositoryHander from './handlers/RepositoryHandler';
 import StargazersHandler from './handlers/StargazersHandler';
 import TagsHandler from './handlers/TagsHandler';
 import WatchersHandler from './handlers/WatchersHandler';
+import Updater from './Updater';
 
 export type THandler =
   | 'dependencies'
@@ -90,31 +90,9 @@ export default class RepositoryUpdater implements Updater {
       .then(() => {
         if (isRetry) return;
         if (this.pendingHandlers.length) return this.update(this.pendingHandlers);
-        if (this.errors.length === 1) {
-          throw new ResourceUpdateError(
-            truncate(this.errors[0].error.message, { length: 144 }),
-            this.errors[0].error
-          );
-        }
-        if (this.errors.length > 1) {
-          const error = new ResourceUpdateError(
-            JSON.stringify(
-              this.errors.reduce(
-                (m, e) => ({
-                  ...m,
-                  [e.handler.constructor.name]: truncate(e.error.message, { length: 144 })
-                }),
-                {}
-              )
-            )
-          );
-
-          error.stack = this.errors
-            .map((error) => `From previous error: ${error.error.stack}`)
-            .join('\n');
-
-          throw error;
-        }
+        if (this.errors.length === 0) return;
+        else if (this.errors.length === 1) throw this.errors[0].error;
+        else throw new ResourceUpdateError(this.errors.map((e) => e.error));
       });
   }
 

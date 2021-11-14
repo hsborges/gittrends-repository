@@ -9,8 +9,8 @@ import { chain, get, min, uniqBy } from 'lodash';
 import mongoClient, { Actor, Repository } from '@gittrends/database-config';
 import { ActorRepository, RepositoryRepository } from '@gittrends/database-config';
 
-import Query from './github/Query';
 import SearchComponent from './github/components/SearchComponent';
+import Query from './github/Query';
 import { BadGatewayError } from './helpers/errors';
 import parser from './helpers/response-parser';
 import { version } from './package.json';
@@ -62,28 +62,27 @@ async function search(
 
         if (get(data, 'search.page_info.has_next_page')) {
           after = get(data, 'search.page_info.end_cursor');
+          hasMoreRepos = true;
         } else {
           after = null;
           const newMaxStargazers = min(repos.map((r) => r.stargazers_count as number));
           if (newMaxStargazers != maxStargazers) maxStargazers = newMaxStargazers;
           else if (maxStargazers) maxStargazers -= 1;
+
+          hasMoreRepos =
+            (opts?.minStargazers ?? 0) <= (maxStargazers ?? Number.MAX_SAFE_INTEGER) &&
+            newRepos.length > 0;
         }
 
         total = 100;
         actors = uniqBy(actors, 'id');
         repos = uniqBy(repos, 'id');
-
-        hasMoreRepos = opts?.name
-          ? false
-          : (opts?.minStargazers ?? 0) <= (maxStargazers ?? Number.MAX_SAFE_INTEGER) &&
-            newRepos.length > 0 &&
-            repos.length < limit;
       })
       .catch((err) => {
         if (err instanceof BadGatewayError) return (total = Math.ceil(total / 2));
         throw err;
       });
-  } while (hasMoreRepos);
+  } while (!opts?.name && repos.length < limit && hasMoreRepos);
 
   return {
     repositories: chain(repos).compact().sortBy('stargazers_count', 'desc').value(),

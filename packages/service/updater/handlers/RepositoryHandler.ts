@@ -6,7 +6,7 @@ import { get } from 'lodash';
 import { Repository, RepositoryRepository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { ResourceUpdateError, NotFoundError } from '../../helpers/errors';
+import { NotFoundError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
@@ -81,7 +81,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
       return;
     }
 
-    throw new ResourceUpdateError(err.message, err);
+    throw err;
   }
 
   hasNextPage(): boolean {

@@ -54,7 +54,7 @@ export class PullRequest extends Issue {
 
   @IsOptional()
   @IsObject()
-  @ValidateIf((o, v) => !isString(v))
+  @ValidateIf((_, v) => !isString(v))
   head_ref?: { name?: string; target?: string } | string;
 
   @IsOptional()

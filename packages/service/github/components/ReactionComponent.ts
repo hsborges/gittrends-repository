@@ -6,13 +6,8 @@ import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from '../fragments/ActorFragment';
 
 export default class ReactionComponent extends Component {
-  readonly id: string;
-  readonly include: { include: boolean; textFragment: string };
-
   constructor(id: string, alias = 'reactable') {
-    super(alias);
-    this.id = id;
-    this.include = { include: false, textFragment: '' };
+    super(id, alias);
   }
 
   get fragments(): Fragment[] {
@@ -24,27 +19,30 @@ export default class ReactionComponent extends Component {
     { first = 100, after }: { first: number; after?: string }
   ): this {
     const args = super.argsToString({ first, after });
-    this.include.include = include;
-    this.include.textFragment = include
-      ? `
-      ... on Reactable {
-        reactions(${args}, orderBy: { field: CREATED_AT, direction: ASC }) {
-          pageInfo { hasNextPage endCursor }
-          nodes { content createdAt id user { ...${SimplifiedActorFragment.code} } }
+    this.includes.reactions = include && {
+      textFragment: `
+        ... on Reactable {
+          reactions(${args}, orderBy: { field: CREATED_AT, direction: ASC }) {
+            pageInfo { hasNextPage endCursor }
+            nodes { content createdAt id user { ...${SimplifiedActorFragment.code} } }
+          }
         }
-      }
-    `
-      : '';
+      `,
+      first,
+      after
+    };
 
     return this;
   }
 
   toString(): string {
-    return `
-      ${this.alias}:node(id: "${this.id}") {
-        type:__typename
-        ${this.include.textFragment}
-      }
-    `;
+    return this.includes.reactions
+      ? `
+          ${this.alias}:node(id: "${this.id}") {
+            type:__typename
+            ${this.includes.reactions.textFragment}
+          }
+        `
+      : '';
   }
 }

@@ -1,6 +1,8 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { get } from 'lodash';
+
 import Component from '../Component';
 import Fragment from '../Fragment';
 import { SimplifiedRepositoryFragment } from '../fragments/RepositoryFragment';
@@ -15,15 +17,9 @@ type Query = {
 };
 
 export default class SearchComponent extends Component {
-  private after: string | undefined;
-  private first = 100;
-  private query: Query;
-
   constructor(query?: Query, after?: string, first?: number) {
-    super('search');
-    this.query = query ?? {};
-    this.after = after;
-    this.first = first || this.first;
+    super(null, 'search');
+    this.includes.search = { textFragment: '', first, after, query: query ?? {} };
   }
 
   get fragments(): Fragment[] {
@@ -31,15 +27,21 @@ export default class SearchComponent extends Component {
   }
 
   toString(): string {
-    let query = `stars:${this.query.minStargazers ?? 0}..${this.query.maxStargazers ?? '*'}`;
+    const searchQuery = get(this.includes, 'search.query', {}) as Query;
 
-    if (this.query.sort)
-      query += ` sort:${this.query.sort}${this.query.order ? `-${this.query.order}` : ''}`;
+    let query = `stars:${searchQuery.minStargazers ?? 0}..${searchQuery.maxStargazers ?? '*'}`;
 
-    if (this.query.language) query += ` language:${this.query.language}`;
-    if (this.query.name) query += ` repo:${this.query.name}`;
+    if (searchQuery.sort)
+      query += ` sort:${searchQuery.sort}${searchQuery.order ? `-${searchQuery.order}` : ''}`;
 
-    const args = super.argsToString({ first: this.first, after: this.after, query });
+    if (searchQuery.language) query += ` language:${searchQuery.language}`;
+    if (searchQuery.name) query += ` repo:${searchQuery.name}`;
+
+    const args = super.argsToString({
+      first: get(this.includes, 'search.first', 100),
+      after: get(this.includes, 'search.after'),
+      query
+    });
 
     return `
       ${this.alias}:search(${args}, type: REPOSITORY) {

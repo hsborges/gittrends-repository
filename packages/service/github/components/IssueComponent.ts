@@ -4,8 +4,6 @@
 import Component from '../Component';
 import Fragment from '../Fragment';
 import { SimplifiedActorFragment } from '../fragments/ActorFragment';
-import IssueCommentFragment from '../fragments/IssueCommentFragment';
-import IssueFragment from '../fragments/IssueFragment';
 import AddedToProjectEvent from '../fragments/events/AddedToProjectEvent';
 import AssignedEvent from '../fragments/events/AssignedEvent';
 import ClosedEvent from '../fragments/events/ClosedEvent';
@@ -35,39 +33,29 @@ import UnmarkedAsDuplicateEvent from '../fragments/events/UnmarkedAsDuplicateEve
 import UnpinnedEvent from '../fragments/events/UnpinnedEvent';
 import UnsubscribedEvent from '../fragments/events/UnsubscribedEvent';
 import UserBlockedEvent from '../fragments/events/UserBlockedEvent';
+import IssueCommentFragment from '../fragments/IssueCommentFragment';
+import IssueFragment from '../fragments/IssueFragment';
 
 type TOptions = { first: number; after?: string; alias?: string };
 
 export default class IssueComponent extends Component {
-  readonly id: string;
   protected componentName: string;
   protected extraTimelineEvents: string;
-  protected includes: Record<string, { include: boolean; textFragment: string }>;
 
   constructor(id: string, alias = 'issue') {
-    super(alias);
-    this.id = id;
+    super(id, alias);
     this.componentName = 'Issue';
     this.extraTimelineEvents = '';
-
-    this.includes = {
-      details: { include: true, textFragment: '' },
-      assignees: { include: true, textFragment: '' },
-      labels: { include: true, textFragment: '' },
-      participants: { include: true, textFragment: '' },
-      timeline: { include: true, textFragment: '' }
-    };
   }
 
   get fragments(): Fragment[] {
     const fragments = new Set<Fragment>();
 
-    if (this.includes.details.include) fragments.add(IssueFragment);
+    if (this.includes.details) fragments.add(IssueFragment);
+    if (this.includes.assignees) fragments.add(SimplifiedActorFragment);
+    if (this.includes.participants) fragments.add(SimplifiedActorFragment);
 
-    if (this.includes.assignees.include) fragments.add(SimplifiedActorFragment);
-    if (this.includes.participants.include) fragments.add(SimplifiedActorFragment);
-
-    if (this.includes.timeline.include) {
+    if (this.includes.timeline) {
       fragments
         .add(AddedToProjectEvent)
         .add(AssignedEvent)
@@ -105,34 +93,35 @@ export default class IssueComponent extends Component {
   }
 
   includeDetails(include = true): this {
-    this.includes.details.include = include;
-    this.includes.details.textFragment = include ? `...${IssueFragment.code}` : '';
+    this.includes.details = include && { textFragment: `...${IssueFragment.code}` };
     return this;
   }
 
   includeAssignees(include = true, { first = 100, after, alias = 'assignees' }: TOptions): this {
-    this.includes.assignees.include = include;
-    this.includes.assignees.textFragment = include
-      ? `
-          ${alias}:assignees(${super.argsToString({ first, after })}) {
-            pageInfo { hasNextPage endCursor }
-            nodes { ...${SimplifiedActorFragment.code} }
-          }
-        `
-      : '';
+    this.includes.assignees = include && {
+      textFragment: `
+        ${alias}:assignees(${super.argsToString({ first, after })}) {
+          pageInfo { hasNextPage endCursor }
+          nodes { ...${SimplifiedActorFragment.code} }
+        }
+      `,
+      first,
+      after
+    };
     return this;
   }
 
   includeLabels(include = true, { first = 100, after, alias = 'labels' }: TOptions): this {
-    this.includes.labels.include = include;
-    this.includes.labels.textFragment = include
-      ? `
-          ${alias}:labels(${super.argsToString({ first, after })}) {
-            pageInfo { hasNextPage endCursor }
-            nodes { name }
-          }
-        `
-      : '';
+    this.includes.labels = include && {
+      textFragment: `
+        ${alias}:labels(${super.argsToString({ first, after })}) {
+          pageInfo { hasNextPage endCursor }
+          nodes { name }
+        }
+      `,
+      first,
+      after
+    };
     return this;
   }
 
@@ -140,68 +129,68 @@ export default class IssueComponent extends Component {
     include = true,
     { first = 100, after, alias = 'participants' }: TOptions
   ): this {
-    this.includes.participants.include = include;
-    this.includes.participants.textFragment = include
-      ? `
-          ${alias}:participants(${super.argsToString({ first, after })}) {
-            nodes { ...${SimplifiedActorFragment.code} }
-          }
-        `
-      : '';
+    this.includes.participants = include && {
+      textFragment: `
+        ${alias}:participants(${super.argsToString({ first, after })}) {
+          nodes { ...${SimplifiedActorFragment.code} }
+        }
+      `,
+      first,
+      after
+    };
     return this;
   }
 
   includeTimeline(include = true, { first = 100, after, alias = 'timeline' }: TOptions): this {
-    this.includes.timeline.include = include;
-    this.includes.timeline.textFragment = include
-      ? `
-          ${alias}:timelineItems(${super.argsToString({ first, after })}) {
-            pageInfo { hasNextPage endCursor }
-            nodes {
-              type:__typename
-              ... on Node { id }
-              ... on AddedToProjectEvent { ...${AddedToProjectEvent.code} }
-              ... on AssignedEvent { ...${AssignedEvent.code} }
-              ... on ClosedEvent { ...${ClosedEvent.code} }
-              ... on CommentDeletedEvent { ...${CommentDeletedEvent.code} }
-              ... on ConnectedEvent { ...${ConnectedEvent.code} }
-              ... on ConvertedNoteToIssueEvent { ...${ConvertedNoteToIssueEvent.code} }
-              ... on CrossReferencedEvent { ...${CrossReferencedEvent.code} }
-              ... on DemilestonedEvent { ...${DemilestonedEvent.code} }
-              ... on DisconnectedEvent { ...${DisconnectedEvent.code} }
-              ... on IssueComment { ...${IssueCommentFragment.code} }
-              ... on LabeledEvent { ...${LabeledEvent.code} }
-              ... on LockedEvent { ...${LockedEvent.code} }
-              ... on MarkedAsDuplicateEvent { ...${MarkedAsDuplicateEvent.code} }
-              ... on MentionedEvent { ...${MentionedEvent.code} }
-              ... on MilestonedEvent { ...${MilestonedEvent.code} }
-              ... on MovedColumnsInProjectEvent { ...${MovedColumnsInProjectEvent.code} }
-              ... on PinnedEvent { ...${PinnedEvent.code} }
-              ... on ReferencedEvent { ...${ReferencedEvent.code} }
-              ... on RemovedFromProjectEvent { ...${RemovedFromProjectEvent.code} }
-              ... on RenamedTitleEvent { ...${RenamedTitleEvent.code} }
-              ... on ReopenedEvent { ...${ReopenedEvent.code} }
-              ... on SubscribedEvent { ...${SubscribedEvent.code} }
-              ... on TransferredEvent { ...${TransferredEvent.code} }
-              ... on UnassignedEvent { ...${UnassignedEvent.code} }
-              ... on UnlabeledEvent { ...${UnlabeledEvent.code} }
-              ... on UnlockedEvent { ...${UnlockedEvent.code} }
-              ... on UnmarkedAsDuplicateEvent { ...${UnmarkedAsDuplicateEvent.code} }
-              ... on UnpinnedEvent { ...${UnpinnedEvent.code} }
-              ... on UnsubscribedEvent { ...${UnsubscribedEvent.code} }
-              ... on UserBlockedEvent { ...${UserBlockedEvent.code} }
-              ${this.extraTimelineEvents}
-            }
+    this.includes.timeline = include && {
+      textFragment: `
+        ${alias}:timelineItems(${super.argsToString({ first, after })}) {
+          pageInfo { hasNextPage endCursor }
+          nodes {
+            type:__typename
+            ... on Node { id }
+            ... on AddedToProjectEvent { ...${AddedToProjectEvent.code} }
+            ... on AssignedEvent { ...${AssignedEvent.code} }
+            ... on ClosedEvent { ...${ClosedEvent.code} }
+            ... on CommentDeletedEvent { ...${CommentDeletedEvent.code} }
+            ... on ConnectedEvent { ...${ConnectedEvent.code} }
+            ... on ConvertedNoteToIssueEvent { ...${ConvertedNoteToIssueEvent.code} }
+            ... on CrossReferencedEvent { ...${CrossReferencedEvent.code} }
+            ... on DemilestonedEvent { ...${DemilestonedEvent.code} }
+            ... on DisconnectedEvent { ...${DisconnectedEvent.code} }
+            ... on IssueComment { ...${IssueCommentFragment.code} }
+            ... on LabeledEvent { ...${LabeledEvent.code} }
+            ... on LockedEvent { ...${LockedEvent.code} }
+            ... on MarkedAsDuplicateEvent { ...${MarkedAsDuplicateEvent.code} }
+            ... on MentionedEvent { ...${MentionedEvent.code} }
+            ... on MilestonedEvent { ...${MilestonedEvent.code} }
+            ... on MovedColumnsInProjectEvent { ...${MovedColumnsInProjectEvent.code} }
+            ... on PinnedEvent { ...${PinnedEvent.code} }
+            ... on ReferencedEvent { ...${ReferencedEvent.code} }
+            ... on RemovedFromProjectEvent { ...${RemovedFromProjectEvent.code} }
+            ... on RenamedTitleEvent { ...${RenamedTitleEvent.code} }
+            ... on ReopenedEvent { ...${ReopenedEvent.code} }
+            ... on SubscribedEvent { ...${SubscribedEvent.code} }
+            ... on TransferredEvent { ...${TransferredEvent.code} }
+            ... on UnassignedEvent { ...${UnassignedEvent.code} }
+            ... on UnlabeledEvent { ...${UnlabeledEvent.code} }
+            ... on UnlockedEvent { ...${UnlockedEvent.code} }
+            ... on UnmarkedAsDuplicateEvent { ...${UnmarkedAsDuplicateEvent.code} }
+            ... on UnpinnedEvent { ...${UnpinnedEvent.code} }
+            ... on UnsubscribedEvent { ...${UnsubscribedEvent.code} }
+            ... on UserBlockedEvent { ...${UserBlockedEvent.code} }
+            ${this.extraTimelineEvents}
           }
-        `
-      : '';
+        }
+      `
+    };
     return this;
   }
 
   toString(): string {
     const includeText = Object.values(this.includes)
-      .filter((i) => i.include)
-      .map((i) => i.textFragment)
+      .filter((i) => i)
+      .map((i) => i && i.textFragment)
       .join('\n');
 
     return `

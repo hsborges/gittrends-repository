@@ -1,9 +1,13 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { AxiosError } from 'axios';
 import compress from 'graphql-query-compress';
 import { get } from 'lodash';
 
+import compact from '../helpers/compact';
+import * as Errors from '../helpers/errors';
+import normalize from '../helpers/normalize';
 import Component from './Component';
 import Fragment from './Fragment';
 import client from './HttpClient';
@@ -76,6 +80,58 @@ export default class Query {
   async run(interceptor?: (args: string) => string): Promise<any> {
     return client({
       query: compress(interceptor ? interceptor(this.toString()) : this.toString())
-    }).then((response) => get(response, 'data.data', null));
+    })
+      .catch((err: AxiosError) => {
+        switch (err.response?.status) {
+          case 408:
+            throw new Errors.TimedoutError(err, this.components);
+          case 500:
+            throw new Errors.InternalServerError(err, this.components);
+          case 502:
+            throw new Errors.BadGatewayError(err, this.components);
+          default:
+            throw new Errors.RequestError(err, this.components);
+        }
+      })
+      .then((response) => {
+        const data = normalize(compact(response.data));
+
+        if (data?.errors?.length) {
+          const error = new Error(
+            `Response errors (${data.errors.length}): ${JSON.stringify(data.errors)}`
+          );
+
+          if (data.errors.find((e: TObject) => e.type === 'FORBIDDEN'))
+            throw new Errors.ForbiddenError(error, this.components);
+
+          if (data.errors.find((e: TObject) => e.type === 'INTERNAL'))
+            throw new Errors.InternalError(error, this.components);
+
+          if (data.errors.find((e: TObject) => e.type === 'NOT_FOUND'))
+            throw new Errors.NotFoundError(error, this.components);
+
+          if (data.errors.find((e: TObject) => e.type === 'MAX_NODE_LIMIT_EXCEEDED'))
+            throw new Errors.MaxNodeLimitExceededError(error, this.components);
+
+          if (data.errors.find((e: TObject) => e.type === 'SERVICE_UNAVAILABLE'))
+            throw new Errors.ServiceUnavailableError(error, this.components);
+
+          if (data.errors.find((e: TObject) => e.message === 'timedout'))
+            throw new Errors.TimedoutError(error, this.components);
+
+          if (data.errors.find((e: TObject) => e.message === 'loading'))
+            throw new Errors.LoadingError(error, this.components);
+
+          if (
+            data.errors.find((e: TObject) => /^something.went.wrong.+/i.test(e.message as string))
+          )
+            throw new Errors.SomethingWentWrongError(error, this.components);
+
+          throw new Errors.RequestError(error, this.components);
+        }
+
+        return { ...response, data };
+      })
+      .then((response) => get(response, 'data.data', null));
   }
 }

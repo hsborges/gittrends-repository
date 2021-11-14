@@ -8,7 +8,7 @@ import { Dependency, DependencyRepository, RepositoryRepository } from '@gittren
 import Component from '../../github/Component';
 import DependencyGraphManifestComponent from '../../github/components/DependencyGraphManifestComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { ResourceUpdateError, RetryableError } from '../../helpers/errors';
+import { RetryableError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TManifestMetadata = {
@@ -138,7 +138,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
       throw err;
     }
 
-    throw new ResourceUpdateError(err.message, err);
+    throw err;
   }
 
   getPendingManifests(): Array<TManifestMetadata> {

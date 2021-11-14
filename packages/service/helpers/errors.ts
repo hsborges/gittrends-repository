@@ -1,9 +1,12 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { truncate } from 'lodash';
+import { AxiosError } from 'axios';
+import { pick, truncate } from 'lodash';
 
-class ExtendedError extends Error {
+import Component from '../github/Component';
+
+class BaseError extends Error {
   constructor(message: string) {
     super(message);
     this.name = this.constructor.name;
@@ -15,34 +18,43 @@ class ExtendedError extends Error {
     }
   }
 }
-class CustomError extends ExtendedError {
+
+class CustomError extends BaseError {
   readonly cause?: Error;
 
-  constructor(message: string, err?: Error) {
-    super(message);
-    if (err && err instanceof Error) {
-      this.cause = err;
-      this.stack += '\nFrom previous ' + this.cause?.stack;
-    }
+  constructor(error: Error) {
+    super(error.message);
+    this.cause = error;
+    this.stack += '\nFrom previous ' + this.cause?.stack;
   }
 }
 
 export class RequestError extends CustomError {
   readonly response?: string;
-  readonly query?: TObject | string;
+  readonly components?: Component[];
 
-  constructor(message: string, err?: Error | null, response?: string, query?: TObject | string) {
-    const internalMessage =
-      message +
-      `\nQuery: ${truncate(JSON.stringify(query), { length: 96 })}` +
-      `\nResponse: ${typeof response === 'string' ? response : JSON.stringify(response)}`;
-    super(internalMessage, err || undefined);
-    this.response = response;
-    this.query = query;
+  constructor(error: Error, components?: Component | Component[]);
+  constructor(error: AxiosError, components?: Component | Component[]) {
+    super(error);
+    this.response = JSON.stringify(pick(error.response, ['data', 'headers', 'status']));
+    if (components) this.components = Array.isArray(components) ? components : [components];
   }
 }
 
-export class ResourceUpdateError extends CustomError {}
+export class ResourceUpdateError extends BaseError {
+  readonly errors: Error[];
+
+  constructor(errors: Error | Error[]) {
+    const errorsArray = Array.isArray(errors) ? errors : [errors];
+    const messageFragment = errorsArray
+      .map((error) => `[${error.constructor.name}]: ${truncate(error.message, { length: 80 })}`)
+      .join(' -- ');
+
+    super(`Several errors occurred (see "errors" field). Summary: ${messageFragment}`);
+    this.errors = errorsArray;
+  }
+}
+
 export class RetryableError extends RequestError {}
 export class BadGatewayError extends RetryableError {}
 export class BlockedError extends RequestError {}

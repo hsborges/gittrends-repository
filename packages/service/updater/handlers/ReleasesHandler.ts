@@ -6,7 +6,6 @@ import { get } from 'lodash';
 import { Release, ReleaseRepository, RepositoryRepository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { ResourceUpdateError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 export default class ReleasesHandler extends AbstractRepositoryHandler {
@@ -62,7 +61,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
   }
 
   async error(err: Error): Promise<void> {
-    throw new ResourceUpdateError(err.message, err);
+    throw err;
   }
 
   hasNextPage(): boolean {

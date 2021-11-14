@@ -1,7 +1,8 @@
 module.exports = {
   root: true,
   parserOptions: {
-    ecmaVersion: 2020
+    ecmaVersion: es6,
+    ecmaFeatures: { legacyDecorators: true }
   },
   env: {
     es6: true,
