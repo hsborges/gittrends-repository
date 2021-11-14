@@ -2,6 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { AxiosError } from 'axios';
+import { bold } from 'chalk';
 import { pick, truncate } from 'lodash';
 
 import Component from '../github/Component';
@@ -20,24 +21,28 @@ class BaseError extends Error {
 }
 
 class CustomError extends BaseError {
-  readonly cause?: Error;
-
   constructor(error: Error) {
     super(error.message);
-    this.cause = error;
-    this.stack += '\nFrom previous ' + this.cause?.stack;
+    this.stack += `\n${bold('From previous:')} ${error.stack?.replace(/\n/g, '\n\t')}`;
   }
 }
 
 export class RequestError extends CustomError {
   readonly response?: string;
-  readonly components?: Component[];
+  readonly components?: any[];
 
   constructor(error: Error, components?: Component | Component[]);
   constructor(error: AxiosError, components?: Component | Component[]) {
     super(error);
-    this.response = JSON.stringify(pick(error.response, ['data', 'headers', 'status']));
-    if (components) this.components = Array.isArray(components) ? components : [components];
+    this.response = JSON.stringify({
+      message: error.message,
+      ...pick(error.response, ['status', 'data'])
+    });
+
+    if (components) {
+      const componentArray = Array.isArray(components) ? components : [components];
+      this.components = componentArray.map((component) => component.toJSON());
+    }
   }
 }
 

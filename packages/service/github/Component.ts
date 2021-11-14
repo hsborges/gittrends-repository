@@ -36,7 +36,7 @@ export default abstract class Component {
   abstract get fragments(): Fragment[];
   abstract toString(): string;
 
-  get details(): { component: string; id?: string | null } & Record<string, any> {
+  toJSON(): { component: string; id?: string | null } & Record<string, any> {
     return Object.keys(this.includes).reduce(
       (memo, current) => ({ ...memo, ...(this.includes?.[current] || {}) }),
       { component: this.constructor.name, id: this.id }

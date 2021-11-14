@@ -1,3 +1,6 @@
+import axios from 'axios';
+import nock from 'nock';
+
 import * as Errors from './errors';
 
 const error = new Error();
@@ -25,5 +28,12 @@ describe('Test custom errors', () => {
   test('it should be instance of custom errors', () => {
     expect(new Errors.RequestError(error)).toBeInstanceOf(Error);
     expect(new Errors.ResourceUpdateError(error)).toBeInstanceOf(Error);
+  });
+
+  test('it should store information of the failed request', async () => {
+    nock('http://localhost').get('/').reply(500, 'failed');
+
+    const error = await axios.get('/').catch((error) => new Errors.RequestError(error));
+    console.error(error, JSON.stringify(error));
   });
 });
