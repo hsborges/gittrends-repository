@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { isNil, negate } from 'lodash';
+import { isNil, mapValues, negate, omit, omitBy } from 'lodash';
 
 import Fragment from './Fragment';
 
@@ -37,10 +37,14 @@ export default abstract class Component {
   abstract toString(): string;
 
   toJSON(): { component: string; id?: string | null } & Record<string, any> {
-    return Object.keys(this.includes).reduce(
-      (memo, current) => ({ ...memo, ...(this.includes?.[current] || {}) }),
-      { component: this.constructor.name, id: this.id }
-    );
+    return {
+      component: this.constructor.name,
+      id: this.id,
+      ...omitBy(
+        mapValues(this.includes, (value) => value && omit(value, ['textFragment'])),
+        isNil
+      )
+    };
   }
 
   setAlias(alias: string): this {
