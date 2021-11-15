@@ -84,12 +84,13 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
           .then((result) => get(result, ['_metadata', this.meta.resource, 'endCursor']));
       }
 
-      const method =
+      const includeMethod = (
         this.resource === 'issues'
           ? this._component.includeIssues
-          : this._component.includePullRequests;
+          : this._component.includePullRequests
+      ).bind(this._component);
 
-      return method.bind(this._component)(true, {
+      return includeMethod(true, {
         first: this.batchSize,
         after: this.issues.endCursor,
         alias: this.resourceAlias
@@ -330,31 +331,28 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       switch (this.currentStage) {
         case Stages.GET_ISSUES_LIST:
         case Stages.GET_ISSUES_DETAILS:
-          if (this.batchSize === 1) break;
-          this.batchSize = 1;
+          if (this.batchSize === 1) {
+            const issue = this.pendingIssues[0];
+            issue.details.hasNextPage =
+              issue.assignees.hasNextPage =
+              issue.labels.hasNextPage =
+              issue.participants.hasNextPage =
+              issue.timeline.hasNextPage =
+                false;
+            issue.error = err;
+            if (err.response?.data) return this._update(err.response.data);
+          } else {
+            this.batchSize = 1;
+          }
           return;
         case Stages.GET_REACTIONS:
-          if (this.rBatchSize === 1) break;
-          this.rBatchSize = 1;
-          return;
-      }
-
-      switch (this.currentStage) {
-        case Stages.GET_ISSUES_LIST:
-        case Stages.GET_ISSUES_DETAILS:
-          const issue = this.pendingIssues[0];
-          issue.details.hasNextPage =
-            issue.assignees.hasNextPage =
-            issue.labels.hasNextPage =
-            issue.participants.hasNextPage =
-            issue.timeline.hasNextPage =
-              false;
-          issue.error = err;
-          return;
-        case Stages.GET_REACTIONS:
-          const reaction = this.pendingReactables[0];
-          reaction.hasNextPage = false;
-          reaction.error = err;
+          if (this.rBatchSize === 1) {
+            const reaction = this.pendingReactables[0];
+            reaction.hasNextPage = false;
+            reaction.error = err;
+          } else {
+            this.rBatchSize = 1;
+          }
           return;
       }
     }

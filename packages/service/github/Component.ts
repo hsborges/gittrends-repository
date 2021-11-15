@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { isNil, mapValues, negate, omit, omitBy } from 'lodash';
+import { isEmpty, isNil, mapValues, negate, omit, omitBy } from 'lodash';
 
 import Fragment from './Fragment';
 
@@ -41,7 +41,11 @@ export default abstract class Component {
       component: this.constructor.name,
       id: this.id,
       ...omitBy(
-        mapValues(this.includes, (value) => value && omit(value, ['textFragment'])),
+        mapValues(this.includes, (value) => {
+          if (!value) return null;
+          const nValue = omit(value, ['textFragment']);
+          return isEmpty(nValue) ? true : nValue;
+        }),
         isNil
       )
     };

@@ -182,7 +182,9 @@ export default class IssueComponent extends Component {
             ${this.extraTimelineEvents}
           }
         }
-      `
+      `,
+      first,
+      after
     };
     return this;
   }

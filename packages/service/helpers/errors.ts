@@ -28,16 +28,17 @@ class CustomError extends BaseError {
 }
 
 export class RequestError extends CustomError {
-  readonly response?: string;
+  readonly response?: { message: string; status?: number; data?: any };
   readonly components?: any[];
 
   constructor(error: Error, components?: Component | Component[]);
   constructor(error: AxiosError, components?: Component | Component[]) {
     super(error);
-    this.response = JSON.stringify({
+
+    this.response = {
       message: error.message,
-      ...pick(error.response, ['status', 'data'])
-    });
+      ...pick<{ status?: number; data?: any }>(error.response, ['status', 'data'])
+    };
 
     if (components) {
       const componentArray = Array.isArray(components) ? components : [components];
