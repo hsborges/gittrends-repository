@@ -34,7 +34,7 @@ type TIssueMetadata = {
   labels: TPaginable;
   participants: TPaginable;
   timeline: TPaginable;
-  error?: Error;
+  error?: Error | string;
 };
 
 type TReactableMetadata = {
@@ -333,6 +333,10 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         case Stages.GET_ISSUES_DETAILS:
           if (this.batchSize === 1) {
             const issue = this.pendingIssues[0];
+            if (err.response?.data) {
+              issue.error = err.message;
+              return this.update(err.response.data);
+            }
             issue.details.hasNextPage =
               issue.assignees.hasNextPage =
               issue.labels.hasNextPage =
@@ -340,7 +344,6 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
               issue.timeline.hasNextPage =
                 false;
             issue.error = err;
-            if (err.response?.data) return this._update(err.response.data);
           } else {
             this.batchSize = 1;
           }

@@ -3,7 +3,7 @@
  */
 import { AxiosError } from 'axios';
 import { bold } from 'chalk';
-import { pick, truncate } from 'lodash';
+import { truncate } from 'lodash';
 
 import Component from '../github/Component';
 
@@ -27,21 +27,30 @@ class CustomError extends BaseError {
   }
 }
 
+type RequestErrorOptions = {
+  components?: Component | Component[];
+  status?: number;
+  data?: any;
+};
+
 export class RequestError extends CustomError {
   readonly response?: { message: string; status?: number; data?: any };
   readonly components?: any[];
 
-  constructor(error: Error, components?: Component | Component[]);
-  constructor(error: AxiosError, components?: Component | Component[]) {
+  constructor(error: Error, opts?: RequestErrorOptions);
+  constructor(error: AxiosError, opts?: RequestErrorOptions) {
     super(error);
 
     this.response = {
       message: error.message,
-      ...pick<{ status?: number; data?: any }>(error.response, ['status', 'data'])
+      status: opts?.status ?? error.response?.status,
+      data: opts?.data ?? error.response?.data
     };
 
-    if (components) {
-      const componentArray = Array.isArray(components) ? components : [components];
+    if (opts?.components) {
+      const componentArray = Array.isArray(opts?.components)
+        ? opts?.components
+        : [opts?.components];
       this.components = componentArray.map((component) => component.toJSON());
     }
   }
