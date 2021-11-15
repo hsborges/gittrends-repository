@@ -281,8 +281,9 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     }
 
     const issues = this.issues.items.map((issue) => {
-      if (issue.error) issue.data._metadata = { error: JSON.stringify(issue.error) };
-      else issue.data._metadata = { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
+      issue.data._metadata = issue.error
+        ? { error: typeof issue.error === 'string' ? issue.error : JSON.stringify(issue.error) }
+        : { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
       return new (this.resource === 'issues' ? Issue : PullRequest)(omit(issue.data, 'timeline'));
     });
 
@@ -372,7 +373,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
             issue.labels.hasNextPage ||
             issue.participants.hasNextPage ||
             issue.timeline.hasNextPage) &&
-          !issue.error
+          !(issue.error instanceof Error)
       )
       .slice(0, this.batchSize);
   }
