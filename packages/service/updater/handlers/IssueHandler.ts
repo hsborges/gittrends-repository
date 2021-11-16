@@ -3,11 +3,18 @@
  */
 import { get, omit } from 'lodash';
 
-
-
-import { Issue, IssueRepository, MongoRepository, PullRequest, PullRequestRepository, Reaction, ReactionRepository, RepositoryRepository, TimelineEvent, TimelineEventRepository } from '@gittrends/database-config';
-
-
+import {
+  Issue,
+  IssueRepository,
+  MongoRepository,
+  PullRequest,
+  PullRequestRepository,
+  Reaction,
+  ReactionRepository,
+  RepositoryRepository,
+  TimelineEvent,
+  TimelineEventRepository
+} from '@gittrends/database-config';
 
 import Component from '../../github/Component';
 import IssueComponent from '../../github/components/IssueComponent';
@@ -16,7 +23,6 @@ import ReactionComponent from '../../github/components/ReactionComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ForbiddenError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
-
 
 type TComponent = IssueComponent | PullRequestComponent;
 type TPaginable = { hasNextPage: boolean; endCursor?: string };
@@ -68,7 +74,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     super(id, alias, type);
     this.resource = type;
     this.resourceAlias = `_${type}`;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 50 : 20;
+    this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 10;
     this.rBatchSize = this.defaultRBatchSize = 100;
     this.issues = { items: [], hasNextPage: true };
     this.debug('Issue handler built for %s (%s)', id, type);
