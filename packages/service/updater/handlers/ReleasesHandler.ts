@@ -60,10 +60,6 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     }
   }
 
-  async error(err: Error): Promise<void> {
-    throw err;
-  }
-
   hasNextPage(): boolean {
     return this.releases.hasNextPage;
   }

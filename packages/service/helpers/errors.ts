@@ -20,7 +20,7 @@ class BaseError extends Error {
   }
 }
 
-class CustomError extends BaseError {
+class ExtendedError extends BaseError {
   constructor(error: Error) {
     super(error.message);
     this.stack += `\n${bold('From previous:')} ${error.stack?.replace(/\n/g, '\n\t')}`;
@@ -33,7 +33,7 @@ type RequestErrorOptions = {
   data?: any;
 };
 
-export class RequestError extends CustomError {
+export class RequestError extends ExtendedError {
   readonly response?: { message: string; status?: number; data?: any };
   readonly components?: any[];
 
@@ -56,16 +56,17 @@ export class RequestError extends CustomError {
   }
 }
 
-export class ResourceUpdateError extends BaseError {
+export class ResourceUpdateError extends ExtendedError {}
+export class RepositoryUpdateError extends BaseError {
   readonly errors: Error[];
 
   constructor(errors: Error | Error[]) {
     const errorsArray = Array.isArray(errors) ? errors : [errors];
     const messageFragment = errorsArray
       .map((error) => `[${error.constructor.name}]: ${truncate(error.message, { length: 80 })}`)
-      .join(' -- ');
+      .join(' & ');
 
-    super(`Several errors occurred (see "errors" field). Summary: ${messageFragment}`);
+    super(`Errors occurred when updating (see "errors" field) @ ${messageFragment}`);
     this.errors = errorsArray;
   }
 }

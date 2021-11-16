@@ -64,10 +64,6 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     }
   }
 
-  async error(err: Error): Promise<void> {
-    throw err;
-  }
-
   hasNextPage(): boolean {
     return this.tags.hasNextPage;
   }

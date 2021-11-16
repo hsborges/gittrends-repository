@@ -81,7 +81,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
       return;
     }
 
-    throw err;
+    return super.error(err);
   }
 
   hasNextPage(): boolean {

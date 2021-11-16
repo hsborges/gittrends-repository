@@ -8,7 +8,7 @@ import { flatten, shuffle } from 'lodash';
 import { EntityValidationError } from '@gittrends/database-config';
 
 import Query from '../github/Query';
-import { ResourceUpdateError } from '../helpers/errors';
+import { RepositoryUpdateError } from '../helpers/errors';
 import Cache from './Cache';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
 import DependenciesHander from './handlers/DependenciesHandler';
@@ -90,9 +90,8 @@ export default class RepositoryUpdater implements Updater {
       .then(() => {
         if (isRetry) return;
         if (this.pendingHandlers.length) return this.update(this.pendingHandlers);
-        if (this.errors.length === 0) return;
-        else if (this.errors.length === 1) throw this.errors[0].error;
-        else throw new ResourceUpdateError(this.errors.map((e) => e.error));
+        if (this.errors.length > 0)
+          throw new RepositoryUpdateError(this.errors.map((e) => e.error));
       });
   }
 

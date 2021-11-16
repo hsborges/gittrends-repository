@@ -93,7 +93,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
       }
     }
 
-    throw err;
+    return super.error(err);
   }
 
   hasNextPage(): boolean {

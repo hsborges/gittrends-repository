@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import nock from 'nock';
 
 import * as Errors from './errors';
@@ -33,7 +33,11 @@ describe('Test custom errors', () => {
   test('it should store information of the failed request', async () => {
     nock('http://localhost').get('/').reply(500, 'failed');
 
-    const error = await axios.get('/').catch((error) => new Errors.RequestError(error));
-    console.error(error, JSON.stringify(error));
+    await axios.get('/').catch((error: AxiosError) => {
+      const rError = new Errors.RequestError(error);
+      expect(rError.response?.status).toBe(500);
+      expect(rError.response?.data).toBe('failed');
+      expect(rError.message).toBe(error.message);
+    });
   });
 });

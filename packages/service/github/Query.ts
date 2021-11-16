@@ -82,16 +82,15 @@ export default class Query {
       query: compress(interceptor ? interceptor(this.toString()) : this.toString())
     })
       .catch((err: AxiosError) => {
-        const opts = { components: this.components };
         switch (err.response?.status) {
           case 408:
-            throw new Errors.TimedoutError(err, opts);
+            throw new Errors.TimedoutError(err, { components: this.components });
           case 500:
-            throw new Errors.InternalServerError(err, opts);
+            throw new Errors.InternalServerError(err, { components: this.components });
           case 502:
-            throw new Errors.BadGatewayError(err, opts);
+            throw new Errors.BadGatewayError(err, { components: this.components });
           default:
-            throw new Errors.RequestError(err, opts);
+            throw new Errors.RequestError(err, { components: this.components });
         }
       })
       .then((response) => {

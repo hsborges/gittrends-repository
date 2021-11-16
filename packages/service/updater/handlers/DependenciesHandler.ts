@@ -134,11 +134,9 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.error`]: err.message } }
       );
-
-      throw err;
     }
 
-    throw err;
+    return super.error(err);
   }
 
   getPendingManifests(): Array<TManifestMetadata> {

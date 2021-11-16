@@ -13,6 +13,7 @@ import {
   Milestone,
   MilestoneRepository
 } from '@gittrends/database-config';
+import { ResourceUpdateError } from '@gittrends/service/helpers/errors';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import parser from '../../helpers/response-parser';
@@ -72,5 +73,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     this.milestones = [];
   }
 
-  abstract error(err: Error): Promise<void>;
+  async error(err: Error): Promise<void> {
+    throw new ResourceUpdateError(err);
+  }
 }

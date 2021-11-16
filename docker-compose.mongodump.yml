@@ -8,3 +8,10 @@ services:
     environment:
       MONGO_URI: 'mongodb://${GT_DATABASE_USERNAME}:${GT_DATABASE_PASSWORD}@mongo:27017/${GT_DATABASE_DB}?authSource=admin'
       CRON_SCHEDULE: ${GT_MONGODUMP_CRON_SCHEDULE-0 1 * * 0}
+
+  mongo-backup-run:
+    image: istepanov/mongodump
+    volumes:
+      - ./mongo-backup:/backup
+    environment:
+      MONGO_URI: 'mongodb://${GT_DATABASE_USERNAME}:${GT_DATABASE_PASSWORD}@mongo:27017/${GT_DATABASE_DB}?authSource=admin'

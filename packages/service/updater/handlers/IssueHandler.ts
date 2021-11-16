@@ -3,17 +3,11 @@
  */
 import { get, omit } from 'lodash';
 
-import {
-  Issue,
-  IssueRepository,
-  PullRequest,
-  PullRequestRepository,
-  Reaction,
-  ReactionRepository,
-  RepositoryRepository,
-  TimelineEvent,
-  TimelineEventRepository
-} from '@gittrends/database-config';
+
+
+import { Issue, IssueRepository, MongoRepository, PullRequest, PullRequestRepository, Reaction, ReactionRepository, RepositoryRepository, TimelineEvent, TimelineEventRepository } from '@gittrends/database-config';
+
+
 
 import Component from '../../github/Component';
 import IssueComponent from '../../github/components/IssueComponent';
@@ -22,6 +16,7 @@ import ReactionComponent from '../../github/components/ReactionComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ForbiddenError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
+
 
 type TComponent = IssueComponent | PullRequestComponent;
 type TPaginable = { hasNextPage: boolean; endCursor?: string };
@@ -49,6 +44,7 @@ type TReactableMetadata = {
 type TResource = 'issues' | 'pull_requests';
 
 enum Stages {
+  GET_PENDING_ISSUES,
   GET_ISSUES_LIST,
   GET_ISSUES_DETAILS,
   GET_REACTIONS
@@ -66,6 +62,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   private currentStage?: Stages;
   private rBatchSize: number;
   private defaultRBatchSize: number;
+  private collection: MongoRepository<Issue | PullRequest>;
 
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
@@ -75,9 +72,24 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     this.rBatchSize = this.defaultRBatchSize = 100;
     this.issues = { items: [], hasNextPage: true };
     this.debug('Issue handler built for %s (%s)', id, type);
+    this.currentStage = Stages.GET_PENDING_ISSUES;
+    this.collection = this.resource === 'issues' ? IssueRepository : PullRequestRepository;
   }
 
   async component(): Promise<RepositoryComponent | Component[]> {
+    if (this.currentStage === Stages.GET_PENDING_ISSUES) {
+      const type = this.resource === 'issues' ? 'Issue' : 'PullRequest';
+
+      await new Promise((resolve, reject) =>
+        this.collection.collection
+          .find({ repository: this.id, type, '_metadata.error': { $exists: true } })
+          .forEach(
+            (doc) => this.addIssueToItems(doc),
+            (err) => (err ? reject(err) : resolve())
+          )
+      );
+    }
+
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
       this.debug('Updating component (stage: %s)', Stages[Stages.GET_ISSUES_LIST]);
       this.currentStage = Stages.GET_ISSUES_LIST;
@@ -158,37 +170,37 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     });
   }
 
+  private addIssueToItems(issue: Record<string, unknown>): void {
+    this.issues.items.push({
+      data: { repository: this.id, ...issue },
+      component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
+        issue.id as string,
+        `issue_${issue.number}`
+      ),
+      details: { hasNextPage: true },
+      assignees: { hasNextPage: true },
+      labels: { hasNextPage: true },
+      participants: { hasNextPage: true },
+      timeline: {
+        hasNextPage: true,
+        endCursor: get(issue, '_metadata.endCursor') as string | undefined
+      }
+    });
+  }
+
   private async _update(response: Record<string, unknown>): Promise<void> {
     switch (this.currentStage) {
       case Stages.GET_ISSUES_LIST: {
         const data = super.parseResponse(response[super.alias as string]);
-        const newIssues = get(data, `${this.resourceAlias}.nodes`, []);
+        const newIssues = get(data, `${this.resourceAlias}.nodes`, []) as Record<string, unknown>[];
 
-        const newIssuesMetadata = await IssueRepository.collection
-          .find(
-            { _id: { $in: newIssues.map((ni: any) => ni.id) } },
-            { projection: { _id: 1, _metadata: 1 } }
-          )
-          .toArray();
-
-        this.issues.items = newIssues.map((issue: Record<string, unknown>) => ({
-          data: { repository: this.id, ...issue },
-          component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
-            issue.id as string,
-            `issue_${issue.number}`
-          ),
-          details: { hasNextPage: true },
-          assignees: { hasNextPage: true },
-          labels: { hasNextPage: true },
-          participants: { hasNextPage: true },
-          timeline: {
-            hasNextPage: true,
-            endCursor: get(
-              newIssuesMetadata.find((ni) => ni._id === issue.id),
-              '_metadata.endCursor'
-            )
-          }
-        }));
+        for await (const issue of newIssues) {
+          const data = await this.collection.collection.findOne(
+            { _id: issue.id },
+            { projection: { _metadata: true } }
+          );
+          this.addIssueToItems({ ...issue, _metadata: data?._metadata });
+        }
 
         const pageInfo = get(data, `${this.resourceAlias}.page_info`, {});
         this.issues.hasNextPage = pageInfo.has_next_page ?? false;
@@ -365,7 +377,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       }
     }
 
-    throw err;
+    return super.error(err);
   }
 
   get pendingIssues(): TIssueMetadata[] {
