@@ -54,6 +54,10 @@ enum Stages {
   GET_REACTIONS
 }
 
+function isSuccess(number: number | undefined): boolean {
+  return number ? Math.floor(number / 100) === 2 : false;
+}
+
 export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   private resource: TResource;
   private resourceAlias: string;
@@ -334,7 +338,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         case Stages.GET_ISSUES_DETAILS:
           if (this.batchSize === 1) {
             const issue = this.pendingIssues[0];
-            if (err.response?.data) {
+            if (isSuccess(err.response?.status) && err.response?.data) {
               issue.error = err.message;
               return this.update(err.response.data);
             }
