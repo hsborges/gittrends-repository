@@ -31,6 +31,7 @@ export class IssueFragment extends Fragment {
   toString(): string {
     return `
       fragment ${this.code} on ${this.objectName} {
+        type:__typename
         ${Fragment.include(this.full, 'activeLockReason')}
         author { ...${SimplifiedActorFragment.code} }
         authorAssociation

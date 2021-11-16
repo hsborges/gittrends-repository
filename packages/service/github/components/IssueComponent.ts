@@ -197,7 +197,6 @@ export default class IssueComponent extends Component {
 
     return `
       ${this.alias}:node(id: "${this.id}") {
-        type:__typename
         ... on ${this.componentName} {
           ${includeText}
         }
