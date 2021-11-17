@@ -13,9 +13,9 @@ import {
   Milestone,
   MilestoneRepository
 } from '@gittrends/database-config';
-import { ResourceUpdateError } from '@gittrends/service/helpers/errors';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
+import { ResourceUpdateError } from '../../helpers/errors';
 import parser from '../../helpers/response-parser';
 import Cache from '../Cache';
 import Handler from '../Handler';
