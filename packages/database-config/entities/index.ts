@@ -5,6 +5,7 @@ export * from './Actor';
 export * from './Commit';
 export * from './Dependency';
 export * from './Entity';
+export * from './ErrorLog';
 export * from './GithubToken';
 export * from './Issue';
 export * from './Location';

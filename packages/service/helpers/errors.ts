@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import { AxiosError } from 'axios';
-import { bold } from 'chalk';
 import { truncate } from 'lodash';
 
 import Component from '../github/Component';
@@ -23,7 +22,7 @@ class BaseError extends Error {
 class ExtendedError extends BaseError {
   constructor(error: Error) {
     super(error.message);
-    this.stack += `\n${bold('From previous:')} ${error.stack?.replace(/\n/g, '\n\t')}`;
+    this.stack += `\nFrom previous: ${error.stack?.replace(/\n/g, '\n    ')}`;
   }
 }
 

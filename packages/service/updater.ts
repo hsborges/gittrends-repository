@@ -7,8 +7,9 @@ import { bold } from 'chalk';
 import { program, Option } from 'commander';
 import consola from 'consola';
 
-import mongoClient from '@gittrends/database-config';
+import mongoClient, { ErrorLogRepository, ErrorLog } from '@gittrends/database-config';
 
+import { RepositoryUpdateError } from './helpers/errors';
 import { version } from './package.json';
 import * as redis from './redis';
 import ActorsUpdater from './updater/ActorUpdater';
@@ -72,9 +73,18 @@ program
               process.exit(1);
             }
           }
-        } catch (err: any) {
-          consola.error(`Error thrown by ${job.id}.`, (err && err.stack) || (err && err.message));
-          throw err;
+        } catch (error: any) {
+          consola.error(`Error thrown by ${job.id}.`, error);
+
+          if (error instanceof Error) {
+            await ErrorLogRepository.upsert(
+              error instanceof RepositoryUpdateError
+                ? error.errors.map((e) => ErrorLog.from(e))
+                : ErrorLog.from(error)
+            );
+          }
+
+          throw error;
         }
       },
       {

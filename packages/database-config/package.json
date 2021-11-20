@@ -20,7 +20,9 @@
     "lodash": "^4.17.21",
     "migrate-mongo": "^8.2.3",
     "mongodb": "4.1.4",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "stack-trace": "0.0.10",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@gittrends/env-config": "file:../env-config",
@@ -28,6 +30,8 @@
     "@types/es6-shim": "^0.31.42",
     "@types/jest": "^27.0.2",
     "@types/lodash": "^4.14.176",
+    "@types/stack-trace": "^0.0.29",
+    "@types/uuid": "^8.3.3",
     "jest": "^27.3.1",
     "ts-jest": "^27.0.7",
     "ts-node": "^10.4.0"

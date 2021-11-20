@@ -65,6 +65,7 @@ export class MongoRepository<T extends Entity> {
 export const ActorRepository = MongoRepository.create(Entities.Actor);
 export const CommitRepository = MongoRepository.create(Entities.Commit);
 export const DependencyRepository = MongoRepository.create(Entities.Dependency);
+export const ErrorLogRepository = MongoRepository.create(Entities.ErrorLog);
 export const GithubTokenRepository = MongoRepository.create(Entities.GithubToken);
 export const IssueRepository = MongoRepository.create(Entities.Issue);
 export const LocationRepository = MongoRepository.create(Entities.Location);
