@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+  service:
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
+    restart: unless-stopped
+    volumes:
+      - ${GT_PROXY_TOKENS_FILE-./tokens.txt}:/app/${GT_PROXY_TOKENS_FILE-./tokens.txt}:ro
+    env_file:
+      - .env
+    environment:
+      GT_DATABASE_HOST: mongo
+      GT_DATABASE_PORT: 27017
+      GT_REDIS_HOST: redis
+      GT_REDIS_PORT: 6379
+    depends_on:
+      - mongo
+      - redis

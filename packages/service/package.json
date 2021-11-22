@@ -21,15 +21,17 @@
     "dev:repos-stats": "ts-node -r tsconfig-paths/register -r @gittrends/env-config -T extra/repos-stats.ts",
     "clinic-doctor": "clinic doctor -- node -r @gittrends/env-config dist/updater.js",
     "clinic-bubbleprof": "clinic bubbleprof -- node -r @gittrends/env-config dist/updater.js",
-    "clinic-flame": "clinic flame -- node -r @gittrends/env-config dist/updater.js"
+    "clinic-flame": "clinic flame -- node -r @gittrends/env-config dist/updater.js",
+    "pm2": "npm -r @gittrends/env-config ./node_modules/.bin/pm2",
+    "pm2-runtime": "node -r @gittrends/env-config ./node_modules/.bin/pm2-runtime"
   },
   "dependencies": {
     "@bull-board/api": "^3.7.0",
     "@bull-board/express": "^3.7.0",
-    "@gittrends/database-config": "file:../database-config",
+    "@gittrends/database-config": "link:../database-config",
     "axios": "^0.24.0",
     "bluebird": "^3.7.2",
-    "bullmq": "^1.52.0",
+    "bullmq": "^1.54.2",
     "chalk": "^4.1.2",
     "commander": "^8.3.0",
     "consola": "^2.15.3",
@@ -46,11 +48,11 @@
     "promise-retry": "^2.0.1",
     "redis-lru": "^0.6.0",
     "table": "^6.7.3",
-    "user-agents": "^1.0.831"
+    "user-agents": "^1.0.842"
   },
   "devDependencies": {
     "@gittrends-app/github-proxy-server": "gittrends-app/github-proxy-server",
-    "@gittrends/env-config": "file:../env-config",
+    "@gittrends/env-config": "link:../env-config",
     "@types/bluebird": "^3.5.36",
     "@types/bull": "^3.15.5",
     "@types/cron": "^1.7.3",
@@ -65,6 +67,7 @@
     "get-port": "^6.0.0",
     "jest": "^27.3.1",
     "nock": "^13.2.1",
+    "pm2": "^5.1.2",
     "ts-jest": "^27.0.7"
   },
   "config": {

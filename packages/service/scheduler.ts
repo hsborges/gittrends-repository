@@ -52,7 +52,7 @@ const repositoriesScheduler = async (
           .then(async (job) => !(await job?.isActive()) && job?.remove());
         await queue.add(
           '__default__',
-          { id: data._id, resources: _resources, excluded: exclude },
+          { id: data._id.toString(), resources: _resources, excluded: exclude },
           { jobId: (data.name_with_owner as string).toLowerCase() }
         );
       }
@@ -76,7 +76,7 @@ const usersScheduler = async (queue: Queue<UsersJob>, wait = 24, limit = 100000)
     )
     .limit(limit)
     .toArray()
-    .then((users) => users.map((r) => r._id));
+    .then((users) => users.map((r) => r._id.toString()));
   // add to queue
   return Promise.all(
     chunk(usersIds, 25).map((id) => queue.add('__default__', { id }, { jobId: `users@${id[0]}+` }))

@@ -1,19 +1,19 @@
-FROM node:alpine
+FROM node:lts-alpine
 
-RUN apk add --update make gcc g++ python3 git
+RUN apk add --update make gcc g++ python3 git bash
 
 WORKDIR /app
 COPY . .
 RUN rm -rf packages
+COPY ./packages/env-config ./packages/env-config
+COPY ./packages/database-config ./packages/database-config
+COPY ./packages/service ./packages/service
 
-WORKDIR /app/packages/env-config
-COPY ./packages/env-config .
-RUN yarn install && yarn build
-
-WORKDIR /app/packages/database-config
-COPY ./packages/database-config .
-RUN yarn install && yarn build
+RUN yarn install
+RUN yarn workspace @gittrends/env-config build
+RUN yarn workspace @gittrends/database-config build
+RUN yarn workspace @gittrends/service build
 
 WORKDIR /app/packages/service
-COPY ./packages/service .
-RUN yarn install --force && yarn build
+
+ENTRYPOINT [ "yarn", "pm2-runtime", "service.config.js" ]

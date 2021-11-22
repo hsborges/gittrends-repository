@@ -14,22 +14,22 @@
     "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.ts'"
   },
   "dependencies": {
-    "class-transformer": "^0.4.0",
-    "class-validator": "^0.13.1",
+    "class-transformer": "0.4.0",
+    "class-validator": "^0.13.2",
     "es6-shim": "^0.35.6",
     "lodash": "^4.17.21",
     "migrate-mongo": "^8.2.3",
-    "mongodb": "4.1.4",
+    "mongodb": "4.2.0",
     "reflect-metadata": "^0.1.13",
     "stack-trace": "0.0.10",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@gittrends/env-config": "file:../env-config",
+    "@gittrends/env-config": "link:../env-config",
     "@shelf/jest-mongodb": "^2.1.0",
     "@types/es6-shim": "^0.31.42",
-    "@types/jest": "^27.0.2",
-    "@types/lodash": "^4.14.176",
+    "@types/jest": "^27.0.3",
+    "@types/lodash": "^4.14.177",
     "@types/stack-trace": "^0.0.29",
     "@types/uuid": "^8.3.3",
     "jest": "^27.3.1",

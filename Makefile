@@ -13,7 +13,9 @@ BASE_DIR=$(shell pwd)
 SERVICE_IMAGE_NAME=hsborges/service.gittrends.app
 REPO=https://github.com/hsborges/gittrends-repository
 
-.PHONY: help build build push up dev service
+.PHONY: help \
+				install env-config database-config service website website-api \
+ 				build build-docker
 
 help:
 		@echo "Makefile commands:"
@@ -22,23 +24,31 @@ help:
 
 .DEFAULT_GOAL := build
 
-build:
-		@echo "Preparing packages to build"
+install:
+		@yarn workspace @gittrends/service install
+
+env-config: install
 		@echo "Building environment config"
-		@yarn workspace @gittrends/env-config install
 		@yarn workspace @gittrends/env-config build
+
+database-config: install env-config
 		@echo "Building database config"
-		@yarn workspace @gittrends/database-config install
 		@yarn workspace @gittrends/database-config build
+
+service: install env-config database-config
 		@echo "Building updater service"
-		@yarn workspace @gittrends/service install --force
 		@yarn workspace @gittrends/service build
+
+website: install env-config
 		@echo "Building website"
-		@yarn workspace @gittrends/website install --force
 		@yarn workspace @gittrends/website build
+
+website-api: install env-config database-config
 		@echo "Building website-api"
-		@yarn workspace @gittrends/website-api install --force
 		@yarn workspace @gittrends/website-api build
+
+build: install env-config database-config service website website-api
+
 
 build-docker:
 		@docker build --pull --compress -t ${SERVICE_IMAGE_NAME} -f packages/service/Dockerfile .
