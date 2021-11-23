@@ -18,7 +18,7 @@ module.exports = {
       name: 'queue-board',
       interpreter: 'node',
       interpreter_args: '-r @gittrends/env-config',
-      script: 'dist/queue-board.js',
+      script: 'dist/extra/queue-board.js',
       out_file: '/dev/null',
       error_file: '/dev/null',
       env: {
