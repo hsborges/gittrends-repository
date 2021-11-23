@@ -18,7 +18,7 @@ type TManifestMetadata = {
   endCursor?: string;
 };
 
-export default class DependenciesHander extends AbstractRepositoryHandler {
+export default class DependenciesHandler extends AbstractRepositoryHandler {
   readonly manifests: { hasNextPage: boolean; endCursor?: string };
   readonly manifestsComponents: Array<TManifestMetadata>;
 
@@ -36,15 +36,14 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
       });
     }
 
-    const pendingManifests = this.getPendingManifests();
-    pendingManifests.forEach((manifest) => {
+    this.pendingManifests.forEach((manifest) => {
       manifest.component.includeDependencies(manifest.hasNextPage, {
         first: this.batchSize,
         after: manifest.endCursor
       });
     });
 
-    return pendingManifests.map((c) => c.component);
+    return this.pendingManifests.map((c) => c.component);
   }
 
   async update(response: Record<string, unknown>): Promise<void> {
@@ -80,30 +79,27 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     }
 
     if (response && !this.manifests.hasNextPage && this.hasNextPage) {
-      const dependencies = this.getPendingManifests().reduce(
-        (dependencies: Dependency[], manifest) => {
-          const piPath = `${manifest.component.alias}.dependencies.page_info`;
-          const pageInfo = get(response as unknown, piPath, {});
+      const dependencies = this.pendingManifests.reduce((dependencies: Dependency[], manifest) => {
+        const piPath = `${manifest.component.alias}.dependencies.page_info`;
+        const pageInfo = get(response as unknown, piPath, {});
 
-          manifest.hasNextPage = pageInfo.has_next_page || false;
-          manifest.endCursor = pageInfo.end_cursor || manifest.endCursor;
+        manifest.hasNextPage = pageInfo.has_next_page || false;
+        manifest.endCursor = pageInfo.end_cursor || manifest.endCursor;
 
-          const nodes = get(response, `${manifest.component.alias}.dependencies.nodes`, []) as [];
+        const nodes = get(response, `${manifest.component.alias}.dependencies.nodes`, []) as [];
 
-          return dependencies.concat(
-            nodes.map(
-              (dependency: Record<string, unknown>) =>
-                new Dependency({
-                  repository: this.id,
-                  manifest: manifest.data.id,
-                  filename: manifest.data.filename,
-                  ...dependency
-                })
-            )
-          );
-        },
-        []
-      );
+        return dependencies.concat(
+          nodes.map(
+            (dependency: Record<string, unknown>) =>
+              new Dependency({
+                repository: this.id,
+                manifest: manifest.data.id,
+                filename: manifest.data.filename,
+                ...dependency
+              })
+          )
+        );
+      }, []);
 
       if (dependencies.length > 0) {
         await Promise.all([super.saveReferences(), DependencyRepository.upsert(dependencies)]);
@@ -127,7 +123,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
         return;
       }
 
-      const [pending] = this.getPendingManifests();
+      const [pending] = this.pendingManifests;
       pending.hasNextPage = false;
 
       await RepositoryRepository.collection.updateOne(
@@ -139,7 +135,7 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
     return super.error(err);
   }
 
-  getPendingManifests(): Array<TManifestMetadata> {
+  get pendingManifests(): Array<TManifestMetadata> {
     return this.manifestsComponents
       .filter((m) => m.data.parseable && !m.data.exceeds_max_size && m.hasNextPage)
       .slice(0, this.batchSize);
@@ -147,11 +143,11 @@ export default class DependenciesHander extends AbstractRepositoryHandler {
 
   get alias(): string[] {
     return [super.alias as string].concat(
-      this.getPendingManifests().map((manifest) => manifest.component.alias)
+      this.pendingManifests.map((manifest) => manifest.component.alias)
     );
   }
 
   hasNextPage(): boolean {
-    return this.manifests.hasNextPage || this.getPendingManifests().length > 0;
+    return this.manifests.hasNextPage || this.pendingManifests.length > 0;
   }
 }

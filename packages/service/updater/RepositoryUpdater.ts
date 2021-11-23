@@ -5,13 +5,11 @@ import { map } from 'bluebird';
 import { Job } from 'bullmq';
 import { flatten, shuffle } from 'lodash';
 
-import { EntityValidationError } from '@gittrends/database-config';
-
 import Query from '../github/Query';
-import { RepositoryUpdateError } from '../helpers/errors';
+import { RepositoryUpdateError, RequestError } from '../helpers/errors';
 import Cache from './Cache';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
-import DependenciesHander from './handlers/DependenciesHandler';
+import DependenciesHandler from './handlers/DependenciesHandler';
 import IssuesHander from './handlers/IssueHandler';
 import ReleasesHandler from './handlers/ReleasesHandler';
 import RepositoryHander from './handlers/RepositoryHandler';
@@ -42,7 +40,7 @@ export default class RepositoryUpdater implements Updater {
   constructor(repositoryId: string, handlers: THandler[], opts?: TOptions) {
     this.id = repositoryId;
     this.job = opts?.job;
-    if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHander(this.id));
+    if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHandler(this.id));
     if (handlers.includes('issues'))
       this.handlers.push(new IssuesHander(this.id, undefined, 'issues'));
     if (handlers.includes('pull_requests'))
@@ -64,13 +62,15 @@ export default class RepositoryUpdater implements Updater {
       .run()
       .then((data) => Promise.all(handlers.map((handler) => handler.update(data))))
       .catch(async (err) => {
-        if (isRetry || err instanceof EntityValidationError) throw err;
+        if (err instanceof RequestError) {
+          return map(shuffle(handlers), (handler) =>
+            this.update([handler], true).catch((err) =>
+              handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
+            )
+          );
+        }
 
-        return map(shuffle(handlers), (handler) =>
-          this.update([handler], true).catch((err) =>
-            handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
-          )
-        );
+        throw err;
       })
       .finally(async () => {
         if (isRetry) return;
