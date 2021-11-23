@@ -51,7 +51,7 @@ module.exports = {
       name: 'users',
       interpreter: 'node',
       interpreter_args: '-r @gittrends/env-config',
-      script: 'updater',
+      script: 'dist/updater.js',
       args: ['--type', 'users', '--workers', process.env.GT_UPDATER_USERS_WORKERS || 1],
       out_file: '/dev/null',
       restart_delay: 5 * 1000
