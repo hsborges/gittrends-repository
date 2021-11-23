@@ -22,7 +22,7 @@
     "clinic-doctor": "clinic doctor -- node -r @gittrends/env-config dist/updater.js",
     "clinic-bubbleprof": "clinic bubbleprof -- node -r @gittrends/env-config dist/updater.js",
     "clinic-flame": "clinic flame -- node -r @gittrends/env-config dist/updater.js",
-    "pm2": "npm -r @gittrends/env-config ./node_modules/.bin/pm2",
+    "pm2": "node -r @gittrends/env-config ./node_modules/.bin/pm2",
     "pm2-runtime": "node -r @gittrends/env-config ./node_modules/.bin/pm2-runtime"
   },
   "dependencies": {
