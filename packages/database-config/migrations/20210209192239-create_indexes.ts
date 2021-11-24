@@ -5,7 +5,7 @@ import { Db } from 'mongodb';
 
 export = {
   async up(db: Db): Promise<void> {
-    Promise.all([
+    await Promise.all([
       db
         .collection('stargazers')
         .createIndex({ repository: 1 }, { name: 'stargazers_repository_index' }),
