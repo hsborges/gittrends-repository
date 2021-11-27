@@ -7,14 +7,14 @@ import lru from 'redis-lru';
 
 import { Entity } from '@gittrends/database-config';
 
-import * as redis from '../redis';
+import { createRedisConnection } from '../redis';
 
-export default class UpdaterCache {
+export class Cache {
   readonly cache: ReturnType<typeof lru>;
   readonly hashSortCoerce = hasher({ sort: true, coerce: true });
 
   constructor(cacheSize: number) {
-    this.cache = lru(redis.cache, {
+    this.cache = lru(createRedisConnection('cache'), {
       max: cacheSize,
       namespace: 'gittrends:cache',
       maxAge: 24 * 60 * 60 * 1000

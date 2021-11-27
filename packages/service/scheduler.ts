@@ -9,10 +9,10 @@ import { CronJob } from 'cron';
 import dayjs from 'dayjs';
 import { difference, chunk, intersection, get } from 'lodash';
 
-import mongoClient, { ActorRepository, RepositoryRepository } from '@gittrends/database-config';
+import mongoClient, { Actor, MongoRepository, Repository } from '@gittrends/database-config';
 
 import { version, config } from './package.json';
-import * as redis from './redis';
+import { createRedisConnection } from './redis';
 
 /* COMMANDS */
 function resourcesParser(resources: string[]): string[] {
@@ -31,8 +31,8 @@ const repositoriesScheduler = async (
   let count = 0;
 
   return each(
-    RepositoryRepository.collection
-      .find(
+    MongoRepository.get(Repository)
+      .collection.find(
         { '_metadata.removed': { $exists: false } },
         { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
       )
@@ -64,8 +64,8 @@ const usersScheduler = async (queue: Queue<UsersJob>, wait = 24, limit = 100000)
   // find and save jobs on queue
   const before = dayjs().subtract(wait, 'hour').toISOString();
   // get metadata
-  const usersIds = await ActorRepository.collection
-    .find(
+  const usersIds = await MongoRepository.get(Actor)
+    .collection.find(
       {
         $or: [
           { '_metadata.updatedAt': { $exists: false } },
@@ -107,7 +107,7 @@ const scheduler = async (options: SchedulerOptions) => {
 
   async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
     const queue = new Queue<T>(name, {
-      connection: redis.scheduler,
+      connection: createRedisConnection('scheduler'),
       sharedConnection: true,
       defaultJobOptions: { attempts: 3, removeOnComplete, removeOnFail }
     });
@@ -128,19 +128,22 @@ const scheduler = async (options: SchedulerOptions) => {
 
   // schedule repositories updates
   const reposResources = options.resources.filter((r) => r !== 'users');
+
+  let queue: Queue;
+
   if (reposResources) {
-    const queue = await prepareQueue<RepositoryJob>('repositories');
+    queue = await prepareQueue<RepositoryJob>('repositories');
     promises.push(repositoriesScheduler(queue, reposResources, options.wait));
   }
 
   // schedule users updates
   if (options.resources.indexOf('users') >= 0) {
-    const queue = await prepareQueue<UsersJob>('users', true);
+    queue = await prepareQueue<UsersJob>('users', true);
     promises.push(usersScheduler(queue, options.wait, options.limit));
   }
 
   // await promises and finish script
-  return Promise.all(promises);
+  return Promise.all(promises).finally(() => queue.close());
 };
 
 /* Script entry point */

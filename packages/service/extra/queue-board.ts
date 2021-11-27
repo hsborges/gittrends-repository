@@ -8,17 +8,15 @@ import { Queue } from 'bullmq';
 import consola from 'consola';
 import express from 'express';
 
-import * as redis from '../redis';
+import { createRedisConnection } from '../redis';
 
 const app = express();
 const serverAdapter = new ExpressAdapter();
+const connection = createRedisConnection('scheduler');
 
 createBullBoard({
   queues: ['repositories', 'users'].map(
-    (queue) =>
-      new BullMQAdapter(
-        new Queue(queue, { connection: redis.scheduler.options, sharedConnection: true })
-      )
+    (queue) => new BullMQAdapter(new Queue(queue, { connection, sharedConnection: true }))
   ),
   serverAdapter
 });

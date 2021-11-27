@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { RepositoryRepository, Stargazer, StargazerRepository } from '@gittrends/database-config';
+import { Stargazer, MongoRepository, Repository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { InternalError, RetryableError } from '../../helpers/errors';
@@ -19,8 +19,8 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.stargazers.endCursor) {
-      this.stargazers.endCursor = await RepositoryRepository.collection
-        .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+      this.stargazers.endCursor = await MongoRepository.get(Repository)
+        .collection.findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
         .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
 
@@ -53,9 +53,9 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     if (this.stargazers.items.length >= this.writeBatchSize || this.isDone()) {
       await Promise.all([
         super.saveReferences(),
-        StargazerRepository.upsert(this.stargazers.items)
+        MongoRepository.get(Stargazer).upsert(this.stargazers.items)
       ]);
-      await RepositoryRepository.collection.updateOne(
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } }
       );
@@ -63,7 +63,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      await RepositoryRepository.collection.updateOne(
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );

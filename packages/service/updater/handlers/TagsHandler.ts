@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { RepositoryRepository, Tag, TagRepository } from '@gittrends/database-config';
+import { Tag, MongoRepository, Repository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
@@ -18,8 +18,8 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.tags.endCursor) {
-      this.tags.endCursor = await RepositoryRepository.collection
-        .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+      this.tags.endCursor = await MongoRepository.get(Repository)
+        .collection.findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
         .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
 
@@ -48,8 +48,8 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     this.tags.endCursor = pageInfo.end_cursor ?? this.tags.endCursor;
 
     if (this.tags.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([super.saveReferences(), TagRepository.upsert(this.tags.items)]);
-      await RepositoryRepository.collection.updateOne(
+      await Promise.all([super.saveReferences(), MongoRepository.get(Tag).upsert(this.tags.items)]);
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.tags.endCursor } }
       );
@@ -57,7 +57,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      await RepositoryRepository.collection.updateOne(
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );

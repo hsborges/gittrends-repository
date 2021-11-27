@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Release, ReleaseRepository, RepositoryRepository } from '@gittrends/database-config';
+import { Release, MongoRepository, Repository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
@@ -18,8 +18,8 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.releases.endCursor) {
-      this.releases.endCursor = await RepositoryRepository.collection
-        .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+      this.releases.endCursor = await MongoRepository.get(Repository)
+        .collection.findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
         .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
 
@@ -44,8 +44,11 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     this.releases.endCursor = pageInfo.end_cursor ?? this.releases.endCursor;
 
     if (this.releases.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([super.saveReferences(), ReleaseRepository.upsert(this.releases.items)]);
-      await RepositoryRepository.collection.updateOne(
+      await Promise.all([
+        super.saveReferences(),
+        MongoRepository.get(Release).upsert(this.releases.items)
+      ]);
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.releases.endCursor } }
       );
@@ -53,7 +56,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      await RepositoryRepository.collection.updateOne(
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );

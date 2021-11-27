@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Repository, RepositoryRepository } from '@gittrends/database-config';
+import { Repository, MongoRepository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { NotFoundError } from '../../helpers/errors';
@@ -54,13 +54,13 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
     this.topics.endCursor = topicsPageInfo.end_cursor ?? this.topics.endCursor;
 
     if (this.isDone()) {
-      const current = await RepositoryRepository.collection.findOne(
+      const current = await MongoRepository.get(Repository).collection.findOne(
         { _id: this.id },
         { projection: { _metadata: 1 } }
       );
 
       await super.saveReferences().then(() =>
-        RepositoryRepository.upsert(
+        MongoRepository.get(Repository).upsert(
           new Repository({
             ...this.details,
             languages: this.languages.items,
@@ -74,7 +74,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof NotFoundError) {
-      await RepositoryRepository.collection.updateOne(
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.id },
         { $set: { '_metadata.removed': true, '_metadata.removed_at': new Date() } }
       );

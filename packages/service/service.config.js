@@ -44,7 +44,7 @@ module.exports = {
     {
       name: 'repos',
       interpreter: 'node',
-      interpreter_args: '-r @gittrends/env-config',
+      interpreter_args: '--expose-gc -r @gittrends/env-config',
       script: 'dist/updater.js',
       args: ['--workers', process.env.GT_UPDATER_REPOS_WORKERS || 1],
       out_file: '/dev/null',
@@ -55,7 +55,7 @@ module.exports = {
     {
       name: 'users',
       interpreter: 'node',
-      interpreter_args: '-r @gittrends/env-config',
+      interpreter_args: '--expose-gc -r @gittrends/env-config',
       script: 'dist/updater.js',
       args: ['--type', 'users', '--workers', process.env.GT_UPDATER_USERS_WORKERS || 1],
       out_file: '/dev/null',

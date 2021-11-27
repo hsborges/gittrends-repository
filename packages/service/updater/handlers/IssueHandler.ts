@@ -5,15 +5,11 @@ import { get, omit } from 'lodash';
 
 import {
   Issue,
-  IssueRepository,
   MongoRepository,
   PullRequest,
-  PullRequestRepository,
   Reaction,
-  ReactionRepository,
-  RepositoryRepository,
-  TimelineEvent,
-  TimelineEventRepository
+  Repository,
+  TimelineEvent
 } from '@gittrends/database-config';
 
 import Component from '../../github/Component';
@@ -68,7 +64,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   private currentStage?: Stages;
   private rBatchSize: number;
   private defaultRBatchSize: number;
-  private collection: MongoRepository<Issue | PullRequest>;
+  private mongoRepository: MongoRepository<Issue | PullRequest>;
 
   constructor(id: string, alias?: string, type: TResource = 'issues') {
     super(id, alias, type);
@@ -79,21 +75,21 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     this.issues = { items: [], hasNextPage: true };
     this.debug('Issue handler built for %s (%s)', id, type);
     this.currentStage = Stages.GET_PENDING_ISSUES;
-    this.collection = this.resource === 'issues' ? IssueRepository : PullRequestRepository;
+    this.mongoRepository =
+      this.resource === 'issues' ? MongoRepository.get(Issue) : MongoRepository.get(PullRequest);
   }
 
   async component(): Promise<RepositoryComponent | Component[]> {
     if (this.currentStage === Stages.GET_PENDING_ISSUES) {
-      const type = this.resource === 'issues' ? 'Issue' : 'PullRequest';
+      const cursor = this.mongoRepository.collection
+        .find({
+          repository: this.id,
+          type: this.resource === 'issues' ? 'Issue' : 'PullRequest',
+          '_metadata.error': { $exists: true }
+        })
+        .project({ number: true, _metadata: true, id: '$_id' });
 
-      await new Promise((resolve, reject) =>
-        this.collection.collection
-          .find({ repository: this.id, type, '_metadata.error': { $exists: true } })
-          .forEach(
-            (doc) => this.addIssueToItems(doc),
-            (err) => (err ? reject(err) : resolve())
-          )
-      );
+      for await (const doc of cursor) this.addIssueToItems(doc);
     }
 
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
@@ -101,8 +97,8 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       this.currentStage = Stages.GET_ISSUES_LIST;
 
       if (!this.issues.endCursor) {
-        this.issues.endCursor = await RepositoryRepository.collection
-          .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+        this.issues.endCursor = await MongoRepository.get(Repository)
+          .collection.findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
           .then((result) => get(result, ['_metadata', this.meta.resource, 'endCursor']));
       }
 
@@ -161,6 +157,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
       );
     }
 
+    console.error(this.issues, this.pendingIssues, this.pendingReactables);
     throw new ResourceUpdateError(new Error('Invalid condition reached!'));
   }
 
@@ -180,7 +177,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     this.issues.items.push({
       data: { repository: this.id, ...issue },
       component: new (this.resource === 'issues' ? IssueComponent : PullRequestComponent)(
-        issue.id as string,
+        (issue.id ?? issue._id) as string,
         `issue_${issue.number}`
       ),
       details: { hasNextPage: true },
@@ -201,7 +198,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
         const newIssues = get(data, `${this.resourceAlias}.nodes`, []) as Record<string, unknown>[];
 
         for await (const issue of newIssues) {
-          const data = await this.collection.collection.findOne(
+          const data = await this.mongoRepository.collection.findOne(
             { _id: issue.id },
             { projection: { _metadata: true } }
           );
@@ -328,12 +325,12 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
     await Promise.all([
       super.saveReferences(),
-      (this.resource === 'issues' ? IssueRepository : PullRequestRepository).upsert(issues),
-      TimelineEventRepository.upsert(timeline),
-      ReactionRepository.upsert(reactions)
+      this.mongoRepository.upsert(issues),
+      MongoRepository.get(TimelineEvent).upsert(timeline),
+      MongoRepository.get(Reaction).upsert(reactions)
     ]);
 
-    await RepositoryRepository.collection.updateOne(
+    await MongoRepository.get(Repository).collection.updateOne(
       { _id: this.meta.id },
       { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.issues.endCursor } }
     );
@@ -342,7 +339,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     this.reactions = [];
 
     if (this.isDone()) {
-      await RepositoryRepository.collection.updateOne(
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );

@@ -1,13 +1,12 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { map } from 'bluebird';
 import { Job } from 'bullmq';
-import { flatten, shuffle } from 'lodash';
+import { flatten } from 'lodash';
 
 import Query from '../github/Query';
 import { RepositoryUpdateError, RequestError } from '../helpers/errors';
-import Cache from './Cache';
+import { Cache } from './Cache';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
 import DependenciesHandler from './handlers/DependenciesHandler';
 import IssuesHander from './handlers/IssueHandler';
@@ -18,7 +17,7 @@ import TagsHandler from './handlers/TagsHandler';
 import WatchersHandler from './handlers/WatchersHandler';
 import Updater from './Updater';
 
-export type THandler =
+export type RepositoryUpdaterHandler =
   | 'dependencies'
   | 'issues'
   | 'pull_requests'
@@ -28,16 +27,26 @@ export type THandler =
   | 'tags'
   | 'watchers';
 
-type TJob = { id: string | string[]; resources: string[]; done?: string[]; errors?: string[] };
-type TOptions = { job?: Job<TJob>; cache?: Cache };
+type RepositoryUpdaterJob = {
+  id: string | string[];
+  resources: string[];
+  done?: string[];
+  errors?: string[];
+};
 
-export default class RepositoryUpdater implements Updater {
+type RepositoryUpdaterOptions = { job?: Job<RepositoryUpdaterJob>; cache?: Cache };
+
+export class RepositoryUpdater implements Updater {
   readonly id: string;
-  readonly job?: Job<TJob>;
+  readonly job?: Job<RepositoryUpdaterJob>;
   readonly handlers: AbstractRepositoryHandler[] = [];
   readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
 
-  constructor(repositoryId: string, handlers: THandler[], opts?: TOptions) {
+  constructor(
+    repositoryId: string,
+    handlers: RepositoryUpdaterHandler[],
+    opts?: RepositoryUpdaterOptions
+  ) {
     this.id = repositoryId;
     this.job = opts?.job;
     if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHandler(this.id));
@@ -54,56 +63,62 @@ export default class RepositoryUpdater implements Updater {
     this.handlers.forEach((handler) => (handler.cache = opts?.cache));
   }
 
-  async update(handlers = this.pendingHandlers, isRetry?: boolean): Promise<void> {
-    if (handlers.length === 0) return;
+  async update(handlers = this.filterPending(this.handlers), isRetry?: boolean): Promise<void> {
+    let pendingHandlers = handlers;
+    if (pendingHandlers.length === 0) return;
 
-    return Query.create()
-      .compose(...flatten(await Promise.all(handlers.map((handler) => handler.component()))))
-      .run()
-      .then((data) => Promise.all(handlers.map((handler) => handler.update(data))))
-      .catch(async (err) => {
-        if (err instanceof RequestError) {
-          return map(shuffle(handlers), (handler) =>
-            this.update([handler], true).catch((err) =>
+    do {
+      await Query.create()
+        .compose(
+          ...flatten(await Promise.all(pendingHandlers.map((handler) => handler.component())))
+        )
+        .run()
+        .then((data) => Promise.all(pendingHandlers.map((handler) => handler.update(data))))
+        .catch(async (err) => {
+          if (isRetry || !(err instanceof RequestError)) throw err;
+
+          for (const handler of pendingHandlers) {
+            await this.update([handler], true).catch((err) =>
               handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
-            )
-          );
-        }
+            );
+          }
+        })
+        .finally(async () => {
+          if (isRetry) return;
 
-        throw err;
-      })
-      .finally(async () => {
-        if (isRetry) return;
-        if (this.job && handlers.find((h) => h.isDone())) {
-          this.job?.updateProgress(
-            Math.ceil((this.doneHandlers.length / this.handlers.length) * 100)
-          );
+          const doneHandlers = this.filterDone(pendingHandlers);
 
-          await this.job?.update({
-            ...this.job.data,
-            resources: this.pendingHandlers.map((h) => h.meta.resource),
-            done: this.doneHandlers.map((h) => h.meta.resource),
-            errors: this.errors.map((e) => e.handler.meta.resource)
-          });
-        }
-      })
-      .then(() => {
-        if (isRetry) return;
-        if (this.pendingHandlers.length) return this.update(this.pendingHandlers);
-        if (this.errors.length > 0)
-          throw new RepositoryUpdateError(this.errors.map((e) => e.error));
-      });
+          if (this.job && doneHandlers.length > 0) {
+            this.job?.updateProgress(
+              Math.ceil((this.filterDone(handlers).length / handlers.length) * 100)
+            );
+
+            await this.job?.update({
+              ...this.job.data,
+              resources: this.filterPending(handlers).map((h) => h.meta.resource),
+              done: this.filterDone(handlers).map((h) => h.meta.resource),
+              errors: this.errors.map((e) => e.handler.meta.resource)
+            });
+          }
+        });
+
+      pendingHandlers = this.filterPending(pendingHandlers);
+
+      if (global.gc) global.gc();
+    } while (!isRetry && pendingHandlers.length > 0);
+
+    if (!isRetry)
+      if (this.errors.length > 0) throw new RepositoryUpdateError(this.errors.map((e) => e.error));
   }
 
-  private get pendingHandlers(): AbstractRepositoryHandler[] {
-    return this.handlers.filter(
+  private filterPending(handlers: AbstractRepositoryHandler[]): AbstractRepositoryHandler[] {
+    return handlers.filter(
       (handler) => !handler.isDone() && !this.errors.find((e) => e.handler === handler)
     );
   }
 
-  private get doneHandlers(): AbstractRepositoryHandler[] {
-    return this.handlers.filter(
-      (handler) => handler.isDone() || this.errors.find((e) => e.handler === handler)
-    );
+  private filterDone(handlers: AbstractRepositoryHandler[]): AbstractRepositoryHandler[] {
+    const pending = this.filterPending(handlers);
+    return handlers.filter((handler) => pending.indexOf(handler) < 0);
   }
 }

@@ -10,7 +10,7 @@ import {
 } from 'class-transformer';
 import { IsDefined, validateSync, ValidationError } from 'class-validator';
 import 'es6-shim';
-import { pick, get } from 'lodash';
+import { pick } from 'lodash';
 import 'reflect-metadata';
 
 export class EntityValidationError extends Error {
@@ -33,7 +33,7 @@ function plainToEntity<T extends Entity>(
   object: Record<string, unknown>
 ): T {
   if (!object._id) {
-    const idFields = get(entity.prototype.constructor, '__id_fields');
+    const idFields = entity.prototype.constructor?.__id_fields;
     object._id = Array.isArray(idFields) ? pick(object, idFields) : object[idFields];
   }
 

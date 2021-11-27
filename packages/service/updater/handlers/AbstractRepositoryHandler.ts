@@ -4,20 +4,12 @@
 import { filter } from 'bluebird';
 import debug from 'debug';
 
-import {
-  Actor,
-  ActorRepository,
-  Commit,
-  CommitRepository,
-  Entity,
-  Milestone,
-  MilestoneRepository
-} from '@gittrends/database-config';
+import { Actor, Commit, Entity, Milestone, MongoRepository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ResourceUpdateError } from '../../helpers/errors';
 import parser from '../../helpers/response-parser';
-import Cache from '../Cache';
+import { Cache } from '../Cache';
 import Handler from '../Handler';
 
 export default abstract class AbstractRepositoryHandler extends Handler<RepositoryComponent> {
@@ -39,7 +31,7 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     this.id = id;
     this.meta = { id, resource };
     this.batchSize = this.defaultBatchSize = 100;
-    this.writeBatchSize = 1000;
+    this.writeBatchSize = 500;
     this.debug = debug(`gittrends:updater:handler:${resource}`);
   }
 
@@ -63,9 +55,15 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     ]);
 
     await Promise.all([
-      ActorRepository.insert(actors).then(() => this.cache?.add(actors)),
-      CommitRepository.upsert(commits).then(() => this.cache?.add(commits)),
-      MilestoneRepository.upsert(milestones).then(() => this.cache?.add(milestones))
+      MongoRepository.get(Actor)
+        .insert(actors)
+        .then(() => this.cache?.add(actors)),
+      MongoRepository.get(Commit)
+        .upsert(commits)
+        .then(() => this.cache?.add(commits)),
+      MongoRepository.get(Milestone)
+        .upsert(milestones)
+        .then(() => this.cache?.add(milestones))
     ]);
 
     this.actors = [];

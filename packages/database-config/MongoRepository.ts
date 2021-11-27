@@ -7,9 +7,9 @@ import { Collection, Db, Document } from 'mongodb';
 import 'reflect-metadata';
 
 import { Entity } from './entities';
-import * as Entities from './entities';
 
 export class MongoRepository<T extends Entity> {
+  private static repositories: Record<string, MongoRepository<any>> = {};
   public static db: Db;
 
   private entityRef!: ClassConstructor<T>;
@@ -57,24 +57,10 @@ export class MongoRepository<T extends Entity> {
     );
   }
 
-  public static create<T extends Entity>(entityRef: ClassConstructor<T>): MongoRepository<T> {
-    return new MongoRepository(entityRef);
+  public static get<T extends Entity>(entityRef: ClassConstructor<T>): MongoRepository<T> {
+    if (!(entityRef.name in MongoRepository.repositories))
+      MongoRepository.repositories[entityRef.name] = new MongoRepository(entityRef);
+
+    return MongoRepository.repositories[entityRef.name];
   }
 }
-
-export const ActorRepository = MongoRepository.create(Entities.Actor);
-export const CommitRepository = MongoRepository.create(Entities.Commit);
-export const DependencyRepository = MongoRepository.create(Entities.Dependency);
-export const ErrorLogRepository = MongoRepository.create(Entities.ErrorLog);
-export const GithubTokenRepository = MongoRepository.create(Entities.GithubToken);
-export const IssueRepository = MongoRepository.create(Entities.Issue);
-export const LocationRepository = MongoRepository.create(Entities.Location);
-export const MilestoneRepository = MongoRepository.create(Entities.Milestone);
-export const PullRequestRepository = MongoRepository.create(Entities.PullRequest);
-export const ReactionRepository = MongoRepository.create(Entities.Reaction);
-export const ReleaseRepository = MongoRepository.create(Entities.Release);
-export const RepositoryRepository = MongoRepository.create(Entities.Repository);
-export const StargazerRepository = MongoRepository.create(Entities.Stargazer);
-export const TagRepository = MongoRepository.create(Entities.Tag);
-export const TimelineEventRepository = MongoRepository.create(Entities.TimelineEvent);
-export const WatcherRepository = MongoRepository.create(Entities.Watcher);

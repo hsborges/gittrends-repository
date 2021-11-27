@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { RepositoryRepository, Watcher, WatcherRepository } from '@gittrends/database-config';
+import { Watcher, MongoRepository, Repository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
@@ -18,8 +18,8 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.watchers.endCursor) {
-      this.watchers.endCursor = await RepositoryRepository.collection
-        .findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
+      this.watchers.endCursor = await MongoRepository.get(Repository)
+        .collection.findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
         .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
     }
 
@@ -44,8 +44,11 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     this.watchers.endCursor = pageInfo.end_cursor ?? this.watchers.endCursor;
 
     if (this.watchers.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([super.saveReferences(), WatcherRepository.upsert(this.watchers.items)]);
-      await RepositoryRepository.collection.updateOne(
+      await Promise.all([
+        super.saveReferences(),
+        MongoRepository.get(Watcher).upsert(this.watchers.items)
+      ]);
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.watchers.endCursor } }
       );
@@ -53,7 +56,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      await RepositoryRepository.collection.updateOne(
+      await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
         { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
       );

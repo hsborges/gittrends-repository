@@ -1289,7 +1289,7 @@
     migrate-mongo "^8.2.3"
     mongodb "4.2.0"
     reflect-metadata "^0.1.13"
-    stack-trace "1.0.0-pre1"
+    stack-trace "0.0.10"
     uuid "^8.3.2"
 
 "@gittrends/database-config@link:packages/database-config":
@@ -1302,7 +1302,7 @@
     migrate-mongo "^8.2.3"
     mongodb "4.2.0"
     reflect-metadata "^0.1.13"
-    stack-trace "1.0.0-pre1"
+    stack-trace "0.0.10"
     uuid "^8.3.2"
 
 "@gittrends/env-config@file:packages/env-config":
@@ -9535,11 +9535,6 @@ stack-trace@0.0.10:
   version "0.0.10"
   resolved "https://registry.yarnpkg.com/stack-trace/-/stack-trace-0.0.10.tgz#547c70b347e8d32b4e108ea1a2a159e5fdde19c0"
   integrity sha1-VHxws0fo0ytOEI6hoqFZ5f3eGcA=
-
-stack-trace@1.0.0-pre1:
-  version "1.0.0-pre1"
-  resolved "https://registry.yarnpkg.com/stack-trace/-/stack-trace-1.0.0-pre1.tgz#3eb3c7a86ceaaa67f8b1cf2eaab4a58ad68348d0"
-  integrity sha512-biM7OwS3J2hcou7tfozHcsqhJZxX5pqMMqe/Zr6stw9uVn8Gh7ct3eFR9Gb66BBi/ToSeOgk4FsjKgZVrDIyew==
 
 stack-utils@^2.0.3:
   version "2.0.5"

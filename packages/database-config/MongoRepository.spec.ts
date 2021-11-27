@@ -28,7 +28,7 @@ describe('Test MongoRepository function', () => {
     if (!connectionUrl) throw new Error('Invalid mongodb connection url!');
     connection = await MongoClient.connect(connectionUrl);
     MongoRepository.db = connection.db();
-    entityRepository = MongoRepository.create(FakeEntity);
+    entityRepository = MongoRepository.get(FakeEntity);
   });
 
   afterAll(async () => {
@@ -62,7 +62,7 @@ describe('Test MongoRepository function', () => {
   it('should persist extra fields', async () => {
     const plainData = { _id: 'extra_field', field: '1', extraField: 1 };
     const entity = new FakeNonWhitelistEntity(plainData);
-    const entityExtraRepository = MongoRepository.create(FakeNonWhitelistEntity);
+    const entityExtraRepository = MongoRepository.get(FakeNonWhitelistEntity);
     await expect(entityExtraRepository.insert(entity)).resolves.not.toThrow();
     const insertedEntity = entityExtraRepository.collection.findOne({ _id: 'extra_field' });
     await expect(insertedEntity).resolves.toHaveProperty('extraField', plainData.extraField);

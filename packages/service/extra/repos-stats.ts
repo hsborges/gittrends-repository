@@ -6,7 +6,7 @@ import { startCase, difference, get } from 'lodash';
 import numeral from 'numeral';
 import { table } from 'table';
 
-import mongoClient, { RepositoryRepository } from '@gittrends/database-config';
+import mongoClient, { MongoRepository, Repository } from '@gittrends/database-config';
 
 import packageJson from '../package.json';
 
@@ -15,8 +15,8 @@ import packageJson from '../package.json';
 
   const reposResources = difference(packageJson.config.resources, ['users']);
 
-  const repositories = await RepositoryRepository.collection
-    .find({}, { projection: { _id: 1, _metadata: 1 } })
+  const repositories = await MongoRepository.get(Repository)
+    .collection.find({}, { projection: { _id: 1, _metadata: 1 } })
     .toArray();
 
   if (repositories.length === 0) throw new Error('Database is empty!');

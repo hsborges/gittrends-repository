@@ -6,8 +6,7 @@ import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import { chain, get, min, uniqBy } from 'lodash';
 
-import mongoClient, { Actor, Repository } from '@gittrends/database-config';
-import { ActorRepository, RepositoryRepository } from '@gittrends/database-config';
+import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/database-config';
 
 import SearchComponent from './github/components/SearchComponent';
 import Query from './github/Query';
@@ -156,21 +155,21 @@ program
 
         return Promise.all([
           filter(repos, (repo) =>
-            RepositoryRepository.collection
-              .findOne({ _id: repo.id }, { projection: { _id: 1 } })
+            MongoRepository.get(Repository)
+              .collection.findOne({ _id: repo.id }, { projection: { _id: 1 } })
               .then((data) => !data)
           ),
           filter(users, (user) =>
-            ActorRepository.collection
-              .findOne({ _id: user.id }, { projection: { _id: 1 } })
+            MongoRepository.get(Actor)
+              .collection.findOne({ _id: user.id }, { projection: { _id: 1 } })
               .then((data) => !data)
           )
         ]);
       })
       .then(async ([repos, users]) => {
         consola.info('Adding repositories to database ...');
-        await ActorRepository.insert(users.map((user) => new Actor(user)));
-        await RepositoryRepository.insert(repos.map((repo) => new Repository(repo)));
+        await MongoRepository.get(Actor).insert(users.map((user) => new Actor(user)));
+        await MongoRepository.get(Repository).insert(repos.map((repo) => new Repository(repo)));
       })
       .then(() => consola.success('Repositories successfully added!'))
       .catch((err) => consola.error(err))

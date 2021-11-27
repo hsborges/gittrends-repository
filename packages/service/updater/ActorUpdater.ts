@@ -5,7 +5,7 @@ import { mapSeries } from 'bluebird';
 import { Job } from 'bullmq';
 import { chunk } from 'lodash';
 
-import { Actor, ActorRepository } from '@gittrends/database-config';
+import { Actor, MongoRepository } from '@gittrends/database-config';
 
 import ActorComponent from '../github/components/ActorComponent';
 import Query from '../github/Query';
@@ -13,7 +13,7 @@ import { NotFoundError, RetryableError } from '../helpers/errors';
 import parser from '../helpers/response-parser';
 import Updater from './Updater';
 
-export default class ActorsUpdater implements Updater {
+export class ActorsUpdater implements Updater {
   readonly id: string[] | string;
   readonly job?: Job<{ id: string | string[] }>;
 
@@ -30,7 +30,7 @@ export default class ActorsUpdater implements Updater {
       .run()
       .then((response) => parser(response))
       .then(async ({ actors }) =>
-        ActorRepository.upsert(
+        MongoRepository.get(Actor).upsert(
           actors.map((actor) => new Actor({ ...actor, _metadata: { updatedAt: new Date() } }))
         )
       )
@@ -39,7 +39,7 @@ export default class ActorsUpdater implements Updater {
           if (ids.length > 1)
             return mapSeries(chunk(ids, Math.ceil(ids.length / 2)), (_ids) => this._update(_ids));
 
-          return ActorRepository.collection.updateOne(
+          return MongoRepository.get(Actor).collection.updateOne(
             { _id: ids[0] },
             { $set: { _metadata: { updatedAt: new Date(), error: err.message } } }
           );
