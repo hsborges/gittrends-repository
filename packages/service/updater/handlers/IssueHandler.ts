@@ -81,15 +81,13 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent | Component[]> {
     if (this.currentStage === Stages.GET_PENDING_ISSUES) {
-      const cursor = this.mongoRepository.collection
-        .find({
-          repository: this.id,
-          type: this.resource === 'issues' ? 'Issue' : 'PullRequest',
-          '_metadata.error': { $exists: true }
-        })
-        .project({ number: true, _metadata: true, id: '$_id' });
+      const cursor = this.mongoRepository.collection.find({
+        repository: this.id,
+        type: this.resource === 'issues' ? 'Issue' : 'PullRequest',
+        '_metadata.error': { $exists: true }
+      });
 
-      for await (const doc of cursor) this.addIssueToItems(doc);
+      for await (const doc of cursor) this.addIssueToItems({ id: doc._id, ...doc });
     }
 
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
