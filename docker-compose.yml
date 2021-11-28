@@ -3,7 +3,7 @@ version: '3.7'
 services:
   mongo:
     image: mongo:latest
-    command: --wiredTigerCacheSizeGB ${GT_DATABASE_CACHE_SIZE-1} --wiredTigerJournalCompressor zstd --directoryperdb --auth
+    command: --wiredTigerJournalCompressor zstd --directoryperdb --auth
     restart: always
     ports:
       - ${GT_DATABASE_PORT-27017}:27017
@@ -16,7 +16,7 @@ services:
 
   redis:
     image: redis:alpine
-    command: --maxmemory ${GT_REDIS_MAX_MEMORY-50}mb --maxmemory-policy allkeys-lru
+    command: --maxmemory-policy allkeys-lru
     restart: always
     ports:
       - ${GT_REDIS_PORT-6379}:6379
