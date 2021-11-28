@@ -132,7 +132,7 @@ export default class RepositoryComponent extends Component {
 
   includeDependencyManifests(
     include = true,
-    { first, after, alias = 'dependencyGraphManifests' }: TIncludeOpts
+    { first, after, alias = 'dependency_graph_manifests' }: TIncludeOpts
   ): this {
     this.includes.dependencies = include && {
       textFragment: `

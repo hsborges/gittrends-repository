@@ -32,7 +32,8 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
     if (this.manifests.hasNextPage) {
       return this._component.includeDependencyManifests(this.manifests.hasNextPage, {
         first: this.batchSize,
-        after: this.manifests.endCursor
+        after: this.manifests.endCursor,
+        alias: 'manifests'
       });
     }
 
@@ -57,7 +58,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       const data = super.parseResponse(response[this.alias[0]]);
 
       this.manifestsComponents.push(
-        ...get(data, 'dependency_graph_manifests.nodes', []).map(
+        ...get(data, 'manifests.nodes', []).map(
           (manifest: Record<string, unknown>, index: number) => ({
             data: manifest,
             component: new DependencyGraphManifestComponent(
@@ -71,14 +72,14 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
         )
       );
 
-      const pageInfo = get(data, 'dependency_graph_manifests.page_info', {});
+      const pageInfo = get(data, 'manifests.page_info', {});
       this.manifests.hasNextPage = pageInfo.has_next_page ?? false;
       this.manifests.endCursor = pageInfo.end_cursor ?? this.manifests.endCursor;
 
-      if (this.hasNextPage()) return;
+      return;
     }
 
-    if (response && !this.manifests.hasNextPage && this.hasNextPage) {
+    if (response && !this.manifests.hasNextPage) {
       const dependencies = this.pendingManifests.reduce((dependencies: Dependency[], manifest) => {
         const piPath = `${manifest.component.alias}.dependencies.page_info`;
         const pageInfo = get(response as unknown, piPath, {});
@@ -107,8 +108,6 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
           MongoRepository.get(Dependency).upsert(dependencies)
         ]);
       }
-
-      if (this.hasNextPage()) return;
     }
 
     if (this.isDone()) {
@@ -127,7 +126,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       }
 
       const [pending] = this.pendingManifests;
-      pending.hasNextPage = false;
+      if (pending) pending.hasNextPage = false;
 
       await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.meta.id },
