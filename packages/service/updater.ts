@@ -49,6 +49,7 @@ program
 
     const queue = new Queue(options.type, {
       redis: connectionOptions('scheduler'),
+      stallInterval: 30 * 1000,
       storeJobs: false,
       sendEvents: false
     });
@@ -84,23 +85,23 @@ program
 
         throw error;
       }
-    });
 
-    queue.on('job progress', (jobId, data) => {
-      let progress: number;
+      job.on('progress', (data) => {
+        let progress: number;
 
-      if (typeof data === 'number') progress = data;
-      else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
+        if (typeof data === 'number') progress = data;
+        else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
 
-      const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
+        const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
 
-      const message =
-        `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(jobId)} ` +
-        (typeof data !== 'number' && data.pending.length
-          ? dim(`(pending: ${data.pending.join(', ')})`)
-          : '');
+        const message =
+          `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.id)} ` +
+          (typeof data !== 'number' && data.pending.length
+            ? dim(`(pending: ${data.pending.join(', ')})`)
+            : '');
 
-      consola[progress === 100 ? 'success' : 'info'](message);
+        consola[progress === 100 ? 'success' : 'info'](message);
+      });
     });
   })
   .parse(process.argv);
