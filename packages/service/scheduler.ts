@@ -1,8 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { each } from 'bluebird';
-import { Queue } from 'bullmq';
+import Queue from 'bee-queue';
 import { program } from 'commander';
 import consola from 'consola';
 import { CronJob } from 'cron';
@@ -12,7 +11,7 @@ import { difference, chunk, intersection, get } from 'lodash';
 import mongoClient, { Actor, MongoRepository, Repository } from '@gittrends/database-config';
 
 import { version, config } from './package.json';
-import { createRedisConnection } from './redis';
+import { connectionOptions } from './redis';
 
 /* COMMANDS */
 function resourcesParser(resources: string[]): string[] {
@@ -30,34 +29,30 @@ const repositoriesScheduler = async (
   // find and save jobs on queue
   let count = 0;
 
-  return each(
-    MongoRepository.get(Repository)
-      .collection.find(
-        { '_metadata.removed': { $exists: false } },
-        { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
-      )
-      .toArray(),
-    async (data) => {
-      const exclude: string[] = resources.filter((resource) => {
-        const updatedAt = get(data, ['_metadata', resource, 'updatedAt']);
-        return updatedAt && dayjs().subtract(wait, 'hour').isBefore(updatedAt);
-      });
+  const repos = MongoRepository.get(Repository).collection.find(
+    { '_metadata.removed': { $exists: false } },
+    { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
+  );
 
-      const _resources = difference(resources, exclude);
+  for await (const repo of repos) {
+    const exclude: string[] = resources.filter((resource) => {
+      const updatedAt = get(repo, ['_metadata', resource, 'updatedAt']);
+      return updatedAt && dayjs().subtract(wait, 'hour').isBefore(updatedAt);
+    });
 
-      if (_resources.length) {
-        count += 1;
-        await queue
-          .getJob((data.name_with_owner as string).toLowerCase())
-          .then(async (job) => !(await job?.isActive()) && job?.remove());
-        await queue.add(
-          '__default__',
-          { id: data._id.toString(), resources: _resources, excluded: exclude },
-          { jobId: (data.name_with_owner as string).toLowerCase() }
-        );
-      }
+    const _resources = difference(resources, exclude);
+
+    if (_resources.length) {
+      count += 1;
+      await queue
+        .createJob({ id: repo._id.toString(), resources: _resources, excluded: exclude })
+        .setId((repo.name_with_owner as string).toLowerCase())
+        .retries(3)
+        .save();
     }
-  ).then(async () => consola.success(`Number of repositories scheduled: ${count}`));
+  }
+
+  consola.success(`Number of repositories scheduled: ${count}`);
 };
 
 const usersScheduler = async (queue: Queue<UsersJob>, wait = 24, limit = 100000) => {
@@ -79,7 +74,7 @@ const usersScheduler = async (queue: Queue<UsersJob>, wait = 24, limit = 100000)
     .then((users) => users.map((r) => r._id.toString()));
   // add to queue
   return Promise.all(
-    chunk(usersIds, 25).map((id) => queue.add('__default__', { id }, { jobId: `users@${id[0]}+` }))
+    chunk(usersIds, 25).map((id) => queue.createJob({ id }).setId(`users@${id[0]}+`).save())
   ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
 };
 
@@ -107,17 +102,22 @@ const scheduler = async (options: SchedulerOptions) => {
 
   async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
     const queue = new Queue<T>(name, {
-      connection: createRedisConnection('scheduler'),
-      sharedConnection: true,
-      defaultJobOptions: { attempts: 3, removeOnComplete, removeOnFail }
+      redis: connectionOptions('scheduler'),
+      removeOnSuccess: removeOnComplete,
+      removeOnFailure: removeOnFail,
+      isWorker: false,
+      getEvents: false,
+      sendEvents: false
     });
 
     if (options.destroyQueue) {
-      await Promise.all([
-        queue.clean(0, Number.MAX_SAFE_INTEGER, 'completed'),
-        queue.clean(0, Number.MAX_SAFE_INTEGER, 'failed'),
-        queue.drain(true)
-      ]);
+      await Promise.all(
+        ['succeeded', 'failed', 'waiting'].map((status) =>
+          queue.getJobs(status, { size: Number.MAX_SAFE_INTEGER })
+        )
+      )
+        .then((jobsList) => jobsList.reduce((memo, list) => memo.concat(list), []))
+        .then((jobs) => Promise.all(jobs.map((job) => job.remove())));
     }
 
     return queue;

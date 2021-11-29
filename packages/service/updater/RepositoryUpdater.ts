@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bullmq';
+import { Job } from 'bee-queue';
 import { flatten } from 'lodash';
 
 import Query from '../github/Query';
@@ -88,16 +88,9 @@ export class RepositoryUpdater implements Updater {
         .finally(async () => {
           if (isRetry) return;
 
-          const doneHandlers = this.filterDone(pendingHandlers);
-
-          if (this.job && doneHandlers.length > 0) {
-            this.job?.updateProgress(
-              Math.ceil((this.filterDone(handlers).length / handlers.length) * 100)
-            );
-
-            await this.job?.update({
-              ...this.job.data,
-              resources: this.filterPending(handlers).map((h) => h.meta.resource),
+          if (this.job && this.filterDone(pendingHandlers).length > 0) {
+            this.job?.reportProgress({
+              pending: this.filterPending(handlers).map((h) => h.meta.resource),
               done: this.filterDone(handlers).map((h) => h.meta.resource),
               errors: this.errors.map((e) => e.handler.meta.resource)
             });

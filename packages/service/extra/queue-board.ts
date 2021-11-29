@@ -1,27 +1,29 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { createBullBoard } from '@bull-board/api';
-import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import { ExpressAdapter } from '@bull-board/express';
-import { Queue } from 'bullmq';
+import Bee from 'bee-queue';
+import Arena from 'bull-arena';
 import consola from 'consola';
 import express from 'express';
 
-import { createRedisConnection } from '../redis';
+import { connectionOptions } from '../redis';
 
 const app = express();
-const serverAdapter = new ExpressAdapter();
-const connection = createRedisConnection('scheduler');
 
-createBullBoard({
-  queues: ['repositories', 'users'].map(
-    (queue) => new BullMQAdapter(new Queue(queue, { connection, sharedConnection: true }))
-  ),
-  serverAdapter
-});
+const arena = Arena(
+  {
+    Bee,
+    queues: ['repositories', 'users'].map((source) => ({
+      type: 'bee',
+      name: source,
+      hostId: source,
+      redis: connectionOptions('scheduler')
+    }))
+  },
+  { disableListen: true }
+);
 
-app.use('/', serverAdapter.getRouter());
+app.use('/', arena);
 
 const port = process.env.PORT || 8082;
 app.listen(port, () => consola.success(`Bull board running on http://localhost:${port}`));
