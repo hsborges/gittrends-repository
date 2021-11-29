@@ -50,8 +50,9 @@ program
     const queue = new Queue(options.type, {
       redis: connectionOptions('scheduler'),
       stallInterval: 30 * 1000,
-      storeJobs: false,
-      sendEvents: false
+      isWorker: true,
+      sendEvents: false,
+      storeJobs: false
     });
 
     queue.checkStalledJobs(5000);
@@ -59,7 +60,8 @@ program
     queue.process(options.workers, async (job) => {
       const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
 
-      job.on('progress', (data) => {
+      const originalReportProgress = job.reportProgress.bind(job);
+      job.reportProgress = (data: any) => {
         let progress: number;
 
         if (typeof data === 'number') progress = data;
@@ -74,7 +76,9 @@ program
             : '');
 
         consola[progress === 100 ? 'success' : 'info'](message);
-      });
+
+        originalReportProgress(data);
+      };
 
       try {
         if (options.type === 'users') {
