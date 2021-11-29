@@ -48,8 +48,9 @@ program
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
     const queue = new Queue(options.type, {
+      redis: connectionOptions('scheduler'),
       storeJobs: false,
-      redis: connectionOptions('scheduler')
+      sendEvents: false
     });
 
     queue.checkStalledJobs(5000);
