@@ -59,6 +59,23 @@ program
     queue.process(options.workers, async (job) => {
       const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
 
+      job.on('progress', (data) => {
+        let progress: number;
+
+        if (typeof data === 'number') progress = data;
+        else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
+
+        const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
+
+        const message =
+          `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.id)} ` +
+          (typeof data !== 'number' && data.pending.length
+            ? dim(`(pending: ${data.pending.join(', ')})`)
+            : '');
+
+        consola[progress === 100 ? 'success' : 'info'](message);
+      });
+
       try {
         if (options.type === 'users') {
           return new ActorsUpdater(job.data.id, { job }).update();
@@ -85,23 +102,6 @@ program
 
         throw error;
       }
-
-      job.on('progress', (data) => {
-        let progress: number;
-
-        if (typeof data === 'number') progress = data;
-        else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
-
-        const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
-
-        const message =
-          `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.id)} ` +
-          (typeof data !== 'number' && data.pending.length
-            ? dim(`(pending: ${data.pending.join(', ')})`)
-            : '');
-
-        consola[progress === 100 ? 'success' : 'info'](message);
-      });
     });
   })
   .parse(process.argv);
