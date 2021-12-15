@@ -50,7 +50,7 @@ module.exports = {
       instances: process.env.GT_UPDATER_REPOS_INSTANCES || 1,
       out_file: '/dev/null',
       watch: ['dist/'],
-      max_memory_restart: '250M',
+      max_memory_restart: '512M',
       restart_delay: 5 * 1000
     },
     {
@@ -62,7 +62,7 @@ module.exports = {
       instances: process.env.GT_UPDATER_USERS_INSTANCES || 1,
       out_file: '/dev/null',
       watch: ['dist/'],
-      max_memory_restart: '250M',
+      max_memory_restart: '512M',
       restart_delay: 5 * 1000
     }
   ]
