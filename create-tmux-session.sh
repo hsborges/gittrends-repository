@@ -1,7 +1,7 @@
 Cols=$(tput cols)
 
 tmux new-session \; \
-  send-keys 'yarn workspace @gittrends/service pm2 logs "/repos|users|scheduler/"' Enter  \; \
+  send-keys 'yarn workspace @gittrends/service pm2 logs --raw "/repos|users|scheduler/"' Enter  \; \
   split-window -v \; \
   send-keys 'yarn workspace @gittrends/service pm2 logs --raw proxy-server' Enter  \; \
   split-window -h \; \
