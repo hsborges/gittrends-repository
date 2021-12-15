@@ -9,13 +9,24 @@ import { RepositoryUpdateError, RequestError } from '../helpers/errors';
 import { Cache } from './Cache';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
 import DependenciesHandler from './handlers/DependenciesHandler';
-import IssuesHander from './handlers/IssueHandler';
+import IssuesHander, { PullRequestHander } from './handlers/IssueHandler';
 import ReleasesHandler from './handlers/ReleasesHandler';
 import RepositoryHander from './handlers/RepositoryHandler';
 import StargazersHandler from './handlers/StargazersHandler';
 import TagsHandler from './handlers/TagsHandler';
 import WatchersHandler from './handlers/WatchersHandler';
 import Updater from './Updater';
+
+const AVAILABLE_HANDLERS = [
+  DependenciesHandler,
+  IssuesHander,
+  PullRequestHander,
+  RepositoryHander,
+  ReleasesHandler,
+  StargazersHandler,
+  TagsHandler,
+  WatchersHandler
+];
 
 export type RepositoryUpdaterHandler =
   | 'dependencies'
@@ -39,7 +50,7 @@ type RepositoryUpdaterOptions = { job?: Job<RepositoryUpdaterJob>; cache?: Cache
 export class RepositoryUpdater implements Updater {
   readonly id: string;
   readonly job?: Job<RepositoryUpdaterJob>;
-  readonly handlers: AbstractRepositoryHandler[] = [];
+  readonly handlers: Record<string, AbstractRepositoryHandler> = {};
   readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
 
   constructor(
@@ -49,21 +60,19 @@ export class RepositoryUpdater implements Updater {
   ) {
     this.id = repositoryId;
     this.job = opts?.job;
-    if (handlers.includes('dependencies')) this.handlers.push(new DependenciesHandler(this.id));
-    if (handlers.includes('issues'))
-      this.handlers.push(new IssuesHander(this.id, undefined, 'issues'));
-    if (handlers.includes('pull_requests'))
-      this.handlers.push(new IssuesHander(this.id, undefined, 'pull_requests'));
-    if (handlers.includes('repository')) this.handlers.push(new RepositoryHander(this.id));
-    if (handlers.includes('releases')) this.handlers.push(new ReleasesHandler(this.id));
-    if (handlers.includes('stargazers')) this.handlers.push(new StargazersHandler(this.id));
-    if (handlers.includes('tags')) this.handlers.push(new TagsHandler(this.id));
-    if (handlers.includes('watchers')) this.handlers.push(new WatchersHandler(this.id));
 
-    this.handlers.forEach((handler) => (handler.cache = opts?.cache));
+    handlers.forEach((resource) => {
+      const Class = AVAILABLE_HANDLERS.find((handler) => handler.resource === resource);
+      if (!Class) throw new Error(`Handler for '${resource}' not found!`);
+      this.handlers[resource] = new Class(this.id);
+      this.handlers[resource].cache = opts?.cache;
+    });
   }
 
-  async update(handlers = this.filterPending(this.handlers), isRetry?: boolean): Promise<void> {
+  async update(
+    handlers = this.filterPending(Object.values(this.handlers)),
+    isRetry?: boolean
+  ): Promise<void> {
     let pendingHandlers = handlers;
     if (pendingHandlers.length === 0) return;
 
@@ -90,9 +99,15 @@ export class RepositoryUpdater implements Updater {
 
           if (this.job && this.filterDone(pendingHandlers).length > 0) {
             this.job?.reportProgress({
-              pending: this.filterPending(handlers).map((h) => h.meta.resource),
-              done: this.filterDone(handlers).map((h) => h.meta.resource),
-              errors: this.errors.map((e) => e.handler.meta.resource)
+              pending: this.filterPending(handlers).map(
+                (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
+              ),
+              done: this.filterDone(handlers).map(
+                (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
+              ),
+              errors: this.errors.map(
+                (e) => (e.handler.constructor as typeof AbstractRepositoryHandler).resource
+              )
             });
           }
         });

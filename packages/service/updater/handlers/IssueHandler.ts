@@ -46,7 +46,6 @@ type TReactableMetadata = {
 type TResource = 'issues' | 'pull_requests';
 
 enum Stages {
-  GET_PENDING_ISSUES,
   GET_ISSUES_LIST,
   GET_ISSUES_DETAILS,
   GET_REACTIONS
@@ -56,7 +55,9 @@ function isSuccess(number: number | undefined): boolean {
   return number ? Math.floor(number / 100) === 2 : false;
 }
 
-export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
+export default class IssuesHander extends AbstractRepositoryHandler {
+  static resource: TResource = 'issues';
+
   private resource: TResource;
   private resourceAlias: string;
   private issues: { items: TIssueMetadata[]; hasNextPage: boolean; endCursor?: string };
@@ -65,60 +66,59 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   private rBatchSize: number;
   private defaultRBatchSize: number;
   private mongoRepository: MongoRepository<Issue | PullRequest>;
+  private hasPendingIssues: boolean = true;
 
-  constructor(id: string, alias?: string, type: TResource = 'issues') {
-    super(id, alias, type);
+  constructor(id: string, alias?: string, type: TResource = IssuesHander.resource) {
+    super(id, alias);
     this.resource = type;
     this.resourceAlias = `_${type}`;
     this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 10;
     this.rBatchSize = this.defaultRBatchSize = 100;
     this.issues = { items: [], hasNextPage: true };
-    this.debug('Issue handler built for %s (%s)', id, type);
-    this.currentStage = Stages.GET_PENDING_ISSUES;
     this.mongoRepository =
       this.resource === 'issues' ? MongoRepository.get(Issue) : MongoRepository.get(PullRequest);
   }
 
   async component(): Promise<RepositoryComponent | Component[]> {
-    if (this.currentStage === Stages.GET_PENDING_ISSUES) {
-      const cursor = this.mongoRepository.collection.find({
-        repository: this.id,
-        type: this.resource === 'issues' ? 'Issue' : 'PullRequest',
-        '_metadata.error': { $exists: true }
-      });
-
-      for await (const doc of cursor) this.addIssueToItems({ id: doc._id, ...doc });
-    }
-
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
-      this.debug('Updating component (stage: %s)', Stages[Stages.GET_ISSUES_LIST]);
-      this.currentStage = Stages.GET_ISSUES_LIST;
+      if (this.hasPendingIssues) {
+        const cursor = this.mongoRepository.collection
+          .find({
+            repository: this.id,
+            type: this.resource === 'issues' ? 'Issue' : 'PullRequest',
+            '_metadata.error': { $exists: true }
+          })
+          .limit(this.batchSize);
 
-      if (!this.issues.endCursor) {
-        this.issues.endCursor = await MongoRepository.get(Repository)
-          .collection.findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
-          .then((result) => get(result, ['_metadata', this.meta.resource, 'endCursor']));
+        for await (const doc of cursor) this.addIssueToItems({ id: doc._id, ...doc });
+
+        this.hasPendingIssues = this.pendingIssues.length === this.batchSize;
       }
 
-      const includeMethod = (
-        this.resource === 'issues'
-          ? this._component.includeIssues
-          : this._component.includePullRequests
-      ).bind(this._component);
+      if (this.pendingIssues.length === 0) {
+        this.currentStage = Stages.GET_ISSUES_LIST;
 
-      return includeMethod(true, {
-        first: this.batchSize,
-        after: this.issues.endCursor,
-        alias: this.resourceAlias
-      });
+        if (!this.issues.endCursor) {
+          this.issues.endCursor = await MongoRepository.get(Repository)
+            .collection.findOne({ _id: this.id }, { projection: { _metadata: 1 } })
+            .then((result) => get(result, ['_metadata', this.resource, 'endCursor']));
+        }
+
+        const includeMethod = (
+          this.resource === 'issues'
+            ? this._component.includeIssues
+            : this._component.includePullRequests
+        ).bind(this._component);
+
+        return includeMethod(true, {
+          first: this.batchSize,
+          after: this.issues.endCursor,
+          alias: this.resourceAlias
+        });
+      }
     }
 
     if (this.pendingIssues.length) {
-      this.debug(
-        'Updating component (stage: %s, items: %d)',
-        Stages[Stages.GET_ISSUES_DETAILS],
-        this.pendingIssues.length
-      );
       this.currentStage = Stages.GET_ISSUES_DETAILS;
 
       return this.pendingIssues.map((issue) =>
@@ -144,7 +144,6 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     }
 
     if (this.pendingReactables.length) {
-      this.debug('Updating component (stage: %s)', Stages[Stages.GET_REACTIONS]);
       this.currentStage = Stages.GET_REACTIONS;
 
       return this.pendingReactables.map((reactable) =>
@@ -160,12 +159,7 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: Record<string, unknown>): Promise<void> {
-    this.debug('Processing %s information.', this.resource);
     return this._update(response).finally(() => {
-      this.debug('Information updated. %o', {
-        ...this.issues,
-        items: this.issues.items.length
-      });
       this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
       this.rBatchSize = Math.min(this.defaultRBatchSize, this.rBatchSize * 2);
     });
@@ -329,8 +323,8 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     ]);
 
     await MongoRepository.get(Repository).collection.updateOne(
-      { _id: this.meta.id },
-      { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.issues.endCursor } }
+      { _id: this.id },
+      { $set: { [`_metadata.${this.resource}.endCursor`]: this.issues.endCursor } }
     );
 
     this.issues.items = [];
@@ -338,8 +332,8 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
 
     if (this.isDone()) {
       await MongoRepository.get(Repository).collection.updateOne(
-        { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
+        { _id: this.id },
+        { $set: { [`_metadata.${this.resource}.updatedAt`]: new Date() } }
       );
     }
   }
@@ -414,5 +408,13 @@ export default class RepositoryIssuesHander extends AbstractRepositoryHandler {
     return (
       this.issues.hasNextPage || this.pendingIssues.length > 0 || this.pendingReactables.length > 0
     );
+  }
+}
+
+export class PullRequestHander extends IssuesHander {
+  static resource: TResource = 'pull_requests';
+
+  constructor(id: string, alias?: string) {
+    super(id, alias, PullRequestHander.resource);
   }
 }

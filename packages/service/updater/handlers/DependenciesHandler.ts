@@ -19,11 +19,13 @@ type TManifestMetadata = {
 };
 
 export default class DependenciesHandler extends AbstractRepositoryHandler {
+  static resource: string = 'dependencies';
+
   readonly manifests: { hasNextPage: boolean; endCursor?: string };
   readonly manifestsComponents: Array<TManifestMetadata>;
 
   constructor(id: string, alias?: string) {
-    super(id, alias, 'dependencies');
+    super(id, alias);
     this.manifests = { hasNextPage: true };
     this.manifestsComponents = [];
   }
@@ -112,8 +114,8 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
 
     if (this.isDone()) {
       await MongoRepository.get(Repository).collection.updateOne(
-        { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
+        { _id: this.id },
+        { $set: { [`_metadata.${DependenciesHandler.resource}.updatedAt`]: new Date() } }
       );
     }
   }
@@ -129,8 +131,8 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       if (pending) pending.hasNextPage = false;
 
       await MongoRepository.get(Repository).collection.updateOne(
-        { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.error`]: err.message } }
+        { _id: this.id },
+        { $set: { [`_metadata.${DependenciesHandler.resource}.error`]: err.message } }
       );
     }
 

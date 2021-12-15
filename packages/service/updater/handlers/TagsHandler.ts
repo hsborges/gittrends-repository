@@ -9,23 +9,25 @@ import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 export default class TagsHandler extends AbstractRepositoryHandler {
-  tags: { items: Tag[]; hasNextPage: boolean; endCursor?: string };
+  static resource: string = 'tags';
+
+  meta: { hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
-    super(id, alias, 'tags');
-    this.tags = { items: [], hasNextPage: true };
+    super(id, alias);
+    this.meta = { hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent> {
-    if (!this.tags.endCursor) {
-      this.tags.endCursor = await MongoRepository.get(Repository)
-        .collection.findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
-        .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
+    if (!this.meta.endCursor) {
+      this.meta.endCursor = await MongoRepository.get(Repository)
+        .collection.findOne({ _id: this.id }, { projection: { _metadata: 1 } })
+        .then((res) => res && get(res, `_metadata.${TagsHandler.resource}.endCursor`));
     }
 
-    return this._component.includeTags(this.tags.hasNextPage, {
+    return this._component.includeTags(this.meta.hasNextPage, {
       first: this.batchSize,
-      after: this.tags.endCursor,
+      after: this.meta.endCursor,
       alias: '_tags'
     });
   }
@@ -33,38 +35,37 @@ export default class TagsHandler extends AbstractRepositoryHandler {
   async update(response: Record<string, unknown>): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
-    this.tags.items.push(
-      ...get<Record<string, unknown>[]>(data, '_tags.nodes', []).map(
-        (tag) =>
-          new Tag({
-            repository: this.id,
-            ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as Record<string, unknown>)
-          })
-      )
-    );
-
     const pageInfo = get(data, '_tags.page_info', {});
-    this.tags.hasNextPage = pageInfo.has_next_page ?? false;
-    this.tags.endCursor = pageInfo.end_cursor ?? this.tags.endCursor;
+    this.meta.hasNextPage = pageInfo.has_next_page ?? false;
+    this.meta.endCursor = pageInfo.end_cursor ?? this.meta.endCursor;
 
-    if (this.tags.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([super.saveReferences(), MongoRepository.get(Tag).upsert(this.tags.items)]);
-      await MongoRepository.get(Repository).collection.updateOne(
-        { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.tags.endCursor } }
-      );
-      this.tags.items = [];
-    }
+    await Promise.all([
+      super.saveReferences(),
+      MongoRepository.get(Tag).upsert(
+        get<Record<string, unknown>[]>(data, '_tags.nodes', []).map(
+          (tag) =>
+            new Tag({
+              repository: this.id,
+              ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as Record<string, unknown>)
+            })
+        )
+      )
+    ]);
+
+    await MongoRepository.get(Repository).collection.updateOne(
+      { _id: this.id },
+      { $set: { [`_metadata.${TagsHandler.resource}.endCursor`]: this.meta.endCursor } }
+    );
 
     if (this.isDone()) {
       await MongoRepository.get(Repository).collection.updateOne(
-        { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
+        { _id: this.id },
+        { $set: { [`_metadata.${TagsHandler.resource}.updatedAt`]: new Date() } }
       );
     }
   }
 
   hasNextPage(): boolean {
-    return this.tags.hasNextPage;
+    return this.meta.hasNextPage;
   }
 }

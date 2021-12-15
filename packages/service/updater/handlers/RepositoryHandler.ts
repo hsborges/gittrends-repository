@@ -12,26 +12,28 @@ import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
 
 export default class RepositoryHander extends AbstractRepositoryHandler {
+  static resource: string = 'repository';
+
   details?: Record<string, unknown>;
-  languages: TMetadata;
-  topics: TMetadata;
+  languagesMeta: TMetadata;
+  topicsMeta: TMetadata;
 
   constructor(id: string, alias?: string) {
-    super(id, alias, 'repository');
-    this.languages = { items: [], hasNextPage: true };
-    this.topics = { items: [], hasNextPage: true };
+    super(id, alias);
+    this.languagesMeta = { items: [], hasNextPage: true };
+    this.topicsMeta = { items: [], hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent> {
     return this._component
       .includeDetails(!this.details)
-      .includeLanguages(this.languages.hasNextPage, {
+      .includeLanguages(this.languagesMeta.hasNextPage, {
         first: this.batchSize,
-        after: this.languages?.endCursor
+        after: this.languagesMeta?.endCursor
       })
-      .includeTopics(this.topics.hasNextPage, {
+      .includeTopics(this.topicsMeta.hasNextPage, {
         first: this.batchSize,
-        after: this.topics?.endCursor
+        after: this.topicsMeta?.endCursor
       });
   }
 
@@ -40,18 +42,18 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
 
     if (!this.details) this.details = data;
 
-    this.languages.items.push(...get<[]>(data, 'languages.edges', []));
-    this.topics.items.push(
+    this.languagesMeta.items.push(...get<[]>(data, 'languages.edges', []));
+    this.topicsMeta.items.push(
       ...get<[]>(data, 'repository_topics.nodes', []).map((t: Record<string, unknown>) => t.topic)
     );
 
     const langPageInfo = get(data, 'languages.page_info', {});
-    this.languages.hasNextPage = langPageInfo.has_next_page ?? false;
-    this.languages.endCursor = langPageInfo.end_cursor ?? this.languages.endCursor;
+    this.languagesMeta.hasNextPage = langPageInfo.has_next_page ?? false;
+    this.languagesMeta.endCursor = langPageInfo.end_cursor ?? this.languagesMeta.endCursor;
 
     const topicsPageInfo = get(data, 'repository_topics.page_info', {});
-    this.topics.hasNextPage = topicsPageInfo.has_next_page ?? false;
-    this.topics.endCursor = topicsPageInfo.end_cursor ?? this.topics.endCursor;
+    this.topicsMeta.hasNextPage = topicsPageInfo.has_next_page ?? false;
+    this.topicsMeta.endCursor = topicsPageInfo.end_cursor ?? this.topicsMeta.endCursor;
 
     if (this.isDone()) {
       const current = await MongoRepository.get(Repository).collection.findOne(
@@ -63,9 +65,9 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
         MongoRepository.get(Repository).upsert(
           new Repository({
             ...this.details,
-            languages: this.languages.items,
-            repository_topics: this.topics.items,
-            _metadata: { ...current?._metadata, [this.meta.resource]: { updatedAt: new Date() } }
+            languages: this.languagesMeta.items,
+            repository_topics: this.topicsMeta.items,
+            _metadata: { ...current?._metadata, repository: { updatedAt: new Date() } }
           })
         )
       );
@@ -85,6 +87,6 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
   }
 
   hasNextPage(): boolean {
-    return !this.details || this.languages.hasNextPage || this.topics.hasNextPage;
+    return !this.details || this.languagesMeta.hasNextPage || this.topicsMeta.hasNextPage;
   }
 }

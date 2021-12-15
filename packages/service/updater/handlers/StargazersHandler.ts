@@ -10,23 +10,25 @@ import { InternalError, RetryableError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
-  stargazers: { items: Stargazer[]; hasNextPage: boolean; endCursor?: string };
+  static resource: string = 'stargazers';
+
+  meta: { hasNextPage: boolean; endCursor?: string };
 
   constructor(id: string, alias?: string) {
-    super(id, alias, 'stargazers');
-    this.stargazers = { items: [], hasNextPage: true };
+    super(id, alias);
+    this.meta = { hasNextPage: true };
   }
 
   async component(): Promise<RepositoryComponent> {
-    if (!this.stargazers.endCursor) {
-      this.stargazers.endCursor = await MongoRepository.get(Repository)
-        .collection.findOne({ _id: this.meta.id }, { projection: { _metadata: 1 } })
-        .then((result) => result && get(result, ['_metadata', this.meta.resource, 'endCursor']));
+    if (!this.meta.endCursor) {
+      this.meta.endCursor = await MongoRepository.get(Repository)
+        .collection.findOne({ _id: this.id }, { projection: { _metadata: 1 } })
+        .then((res) => res && get(res, `_metadata.${StargazersHandler.resource}.endCursor`));
     }
 
-    return this._component.includeStargazers(this.stargazers.hasNextPage, {
+    return this._component.includeStargazers(this.meta.hasNextPage, {
       first: this.batchSize,
-      after: this.stargazers.endCursor,
+      after: this.meta.endCursor,
       alias: '_stargazers'
     });
   }
@@ -40,53 +42,36 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
   private async _update(response: Record<string, unknown>): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
-    this.stargazers.items.push(
-      ...get<{ user: string; starred_at: Date }[]>(data, '_stargazers.edges', []).map(
-        (stargazer) => new Stargazer({ repository: this.id, ...stargazer })
-      )
-    );
-
     const pageInfo = get(data, '_stargazers.page_info', {});
-    this.stargazers.hasNextPage = pageInfo.has_next_page ?? false;
-    this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
+    this.meta.hasNextPage = pageInfo.has_next_page ?? false;
+    this.meta.endCursor = pageInfo.end_cursor ?? this.meta.endCursor;
 
-    if (this.stargazers.items.length >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([
-        super.saveReferences(),
-        MongoRepository.get(Stargazer).upsert(this.stargazers.items)
-      ]);
-      await MongoRepository.get(Repository).collection.updateOne(
-        { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.endCursor`]: this.stargazers.endCursor } }
-      );
-      this.stargazers.items = [];
-    }
+    await Promise.all([
+      super.saveReferences(),
+      MongoRepository.get(Stargazer).upsert(
+        get<{ user: string; starred_at: Date }[]>(data, '_stargazers.edges', [])
+          .map((stargazer) => new Stargazer({ repository: this.id, ...stargazer }))
+          .filter((star) => star && star._id.starred_at)
+      )
+    ]);
+
+    await MongoRepository.get(Repository).collection.updateOne(
+      { _id: this.id },
+      { $set: { [`_metadata.${StargazersHandler.resource}.endCursor`]: this.meta.endCursor } }
+    );
 
     if (this.isDone()) {
       await MongoRepository.get(Repository).collection.updateOne(
-        { _id: this.meta.id },
-        { $set: { [`_metadata.${this.meta.resource}.updatedAt`]: new Date() } }
+        { _id: this.id },
+        { $set: { [`_metadata.${StargazersHandler.resource}.updatedAt`]: new Date() } }
       );
     }
   }
 
   async error(err: Error): Promise<void> {
     if (err instanceof InternalError) {
-      const data = super.parseResponse(get(err, `response.data.${this.alias as string}`));
-
-      this.stargazers.items.push(
-        ...get(data, '_stargazers.edges', [])
-          .filter((star: Record<string, unknown>) => star && star.starred_at)
-          .map((star: Record<string, unknown>) => ({ repository: this.id, ...star }))
-      );
-
-      const pageInfo = get(data, '_stargazers.page_info');
-      this.stargazers.endCursor = pageInfo.end_cursor ?? this.stargazers.endCursor;
-
-      return;
-    }
-
-    if (err instanceof RetryableError) {
+      return this.update(get(err, 'response.data'));
+    } else if (err instanceof RetryableError) {
       if (this.batchSize > 1) {
         this.batchSize = 1;
         return;
@@ -97,6 +82,6 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
   }
 
   hasNextPage(): boolean {
-    return this.stargazers.hasNextPage;
+    return this.meta.hasNextPage;
   }
 }

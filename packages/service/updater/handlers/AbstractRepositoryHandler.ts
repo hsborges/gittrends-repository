@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import { filter } from 'bluebird';
-import debug from 'debug';
 
 import { Actor, Commit, Entity, Milestone, MongoRepository } from '@gittrends/database-config';
 
@@ -13,26 +12,22 @@ import { Cache } from '../Cache';
 import Handler from '../Handler';
 
 export default abstract class AbstractRepositoryHandler extends Handler<RepositoryComponent> {
-  readonly id: string;
-  readonly meta: { id: string; resource: string };
+  static readonly resource: string;
 
-  protected debug;
+  readonly id: string;
+
   protected actors: Actor[] = [];
   protected commits: Commit[] = [];
   protected milestones: Milestone[] = [];
 
   cache?: Cache;
-  writeBatchSize: number;
   batchSize: number;
   defaultBatchSize: number;
 
-  protected constructor(id: string, alias = 'repository', resource: string) {
+  protected constructor(id: string, alias = 'repository') {
     super(new RepositoryComponent(id).setAlias(alias));
     this.id = id;
-    this.meta = { id, resource };
     this.batchSize = this.defaultBatchSize = 100;
-    this.writeBatchSize = 500;
-    this.debug = debug(`gittrends:updater:handler:${resource}`);
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
