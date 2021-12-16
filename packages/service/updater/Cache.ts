@@ -1,33 +1,30 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { map } from 'bluebird';
+import LRU from 'lru-cache';
 import hasher from 'node-object-hash';
-import lru from 'redis-lru';
 
 import { Entity } from '@gittrends/database-config';
 
-import { createRedisConnection } from '../redis';
-
 export class Cache {
-  readonly cache: ReturnType<typeof lru>;
+  readonly cache: LRU<string, void>;
   readonly hashSortCoerce = hasher({ sort: true, coerce: true });
 
   constructor(cacheSize: number) {
-    this.cache = lru(createRedisConnection('cache'), {
-      max: cacheSize,
-      namespace: 'gittrends:cache',
-      maxAge: 24 * 60 * 60 * 1000
-    });
+    this.cache = new LRU({ max: cacheSize, updateAgeOnGet: true });
   }
 
-  async add(object: Entity | Entity[]): Promise<void> {
-    await map(Array.isArray(object) ? object : [object], (object) =>
-      this.cache.set(object._id ? object._id : this.hashSortCoerce.hash(object.toJSON()), 1)
+  private getKey(object: Entity): string {
+    return object._id ? object._id : this.hashSortCoerce.hash(object.toJSON());
+  }
+
+  public add(object: Entity | Entity[]): void {
+    (Array.isArray(object) ? object : [object]).map((object) =>
+      this.cache.set(this.getKey(object))
     );
   }
 
-  async has(object: Entity): Promise<boolean> {
-    return !!(await this.cache.get(object._id || this.hashSortCoerce.hash(object.toJSON())));
+  public has(object: Entity): boolean {
+    return this.cache.has(this.getKey(object));
   }
 }

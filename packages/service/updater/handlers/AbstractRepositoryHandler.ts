@@ -1,9 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { filter } from 'bluebird';
-
-import { Actor, Commit, Entity, Milestone, MongoRepository } from '@gittrends/database-config';
+import { Actor, Commit, Milestone, MongoRepository } from '@gittrends/database-config';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ResourceUpdateError } from '../../helpers/errors';
@@ -42,14 +40,11 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   }
 
   protected async saveReferences(): Promise<void> {
-    const _filter = async <T extends Entity>(entities: T[]) =>
-      await filter(entities, async (object) => !(await this.cache?.has(object)));
-
-    const [actors, commits, milestones] = await Promise.all([
-      _filter(this.actors),
-      _filter(this.commits),
-      _filter(this.milestones)
-    ]);
+    const [actors, commits, milestones] = [
+      this.actors.filter((object) => !this.cache?.has(object)),
+      this.commits.filter((object) => !this.cache?.has(object)),
+      this.milestones.filter((object) => !this.cache?.has(object))
+    ];
 
     await Promise.all([
       MongoRepository.get(Actor)

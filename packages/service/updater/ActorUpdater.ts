@@ -2,7 +2,6 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bee-queue';
-import { mapSeries } from 'bluebird';
 import { chunk } from 'lodash';
 
 import { Actor, MongoRepository } from '@gittrends/database-config';
@@ -43,8 +42,10 @@ export class ActorsUpdater implements Updater {
       )
       .catch(async (err) => {
         if (err instanceof RetryableError || err instanceof NotFoundError) {
-          if (ids.length > 1)
-            return mapSeries(chunk(ids, Math.ceil(ids.length / 2)), (_ids) => this._update(_ids));
+          if (ids.length > 1) {
+            for (const idsChunk of chunk(ids, Math.ceil(ids.length / 2)))
+              await this._update(idsChunk);
+          }
 
           return MongoRepository.get(Actor).collection.updateOne(
             { _id: ids[0] },

@@ -1,10 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { filter } from 'bluebird';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
-import { chain, get, min, uniqBy } from 'lodash';
+import { chain, get, isNil, min, negate, uniqBy } from 'lodash';
 import UserAgent from 'user-agents';
 
 import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/database-config';
@@ -166,17 +165,29 @@ program
       .then(async ([repos, users]) => {
         await mongoClient.connect();
 
-        return Promise.all([
-          filter(repos, (repo) =>
+        Promise.all(
+          repos.map((repo) =>
             MongoRepository.get(Repository)
               .collection.findOne({ _id: repo.id }, { projection: { _id: 1 } })
-              .then((data) => !data)
-          ),
-          filter(users, (user) =>
-            MongoRepository.get(Actor)
-              .collection.findOne({ _id: user.id }, { projection: { _id: 1 } })
-              .then((data) => !data)
+              .then((data) => (data ? null : repo))
           )
+        ).then((results) => results.filter(negate(isNil)));
+
+        return Promise.all([
+          Promise.all(
+            repos.map((repo) =>
+              MongoRepository.get(Repository)
+                .collection.findOne({ _id: repo.id }, { projection: { _id: 1 } })
+                .then((data) => (data ? null : repo))
+            )
+          ).then((res) => res.filter(negate(isNil)) as TObject[]),
+          Promise.all(
+            users.map((user) =>
+              MongoRepository.get(Actor)
+                .collection.findOne({ _id: user.id }, { projection: { _id: 1 } })
+                .then((data) => (data ? null : user))
+            )
+          ).then((res) => res.filter(negate(isNil)) as TObject[])
         ]);
       })
       .then(async ([repos, users]) => {

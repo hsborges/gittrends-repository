@@ -1,11 +1,11 @@
 /*
  *  Author: Hudson S. Borges
  */
-import axios from 'axios';
 import Queue from 'bee-queue';
 import { bold, dim } from 'chalk';
 import { program, Option } from 'commander';
 import consola from 'consola';
+import fetch from 'node-fetch';
 import UserAgent from 'user-agents';
 
 import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database-config';
@@ -22,9 +22,8 @@ async function proxyServerHealthCheck(): Promise<boolean> {
   const protocol = process.env.GT_PROXY_PROTOCOL ?? 'http';
   const host = process.env.GT_PROXY_HOST ?? 'localhost';
   const port = parseInt(process.env.GT_PROXY_PORT ?? '3000', 10);
-  return axios
-    .get(`${protocol}://${host}:${port}/status`, { timeout: 5000 })
-    .then(() => true)
+  return fetch(`${protocol}://${host}:${port}/status`, { timeout: 5000 })
+    .then((request) => request.ok)
     .catch(() => false);
 }
 

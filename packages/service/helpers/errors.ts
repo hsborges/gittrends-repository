@@ -1,10 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { AxiosError } from 'axios';
 import { truncate } from 'lodash';
 
 import Component from '../github/Component';
+import { HttpClientResponse } from '../github/HttpClient';
 
 class BaseError extends Error {
   constructor(message: string) {
@@ -37,13 +37,13 @@ export class RequestError extends ExtendedError {
   readonly components?: any[];
 
   constructor(error: Error, opts?: RequestErrorOptions);
-  constructor(error: AxiosError, opts?: RequestErrorOptions) {
+  constructor(error: Error & HttpClientResponse, opts?: RequestErrorOptions) {
     super(error);
 
     this.response = {
       message: error.message,
-      status: opts?.status ?? error.response?.status,
-      data: opts?.data ?? error.response?.data
+      status: opts?.status ?? error.status,
+      data: opts?.data ?? error.data
     };
 
     if (opts?.components) {
