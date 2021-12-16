@@ -8,24 +8,31 @@ import { chunk } from 'lodash';
 import { Actor, MongoRepository } from '@gittrends/database-config';
 
 import ActorComponent from '../github/components/ActorComponent';
+import HttpClient from '../github/HttpClient';
 import Query from '../github/Query';
 import { NotFoundError, RetryableError } from '../helpers/errors';
 import parser from '../helpers/response-parser';
 import Updater from './Updater';
 
 export class ActorsUpdater implements Updater {
-  readonly id: string[] | string;
-  readonly job?: Job<{ id: string | string[] }>;
+  private readonly id: string[] | string;
+  private readonly httpClient: HttpClient;
+  private readonly job?: Job<{ id: string | string[] }>;
 
-  constructor(id: string[] | string, opts?: { job: Job<{ id: string | string[] }> }) {
+  constructor(
+    id: string[] | string,
+    httpClient: HttpClient,
+    opts?: { job: Job<{ id: string | string[] }> }
+  ) {
     this.id = id;
+    this.httpClient = httpClient;
     this.job = opts?.job;
   }
 
   private async _update(ids: string[]): Promise<void> {
     const components = ids.map((id, index) => new ActorComponent(id).setAlias(`actor_${index}`));
 
-    await Query.create()
+    await Query.create(this.httpClient)
       .compose(...components)
       .run()
       .then((response) => parser(response))

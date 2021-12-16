@@ -58,26 +58,22 @@ function isSuccess(number: number | undefined): boolean {
 export default class IssuesHander extends AbstractRepositoryHandler {
   static resource: TResource = 'issues';
 
-  private resource: TResource;
-  private resourceAlias: string;
-  private issues: { items: TIssueMetadata[]; hasNextPage: boolean; endCursor?: string };
+  protected resource: TResource = IssuesHander.resource;
+  protected resourceAlias: string = `_${IssuesHander.resource}`;
+  protected mongoRepository: MongoRepository<Issue | PullRequest> = MongoRepository.get(Issue);
+
+  private issues: { items: TIssueMetadata[]; hasNextPage: boolean; endCursor?: string } = {
+    items: [],
+    hasNextPage: true
+  };
+
   private reactions?: TReactableMetadata[];
   private currentStage?: Stages;
-  private rBatchSize: number;
-  private defaultRBatchSize: number;
-  private mongoRepository: MongoRepository<Issue | PullRequest>;
+  private rBatchSize: number = 100;
+  private defaultRBatchSize: number = 100;
   private hasPendingIssues: boolean = true;
 
-  constructor(id: string, alias?: string, type: TResource = IssuesHander.resource) {
-    super(id, alias);
-    this.resource = type;
-    this.resourceAlias = `_${type}`;
-    this.batchSize = this.defaultBatchSize = type === 'issues' ? 25 : 10;
-    this.rBatchSize = this.defaultRBatchSize = 100;
-    this.issues = { items: [], hasNextPage: true };
-    this.mongoRepository =
-      this.resource === 'issues' ? MongoRepository.get(Issue) : MongoRepository.get(PullRequest);
-  }
+  batchSize = (this.defaultBatchSize = 25);
 
   async component(): Promise<RepositoryComponent | Component[]> {
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
@@ -414,7 +410,8 @@ export default class IssuesHander extends AbstractRepositoryHandler {
 export class PullRequestHander extends IssuesHander {
   static resource: TResource = 'pull_requests';
 
-  constructor(id: string, alias?: string) {
-    super(id, alias, PullRequestHander.resource);
-  }
+  batchSize = (this.defaultBatchSize = 10);
+  resource = PullRequestHander.resource;
+  resourceAlias = `_${PullRequestHander.resource}`;
+  mongoRepository = MongoRepository.get(PullRequest);
 }

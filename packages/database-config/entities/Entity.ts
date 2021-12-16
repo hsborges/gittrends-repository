@@ -5,8 +5,7 @@ import {
   ClassConstructor,
   Exclude,
   plainToClass,
-  classToPlain,
-  classToClass
+  classToPlain
 } from 'class-transformer';
 import { IsDefined, validateSync, ValidationError } from 'class-validator';
 import 'es6-shim';
@@ -38,18 +37,13 @@ function plainToEntity<T extends Entity>(
   }
 
   const classEntity = plainToClass(entity, object);
-  const errors = validate(classEntity);
 
+  const errors = validate(classEntity);
   if (errors?.length) throw new EntityValidationError(errors);
 
   return classEntity;
 }
 
-function entityToPlain<T extends Entity>(entity: T): Record<string, unknown> {
-  const entityClone = classToClass(entity);
-  validate(entityClone);
-  return classToPlain(entityClone);
-}
 
 export abstract class Entity {
   @Exclude()
@@ -70,6 +64,6 @@ export abstract class Entity {
 
   @Exclude()
   public toJSON(): Record<any, unknown> {
-    return entityToPlain(this);
+    return classToPlain(this);
   }
 }

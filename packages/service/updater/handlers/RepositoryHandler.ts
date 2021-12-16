@@ -14,15 +14,9 @@ type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
 export default class RepositoryHander extends AbstractRepositoryHandler {
   static resource: string = 'repository';
 
-  details?: Record<string, unknown>;
-  languagesMeta: TMetadata;
-  topicsMeta: TMetadata;
-
-  constructor(id: string, alias?: string) {
-    super(id, alias);
-    this.languagesMeta = { items: [], hasNextPage: true };
-    this.topicsMeta = { items: [], hasNextPage: true };
-  }
+  private details?: Record<string, unknown>;
+  private languagesMeta: TMetadata = { items: [], hasNextPage: true };
+  private topicsMeta: TMetadata = { items: [], hasNextPage: true };
 
   async component(): Promise<RepositoryComponent> {
     return this._component

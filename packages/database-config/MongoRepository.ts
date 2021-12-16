@@ -23,19 +23,17 @@ export class MongoRepository<T extends Entity> {
   }
 
   private validateAndTransform(object: T | T[]): Record<string, unknown>[] {
-    return (Array.isArray(object) ? object : [object])
-      .map((record) => new this.entityRef(record.toJSON()))
-      .map((record) => record.toJSON());
+    return (Array.isArray(object) ? object : [object]).map((record) =>
+      new (record.constructor as any)(record).toJSON()
+    );
   }
 
   public async insert(object: T | T[]): Promise<void> {
-    const records = this.validateAndTransform(object);
-
-    if (!records.length) return;
+    if (Array.isArray(object) && object.length === 0) return;
 
     await this.collection
       .bulkWrite(
-        records.map((record) => ({ insertOne: { document: record } })),
+        this.validateAndTransform(object).map((record) => ({ insertOne: { document: record } })),
         { ordered: false }
       )
       .catch((err) => {
@@ -45,12 +43,10 @@ export class MongoRepository<T extends Entity> {
   }
 
   public async upsert(object: T | T[]): Promise<void> {
-    const records = this.validateAndTransform(object);
-
-    if (!records.length) return;
+    if (Array.isArray(object) && object.length === 0) return;
 
     await this.collection.bulkWrite(
-      records.map((record) => ({
+      this.validateAndTransform(object).map((record) => ({
         replaceOne: { filter: { _id: record._id }, replacement: record, upsert: true }
       })),
       { ordered: false }

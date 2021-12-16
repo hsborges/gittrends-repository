@@ -1,7 +1,6 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { AxiosError } from 'axios';
 import compress from 'graphql-query-compress';
 import { get } from 'lodash';
 
@@ -10,30 +9,20 @@ import * as Errors from '../helpers/errors';
 import normalize from '../helpers/normalize';
 import Component from './Component';
 import Fragment from './Fragment';
-import client from './HttpClient';
-
-function getGraphQLType(key: unknown) {
-  switch (typeof key) {
-    case 'number':
-      return 'Int';
-    case 'boolean':
-      return 'Boolean';
-    default:
-      return 'String';
-  }
-}
+import HttpClient, { HttpClientResponse } from './HttpClient';
 
 export default class Query {
   readonly components: Component[] = [];
   readonly fragments: Fragment[] = [];
-  readonly args: Record<string, unknown>;
 
-  private constructor(args?: Record<string, unknown>) {
-    this.args = Object.assign({}, args);
+  private readonly client: HttpClient;
+
+  private constructor(httpClient: HttpClient) {
+    this.client = httpClient;
   }
 
-  static create(args?: Record<string, unknown>): Query {
-    return new Query(args);
+  static create(httpClient: HttpClient): Query {
+    return new Query(httpClient);
   }
 
   compose(...components: Component[]): Query {
@@ -54,35 +43,19 @@ export default class Query {
   }
 
   toString(): string {
-    const keys = Object.keys(this.args);
-
-    const _args = !keys.length
-      ? ''
-      : `(${keys
-          .map(
-            (k) =>
-              `$${k}:${getGraphQLType(this.args[k])} ${this.args[k] ? `= ${this.args[k]}` : ''}`
-          )
-          .join(', ')
-          .replace(/\s+/g, ' ')
-          .replace(/\s,/g, ',')})`;
-
-    return `
-    query${_args} {
-      ${this.components.map((component) => component.toString()).join('\n')}
-    }
-    ${this.fragments.map((fragment) => fragment.toString()).join('\n')}
-    `
-      .replace(/\s+/g, ' ')
-      .trim();
+    return compress(`
+      query {
+        ${this.components.map((component) => component.toString()).join('\n')}
+      }
+      ${this.fragments.map((fragment) => fragment.toString()).join('\n')}
+    `);
   }
 
   async run(interceptor?: (args: string) => string): Promise<any> {
-    return client({
-      query: compress(interceptor ? interceptor(this.toString()) : this.toString())
-    })
-      .catch((err: AxiosError) => {
-        switch (err.response?.status) {
+    return this.client
+      .request({ query: interceptor ? interceptor(this.toString()) : this.toString() })
+      .catch((err: Error & HttpClientResponse) => {
+        switch (err.status) {
           case 408:
             throw new Errors.TimedoutError(err, { components: this.components });
           case 500:
@@ -94,7 +67,7 @@ export default class Query {
         }
       })
       .then((response) => {
-        const data = normalize(compact(response.data));
+        const data = compact(normalize(response.data));
 
         if (data?.errors?.length) {
           const error = new Error(
@@ -132,8 +105,7 @@ export default class Query {
           throw new Errors.RequestError(error, opts);
         }
 
-        return { ...response, data };
-      })
-      .then((response) => get(response, 'data.data', null));
+        return get(data, 'data', null);
+      });
   }
 }

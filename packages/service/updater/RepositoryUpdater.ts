@@ -4,6 +4,7 @@
 import { Job } from 'bee-queue';
 import { flatten } from 'lodash';
 
+import HttpClient from '../github/HttpClient';
 import Query from '../github/Query';
 import { RepositoryUpdateError, RequestError } from '../helpers/errors';
 import { Cache } from './Cache';
@@ -45,39 +46,37 @@ type RepositoryUpdaterJob = {
   errors?: string[];
 };
 
-type RepositoryUpdaterOptions = { job?: Job<RepositoryUpdaterJob>; cache?: Cache };
-
 export class RepositoryUpdater implements Updater {
-  readonly id: string;
-  readonly job?: Job<RepositoryUpdaterJob>;
-  readonly handlers: Record<string, AbstractRepositoryHandler> = {};
-  readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
+  private readonly id: string;
+  private readonly httpClient: HttpClient;
+
+  private readonly job?: Job<RepositoryUpdaterJob>;
+  private readonly handlers: AbstractRepositoryHandler[] = [];
+  private readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
 
   constructor(
     repositoryId: string,
     handlers: RepositoryUpdaterHandler[],
-    opts?: RepositoryUpdaterOptions
+    httpClient: HttpClient,
+    opts: { job?: Job<RepositoryUpdaterJob>; cache?: Cache } = {}
   ) {
     this.id = repositoryId;
+    this.httpClient = httpClient;
     this.job = opts?.job;
 
     handlers.forEach((resource) => {
       const Class = AVAILABLE_HANDLERS.find((handler) => handler.resource === resource);
       if (!Class) throw new Error(`Handler for '${resource}' not found!`);
-      this.handlers[resource] = new Class(this.id);
-      this.handlers[resource].cache = opts?.cache;
+      this.handlers.push(new Class(this.id, { cache: opts?.cache }));
     });
   }
 
-  async update(
-    handlers = this.filterPending(Object.values(this.handlers)),
-    isRetry?: boolean
-  ): Promise<void> {
+  async update(handlers = this.filterPending(this.handlers), isRetry?: boolean): Promise<void> {
     let pendingHandlers = handlers;
     if (pendingHandlers.length === 0) return;
 
     do {
-      await Query.create()
+      await Query.create(this.httpClient)
         .compose(
           ...flatten(await Promise.all(pendingHandlers.map((handler) => handler.component())))
         )

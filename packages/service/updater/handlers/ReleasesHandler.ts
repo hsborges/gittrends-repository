@@ -11,12 +11,7 @@ import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 export default class ReleasesHandler extends AbstractRepositoryHandler {
   static resource: string = 'releases';
 
-  releases: { hasNextPage: boolean; endCursor?: string };
-
-  constructor(id: string, alias?: string) {
-    super(id, alias);
-    this.releases = { hasNextPage: true };
-  }
+  private releases: { hasNextPage: boolean; endCursor?: string } = { hasNextPage: true };
 
   async component(): Promise<RepositoryComponent> {
     if (!this.releases.endCursor) {

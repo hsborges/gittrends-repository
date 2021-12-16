@@ -37,6 +37,7 @@ export default function normalize(object: any): any {
       return value;
     });
   }
+
   if (typeof object === 'string' && DATE_REGEX.test(object)) return new Date(object);
 
   return object;

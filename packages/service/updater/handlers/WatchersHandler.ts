@@ -11,12 +11,7 @@ import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 export default class WatchersHandler extends AbstractRepositoryHandler {
   static resource: string = 'watchers';
 
-  meta: { hasNextPage: boolean; endCursor?: string };
-
-  constructor(id: string, alias?: string) {
-    super(id, alias);
-    this.meta = { hasNextPage: true };
-  }
+  private meta: { hasNextPage: boolean; endCursor?: string } = { hasNextPage: true };
 
   async component(): Promise<RepositoryComponent> {
     if (!this.meta.endCursor) {

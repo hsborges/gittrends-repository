@@ -5,10 +5,12 @@ import { filter } from 'bluebird';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import { chain, get, min, uniqBy } from 'lodash';
+import UserAgent from 'user-agents';
 
 import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/database-config';
 
 import SearchComponent from './github/components/SearchComponent';
+import HttpClient from './github/HttpClient';
 import Query from './github/Query';
 import { BadGatewayError } from './helpers/errors';
 import parser from './helpers/response-parser';
@@ -16,6 +18,7 @@ import { version } from './package.json';
 
 async function search(
   limit = 1000,
+  httpClient: HttpClient,
   opts?: {
     language?: string;
     name?: string;
@@ -39,7 +42,7 @@ async function search(
   let hasMoreRepos = true;
 
   do {
-    await Query.create()
+    await Query.create(httpClient)
       .compose(
         new SearchComponent(
           { ...opts, maxStargazers },
@@ -111,14 +114,24 @@ program
   .action(async (repositoryName, options) => {
     const minStr = options.minStargazers || '0';
     const maxStr = options.maxStargazers || '*';
+
     consola.info(
       `Searching for repositories with ${minStr}..${maxStr} stars on GitHub ...`,
       options.limit
     );
 
+    const httpClient = new HttpClient({
+      protocol: process.env.GT_PROXY_PROTOCOL ?? 'http',
+      host: process.env.GT_PROXY_HOST ?? 'localhost',
+      port: parseInt(process.env.GT_PROXY_PORT ?? '3000', 10),
+      timeout: parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10),
+      retries: parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5),
+      userAgent: process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString()
+    });
+
     return Promise.all(
       new Array(options.workers).fill(0).map(() =>
-        search(options.limit, {
+        search(options.limit, httpClient, {
           language: options.language,
           name: repositoryName,
           minStargazers: options.minStargazers && parseInt(options.minStargazers, 10),

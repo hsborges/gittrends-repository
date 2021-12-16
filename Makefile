@@ -1,18 +1,4 @@
 #!make
-# INCLUDE ENVIRONMENT VARIABLES FROM FILE
-include .env
-export $(shell sed 's/=.*//' .env)
-
-# DOCKER VARIABLES
-env-file=.env
-detach=false
-command=
-
-# VARIABLES
-BASE_DIR=$(shell pwd)
-SERVICE_IMAGE_NAME=hsborges/service.gittrends.app
-REPO=https://github.com/hsborges/gittrends-repository
-
 .PHONY: help \
 				install env-config database-config service website website-api \
  				build build-docker
@@ -51,4 +37,4 @@ build: install env-config database-config service website website-api
 
 
 build-docker:
-		@docker build --pull --compress -t ${SERVICE_IMAGE_NAME} -f packages/service/Dockerfile .
+		@docker build --pull --compress -t hsborges/service.gittrends.app -f packages/service/Dockerfile .

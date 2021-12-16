@@ -6,9 +6,11 @@ import Queue from 'bee-queue';
 import { bold, dim } from 'chalk';
 import { program, Option } from 'commander';
 import consola from 'consola';
+import UserAgent from 'user-agents';
 
 import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database-config';
 
+import HttpClient from './github/HttpClient';
 import { RepositoryUpdateError } from './helpers/errors';
 import { version } from './package.json';
 import { connectionOptions } from './redis';
@@ -55,6 +57,15 @@ program
       storeJobs: false
     });
 
+    const httpClient = new HttpClient({
+      protocol: process.env.GT_PROXY_PROTOCOL ?? 'http',
+      host: process.env.GT_PROXY_HOST ?? 'localhost',
+      port: parseInt(process.env.GT_PROXY_PORT ?? '3000', 10),
+      timeout: parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10),
+      retries: parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5),
+      userAgent: process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString()
+    });
+
     queue.checkStalledJobs(5000);
 
     queue.process(options.workers, async (job) => {
@@ -82,13 +93,16 @@ program
 
       try {
         if (options.type === 'users') {
-          return new ActorsUpdater(job.data.id, { job }).update();
+          return new ActorsUpdater(job.data.id, httpClient, { job }).update();
         } else if (options.type === 'repositories') {
           const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
           if (job.data?.errors?.length)
             resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
           if (resources.length)
-            return new RepositoryUpdater(job.data.id, resources, { job, cache }).update();
+            return new RepositoryUpdater(job.data.id, resources, httpClient, {
+              job,
+              cache
+            }).update();
         } else {
           consola.error(new Error('Invalid "type" option!'));
           process.exit(1);

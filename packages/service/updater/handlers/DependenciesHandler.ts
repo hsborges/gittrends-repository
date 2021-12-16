@@ -21,14 +21,8 @@ type TManifestMetadata = {
 export default class DependenciesHandler extends AbstractRepositoryHandler {
   static resource: string = 'dependencies';
 
-  readonly manifests: { hasNextPage: boolean; endCursor?: string };
-  readonly manifestsComponents: Array<TManifestMetadata>;
-
-  constructor(id: string, alias?: string) {
-    super(id, alias);
-    this.manifests = { hasNextPage: true };
-    this.manifestsComponents = [];
-  }
+  readonly manifests: { hasNextPage: boolean; endCursor?: string } = { hasNextPage: true };
+  readonly manifestsComponents: Array<TManifestMetadata> = [];
 
   async component(): Promise<RepositoryComponent | Component[]> {
     if (this.manifests.hasNextPage) {

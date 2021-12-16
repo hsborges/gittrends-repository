@@ -1,54 +1,95 @@
 /*
  *  Author: Hudson S. Borges
  */
-import axios, { AxiosResponse } from 'axios';
-import pRetry from 'promise-retry';
-import UserAgent from 'user-agents';
+import retry from 'async-retry';
+import fetch from 'node-fetch';
 
-export const PROTOCOL = process.env.GT_PROXY_PROTOCOL ?? 'http';
-export const HOST = process.env.GT_PROXY_HOST ?? 'localhost';
-export const PORT = parseInt(process.env.GT_PROXY_PORT ?? '3000', 10);
-export const TIMEOUT = parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10);
-export const RETRIES = parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5);
-export const USER_AGENT = process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString();
-export const BASE_URL = `${PROTOCOL}://${HOST}:${PORT}`;
+export type HttpClientOpts = {
+  protocol: string;
+  host: string;
+  port: number;
+  timeout: number;
+  retries: number;
+  userAgent: string;
+};
 
-/* exports */
-export default async function (data: string | Record<string, unknown>): Promise<AxiosResponse> {
-  return pRetry(
-    (retry) => {
-      const source = axios.CancelToken.source();
+export type HttpClientResponse = {
+  status: number;
+  statusText: string;
+  data: any;
+  headers: Record<string, string | string[]>;
+};
 
-      const timeout = setTimeout(
-        () =>
-          source?.cancel(
-            `Cancelled request. Took longer than ${TIMEOUT}ms to get complete response.`
-          ),
-        TIMEOUT
-      );
+export default class HttpClient {
+  readonly protocol: string;
+  readonly host: string;
+  readonly port: number;
+  readonly timeout: number;
+  readonly retries: number;
+  readonly userAgent: string;
 
-      return axios
-        .post('/graphql', data, {
-          baseURL: BASE_URL,
-          responseType: 'json',
+  constructor(opts: HttpClientOpts) {
+    this.protocol = opts.protocol;
+    this.host = opts.host;
+    this.port = opts.port;
+    this.timeout = opts.timeout;
+    this.retries = opts.retries;
+    this.userAgent = opts.userAgent;
+  }
+
+  async request(data: string | Record<string, unknown>): Promise<HttpClientResponse> {
+    return retry(
+      async (bail) => {
+        const controller = new globalThis.AbortController();
+        const timeout = setTimeout(() => controller.abort(), this.timeout);
+
+        return fetch(`${this.protocol}://${this.host}:${this.port}/graphql`, {
+          method: 'POST',
+          body: JSON.stringify(data),
+          compress: true,
           headers: {
-            'user-agent': USER_AGENT,
-            'Accept-Encoding': '*',
+            'user-agent': this.userAgent,
+            'accept-encoding': '*',
+            'content-type': 'application/json',
             accept: [
               'application/vnd.github.starfox-preview+json',
               'application/vnd.github.hawkgirl-preview+json',
               'application/vnd.github.merge-info-preview+json'
             ].join(', ')
           },
-          timeout: TIMEOUT,
-          cancelToken: source?.token
+          signal: controller.signal,
+          timeout: this.timeout
         })
-        .catch((err) => {
-          if (!err.response?.status || /^6\d{2}$/.test(err.response?.status)) retry(err);
-          throw err;
-        })
-        .finally(() => clearTimeout(timeout));
-    },
-    { retries: RETRIES, minTimeout: 100, maxTimeout: 500, randomize: true }
-  );
+          .then(async (fetchResponse) => {
+            const contentType =
+              fetchResponse.headers.get('content-type')?.toLocaleLowerCase() || '';
+
+            const response = {
+              status: fetchResponse.status,
+              statusText: fetchResponse.statusText,
+              data: await (/application\/json/gi.test(contentType)
+                ? fetchResponse.json()
+                : fetchResponse.text()),
+              headers: fetchResponse.headers.raw()
+            };
+
+            if (fetchResponse.ok) return response;
+
+            const error = Object.assign(
+              new Error(`Request failed with code ${fetchResponse.status}.`),
+              response
+            );
+
+            if (/^[3-5]\d{2}$/.test(fetchResponse.status as any)) {
+              bail(error);
+              return response;
+            }
+
+            throw error;
+          })
+          .finally(() => clearTimeout(timeout));
+      },
+      { retries: this.retries, minTimeout: 100, maxTimeout: 500, randomize: true }
+    );
+  }
 }

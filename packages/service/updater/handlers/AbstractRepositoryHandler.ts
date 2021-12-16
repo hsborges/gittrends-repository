@@ -20,12 +20,14 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   protected commits: Commit[] = [];
   protected milestones: Milestone[] = [];
 
-  cache?: Cache;
-  batchSize: number;
-  defaultBatchSize: number;
+  protected batchSize: number;
+  protected defaultBatchSize: number;
 
-  protected constructor(id: string, alias = 'repository') {
-    super(new RepositoryComponent(id).setAlias(alias));
+  public constructor(id: string, opts?: { alias?: string; cache?: Cache }) {
+    super(new RepositoryComponent(id).setAlias(opts?.alias || 'repository'), {
+      cache: opts?.cache
+    });
+
     this.id = id;
     this.batchSize = this.defaultBatchSize = 100;
   }

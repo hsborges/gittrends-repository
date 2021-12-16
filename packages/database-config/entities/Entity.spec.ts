@@ -82,7 +82,6 @@ describe('Test entity transformations.', () => {
     fake.number = 2;
     expect(fake.toJSON()).toStrictEqual({ _id: fake._id, number: fake.number });
     fake.date = new Date();
-    (fake as any).extra = 'extra';
     expect(fake.toJSON()).toStrictEqual({ _id: fake._id, number: fake.number, date: fake.date });
   });
 
