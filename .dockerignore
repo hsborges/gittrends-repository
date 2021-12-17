@@ -1,7 +1,7 @@
 *
 !.yarnrc
 !environment.d.ts
-!packages/env-config
+!packages/env
 !packages/database
 !packages/service
 !package.json

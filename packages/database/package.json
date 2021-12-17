@@ -9,9 +9,9 @@
     "build": "rm -rf dist && yarn tsc",
     "test": "jest",
     "migrate:create": "sh -c 'ts-node node_modules/.bin/migrate-mongo create $0 -f migrate-mongo.ts' ",
-    "migrate:status": "ts-node -r @gittrends/env-config node_modules/.bin/migrate-mongo status -f migrate-mongo.ts",
-    "migrate:undo-last": "ts-node -r @gittrends/env-config node_modules/.bin/migrate-mongo down -f migrate-mongo.ts && npm run migrate:status",
-    "migrate": "ts-node -r @gittrends/env-config node_modules/.bin/migrate-mongo up -f migrate-mongo.ts",
+    "migrate:status": "ts-node -r @gittrends/env node_modules/.bin/migrate-mongo status -f migrate-mongo.ts",
+    "migrate:undo-last": "ts-node -r @gittrends/env node_modules/.bin/migrate-mongo down -f migrate-mongo.ts && npm run migrate:status",
+    "migrate": "ts-node -r @gittrends/env node_modules/.bin/migrate-mongo up -f migrate-mongo.ts",
     "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.ts'"
   },
   "dependencies": {
@@ -26,7 +26,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@gittrends/env-config": "link:../env-config",
+    "@gittrends/env": "link:../env",
     "@shelf/jest-mongodb": "^2.1.0",
     "@types/es6-shim": "^0.31.42",
     "@types/jest": "^27.0.3",

@@ -5,18 +5,18 @@
   "types": "dist/local.d.ts",
   "license": "MIT",
   "scripts": {
-    "start": "node -r @gittrends/env-config dist/local.js",
-    "dev": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env-config --respawn --transpile-only --exit-child --rs local.ts",
+    "start": "node -r @gittrends/env dist/local.js",
+    "dev": "ts-node-dev -r tsconfig-paths/register -r @gittrends/env --respawn --transpile-only --exit-child --rs local.ts",
     "clean": "rm -rf dist",
-    "dotenv-to-json": "node -r @gittrends/env-config dist/util/dotenv-to-json.js > dist/env.json",
+    "dotenv-to-json": "node -r @gittrends/env dist/util/dotenv-to-json.js > dist/env.json",
     "pack": "yarn build && claudia pack --source dist --output dist/gittrends-serverless-api.zip --no-optional-dependencies",
     "build": "yarn clean && tsc && cp package.json dist/package.json && yarn dotenv-to-json",
     "deploy": "yarn build && claudia create --source dist --region us-east-1 --handler lambda.handler --set-env-from-json dist/env.json --config .claudia.json --deploy-proxy-api --no-optional-dependencies",
     "update": "yarn build && claudia update --source dist --update-env-from-json dist/env.json --config .claudia.json --no-optional-dependencies",
     "destroy": "claudia destroy --source dist --config .claudia.json",
     "prettier": "prettier --write --config ../../.prettierrc.yml --ignore-path ../../.prettierignore  '**/*.ts'",
-    "import": "node -r @gittrends/env-config dist/database/index.js",
-    "dev:import": "ts-node -r tsconfig-paths/register -r @gittrends/env-config database/index.ts"
+    "import": "node -r @gittrends/env dist/database/index.js",
+    "dev:import": "ts-node -r tsconfig-paths/register -r @gittrends/env database/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^3.5.0",
@@ -40,7 +40,7 @@
     "nodemailer": "^6.7.1"
   },
   "devDependencies": {
-    "@gittrends/env-config": "link:../env-config",
+    "@gittrends/env": "link:../env",
     "@types/async": "^3.2.10",
     "@types/aws-lambda": "^8.10.83",
     "@types/body-parser": "^1.19.2",

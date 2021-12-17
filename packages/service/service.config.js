@@ -5,7 +5,7 @@ module.exports = {
     {
       name: 'proxy-server',
       interpreter: 'node',
-      interpreter_args: '-r @gittrends/env-config',
+      interpreter_args: '-r @gittrends/env',
       script: 'github-proxy-server',
       args: ['--tokens', resolve('..', '..', process.env.GT_PROXY_TOKENS_FILE || './tokens.txt')],
       out_file: '/dev/null',
@@ -18,7 +18,7 @@ module.exports = {
     {
       name: 'queue-board',
       interpreter: 'node',
-      interpreter_args: '-r @gittrends/env-config',
+      interpreter_args: '-r @gittrends/env',
       script: 'dist/extra/queue-board.js',
       out_file: '/dev/null',
       error_file: '/dev/null',
@@ -30,7 +30,7 @@ module.exports = {
     {
       name: 'scheduler',
       interpreter: 'node',
-      interpreter_args: '-r @gittrends/env-config',
+      interpreter_args: '-r @gittrends/env',
       script: 'dist/scheduler.js',
       args: ['all', '--wait', 48],
       out_file: '/dev/null',
@@ -44,7 +44,7 @@ module.exports = {
     {
       name: 'repos',
       interpreter: 'node',
-      interpreter_args: '--expose-gc -r @gittrends/env-config',
+      interpreter_args: '--expose-gc -r @gittrends/env',
       script: 'dist/updater.js',
       args: ['--workers', process.env.GT_UPDATER_REPOS_WORKERS || 1],
       instances: process.env.GT_UPDATER_REPOS_INSTANCES || 1,
@@ -56,7 +56,7 @@ module.exports = {
     {
       name: 'users',
       interpreter: 'node',
-      interpreter_args: '--expose-gc -r @gittrends/env-config',
+      interpreter_args: '--expose-gc -r @gittrends/env',
       script: 'dist/updater.js',
       args: ['--type', 'users', '--workers', process.env.GT_UPDATER_USERS_WORKERS || 1],
       instances: process.env.GT_UPDATER_USERS_INSTANCES || 1,

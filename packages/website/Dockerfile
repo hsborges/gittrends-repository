@@ -8,10 +8,10 @@ WORKDIR /app
 COPY . .
 RUN rm -rf packages
 
-COPY ./packages/env-config ./packages/env-config
+COPY ./packages/env ./packages/env
 COPY ./packages/website ./packages/website
 
-WORKDIR /app/packages/env-config
+WORKDIR /app/packages/env
 RUN yarn install && yarn build
 
 WORKDIR /app/packages/website

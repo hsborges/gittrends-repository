@@ -1452,13 +1452,13 @@
     stack-trace "0.0.10"
     uuid "^8.3.2"
 
-"@gittrends/env-config@file:packages/env-config":
+"@gittrends/env@file:packages/env":
   version "3.0.0"
   dependencies:
     dotenv "^10.0.0"
     findup-sync "^5.0.0"
 
-"@gittrends/env-config@link:packages/env-config":
+"@gittrends/env@link:packages/env":
   version "3.0.0"
   dependencies:
     dotenv "^10.0.0"

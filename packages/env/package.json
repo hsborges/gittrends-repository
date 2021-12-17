@@ -1,5 +1,5 @@
 {
-  "name": "@gittrends/env-config",
+  "name": "@gittrends/env",
   "version": "3.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
