@@ -44,5 +44,8 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "dotenv-cli": "^4.1.1"
   }
 }

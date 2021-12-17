@@ -18,3 +18,9 @@ ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 apt-get install -y nodejs
 npm install --global --force yarn
+
+## Extras
+# install mongo tools
+wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add -
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+apt-get update && apt-get install -y mongodb-org-tools
