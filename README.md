@@ -31,16 +31,16 @@ git clone https://github.com/hsborges/gittrends-repository.git
 yarn install
 ```
 
-3. Create a file name `.env` and configure the environment variables
+3.  Configure the environment variables on `.env` or create a local/development/production config file
 
 ```sh
-cp .env.example .env
+touch .env.local .env.development .env.production
 ```
 
 4. Run database migrations
 
 ```sh
-yarn workspace @gittrends/database run-migrations
+yarn workspace @gittrends/database migrate
 ```
 
 ### Docker
@@ -49,7 +49,10 @@ You can also use docker containers:
 
 ```sh
 # run containers
-docker-compose -f docker-compose.service.yml up -d
+docker-compose \
+  -f docker-compose.yml \
+  -f docker-compose.service.yml \
+  up -d
 ```
 
 <!-- ROADMAP -->

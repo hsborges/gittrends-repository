@@ -14,23 +14,23 @@ install:
 		@yarn workspace @gittrends/service install
 
 env: install
-		@echo "Building environment config"
+		@echo "Building environment package"
 		@yarn workspace @gittrends/env build
 
 database: install env
-		@echo "Building database config"
+		@echo "Building database package"
 		@yarn workspace @gittrends/database build
 
 service: install env database
-		@echo "Building updater service"
+		@echo "Building service package"
 		@yarn workspace @gittrends/service build
 
 website: install env
-		@echo "Building website"
+		@echo "Building website package"
 		@yarn workspace @gittrends/website build
 
 website-api: install env database
-		@echo "Building website-api"
+		@echo "Building website-api package"
 		@yarn workspace @gittrends/website-api build
 
 build: install env database service website website-api

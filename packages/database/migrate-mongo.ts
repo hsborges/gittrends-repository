@@ -1,12 +1,11 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { CONNECTION_URL, DB } from './mongo-config';
+import { CONNECTION_URL } from './mongo-config';
 
 export = {
   mongodb: {
     url: CONNECTION_URL,
-    databaseName: DB,
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true

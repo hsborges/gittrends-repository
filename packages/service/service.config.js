@@ -1,4 +1,7 @@
 const { resolve } = require('path');
+const url = require('url');
+
+const { port } = url.parse(process.env.GT_PROXY_URL || 'http://localhost:3000');
 
 module.exports = {
   apps: [
@@ -11,9 +14,7 @@ module.exports = {
       out_file: '/dev/null',
       error_file: '/dev/null',
       max_memory_restart: '150M',
-      env: {
-        PORT: process.env.GT_PROXY_PORT || 8081
-      }
+      env: { PORT: port }
     },
     {
       name: 'queue-board',

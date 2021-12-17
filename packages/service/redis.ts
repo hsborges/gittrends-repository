@@ -1,19 +1,4 @@
-import IORedis from 'ioredis';
+import { parseRedisUrl } from 'parse-redis-url-simple';
 
-type RedisSources = 'scheduler' | 'default';
-
-export function connectionOptions(source: RedisSources = 'default') {
-  let db: number = parseInt(process.env.GT_REDIS_DB ?? '0', 10);
-
-  if (source === 'scheduler') db = parseInt(process.env.GT_REDIS_SCHEDULER_DB ?? '1', 10);
-
-  return {
-    host: process.env.GT_REDIS_HOST ?? 'localhost',
-    port: parseInt(process.env.GT_REDIS_PORT ?? '6379', 10),
-    db
-  };
-}
-
-export function createRedisConnection(source: RedisSources = 'default') {
-  return new IORedis(connectionOptions(source));
-}
+export const REDIS_URL = process.env.GT_REDIS_URL || 'redis://localhost:6379/0';
+export const REDIS_PROPS = parseRedisUrl(REDIS_URL)[0];

@@ -13,16 +13,13 @@ import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database';
 import HttpClient from './github/HttpClient';
 import { RepositoryUpdateError } from './helpers/errors';
 import { version } from './package.json';
-import { connectionOptions } from './redis';
+import { REDIS_PROPS } from './redis';
 import { ActorsUpdater } from './updater/ActorUpdater';
 import { Cache } from './updater/Cache';
 import { RepositoryUpdater, RepositoryUpdaterHandler } from './updater/RepositoryUpdater';
 
 async function proxyServerHealthCheck(): Promise<boolean> {
-  const protocol = process.env.GT_PROXY_PROTOCOL ?? 'http';
-  const host = process.env.GT_PROXY_HOST ?? 'localhost';
-  const port = parseInt(process.env.GT_PROXY_PORT ?? '3000', 10);
-  return fetch(`${protocol}://${host}:${port}/status`, { timeout: 5000 })
+  return fetch(`${process.env.GT_PROXY_URL || 'http://localhost:3000'}/status`, { timeout: 5000 })
     .then((request) => request.ok)
     .catch(() => false);
 }
@@ -49,17 +46,19 @@ program
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
     const queue = new Queue(options.type, {
-      redis: connectionOptions('scheduler'),
+      redis: REDIS_PROPS,
       stallInterval: 30 * 1000,
       isWorker: true,
       sendEvents: false,
       storeJobs: false
     });
 
+    const proxyUrl = new URL(process.env.GT_PROXY || 'http://localhost:3000');
+
     const httpClient = new HttpClient({
-      protocol: process.env.GT_PROXY_PROTOCOL ?? 'http',
-      host: process.env.GT_PROXY_HOST ?? 'localhost',
-      port: parseInt(process.env.GT_PROXY_PORT ?? '3000', 10),
+      protocol: proxyUrl.protocol,
+      host: proxyUrl.hostname,
+      port: parseInt(proxyUrl.port, 10),
       timeout: parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10),
       retries: parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5),
       userAgent: process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString()

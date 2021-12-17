@@ -3,9 +3,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=yarn,dotenv,node
 
 ### dotenv ###
-.env
-.env.production
-.env.development
+.env.*
 
 ### Node ###
 # Logs

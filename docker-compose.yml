@@ -3,16 +3,12 @@ version: '3.7'
 services:
   mongo:
     image: mongo:latest
-    command: --wiredTigerJournalCompressor zstd --directoryperdb --auth
+    command: --wiredTigerJournalCompressor zstd --directoryperdb
     restart: always
     ports:
-      - ${GT_DATABASE_PORT-27017}:27017
+      - ${GT_MONGO_PORT-27017}:27017
     volumes:
       - db:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${GT_DATABASE_USERNAME-}
-      MONGO_INITDB_ROOT_PASSWORD: ${GT_DATABASE_PASSWORD-}
-      MONGO_INITDB_DATABASE: ${GT_DATABASE_DB-}
 
   redis:
     image: redis:alpine

@@ -8,3 +8,4 @@
 !tsconfig.*
 **/node_modules
 **/dist
+**/.clinic

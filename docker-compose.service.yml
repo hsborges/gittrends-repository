@@ -8,14 +8,8 @@ services:
     image: gittrends-service:latest
     restart: unless-stopped
     volumes:
-      - ${GT_PROXY_TOKENS_FILE-./tokens.txt}:/app/${GT_PROXY_TOKENS_FILE-./tokens.txt}:ro
+      - ${GT_PROXY_TOKENS_FILE-./tokens.txt}:/app/tokens.txt:ro
+      - ./.env.local:/app/.env.local:ro
+      - ./.env.${NODE_ENV-development}:/app/.env.${NODE_ENV-development}:ro
     env_file:
       - .env
-    environment:
-      GT_DATABASE_HOST: mongo
-      GT_DATABASE_PORT: 27017
-      GT_REDIS_HOST: redis
-      GT_REDIS_PORT: 6379
-    depends_on:
-      - mongo
-      - redis

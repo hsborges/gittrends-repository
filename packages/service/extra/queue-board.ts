@@ -6,7 +6,7 @@ import Arena from 'bull-arena';
 import consola from 'consola';
 import express from 'express';
 
-import { connectionOptions } from '../redis';
+import { REDIS_PROPS } from '../redis';
 
 const app = express();
 
@@ -17,7 +17,7 @@ const arena = Arena(
       type: 'bee',
       name: source,
       hostId: source,
-      redis: connectionOptions('scheduler')
+      redis: REDIS_PROPS
     }))
   },
   { disableListen: true }

@@ -44,6 +44,8 @@
     "node-fetch": "^2.6.6",
     "node-object-hash": "^2.3.10",
     "numeral": "^2.0.6",
+    "parse-redis-url-simple": "^1.0.2",
+    "redis": "^4.0.1",
     "table": "^6.7.3",
     "user-agents": "^1.0.842"
   },

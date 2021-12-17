@@ -3,18 +3,16 @@
  */
 import { MongoClient } from 'mongodb';
 
+import { CONNECTION_URL, POOL_SIZE } from './mongo-config';
 import { MongoRepository } from './MongoRepository';
-import { CONNECTION_URL, POOL_SIZE, DB } from './mongo-config';
 
-const client = new MongoClient(CONNECTION_URL, {
-  maxPoolSize: parseInt(POOL_SIZE, 10)
-});
+const client = new MongoClient(CONNECTION_URL, { maxPoolSize: POOL_SIZE });
 
 const oldConnect = client.connect.bind(client);
 
 client.connect = async function () {
   return oldConnect().then((db) => {
-    MongoRepository.db = client.db(DB);
+    MongoRepository.db = client.db();
     return db;
   });
 };

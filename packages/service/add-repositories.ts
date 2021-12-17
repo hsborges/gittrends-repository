@@ -119,10 +119,12 @@ program
       options.limit
     );
 
+    const proxyUrl = new URL(process.env.GT_PROXY || 'http://localhost:3000');
+
     const httpClient = new HttpClient({
-      protocol: process.env.GT_PROXY_PROTOCOL ?? 'http',
-      host: process.env.GT_PROXY_HOST ?? 'localhost',
-      port: parseInt(process.env.GT_PROXY_PORT ?? '3000', 10),
+      protocol: proxyUrl.protocol,
+      host: proxyUrl.hostname,
+      port: parseInt(proxyUrl.port, 10),
       timeout: parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10),
       retries: parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5),
       userAgent: process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString()

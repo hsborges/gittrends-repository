@@ -27,6 +27,7 @@
     "@typescript-eslint/parser": "^5.4.0",
     "commitizen": "^4.2.4",
     "cz-conventional-changelog": "3.3.0",
+    "dotenv-cli": "^4.1.1",
     "eslint": "8.3.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.3",
@@ -44,8 +45,5 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  },
-  "dependencies": {
-    "dotenv-cli": "^4.1.1"
   }
 }
