@@ -6,7 +6,7 @@ import { startCase, difference, get } from 'lodash';
 import numeral from 'numeral';
 import { table } from 'table';
 
-import mongoClient, { MongoRepository, Repository } from '@gittrends/database-config';
+import mongoClient, { MongoRepository, Repository } from '@gittrends/database';
 
 import packageJson from '../package.json';
 

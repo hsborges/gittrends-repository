@@ -8,7 +8,7 @@ import fs from 'fs';
 import { Document } from 'mongodb';
 import path from 'path';
 
-import mongoClient, { ActorRepository } from '@gittrends/database-config';
+import mongoClient, { ActorRepository } from '@gittrends/database';
 
 import { version } from './package.json';
 

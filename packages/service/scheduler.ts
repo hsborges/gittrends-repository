@@ -8,7 +8,7 @@ import { CronJob } from 'cron';
 import dayjs from 'dayjs';
 import { difference, chunk, intersection, get } from 'lodash';
 
-import mongoClient, { Actor, MongoRepository, Repository } from '@gittrends/database-config';
+import mongoClient, { Actor, MongoRepository, Repository } from '@gittrends/database';
 
 import { version, config } from './package.json';
 import { connectionOptions } from './redis';

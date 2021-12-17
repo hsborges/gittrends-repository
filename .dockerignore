@@ -2,7 +2,7 @@
 !.yarnrc
 !environment.d.ts
 !packages/env-config
-!packages/database-config
+!packages/database
 !packages/service
 !package.json
 !tsconfig.*

@@ -10,7 +10,7 @@ import {
   Reaction,
   Repository,
   TimelineEvent
-} from '@gittrends/database-config';
+} from '@gittrends/database';
 
 import Component from '../../github/Component';
 import IssueComponent from '../../github/components/IssueComponent';

@@ -27,7 +27,7 @@
     "pm2-runtime": "node -r @gittrends/env-config ./node_modules/.bin/pm2-runtime"
   },
   "dependencies": {
-    "@gittrends/database-config": "link:../database-config",
+    "@gittrends/database": "link:../database",
     "async-retry": "^1.3.3",
     "bee-queue": "^1.4.0",
     "bull-arena": "^3.29.3",

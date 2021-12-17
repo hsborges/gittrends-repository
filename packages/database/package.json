@@ -1,5 +1,5 @@
 {
-  "name": "@gittrends/database-config",
+  "name": "@gittrends/database",
   "version": "4.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

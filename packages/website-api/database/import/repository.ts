@@ -3,7 +3,7 @@
  */
 import { omit } from 'lodash';
 
-import { RepositoryRepository } from '@gittrends/database-config';
+import { RepositoryRepository } from '@gittrends/database';
 
 import { Repository, RepositoryMetadata } from '../types';
 import importActor from './actor';

@@ -17,7 +17,7 @@ import mongoClient, {
   WatcherRepository,
   MongoRepository,
   Entity
-} from '@gittrends/database-config';
+} from '@gittrends/database';
 
 import { version } from './package.json';
 

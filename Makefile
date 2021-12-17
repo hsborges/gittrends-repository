@@ -1,6 +1,6 @@
 #!make
 .PHONY: help \
-				install env-config database-config service website website-api \
+				install env-config database service website website-api \
  				build build-docker
 
 help:
@@ -17,11 +17,11 @@ env-config: install
 		@echo "Building environment config"
 		@yarn workspace @gittrends/env-config build
 
-database-config: install env-config
+database: install env-config
 		@echo "Building database config"
-		@yarn workspace @gittrends/database-config build
+		@yarn workspace @gittrends/database build
 
-service: install env-config database-config
+service: install env-config database
 		@echo "Building updater service"
 		@yarn workspace @gittrends/service build
 
@@ -29,11 +29,11 @@ website: install env-config
 		@echo "Building website"
 		@yarn workspace @gittrends/website build
 
-website-api: install env-config database-config
+website-api: install env-config database
 		@echo "Building website-api"
 		@yarn workspace @gittrends/website-api build
 
-build: install env-config database-config service website website-api
+build: install env-config database service website website-api
 
 
 build-docker:

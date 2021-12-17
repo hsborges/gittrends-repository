@@ -6,7 +6,7 @@ import consola from 'consola';
 import { chain, get, isNil, min, negate, uniqBy } from 'lodash';
 import UserAgent from 'user-agents';
 
-import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/database-config';
+import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/database';
 
 import SearchComponent from './github/components/SearchComponent';
 import HttpClient from './github/HttpClient';

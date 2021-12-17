@@ -14,7 +14,7 @@ import mongo, {
   RepositoryRepository,
   StargazerRepository,
   TagRepository
-} from '@gittrends/database-config';
+} from '@gittrends/database';
 
 import { version } from '../package.json';
 import * as dataImport from './import';

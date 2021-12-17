@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { TagRepository } from '@gittrends/database-config';
+import { TagRepository } from '@gittrends/database';
 
 import { Tag } from '../types';
 

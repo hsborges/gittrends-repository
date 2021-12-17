@@ -6,7 +6,7 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import utc from 'dayjs/plugin/utc';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 
-import { StargazerRepository } from '@gittrends/database-config';
+import { StargazerRepository } from '@gittrends/database';
 
 import { Stargazer, StargazerTimeseries } from '../types';
 import importActor from './actor';

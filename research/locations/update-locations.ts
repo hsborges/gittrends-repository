@@ -9,7 +9,7 @@ import { mapKeys, omitBy, snakeCase } from 'lodash';
 import path from 'path';
 import { Transform } from 'stream';
 
-import mongoClient, { Location, LocationRepository } from '@gittrends/database-config';
+import mongoClient, { Location, LocationRepository } from '@gittrends/database';
 
 import { version } from './package.json';
 

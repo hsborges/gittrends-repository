@@ -8,7 +8,7 @@ import consola from 'consola';
 import fetch from 'node-fetch';
 import UserAgent from 'user-agents';
 
-import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database-config';
+import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database';
 
 import HttpClient from './github/HttpClient';
 import { RepositoryUpdateError } from './helpers/errors';

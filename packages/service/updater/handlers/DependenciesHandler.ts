@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Dependency, MongoRepository, Repository } from '@gittrends/database-config';
+import { Dependency, MongoRepository, Repository } from '@gittrends/database';
 
 import Component from '../../github/Component';
 import DependencyGraphManifestComponent from '../../github/components/DependencyGraphManifestComponent';

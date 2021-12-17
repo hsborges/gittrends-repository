@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Stargazer, MongoRepository, Repository } from '@gittrends/database-config';
+import { Stargazer, MongoRepository, Repository } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { InternalError, RetryableError } from '../../helpers/errors';

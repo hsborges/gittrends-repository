@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { ActorRepository } from '@gittrends/database-config';
+import { ActorRepository } from '@gittrends/database';
 
 import { Actor } from '../types';
 

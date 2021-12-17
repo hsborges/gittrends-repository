@@ -40,7 +40,7 @@ cp .env.example .env
 4. Run database migrations
 
 ```sh
-yarn workspace @gittrends/database-config run-migrations
+yarn workspace @gittrends/database run-migrations
 ```
 
 ### Docker

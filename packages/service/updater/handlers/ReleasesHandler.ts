@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Release, MongoRepository, Repository } from '@gittrends/database-config';
+import { Release, MongoRepository, Repository } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';

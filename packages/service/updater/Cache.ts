@@ -4,7 +4,7 @@
 import LRU from 'lru-cache';
 import hasher from 'node-object-hash';
 
-import { Entity } from '@gittrends/database-config';
+import { Entity } from '@gittrends/database';
 
 export class Cache {
   readonly cache: LRU<string, void>;

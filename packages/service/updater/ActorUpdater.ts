@@ -4,7 +4,7 @@
 import { Job } from 'bee-queue';
 import { chunk } from 'lodash';
 
-import { Actor, MongoRepository } from '@gittrends/database-config';
+import { Actor, MongoRepository } from '@gittrends/database';
 
 import ActorComponent from '../github/components/ActorComponent';
 import HttpClient from '../github/HttpClient';

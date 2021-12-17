@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Actor, Commit, Milestone, MongoRepository } from '@gittrends/database-config';
+import { Actor, Commit, Milestone, MongoRepository } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ResourceUpdateError } from '../../helpers/errors';
