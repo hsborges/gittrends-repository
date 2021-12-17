@@ -31,9 +31,10 @@ describe('Test custom errors', () => {
   });
 
   test('it should store information of the failed request', async () => {
-    nock('http://localhost').get('/').reply(500, 'failed');
+    const url = 'http://localhost';
+    nock(url).get('/').reply(500, 'failed');
 
-    await fetch('/').catch((error) => {
+    await fetch(url).catch((error) => {
       const rError = new Errors.RequestError(error);
       expect(rError.response?.status).toBe(500);
       expect(rError.response?.data).toBe('failed');
