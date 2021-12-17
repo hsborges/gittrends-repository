@@ -1,9 +1,6 @@
 #!/bin/sh
-# update system
-apt-get update -y && apt-get dist-upgrade -y
-
 # install system dependencies
-apt-get install git curl build-essential -y
+apt-get update && apt-get install git curl tmux build-essential -y
 
 # install docker
 curl -fsSL https://get.docker.com -o get-docker.sh
