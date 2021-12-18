@@ -9256,6 +9256,11 @@ moment-timezone@^0.5.x:
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
   integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
 
+mongo-url-parser@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/mongo-url-parser/-/mongo-url-parser-1.0.1.tgz#e0c23ea562fbbbe3630568f6e6b912c851966863"
+  integrity sha512-jKygfGx7xf97yqp7Kwx0/fEOmMAbuhNGAhedD490BtN+UKSutkv7RBKk5p8o8W+hkA1AeOYdtLr+OjkXSLkh7g==
+
 mongodb-connection-string-url@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/mongodb-connection-string-url/-/mongodb-connection-string-url-2.1.0.tgz#9c522c11c37f571fecddcb267ac4a76ef432aeb7"

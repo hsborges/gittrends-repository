@@ -20,6 +20,7 @@
     "es6-shim": "^0.35.6",
     "lodash": "^4.17.21",
     "migrate-mongo": "^8.2.3",
+    "mongo-url-parser": "^1.0.1",
     "mongodb": "4.2.0",
     "reflect-metadata": "^0.1.13",
     "stack-trace": "0.0.10",
