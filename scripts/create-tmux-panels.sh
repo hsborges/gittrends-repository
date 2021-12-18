@@ -1,9 +1,9 @@
 #!/bin/sh
 COLS_COUNT=$(tput cols)
 
-tmux new-session -s 'gittrends-service' -n 'pm2-runtime' \; \
-  send-keys 'yarn workspace @gittrends/service pm2-runtime service.config.js' Enter  \; \
-  new-window -n 'pm2-logs' \; \
+tmux new-session -s 'gittrends-panels' -n 'pm2-runtime' \; \
+  send-keys 'yarn workspace @gittrends/service pm2-runtime service.config.js' \; \
+  new-window -n  \; \
   send-keys 'yarn workspace @gittrends/service pm2 logs --raw "/repos|users|scheduler/"' Enter  \; \
   split-window -v \; \
   send-keys 'yarn workspace @gittrends/service pm2 logs --raw proxy-server' Enter  \; \
