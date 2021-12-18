@@ -6,12 +6,18 @@ services:
     volumes:
       - ./mongo-backup:/backup
     environment:
-      MONGO_URI: ${GT_MONGO_URL}
+      MONGO_URI: 'mongodb://mongo:27017/gittrends_app-${NODE_ENV-development}'
       CRON_SCHEDULE: ${GT_MONGODUMP_CRON_SCHEDULE-0 0 * * 0}
+    depends_on:
+      - mongo
+      - redis
 
   mongo-backup-run:
     image: istepanov/mongodump
     volumes:
       - ./mongo-backup:/backup
     environment:
-      MONGO_URI: ${GT_MONGO_URL}
+      MONGO_URI: 'mongodb://mongo:27017/gittrends_app-${NODE_ENV-development}'
+    depends_on:
+      - mongo
+      - redis

@@ -6,7 +6,7 @@ services:
     command: --wiredTigerJournalCompressor zstd --directoryperdb
     restart: always
     ports:
-      - ${GT_MONGO_PORT-27017}:27017
+      - 27017:27017
     volumes:
       - db:/data/db
 
@@ -15,7 +15,7 @@ services:
     command: --maxmemory-policy allkeys-lru
     restart: always
     ports:
-      - ${GT_REDIS_PORT-6379}:6379
+      - 6379:6379
 
 volumes:
   db:

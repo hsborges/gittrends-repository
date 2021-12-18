@@ -11,5 +11,11 @@ services:
       - ${GT_PROXY_TOKENS_FILE-./tokens.txt}:/app/tokens.txt:ro
       - ./.env.local:/app/.env.local:ro
       - ./.env.${NODE_ENV-development}:/app/.env.${NODE_ENV-development}:ro
+    environment:
+      GT_MONGO_URL: 'mongodb://mongo:27017/gittrends_app-${NODE_ENV-development}'
+      GT_REDIS_URL: 'redis://redis:6379/0'
     env_file:
       - .env
+    depends_on:
+      - mongo
+      - redis
