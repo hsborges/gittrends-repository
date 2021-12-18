@@ -43,7 +43,7 @@ export default class HttpClient {
         const controller = new globalThis.AbortController();
         const timeout = setTimeout(() => controller.abort(), this.timeout);
 
-        return fetch(`${this.protocol}://${this.host}:${this.port}/graphql`, {
+        return fetch(`${this.protocol}//${this.host}:${this.port}/graphql`, {
           method: 'POST',
           body: JSON.stringify(data),
           compress: true,
