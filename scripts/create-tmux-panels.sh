@@ -3,7 +3,7 @@ COLS_COUNT=$(tput cols)
 
 tmux new-session -s 'gittrends-panels' -n 'pm2-runtime' \; \
   send-keys 'yarn workspace @gittrends/service pm2-runtime service.config.js' \; \
-  new-window -n  \; \
+  new-window -n 'pm2-logs' \; \
   send-keys 'yarn workspace @gittrends/service pm2 logs --raw "/repos|users|scheduler/"' Enter  \; \
   split-window -v \; \
   send-keys 'yarn workspace @gittrends/service pm2 logs --raw proxy-server' Enter  \; \
