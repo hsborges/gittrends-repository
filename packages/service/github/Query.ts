@@ -1,11 +1,11 @@
 /*
  *  Author: Hudson S. Borges
  */
-import compress from 'graphql-query-compress';
 import { get } from 'lodash';
 
 import compact from '../helpers/compact';
 import * as Errors from '../helpers/errors';
+import compress from '../helpers/gql-compress';
 import normalize from '../helpers/normalize';
 import Component from './Component';
 import Fragment from './Fragment';

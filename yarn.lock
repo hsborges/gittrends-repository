@@ -1434,6 +1434,7 @@
     es6-shim "^0.35.6"
     lodash "^4.17.21"
     migrate-mongo "^8.2.3"
+    mongo-url-parser "^1.0.1"
     mongodb "4.2.0"
     reflect-metadata "^0.1.13"
     stack-trace "0.0.10"
@@ -1447,6 +1448,7 @@
     es6-shim "^0.35.6"
     lodash "^4.17.21"
     migrate-mongo "^8.2.3"
+    mongo-url-parser "^1.0.1"
     mongodb "4.2.0"
     reflect-metadata "^0.1.13"
     stack-trace "0.0.10"
@@ -7049,13 +7051,6 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.2, graceful-fs@^4.1.6, graceful-fs@^4.2.0,
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.8.tgz#e412b8d33f5e006593cbd3cee6df9f2cebbe802a"
   integrity sha512-qkIilPUYcNhJpd33n0GBXTB1MMPp14TxEsEs0pTrsSVucApsYzW5V+Q8Qxhik6KU3evy+qkAAowTByymK0avdg==
 
-graphql-query-compress@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/graphql-query-compress/-/graphql-query-compress-1.2.4.tgz#27c6a21ef4fe0dfaa2ff9d29ca8938a876a55650"
-  integrity sha512-W5SMy8/2RAsC9uMOV9VTwnUkp+8N3BZz6qef6jRCIxOVrVxRBiX2btvpaKrEnPU4nchnc1bCfmMDkEtCRzJUiw==
-  dependencies:
-    tokenizr "1.5.7"
-
 gunzip-maybe@^1.4.0:
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/gunzip-maybe/-/gunzip-maybe-1.4.2.tgz#b913564ae3be0eda6f3de36464837a9cd94b98ac"
@@ -12432,11 +12427,6 @@ toidentifier@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.1.tgz#3be34321a88a820ed1bd80dfaa33e479fbb8dd35"
   integrity sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==
-
-tokenizr@1.5.7:
-  version "1.5.7"
-  resolved "https://registry.yarnpkg.com/tokenizr/-/tokenizr-1.5.7.tgz#80702775ac9d61899bd3c60e4c7ac36b9845bcbf"
-  integrity sha512-w6qS6F5PNtY30DxoRD4a7nC7zOlPM2SlpQ4zLhOmqBaB1VCZrlV82bLpc/lKNOdNmrwIwcsJLDcjEJ8f7UG6Mg==
 
 tough-cookie@^3.0.1:
   version "3.0.1"
