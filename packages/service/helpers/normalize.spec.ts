@@ -33,8 +33,8 @@ describe('Normalize response received from GitHub API', () => {
     expect(
       normalize({
         reaction_groups: [
-          { content: 'HEART', users_count: 10 },
-          { content: 'THUMBS_UP', users_count: 5 }
+          { content: 'HEART', users: 10 },
+          { content: 'THUMBS_UP', users: 5 }
         ]
       })
     ).toStrictEqual({
