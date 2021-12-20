@@ -1,10 +1,8 @@
 /*
- *  Source: https://github.com/jane/gql-compress
+ *  Inspired by: https://github.com/jane/gql-compress
  */
 export default (s: string = ''): string =>
   s
-    // replace multiple whitespace with a single
-    .replace(/(\b|\B)\s+(\b|\B)/gm, ' ')
-    // remove all whitespace between everything except for word and word boundaries
-    .replace(/(\B)\s+(\B)|(\b)\s+(\B)|(\B)\s+(\b)/gm, '')
-    .trim();
+    .trim()
+    .replace(/(\b|\B)[\s\t\r\n]+(\b|\B)/gm, ' ')
+    .replace(/([{}[\](),:])\s+|\s+([{}[\](),:])/gm, '$1$2');

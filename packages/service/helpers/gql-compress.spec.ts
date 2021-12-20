@@ -34,6 +34,6 @@ describe('compress', (): void => {
   });
 
   it('should handle empty inputs', (): void => {
-    expect(compress()).toBe('');
+    expect(compress('')).toBe('');
   });
 });
