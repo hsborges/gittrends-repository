@@ -10,11 +10,21 @@ module.exports = {
       interpreter: 'node',
       interpreter_args: '-r @gittrends/env',
       script: 'github-proxy-server',
-      args: ['--tokens', resolve('..', '..', process.env.GT_PROXY_TOKENS_FILE || './tokens.txt')],
+      args: [
+        '--tokens',
+        resolve(
+          '..',
+          '..',
+          process.env.GT_PROXY_TOKENS_FILE ||
+            `./tokens${process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ''}.txt`
+        )
+      ],
       out_file: '/dev/null',
       error_file: '/dev/null',
-      max_memory_restart: '150M',
-      env: { PORT: port }
+      max_memory_restart: '250M',
+      env: {
+        PORT: port
+      }
     },
     {
       name: 'queue-board',
