@@ -167,14 +167,6 @@ program
       .then(async ([repos, users]) => {
         await mongoClient.connect();
 
-        Promise.all(
-          repos.map((repo) =>
-            MongoRepository.get(Repository)
-              .collection.findOne({ _id: repo.id }, { projection: { _id: 1 } })
-              .then((data) => (data ? null : repo))
-          )
-        ).then((results) => results.filter(negate(isNil)));
-
         return Promise.all([
           Promise.all(
             repos.map((repo) =>
