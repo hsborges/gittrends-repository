@@ -43,17 +43,17 @@ export default class Query {
   }
 
   toString(): string {
-    return compress(`
+    return `
       query {
         ${this.components.map((component) => component.toString()).join('\n')}
       }
       ${this.fragments.map((fragment) => fragment.toString()).join('\n')}
-    `);
+    `;
   }
 
   async run(interceptor?: (args: string) => string): Promise<any> {
     return this.client
-      .request({ query: interceptor ? interceptor(this.toString()) : this.toString() })
+      .request({ query: compress(interceptor ? interceptor(this.toString()) : this.toString()) })
       .catch((err: Error & HttpClientResponse) => {
         switch (err.status) {
           case 408:
