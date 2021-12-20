@@ -150,7 +150,6 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       );
     }
 
-    console.error(this.issues, this.pendingIssues, this.pendingReactables);
     throw new ResourceUpdateError(new Error('Invalid condition reached!'));
   }
 
