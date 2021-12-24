@@ -2291,7 +2291,7 @@
   resolved "https://registry.yarnpkg.com/@types/faker/-/faker-5.5.9.tgz#588ede92186dc557bff8341d294335d50d255f0c"
   integrity sha512-uCx6mP3UY5SIO14XlspxsGjgaemrxpssJI0Ol+GfhxtcKpv9pgRZYsS4eeKeHVLje6Qtc8lGszuBI461+gVZBA==
 
-"@types/findup-sync@^4.0.1":
+"@types/findup-sync@^4.0.2":
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/@types/findup-sync/-/findup-sync-4.0.2.tgz#40ca32d621c8023d266c6070237de13d11d83233"
   integrity sha512-MY2Acwvq6O+/rOMRtbV31phQOj1A+sbVWRbp47PvcZ5+VoofiSZHhj8ByATusuzJE+q/u+PA1SlkfPu3thhsjw==

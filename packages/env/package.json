@@ -13,6 +13,6 @@
     "findup-sync": "^5.0.0"
   },
   "devDependencies": {
-    "@types/findup-sync": "^4.0.1"
+    "@types/findup-sync": "^4.0.2"
   }
 }
