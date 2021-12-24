@@ -73,7 +73,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
   private defaultRBatchSize: number = 100;
   private hasPendingIssues: boolean = true;
 
-  batchSize = (this.defaultBatchSize = 25);
+  batchSize = (this.defaultBatchSize = 50);
 
   async component(): Promise<RepositoryComponent | Component[]> {
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
@@ -409,7 +409,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
 export class PullRequestHander extends IssuesHander {
   static resource: TResource = 'pull_requests';
 
-  batchSize = (this.defaultBatchSize = 10);
+  batchSize = (this.defaultBatchSize = 20);
   resource = PullRequestHander.resource;
   resourceAlias = `_${PullRequestHander.resource}`;
   mongoRepository = MongoRepository.get(PullRequest);
