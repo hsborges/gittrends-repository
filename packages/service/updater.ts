@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import Queue from 'bee-queue';
+import { Worker, Job, QueueScheduler } from 'bullmq';
 import { bold, dim } from 'chalk';
 import { program, Option } from 'commander';
 import consola from 'consola';
@@ -11,9 +11,10 @@ import UserAgent from 'user-agents';
 import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database';
 
 import HttpClient from './github/HttpClient';
+import compact from './helpers/compact';
 import { RepositoryUpdateError } from './helpers/errors';
 import { version } from './package.json';
-import { REDIS_PROPS } from './redis';
+import { REDIS_CONNECTION } from './redis';
 import { ActorsUpdater } from './updater/ActorUpdater';
 import { Cache } from './updater/Cache';
 import { RepositoryUpdater, RepositoryUpdaterHandler } from './updater/RepositoryUpdater';
@@ -45,14 +46,6 @@ program
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
-    const queue = new Queue(options.type, {
-      redis: REDIS_PROPS,
-      stallInterval: 30 * 1000,
-      isWorker: true,
-      sendEvents: false,
-      storeJobs: false
-    });
-
     const proxyUrl = new URL(process.env.GT_PROXY || 'http://localhost:3000');
 
     const httpClient = new HttpClient({
@@ -64,60 +57,88 @@ program
       userAgent: process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString()
     });
 
-    queue.checkStalledJobs(5000);
+    new Worker(
+      options.type,
+      async (job: Job) => {
+        const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
 
-    queue.process(options.workers, async (job) => {
-      const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
+        const originalReportProgress = job.updateProgress.bind(job);
+        type JobProgressReport = { pending: string[]; done: string[]; errors: string[] };
 
-      const originalReportProgress = job.reportProgress.bind(job);
-      job.reportProgress = (data: any) => {
-        let progress: number;
+        job.updateProgress = async (data: number | JobProgressReport) => {
+          let progress: number;
 
-        if (typeof data === 'number') progress = data;
-        else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
+          if (typeof data === 'number') progress = data;
+          else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
 
-        const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
+          const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
 
-        const message =
-          `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.id)} ` +
-          (typeof data !== 'number' && data.pending.length
-            ? dim(`(pending: ${data.pending.join(', ')})`)
-            : '');
+          const message =
+            `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.name)} ` +
+            (typeof data !== 'number' && data.pending.length
+              ? dim(`(pending: ${data.pending.join(', ')})`)
+              : '');
 
-        consola[progress === 100 ? 'success' : 'info'](message);
+          consola[progress === 100 ? 'success' : 'info'](message);
 
-        originalReportProgress(data);
-      };
+          if (typeof data !== 'number')
+            await job.update(
+              compact({
+                resources: data.pending,
+                done: data.done,
+                errors: data.errors
+              })
+            );
 
-      try {
-        if (options.type === 'users') {
-          return new ActorsUpdater(job.data.id, httpClient, { job }).update();
-        } else if (options.type === 'repositories') {
-          const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
-          if (job.data?.errors?.length)
-            resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
-          if (resources.length)
-            return new RepositoryUpdater(job.data.id, resources, httpClient, {
-              job,
-              cache
-            }).update();
-        } else {
-          consola.error(new Error('Invalid "type" option!'));
-          process.exit(1);
+          return originalReportProgress(progress);
+        };
+
+        try {
+          if (options.type === 'users') {
+            return new ActorsUpdater(job.data.id, httpClient, { job }).update();
+          } else if (options.type === 'repositories') {
+            const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
+            if (job.data?.errors?.length)
+              resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
+            if (resources.length)
+              return new RepositoryUpdater(job.data.id, resources, httpClient, {
+                job,
+                cache
+              }).update();
+          } else {
+            consola.error(new Error('Invalid "type" option!'));
+            process.exit(1);
+          }
+        } catch (error: any) {
+          consola.error(`Error thrown by ${job.id}.`, error);
+
+          if (error instanceof Error) {
+            await MongoRepository.get(ErrorLog).upsert(
+              error instanceof RepositoryUpdateError
+                ? error.errors.map((e) => ErrorLog.from(e))
+                : ErrorLog.from(error)
+            );
+          }
+
+          throw error;
         }
-      } catch (error: any) {
-        consola.error(`Error thrown by ${job.id}.`, error);
-
-        if (error instanceof Error) {
-          await MongoRepository.get(ErrorLog).upsert(
-            error instanceof RepositoryUpdateError
-              ? error.errors.map((e) => ErrorLog.from(e))
-              : ErrorLog.from(error)
-          );
-        }
-
-        throw error;
+      },
+      {
+        connection: REDIS_CONNECTION,
+        concurrency: options.workers,
+        autorun: true,
+        sharedConnection: true,
+        lockDuration: 5 * 60 * 1000,
+        lockRenewTime: 30 * 1000
       }
+    );
+
+    new QueueScheduler(options.type, {
+      connection: REDIS_CONNECTION,
+      sharedConnection: true,
+      autorun: true,
+      maxStalledCount: Number.MAX_SAFE_INTEGER,
+      stalledInterval: 60 * 1000
     });
   })
   .parse(process.argv);

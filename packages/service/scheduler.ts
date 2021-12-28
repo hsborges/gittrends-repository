@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import Queue from 'bee-queue';
+import { Queue } from 'bullmq';
 import { program } from 'commander';
 import consola from 'consola';
 import { CronJob } from 'cron';
@@ -11,7 +11,7 @@ import { difference, chunk, intersection, get } from 'lodash';
 import mongoClient, { Actor, MongoRepository, Repository } from '@gittrends/database';
 
 import { version, config } from './package.json';
-import { REDIS_PROPS } from './redis';
+import { REDIS_CONNECTION } from './redis';
 
 /* COMMANDS */
 function resourcesParser(resources: string[]): string[] {
@@ -41,15 +41,14 @@ const repositoriesScheduler = async (
     });
 
     const _resources = difference(resources, exclude);
+    if (_resources.length === 0) return;
 
-    if (_resources.length) {
-      count += 1;
-      await queue
-        .createJob({ id: repo._id.toString(), resources: _resources, excluded: exclude })
-        .setId((repo.name_with_owner as string).toLowerCase())
-        .retries(3)
-        .save();
-    }
+    count += 1;
+    await queue.add(
+      (repo.name_with_owner as string).toLowerCase(),
+      { id: repo._id.toString(), resources: _resources, excluded: exclude },
+      { jobId: repo._id.toString() }
+    );
   }
 
   consola.success(`Number of repositories scheduled: ${count}`);
@@ -73,9 +72,9 @@ const usersScheduler = async (queue: Queue<UsersJob>, wait = 24, limit = 100000)
     .toArray()
     .then((users) => users.map((r) => r._id.toString()));
   // add to queue
-  return Promise.all(
-    chunk(usersIds, 25).map((id) => queue.createJob({ id }).setId(`users@${id[0]}+`).save())
-  ).then(() => consola.success(`Number of users scheduled: ${usersIds.length}`));
+  return Promise.all(chunk(usersIds, 25).map((id) => queue.add(`users@${id[0]}+`, { id }))).then(
+    () => consola.success(`Number of users scheduled: ${usersIds.length}`)
+  );
 };
 
 type SchedulerOptions = {
@@ -102,22 +101,17 @@ const scheduler = async (options: SchedulerOptions) => {
 
   async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
     const queue = new Queue<T>(name, {
-      redis: REDIS_PROPS,
-      removeOnSuccess: removeOnComplete,
-      removeOnFailure: removeOnFail,
-      isWorker: false,
-      getEvents: false,
-      sendEvents: false
+      connection: REDIS_CONNECTION,
+      sharedConnection: true,
+      defaultJobOptions: { attempts: 3, removeOnComplete, removeOnFail }
     });
 
     if (options.destroyQueue) {
-      await Promise.all(
-        ['succeeded', 'failed', 'waiting'].map((status) =>
-          queue.getJobs(status, { size: Number.MAX_SAFE_INTEGER })
-        )
-      )
-        .then((jobsList) => jobsList.reduce((memo, list) => memo.concat(list), []))
-        .then((jobs) => Promise.all(jobs.map((job) => job.remove())));
+      await Promise.all([
+        queue.drain(true),
+        queue.clean(0, Number.MAX_SAFE_INTEGER, 'completed'),
+        queue.clean(0, Number.MAX_SAFE_INTEGER, 'failed')
+      ]);
     }
 
     return queue;

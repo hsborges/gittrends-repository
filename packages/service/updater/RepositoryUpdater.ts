@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bee-queue';
+import { Job } from 'bullmq';
 import { flatten } from 'lodash';
 
 import HttpClient from '../github/HttpClient';
@@ -97,7 +97,7 @@ export class RepositoryUpdater implements Updater {
           if (isRetry) return;
 
           if (this.job && this.filterDone(pendingHandlers).length > 0) {
-            this.job?.reportProgress({
+            this.job?.updateProgress({
               pending: this.filterPending(handlers).map(
                 (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
               ),

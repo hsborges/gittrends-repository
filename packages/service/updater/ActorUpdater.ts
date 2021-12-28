@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bee-queue';
+import { Job } from 'bullmq';
 import { chunk } from 'lodash';
 
 import { Actor, MongoRepository } from '@gittrends/database';
@@ -59,7 +59,7 @@ export class ActorsUpdater implements Updater {
 
   async update(): Promise<void> {
     return this._update(Array.isArray(this.id) ? this.id : [this.id]).then(() => {
-      if (this.job) this.job.reportProgress(100);
+      if (this.job) this.job.updateProgress(100);
     });
   }
 }
