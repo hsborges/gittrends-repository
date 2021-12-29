@@ -18,6 +18,7 @@ import { REDIS_CONNECTION } from './redis';
 import { ActorsUpdater } from './updater/ActorUpdater';
 import { Cache } from './updater/Cache';
 import { RepositoryUpdater, RepositoryUpdaterHandler } from './updater/RepositoryUpdater';
+import Updater from './updater/Updater';
 
 async function proxyServerHealthCheck(): Promise<boolean> {
   return fetch(`${process.env.GT_PROXY_URL || 'http://localhost:3000'}/status`, { timeout: 5000 })
@@ -93,34 +94,35 @@ program
           return originalReportProgress(progress);
         };
 
-        try {
-          if (options.type === 'users') {
-            return new ActorsUpdater(job.data.id, httpClient, { job }).update();
-          } else if (options.type === 'repositories') {
-            const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
-            if (job.data?.errors?.length)
-              resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
-            if (resources.length)
-              return new RepositoryUpdater(job.data.id, resources, httpClient, {
-                job,
-                cache
-              }).update();
-          } else {
-            consola.error(new Error('Invalid "type" option!'));
-            process.exit(1);
-          }
-        } catch (error: any) {
-          consola.error(`Error thrown by ${job.id}.`, error);
+        let updater: Updater | null = null;
 
-          if (error instanceof Error) {
-            await MongoRepository.get(ErrorLog).upsert(
-              error instanceof RepositoryUpdateError
-                ? error.errors.map((e) => ErrorLog.from(e))
-                : ErrorLog.from(error)
-            );
-          }
+        if (options.type === 'users') {
+          updater = new ActorsUpdater(job.data.id, httpClient, { job });
+        } else if (options.type === 'repositories') {
+          const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
+          if (job.data?.errors?.length)
+            resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
+          if (resources.length)
+            updater = new RepositoryUpdater(job.data.id, resources, httpClient, { job, cache });
+        } else {
+          consola.error(new Error('Invalid "type" option!'));
+          process.exit(1);
+        }
 
-          throw error;
+        if (updater) {
+          await updater.update().catch(async (error) => {
+            consola.error(`Error thrown by ${job.id}.`, error);
+
+            if (error instanceof Error) {
+              await MongoRepository.get(ErrorLog).upsert(
+                error instanceof RepositoryUpdateError
+                  ? error.errors.map((e) => ErrorLog.from(e))
+                  : ErrorLog.from(error)
+              );
+            }
+
+            throw error;
+          });
         }
       },
       {
