@@ -41,14 +41,15 @@ const repositoriesScheduler = async (
     });
 
     const _resources = difference(resources, exclude);
-    if (_resources.length === 0) return;
 
-    count += 1;
-    await queue.add(
-      (repo.name_with_owner as string).toLowerCase(),
-      { id: repo._id.toString(), resources: _resources, excluded: exclude },
-      { jobId: repo._id.toString() }
-    );
+    if (_resources.length > 0) {
+      count += 1;
+      await queue.add(
+        (repo.name_with_owner as string).toLowerCase(),
+        { id: repo._id.toString(), resources: _resources, excluded: exclude },
+        { jobId: repo._id.toString() }
+      );
+    }
   }
 
   consola.success(`Number of repositories scheduled: ${count}`);
