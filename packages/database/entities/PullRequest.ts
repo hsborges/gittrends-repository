@@ -16,6 +16,8 @@ import { isString } from 'lodash';
 import { Issue } from './Issue';
 
 export class PullRequest extends Issue {
+  static readonly __collection = 'pull_requests';
+
   @IsOptional()
   @IsString({ each: true })
   suggested_reviewers?: string[];

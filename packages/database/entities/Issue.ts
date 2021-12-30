@@ -18,7 +18,7 @@ import { Entity } from './Entity';
 export class Issue extends Entity {
   // Protected fields
   static readonly __id_fields = 'id';
-  static readonly __collection = 'issues';
+  static readonly __collection: 'issues' | 'pull_requests' = 'issues';
 
   // Entity fields
   @IsDefined()

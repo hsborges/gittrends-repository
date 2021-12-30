@@ -79,11 +79,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
       if (this.hasPendingIssues) {
         const cursor = this.mongoRepository.collection
-          .find({
-            repository: this.id,
-            type: this.resource === 'issues' ? 'Issue' : 'PullRequest',
-            '_metadata.error': { $exists: true }
-          })
+          .find({ repository: this.id, '_metadata.error': { $exists: true } })
           .limit(this.batchSize);
 
         for await (const doc of cursor) this.addIssueToItems({ id: doc._id, ...doc });
