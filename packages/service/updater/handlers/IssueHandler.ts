@@ -80,7 +80,8 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       if (this.hasPendingIssues) {
         const cursor = this.mongoRepository.collection.find({
           repository: this.id,
-          '_metadata.error': { $ne: undefined }
+          '_metadata.error': { $ne: undefined },
+          '_metadata.retry': true
         });
 
         for await (const doc of cursor) this.addIssueToItems({ id: doc._id, ...doc });
