@@ -43,14 +43,14 @@ const repositoriesScheduler = async (
     const _resources = difference(resources, exclude);
 
     if (_resources.length > 0) {
-      count += 1;
       await queue.getJob(repo._id.toString()).then(async (job) => {
         if (job && !(await job.isActive())) await job.remove();
-        return queue.add(
+        await queue.add(
           (repo.name_with_owner as string).toLowerCase(),
-          { id: repo._id.toString(), resources: _resources, excluded: exclude },
+          { id: repo._id.toString(), resources: _resources },
           { jobId: repo._id.toString() }
         );
+        count += 1;
       });
     }
   }

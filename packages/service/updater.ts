@@ -5,6 +5,7 @@ import { Worker, Job, QueueScheduler } from 'bullmq';
 import { bold, dim } from 'chalk';
 import { program, Option } from 'commander';
 import consola from 'consola';
+import { isNil } from 'lodash';
 import fetch from 'node-fetch';
 import UserAgent from 'user-agents';
 
@@ -58,41 +59,12 @@ program
       userAgent: process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString()
     });
 
-    new Worker(
+    const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
+
+    const worker = new Worker(
       options.type,
       async (job: Job) => {
-        const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
-
-        const originalReportProgress = job.updateProgress.bind(job);
-        type JobProgressReport = { pending: string[]; done: string[]; errors: string[] };
-
-        job.updateProgress = async (data: number | JobProgressReport) => {
-          let progress: number;
-
-          if (typeof data === 'number') progress = data;
-          else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
-
-          const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
-
-          const message =
-            `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.name)} ` +
-            (typeof data !== 'number' && data.pending.length
-              ? dim(`(pending: ${data.pending.join(', ')})`)
-              : '');
-
-          consola[progress === 100 ? 'success' : 'info'](message);
-
-          if (typeof data !== 'number')
-            await job.update(
-              compact({
-                resources: data.pending,
-                done: data.done,
-                errors: data.errors
-              })
-            );
-
-          return originalReportProgress(progress);
-        };
+        if (isNil(job.data.id)) throw new Error(`Invalid job data! (${job.name}: ${job.data.id})`);
 
         let updater: Updater | null = null;
 
@@ -111,7 +83,7 @@ program
 
         if (updater) {
           await updater.update().catch(async (error) => {
-            consola.error(`Error thrown by ${job.id}.`, error);
+            consola.error(`Error thrown by ${job.name}.`, error);
 
             if (error instanceof Error) {
               await MongoRepository.get(ErrorLog).upsert(
@@ -134,6 +106,32 @@ program
         lockRenewTime: 30 * 1000
       }
     );
+
+    worker.on('progress', async (job: Job, data: any) => {
+      let progress: number;
+
+      if (typeof data === 'number') progress = data;
+      else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
+
+      const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
+
+      const message =
+        `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.name)} ` +
+        (typeof data !== 'number' && data.pending.length
+          ? dim(`(pending: ${data.pending.join(', ')})`)
+          : '');
+
+      consola[progress === 100 ? 'success' : 'info'](message);
+
+      if (typeof data !== 'number')
+        await job.update(
+          compact({
+            resources: data.pending,
+            done: data.done,
+            errors: data.errors
+          })
+        );
+    });
 
     new QueueScheduler(options.type, {
       connection: REDIS_CONNECTION,
