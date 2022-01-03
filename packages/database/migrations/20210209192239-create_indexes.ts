@@ -8,13 +8,13 @@ export = {
     await Promise.all([
       db
         .collection('stargazers')
-        .createIndex({ repository: 1 }, { name: 'stargazers_repository_index' }),
+        .createIndex({ '_id.repository': 1 }, { name: 'stargazers_repository_index' }),
       db
         .collection('watchers')
-        .createIndex({ repository: 1 }, { name: 'watchers_repository_index' }),
+        .createIndex({ '_id.repository': 1 }, { name: 'watchers_repository_index' }),
       db
         .collection('dependencies')
-        .createIndex({ repository: 1 }, { name: 'dependencies_repository_index' }),
+        .createIndex({ '_id.repository': 1 }, { name: 'dependencies_repository_index' }),
       db
         .collection('actors')
         .createIndex({ '_metadata.updatedAt': 1 }, { name: '_metadata_updatedat_index' }),
