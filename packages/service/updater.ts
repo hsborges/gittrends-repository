@@ -126,7 +126,7 @@ program
       if (typeof data !== 'number')
         await job.update(
           compact({
-            ...data,
+            ...job.data,
             resources: data.pending,
             done: data.done,
             errors: data.errors
