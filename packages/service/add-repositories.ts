@@ -4,20 +4,18 @@
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import { chain, get, isNil, min, negate, uniqBy } from 'lodash';
-import UserAgent from 'user-agents';
 
 import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/database';
 
 import SearchComponent from './github/components/SearchComponent';
-import HttpClient from './github/HttpClient';
 import Query from './github/Query';
 import { BadGatewayError } from './helpers/errors';
+import { useHttpClient } from './helpers/proxy-http-client';
 import parser from './helpers/response-parser';
 import { version } from './package.json';
 
 async function search(
   limit = 1000,
-  httpClient: HttpClient,
   opts?: {
     language?: string;
     name?: string;
@@ -41,7 +39,7 @@ async function search(
   let hasMoreRepos = true;
 
   do {
-    await Query.create(httpClient)
+    await Query.create(useHttpClient())
       .compose(
         new SearchComponent(
           { ...opts, maxStargazers },
@@ -119,20 +117,9 @@ program
       options.limit
     );
 
-    const proxyUrl = new URL(process.env.GT_PROXY || 'http://localhost:3000');
-
-    const httpClient = new HttpClient({
-      protocol: proxyUrl.protocol,
-      host: proxyUrl.hostname,
-      port: parseInt(proxyUrl.port, 10),
-      timeout: parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10),
-      retries: parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5),
-      userAgent: process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString()
-    });
-
     return Promise.all(
       new Array(options.workers).fill(0).map(() =>
-        search(options.limit, httpClient, {
+        search(options.limit, {
           language: options.language,
           name: repositoryName,
           minStargazers: options.minStargazers && parseInt(options.minStargazers, 10),

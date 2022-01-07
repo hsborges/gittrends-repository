@@ -7,13 +7,12 @@ import { program, Option } from 'commander';
 import consola from 'consola';
 import { isNil } from 'lodash';
 import fetch from 'node-fetch';
-import UserAgent from 'user-agents';
 
 import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database';
 
-import HttpClient from './github/HttpClient';
 import compact from './helpers/compact';
 import { RepositoryUpdateError } from './helpers/errors';
+import { useHttpClient } from './helpers/proxy-http-client';
 import { version } from './package.json';
 import { REDIS_CONNECTION } from './redis';
 import { ActorsUpdater } from './updater/ActorUpdater';
@@ -48,17 +47,6 @@ program
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
-    const proxyUrl = new URL(process.env.GT_PROXY || 'http://localhost:3000');
-
-    const httpClient = new HttpClient({
-      protocol: proxyUrl.protocol,
-      host: proxyUrl.hostname,
-      port: parseInt(proxyUrl.port, 10),
-      timeout: parseInt(process.env.GT_PROXY_TIMEOUT ?? '15000', 10),
-      retries: parseInt(process.env.GT_PROXY_RETRIES ?? '0', 5),
-      userAgent: process.env.GT_PROXY_USER_AGENT ?? new UserAgent().random().toString()
-    });
-
     const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
 
     const worker = new Worker(
@@ -69,13 +57,16 @@ program
         let updater: Updater | null = null;
 
         if (options.type === 'users') {
-          updater = new ActorsUpdater(job.data.id, httpClient, { job });
+          updater = new ActorsUpdater(job.data.id, useHttpClient(), { job });
         } else if (options.type === 'repositories') {
           const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
-          if (job.data?.errors?.length)
+          if (job.data?.errors?.length) {
             resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
-          if (resources.length)
-            updater = new RepositoryUpdater(job.data.id, resources, httpClient, { job, cache });
+          }
+          if (resources.length) {
+            const updaterOpts = { job, cache };
+            updater = new RepositoryUpdater(job.data.id, resources, useHttpClient(), updaterOpts);
+          }
         } else {
           consola.error(new Error('Invalid "type" option!'));
           process.exit(1);
