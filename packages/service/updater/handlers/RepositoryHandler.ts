@@ -17,6 +17,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
   private details?: Record<string, unknown>;
   private languagesMeta: TMetadata = { items: [], hasNextPage: true };
   private topicsMeta: TMetadata = { items: [], hasNextPage: true };
+  private removed: boolean = false;
 
   async component(): Promise<RepositoryComponent> {
     return this._component
@@ -70,6 +71,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof NotFoundError) {
+      this.removed = true;
       await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.id },
         { $set: { '_metadata.removed': true, '_metadata.removed_at': new Date() } }
@@ -81,6 +83,9 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
   }
 
   hasNextPage(): boolean {
-    return !this.details || this.languagesMeta.hasNextPage || this.topicsMeta.hasNextPage;
+    return (
+      !this.removed &&
+      (!this.details || this.languagesMeta.hasNextPage || this.topicsMeta.hasNextPage)
+    );
   }
 }
