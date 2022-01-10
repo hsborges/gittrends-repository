@@ -16,4 +16,4 @@ RUN yarn workspace @gittrends/service build
 
 WORKDIR /app/packages/service
 
-ENTRYPOINT [ "yarn", "pm2-runtime", "service.config.js" ]
+CMD [ "yarn", "pm2-runtime", "service.config.js" ]

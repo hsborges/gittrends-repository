@@ -3,7 +3,8 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=yarn,dotenv,node
 
 ### dotenv ###
-.env.*
+.env*
+!.env.example
 
 ### Node ###
 # Logs
@@ -75,9 +76,6 @@ typings/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env.test
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

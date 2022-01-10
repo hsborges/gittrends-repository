@@ -1,12 +1,12 @@
 #!make
 .PHONY: help \
 				install env database service website website-api \
- 				build build-docker
+ 				build docker
 
 help:
 		@echo "Makefile commands:"
 		@echo "build"
-		@echo "build-docker"
+		@echo "docker"
 
 .DEFAULT_GOAL := build
 
@@ -36,5 +36,5 @@ website-api: install env database
 build: install env database service website website-api
 
 
-build-docker:
+docker:
 		@docker build --pull --compress -t hsborges/service.gittrends.app -f packages/service/Dockerfile .

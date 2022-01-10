@@ -1,16 +1,36 @@
 version: '3.7'
 
 services:
-  service:
+  proxy-server:
     build:
       context: .
       dockerfile: packages/service/Dockerfile
     image: gittrends-service:latest
+    entrypoint: yarn github-proxy-server --tokens /app/tokens.txt --request-timeout 45000 --port 80
     restart: unless-stopped
     volumes:
       - ${GT_PROXY_TOKENS_FILE-./tokens.txt}:/app/tokens.txt:ro
-      - ./.env.local:/app/.env.local:ro
-      - ./.env.${NODE_ENV-development}:/app/.env.${NODE_ENV-development}:ro
+
+  queue-board:
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
+    entrypoint: yarn queue-board
+    restart: unless-stopped
+    environment:
+      PORT: 80
+      GT_REDIS_URL: 'redis://redis:6379/0'
+    depends_on:
+      - redis
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
+    command: yarn schedule all --cron '0 */6 * * *'
+    restart: unless-stopped
     environment:
       GT_MONGO_URL: 'mongodb://mongo:27017/gittrends_app-${NODE_ENV-development}'
       GT_REDIS_URL: 'redis://redis:6379/0'
@@ -19,3 +39,38 @@ services:
     depends_on:
       - mongo
       - redis
+  repos-updater:
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
+    command: yarn update --type repositories --workers ${GT_UPDATER_REPOS_WORKERS-1}
+    restart: unless-stopped
+    environment:
+      GT_MONGO_URL: 'mongodb://mongo:27017/gittrends_app-${NODE_ENV-development}'
+      GT_REDIS_URL: 'redis://redis:6379/0'
+      GT_PROXY_URL: 'http://proxy-server:80'
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+      - proxy-server
+
+  users-updater:
+    build:
+      context: .
+      dockerfile: packages/service/Dockerfile
+    image: gittrends-service:latest
+    command: yarn update --type users --workers ${GT_UPDATER_USERS_WORKERS-1}
+    restart: unless-stopped
+    environment:
+      GT_MONGO_URL: 'mongodb://mongo:27017/gittrends_app-${NODE_ENV-development}'
+      GT_REDIS_URL: 'redis://redis:6379/0'
+      GT_PROXY_URL: 'http://proxy-server:80'
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+      - proxy-server
