@@ -6,18 +6,10 @@ import HttpClient from './HttpClient';
 let scope: nock.Scope;
 
 const spy = jest.spyOn(fetch, 'default');
-const client = new HttpClient({
-  protocol: 'http',
-  host: 'localhost',
-  port: 80,
-  retries: 1,
-  timeout: 250,
-  userAgent: '[fake] client'
-});
+const client = new HttpClient({ protocol: 'http', host: 'localhost' });
 
 beforeEach(() => {
-  const url = `${client.protocol}://${client.host}:${client.port}`;
-  scope = nock(url, { allowUnmocked: false }).persist();
+  scope = nock(client.baseUrl, { allowUnmocked: false }).persist();
   spy.mockClear();
 });
 

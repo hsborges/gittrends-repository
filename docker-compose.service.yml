@@ -10,6 +10,10 @@ services:
     restart: unless-stopped
     volumes:
       - ${GT_PROXY_TOKENS_FILE-./tokens.txt}:/app/tokens.txt:ro
+    logging:
+      options:
+        max-file: 5
+        max-size: 10m
 
   queue-board:
     build:
@@ -23,6 +27,10 @@ services:
       GT_REDIS_URL: 'redis://redis:6379/0'
     depends_on:
       - redis
+    logging:
+      options:
+        max-file: 5
+        max-size: 10m
 
   scheduler:
     build:
@@ -39,6 +47,10 @@ services:
     depends_on:
       - mongo
       - redis
+    logging:
+      options:
+        max-file: 5
+        max-size: 10m
   repos-updater:
     build:
       context: .
@@ -56,6 +68,10 @@ services:
       - mongo
       - redis
       - proxy-server
+    logging:
+      options:
+        max-file: 5
+        max-size: 10m
 
   users-updater:
     build:
@@ -74,3 +90,7 @@ services:
       - mongo
       - redis
       - proxy-server
+    logging:
+      options:
+        max-file: 5
+        max-size: 10m
