@@ -4,13 +4,13 @@ COLS_COUNT=$(tput cols)
 tmux new-session -s 'gittrends-panels' -n 'docker-compose' \; \
   send-keys 'docker-compose -f docker-compose.yml -f docker-compose.service.yml up' C-m \; \
   new-window -n 'docker-logs' \; \
-  send-keys 'docker-compose -f docker-compose.yml -f docker-compose.service.yml logs repos-updater users-updater scheduler -f --no-log-prefix' C-m \; \
+  send-keys 'sleep 15 && docker-compose -f docker-compose.yml -f docker-compose.service.yml logs repos-updater users-updater scheduler -f --no-log-prefix' C-m \; \
   split-window -v \; \
-  send-keys 'docker-compose -f docker-compose.yml -f docker-compose.service.yml logs proxy-server -f --no-log-prefix' C-m \; \
+  send-keys 'sleep 15 && docker-compose -f docker-compose.yml -f docker-compose.service.yml logs proxy-server -f --no-log-prefix' C-m \; \
   split-window -h \; \
   send-keys 'htop' C-m \; \
   split-window -h \; \
-  send-keys './node_modules/.bin/dotenv -c ${NODE_ENV-development} -- bash -c '"'"'mongostat -i --uri ${GT_MONGO_URL}'"'"'' C-m \; \
+  send-keys 'sleep 15 && docker-compose run --rm mongo mongostat -i --uri mongodb://mongo:27017' C-m \; \
   resize-pane -t 1 -x $(($COLS_COUNT * 35 / 100)) \; \
   resize-pane -t 2 -x $(($COLS_COUNT * 35 / 100)) \; \
   resize-pane -t 3 -x $(($COLS_COUNT * 30 / 100)) \; \
