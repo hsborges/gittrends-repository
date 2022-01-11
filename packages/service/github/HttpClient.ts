@@ -37,6 +37,9 @@ export default class HttpClient {
   async request(data: string | Record<string, unknown>): Promise<HttpClientResponse> {
     return retry(
       async (bail) => {
+        const controller = new globalThis.AbortController();
+        const timeout = setTimeout(() => controller.abort(), this.timeout);
+
         return fetch(`${this.baseUrl}graphql`, {
           method: 'POST',
           body: JSON.stringify(data),
@@ -51,33 +54,37 @@ export default class HttpClient {
               'application/vnd.github.merge-info-preview+json'
             ].join(', ')
           },
+          signal: controller.signal,
           timeout: this.timeout
-        }).then(async (fetchResponse) => {
-          const contentType = fetchResponse.headers.get('content-type')?.toLocaleLowerCase() || '';
+        })
+          .then(async (fetchResponse) => {
+            const contentType =
+              fetchResponse.headers.get('content-type')?.toLocaleLowerCase() || '';
 
-          const response = {
-            status: fetchResponse.status,
-            statusText: fetchResponse.statusText,
-            data: await (/application\/json/gi.test(contentType)
-              ? fetchResponse.json()
-              : fetchResponse.text()),
-            headers: fetchResponse.headers.raw()
-          };
+            const response = {
+              status: fetchResponse.status,
+              statusText: fetchResponse.statusText,
+              data: await (/application\/json/gi.test(contentType)
+                ? fetchResponse.json()
+                : fetchResponse.text()),
+              headers: fetchResponse.headers.raw()
+            };
 
-          if (fetchResponse.ok) return response;
+            if (fetchResponse.ok) return response;
 
-          const error = Object.assign(
-            new Error(`Request failed with code ${fetchResponse.status}.`),
-            response
-          );
+            const error = Object.assign(
+              new Error(`Request failed with code ${fetchResponse.status}.`),
+              response
+            );
 
-          if (/^[3-5]\d{2}$/.test(fetchResponse.status as any)) {
-            bail(error);
-            return response;
-          }
+            if (/^[3-5]\d{2}$/.test(fetchResponse.status as any)) {
+              bail(error);
+              return response;
+            }
 
-          throw error;
-        });
+            throw error;
+          })
+          .finally(() => clearTimeout(timeout));
       },
       { retries: this.retries, minTimeout: 100, maxTimeout: 500, randomize: true }
     );
