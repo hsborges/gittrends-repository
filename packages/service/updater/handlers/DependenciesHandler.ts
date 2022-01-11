@@ -99,10 +99,8 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       }, []);
 
       if (dependencies.length > 0) {
-        await Promise.all([
-          super.saveReferences(),
-          MongoRepository.get(Dependency).upsert(dependencies)
-        ]);
+        await super.saveReferences();
+        await MongoRepository.get(Dependency).upsert(dependencies);
       }
     }
 

@@ -5,7 +5,7 @@ import HttpClient from '../github/HttpClient';
 
 const proxyUrl = new URL(process.env.GT_PROXY_URL || 'http://localhost:3000');
 
-const httpClient = new HttpClient({
+export default new HttpClient({
   protocol: proxyUrl.protocol.replace(/(.*):$/g, '$1'),
   host: proxyUrl.hostname,
   port: proxyUrl.port ? parseInt(proxyUrl.port, 10) : undefined,
@@ -13,7 +13,3 @@ const httpClient = new HttpClient({
   retries: process.env.GT_PROXY_RETRIES ? parseInt(process.env.GT_PROXY_RETRIES, 5) : undefined,
   userAgent: process.env.GT_PROXY_USER_AGENT || undefined
 });
-
-export function useHttpClient(): HttpClient {
-  return httpClient;
-}

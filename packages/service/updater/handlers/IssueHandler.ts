@@ -308,12 +308,10 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       []
     );
 
-    await Promise.all([
-      super.saveReferences(),
-      this.mongoRepository.upsert(issues),
-      MongoRepository.get(TimelineEvent).upsert(timeline),
-      MongoRepository.get(Reaction).upsert(reactions)
-    ]);
+    await super.saveReferences();
+    await this.mongoRepository.upsert(issues);
+    await MongoRepository.get(TimelineEvent).upsert(timeline);
+    await MongoRepository.get(Reaction).upsert(reactions);
 
     await MongoRepository.get(Repository).collection.updateOne(
       { _id: this.id },

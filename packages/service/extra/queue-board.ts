@@ -9,7 +9,7 @@ import consola from 'consola';
 import express from 'express';
 import ip from 'ip';
 
-import { REDIS_CONNECTION } from '../redis';
+import { useRedis } from '../redis';
 
 const port = process.env.PORT || 8082;
 const ipAddress = ip.address();
@@ -19,7 +19,7 @@ const serverAdapter = new ExpressAdapter();
 
 createBullBoard({
   queues: ['repositories', 'users'].map(
-    (source) => new BullMQAdapter(new Queue(source, { connection: REDIS_CONNECTION }))
+    (source) => new BullMQAdapter(new Queue(source, { connection: useRedis() }))
   ),
   serverAdapter: serverAdapter
 });

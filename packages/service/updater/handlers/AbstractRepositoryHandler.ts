@@ -5,7 +5,7 @@ import { Actor, Commit, Milestone, MongoRepository } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { ResourceUpdateError } from '../../helpers/errors';
-import parser from '../../helpers/response-parser';
+import responseParser from '../../helpers/response-parser';
 import { Cache } from '../Cache';
 import Handler from '../Handler';
 
@@ -30,9 +30,8 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
     this.batchSize = this.defaultBatchSize = 100;
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   protected parseResponse(response: any): any {
-    const { data, actors, commits, milestones } = parser(response);
+    const { data, actors, commits, milestones } = responseParser(response);
     this.actors.push(...actors.map((actor) => new Actor(actor)));
     this.commits.push(...commits.map((commit) => new Commit(commit)));
     this.milestones.push(...milestones.map((milestone) => new Milestone(milestone)));
@@ -40,27 +39,26 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   }
 
   protected async saveReferences(): Promise<void> {
-    const [actors, commits, milestones] = [
-      this.actors.filter((object) => !this.cache?.has(object)),
-      this.commits.filter((object) => !this.cache?.has(object)),
-      this.milestones.filter((object) => !this.cache?.has(object))
-    ];
-
-    await Promise.all([
+    await Promise.resolve(this.actors.filter((v) => !this.cache?.has(v))).then((actors) =>
       MongoRepository.get(Actor)
         .insert(actors)
-        .then(() => this.cache?.add(actors)),
+        .then(() => this.cache?.add(actors))
+        .then(() => (this.actors = []))
+    );
+
+    await Promise.resolve(this.commits.filter((v) => !this.cache?.has(v))).then((commits) =>
       MongoRepository.get(Commit)
         .upsert(commits)
-        .then(() => this.cache?.add(commits)),
+        .then(() => this.cache?.add(commits))
+        .then(() => (this.commits = []))
+    );
+
+    await Promise.resolve(this.milestones.filter((v) => !this.cache?.has(v))).then((milestones) =>
       MongoRepository.get(Milestone)
         .upsert(milestones)
         .then(() => this.cache?.add(milestones))
-    ]);
-
-    this.actors = [];
-    this.commits = [];
-    this.milestones = [];
+        .then(() => (this.milestones = []))
+    );
   }
 
   async error(err: Error): Promise<void> {

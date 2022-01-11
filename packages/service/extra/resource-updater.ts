@@ -5,7 +5,7 @@ import { program, Option, Argument } from 'commander';
 
 import mongoClient, { MongoRepository, Repository } from '@gittrends/database';
 
-import { useHttpClient } from '../helpers/proxy-http-client';
+import httpClient from '../helpers/proxy-http-client';
 import { config } from '../package.json';
 import { RepositoryUpdater } from '../updater/RepositoryUpdater';
 
@@ -34,11 +34,7 @@ program
       .then((repo) => {
         if (!repo) throw new Error('Repository not found!');
 
-        return new RepositoryUpdater(
-          repo._id.toString(),
-          [opts.resource],
-          useHttpClient()
-        ).update();
+        return new RepositoryUpdater(repo._id.toString(), [opts.resource], httpClient).update();
       })
       .finally(() => mongoClient.close());
   })

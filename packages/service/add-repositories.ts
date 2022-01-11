@@ -10,7 +10,7 @@ import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/data
 import SearchComponent from './github/components/SearchComponent';
 import Query from './github/Query';
 import { BadGatewayError } from './helpers/errors';
-import { useHttpClient } from './helpers/proxy-http-client';
+import httpClient from './helpers/proxy-http-client';
 import parser from './helpers/response-parser';
 import { version } from './package.json';
 
@@ -39,7 +39,7 @@ async function search(
   let hasMoreRepos = true;
 
   do {
-    await Query.create(useHttpClient())
+    await Query.create(httpClient)
       .compose(
         new SearchComponent(
           { ...opts, maxStargazers },

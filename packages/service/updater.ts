@@ -12,9 +12,9 @@ import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database';
 
 import compact from './helpers/compact';
 import { RepositoryUpdateError } from './helpers/errors';
-import { useHttpClient } from './helpers/proxy-http-client';
+import httpClient from './helpers/proxy-http-client';
 import { version } from './package.json';
-import { REDIS_CONNECTION } from './redis';
+import { useRedis } from './redis';
 import { ActorsUpdater } from './updater/ActorUpdater';
 import { Cache } from './updater/Cache';
 import { RepositoryUpdater, RepositoryUpdaterHandler } from './updater/RepositoryUpdater';
@@ -49,7 +49,7 @@ program
 
     const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
 
-    const worker = new Worker(
+    new Worker(
       options.type,
       async (job: Job) => {
         if (isNil(job.data.id)) throw new Error(`Invalid job data! (${job.name}: ${job.data.id})`);
@@ -57,7 +57,7 @@ program
         let updater: Updater | null = null;
 
         if (options.type === 'users') {
-          updater = new ActorsUpdater(job.data.id, useHttpClient(), { job });
+          updater = new ActorsUpdater(job.data.id, httpClient, { job });
         } else if (options.type === 'repositories') {
           const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
           if (job.data?.errors?.length) {
@@ -65,7 +65,7 @@ program
           }
           if (resources.length) {
             const updaterOpts = { job, cache };
-            updater = new RepositoryUpdater(job.data.id, resources, useHttpClient(), updaterOpts);
+            updater = new RepositoryUpdater(job.data.id, resources, httpClient, updaterOpts);
           }
         } else {
           consola.error(new Error('Invalid "type" option!'));
@@ -73,6 +73,37 @@ program
         }
 
         if (updater) {
+          const originalUpdateProgress = job.updateProgress.bind(job);
+          job.updateProgress = async (data: any) => {
+            let progress: number;
+
+            if (typeof data === 'number') progress = data;
+            else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
+
+            const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
+
+            const message =
+              `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.name)} ` +
+              (typeof data !== 'number' && data.pending.length
+                ? dim(`(pending: ${data.pending.join(', ')})`)
+                : '');
+
+            consola[progress === 100 ? 'success' : 'info'](message);
+
+            if (typeof data !== 'number') {
+              await job.update(
+                compact({
+                  ...job.data,
+                  resources: data.pending,
+                  done: data.done,
+                  errors: data.errors
+                })
+              );
+            }
+
+            return originalUpdateProgress(progress);
+          };
+
           await updater.update().catch(async (error) => {
             consola.error(`Error thrown by ${job.name}.`, error);
 
@@ -89,7 +120,7 @@ program
         }
       },
       {
-        connection: REDIS_CONNECTION,
+        connection: useRedis(),
         concurrency: options.workers,
         autorun: true,
         sharedConnection: true,
@@ -98,35 +129,8 @@ program
       }
     );
 
-    worker.on('progress', async (job: Job, data: any) => {
-      let progress: number;
-
-      if (typeof data === 'number') progress = data;
-      else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
-
-      const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
-
-      const message =
-        `[${bar}|${`${Math.ceil(progress)}`.padStart(3)}%] ${bold(job.name)} ` +
-        (typeof data !== 'number' && data.pending.length
-          ? dim(`(pending: ${data.pending.join(', ')})`)
-          : '');
-
-      consola[progress === 100 ? 'success' : 'info'](message);
-
-      if (typeof data !== 'number')
-        await job.update(
-          compact({
-            ...job.data,
-            resources: data.pending,
-            done: data.done,
-            errors: data.errors
-          })
-        );
-    });
-
     new QueueScheduler(options.type, {
-      connection: REDIS_CONNECTION,
+      connection: useRedis(),
       sharedConnection: true,
       autorun: true,
       maxStalledCount: Number.MAX_SAFE_INTEGER,

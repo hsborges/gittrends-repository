@@ -56,15 +56,14 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
         { projection: { _metadata: 1 } }
       );
 
-      await super.saveReferences().then(() =>
-        MongoRepository.get(Repository).upsert(
-          new Repository({
-            ...this.details,
-            languages: this.languagesMeta.items,
-            repository_topics: this.topicsMeta.items,
-            _metadata: { ...current?._metadata, repository: { updatedAt: new Date() } }
-          })
-        )
+      await super.saveReferences();
+      await MongoRepository.get(Repository).upsert(
+        new Repository({
+          ...this.details,
+          languages: this.languagesMeta.items,
+          repository_topics: this.topicsMeta.items,
+          _metadata: { ...current?._metadata, repository: { updatedAt: new Date() } }
+        })
       );
     }
   }

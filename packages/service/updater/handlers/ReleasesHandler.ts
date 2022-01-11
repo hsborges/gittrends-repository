@@ -34,14 +34,12 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     this.releases.hasNextPage = pageInfo.has_next_page ?? false;
     this.releases.endCursor = pageInfo.end_cursor ?? this.releases.endCursor;
 
-    await Promise.all([
-      super.saveReferences(),
-      MongoRepository.get(Release).upsert(
-        get<Record<string, unknown>[]>(data, '_releases.nodes', []).map(
-          (release) => new Release({ repository: this.id, ...release })
-        )
+    await super.saveReferences();
+    await MongoRepository.get(Release).upsert(
+      get<Record<string, unknown>[]>(data, '_releases.nodes', []).map(
+        (release) => new Release({ repository: this.id, ...release })
       )
-    ]);
+    );
 
     await MongoRepository.get(Repository).collection.updateOne(
       { _id: this.id },

@@ -10,7 +10,7 @@ import ActorComponent from '../github/components/ActorComponent';
 import HttpClient from '../github/HttpClient';
 import Query from '../github/Query';
 import { NotFoundError, RetryableError } from '../helpers/errors';
-import parser from '../helpers/response-parser';
+import responseParser from '../helpers/response-parser';
 import Updater from './Updater';
 
 export class ActorsUpdater implements Updater {
@@ -34,7 +34,7 @@ export class ActorsUpdater implements Updater {
     await Query.create(this.httpClient)
       .compose(...components)
       .run()
-      .then((response) => parser(response))
+      .then((response) => responseParser(response))
       .then(async ({ actors }) =>
         MongoRepository.get(Actor).upsert(
           actors.map((actor) => new Actor({ ...actor, _metadata: { updatedAt: new Date() } }))

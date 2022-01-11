@@ -18,7 +18,7 @@ import TagsHandler from './handlers/TagsHandler';
 import WatchersHandler from './handlers/WatchersHandler';
 import Updater from './Updater';
 
-const AVAILABLE_HANDLERS = [
+const handlersList = [
   DependenciesHandler,
   IssuesHander,
   PullRequestHander,
@@ -65,7 +65,7 @@ export class RepositoryUpdater implements Updater {
     this.job = opts?.job;
 
     handlers.forEach((resource) => {
-      const Class = AVAILABLE_HANDLERS.find((handler) => handler.resource === resource);
+      const Class = handlersList.find((handler) => handler.resource === resource);
       if (!Class) throw new Error(`Handler for '${resource}' not found!`);
       this.handlers.push(new Class(this.id, { cache: opts?.cache }));
     });
@@ -112,8 +112,6 @@ export class RepositoryUpdater implements Updater {
         });
 
       pendingHandlers = this.filterPending(pendingHandlers);
-
-      if (global.gc) global.gc();
     } while (!isRetry && pendingHandlers.length > 0);
 
     if (!isRetry)

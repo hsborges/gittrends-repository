@@ -34,18 +34,16 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     this.meta.hasNextPage = pageInfo.has_next_page ?? false;
     this.meta.endCursor = pageInfo.end_cursor ?? this.meta.endCursor;
 
-    await Promise.all([
-      super.saveReferences(),
-      MongoRepository.get(Tag).upsert(
-        get<Record<string, unknown>[]>(data, '_tags.nodes', []).map(
-          (tag) =>
-            new Tag({
-              repository: this.id,
-              ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as Record<string, unknown>)
-            })
-        )
+    await super.saveReferences();
+    await MongoRepository.get(Tag).upsert(
+      get<Record<string, unknown>[]>(data, '_tags.nodes', []).map(
+        (tag) =>
+          new Tag({
+            repository: this.id,
+            ...((get(tag, 'target.type') === 'Tag' ? tag.target : tag) as Record<string, unknown>)
+          })
       )
-    ]);
+    );
 
     await MongoRepository.get(Repository).collection.updateOne(
       { _id: this.id },

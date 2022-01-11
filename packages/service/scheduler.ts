@@ -11,7 +11,7 @@ import { difference, chunk, intersection, get } from 'lodash';
 import mongoClient, { Actor, MongoRepository, Repository } from '@gittrends/database';
 
 import { version, config } from './package.json';
-import { REDIS_CONNECTION } from './redis';
+import { useRedis } from './redis';
 
 /* COMMANDS */
 function resourcesParser(resources: string[]): string[] {
@@ -105,7 +105,7 @@ const scheduler = async (options: SchedulerOptions) => {
 
   async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
     const queue = new Queue<T>(name, {
-      connection: REDIS_CONNECTION,
+      connection: useRedis(),
       sharedConnection: true,
       defaultJobOptions: { attempts: 3, removeOnComplete, removeOnFail }
     });

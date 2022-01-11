@@ -34,14 +34,12 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     this.meta.hasNextPage = pageInfo.has_next_page ?? false;
     this.meta.endCursor = pageInfo.end_cursor ?? this.meta.endCursor;
 
-    await Promise.all([
-      super.saveReferences(),
-      MongoRepository.get(Watcher).upsert(
-        get<string[]>(data, '_watchers.nodes', []).map(
-          (watcher) => new Watcher({ repository: this.id, user: watcher })
-        )
+    await super.saveReferences();
+    await MongoRepository.get(Watcher).upsert(
+      get<string[]>(data, '_watchers.nodes', []).map(
+        (watcher) => new Watcher({ repository: this.id, user: watcher })
       )
-    ]);
+    );
 
     await MongoRepository.get(Repository).collection.updateOne(
       { _id: this.id },
