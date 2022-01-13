@@ -15,9 +15,7 @@ program
   .addOption(
     new Option('-r, --resource [string]').choices(config.resources).default(config.resources[0])
   )
-  .addArgument(
-    new Argument('<repository>').argParser((value) => value.trim().toLowerCase()).argRequired()
-  )
+  .addArgument(new Argument('<repository>').argRequired())
   .action(async (repositoryId: string): Promise<void> => {
     const opts = program.opts();
 
