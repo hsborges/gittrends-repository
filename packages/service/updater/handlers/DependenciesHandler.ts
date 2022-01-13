@@ -71,11 +71,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       const pageInfo = get(data, 'manifests.page_info', {});
       this.manifests.hasNextPage = pageInfo.has_next_page ?? false;
       this.manifests.endCursor = pageInfo.end_cursor ?? this.manifests.endCursor;
-
-      return;
-    }
-
-    if (response && !this.manifests.hasNextPage) {
+    } else if (response && !this.manifests.hasNextPage) {
       const dependencies = this.pendingManifests.reduce((dependencies: Dependency[], manifest) => {
         const piPath = `${manifest.component.alias}.dependencies.page_info`;
         const pageInfo = get(response as unknown, piPath, {});
