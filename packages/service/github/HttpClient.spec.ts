@@ -6,7 +6,7 @@ import HttpClient from './HttpClient';
 let scope: nock.Scope;
 
 const spy = jest.spyOn(fetch, 'default');
-const client = new HttpClient({ protocol: 'http', host: 'localhost' });
+const client = new HttpClient({ protocol: 'http', host: 'localhost', timeout: 500, retries: 2 });
 
 beforeEach(() => {
   scope = nock(client.baseUrl, { allowUnmocked: false }).persist();
@@ -59,7 +59,7 @@ test("it shouldn't retry the request when it fails with 5xx", async () => {
 test('it should abort long time running requests', async () => {
   scope
     .post('/graphql')
-    .delay(client.timeout + 1)
+    .delay(client.timeout * 2)
     .reply(200);
   await expect(client.request('')).rejects.toThrowError();
   expect(spy).toHaveBeenCalledTimes(1 + client.retries);
