@@ -1653,8 +1653,8 @@
     prop-types "^15.7.2"
 
 "@gittrends-app/github-proxy-server@gittrends-app/github-proxy-server":
-  version "7.0.1"
-  resolved "https://codeload.github.com/gittrends-app/github-proxy-server/tar.gz/12621bf46511f8305088b5e3d87a7fa5d543f2a2"
+  version "7.0.2"
+  resolved "https://codeload.github.com/gittrends-app/github-proxy-server/tar.gz/82ad8bff450f2aa655bac60418e83d5baffd8fb6"
   dependencies:
     bottleneck "^2.19.5"
     chalk "^4.1.2"
@@ -8358,11 +8358,6 @@ he@1.2.0:
   resolved "https://registry.yarnpkg.com/he/-/he-1.2.0.tgz#84ae65fa7eafb165fddb61566ae14baf05664f0f"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
-helmet@^4.6.0:
-  version "4.6.0"
-  resolved "https://registry.yarnpkg.com/helmet/-/helmet-4.6.0.tgz#579971196ba93c5978eb019e4e8ec0e50076b4df"
-  integrity sha512-HVqALKZlR95ROkrnesdhbbZJFi/rIVSoNq6f3jA/9u6MIbTsPh3xZwihjeI5+DO/2sOV6HMHooXcEOuwskHpTg==
-
 helmet@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/helmet/-/helmet-5.0.1.tgz#e8b2aacf881dd5cffadbb640f23155f23de485ae"
@@ -8796,23 +8791,6 @@ invariant@^2.2.4:
   integrity sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==
   dependencies:
     loose-envify "^1.0.0"
-
-ioredis@^4.28.0:
-  version "4.28.0"
-  resolved "https://registry.yarnpkg.com/ioredis/-/ioredis-4.28.0.tgz#5a2be3f37ff2075e2332f280eaeb02ab4d9ff0d3"
-  integrity sha512-I+zkeeWp3XFgPT2CtJKxvaF5FjGBGt4yGYljRjQecdQKteThuAsKqffeF1lgHVlYnuNeozRbPOCDNZ7tDWPeig==
-  dependencies:
-    cluster-key-slot "^1.1.0"
-    debug "^4.3.1"
-    denque "^1.1.0"
-    lodash.defaults "^4.2.0"
-    lodash.flatten "^4.4.0"
-    lodash.isarguments "^3.1.0"
-    p-map "^2.1.0"
-    redis-commands "1.7.0"
-    redis-errors "^1.2.0"
-    redis-parser "^3.0.0"
-    standard-as-callback "^2.1.0"
 
 ioredis@^4.28.2:
   version "4.28.2"
