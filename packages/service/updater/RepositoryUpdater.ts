@@ -2,6 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bullmq';
+import crypto from 'crypto';
 import { difference, flatten } from 'lodash';
 
 import HttpClient from '../github/HttpClient';
@@ -75,12 +76,19 @@ export class RepositoryUpdater implements Updater {
     let pendingHandlers = handlers;
     if (pendingHandlers.length === 0) return;
 
+    let hash: string;
+
     do {
       await Query.create(this.httpClient)
         .compose(
           ...flatten(await Promise.all(pendingHandlers.map((handler) => handler.component())))
         )
-        .run()
+        .run((query) => {
+          const queryHash = crypto.createHash('sha256').update(query).digest('hex');
+          if (hash === queryHash) throw new Error('Potential loop detected!');
+          hash = queryHash;
+          return query;
+        })
         .then((data) => Promise.all(pendingHandlers.map((handler) => handler.update(data))))
         .catch(async (err) => {
           if (isRetry || !(err instanceof RequestError)) throw err;
