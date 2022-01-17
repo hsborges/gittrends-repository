@@ -47,7 +47,7 @@ const repositoriesScheduler = async (
         if (job && !(await job.isActive())) await job.remove();
         await queue.add(
           (repo.name_with_owner as string).toLowerCase(),
-          { id: repo._id.toString(), resources: _resources },
+          { id: repo._id.toString(), resources: _resources, ignored: exclude },
           { jobId: repo._id.toString() }
         );
         count += 1;
@@ -93,7 +93,7 @@ type RepositoryJob = {
   resources: string[];
   done?: string[];
   errors?: string[];
-  excluded?: string[];
+  ignored?: string[];
 };
 
 type UsersJob = {

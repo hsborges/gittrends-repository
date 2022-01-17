@@ -2,7 +2,7 @@
  *  Author: Hudson S. Borges
  */
 import { Job } from 'bullmq';
-import { flatten } from 'lodash';
+import { difference, flatten } from 'lodash';
 
 import HttpClient from '../github/HttpClient';
 import Query from '../github/Query';
@@ -97,17 +97,19 @@ export class RepositoryUpdater implements Updater {
           if (isRetry) return;
 
           if (this.job && this.filterDone(pendingHandlers).length > 0) {
-            this.job?.updateProgress({
-              pending: this.filterPending(handlers).map(
-                (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
-              ),
-              done: this.filterDone(handlers).map(
-                (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
-              ),
-              errors: this.errors.map(
-                (e) => (e.handler.constructor as typeof AbstractRepositoryHandler).resource
-              )
-            });
+            const errors = this.errors.map(
+              (e) => (e.handler.constructor as typeof AbstractRepositoryHandler).resource
+            );
+
+            const done = this.filterDone(handlers).map(
+              (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
+            );
+
+            const pending = this.filterPending(handlers).map(
+              (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
+            );
+
+            this.job?.updateProgress({ pending, done: difference(done, errors), errors });
           }
         });
 

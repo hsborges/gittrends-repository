@@ -77,8 +77,12 @@ program
           job.updateProgress = async (data: any) => {
             let progress: number;
 
-            if (typeof data === 'number') progress = data;
-            else progress = (data.done.length / (data.pending.length + data.done.length)) * 100;
+            if (typeof data === 'number') {
+              progress = data;
+            } else {
+              const totalJobs = data.pending.length + data.done.length + data.errors.length;
+              progress = (data.done.length / totalJobs) * 100;
+            }
 
             const bar = new Array(Math.ceil(progress / 10)).fill('=').join('').padEnd(10, '-');
 
