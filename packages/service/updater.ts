@@ -105,7 +105,7 @@ program
               );
             }
 
-            return originalUpdateProgress(progress);
+            return originalUpdateProgress(Math.trunc(progress * 100) / 100);
           };
 
           await updater.update().catch(async (error) => {
