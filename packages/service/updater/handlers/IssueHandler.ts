@@ -334,7 +334,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       switch (this.currentStage) {
         case Stages.GET_ISSUES_LIST:
         case Stages.GET_ISSUES_DETAILS:
-          if (this.batchSize === 1) {
+          if (this.batchSize === 1 || this.pendingIssues.length === 1) {
             const issue = this.pendingIssues[0];
             if (isSuccess(err.response?.status) && err.response?.data) {
               issue.error = err.message;
@@ -352,7 +352,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
           }
           return;
         case Stages.GET_REACTIONS:
-          if (this.rBatchSize === 1) {
+          if (this.rBatchSize === 1 || this.pendingReactables.length === 1) {
             const reaction = this.pendingReactables[0];
             reaction.hasNextPage = false;
             reaction.error = err;
