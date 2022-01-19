@@ -9,7 +9,7 @@ import { Actor, MongoRepository } from '@gittrends/database';
 import ActorComponent from '../github/components/ActorComponent';
 import HttpClient from '../github/HttpClient';
 import Query from '../github/Query';
-import { NotFoundError, RetryableError } from '../helpers/errors';
+import { GithubRequestError, RequestError } from '../helpers/errors';
 import responseParser from '../helpers/response-parser';
 import Updater from './Updater';
 
@@ -41,16 +41,24 @@ export class ActorsUpdater implements Updater {
         )
       )
       .catch(async (err) => {
-        if (err instanceof RetryableError || err instanceof NotFoundError) {
+        if (err instanceof RequestError) {
           if (ids.length > 1) {
             for (const idsChunk of chunk(ids, Math.ceil(ids.length / 2)))
               await this._update(idsChunk);
-          }
+          } else {
+            let _metadata: any = { updatedAt: new Date() };
 
-          return MongoRepository.get(Actor).collection.updateOne(
-            { _id: ids[0] },
-            { $set: { _metadata: { updatedAt: new Date(), error: err.message } } }
-          );
+            if (err instanceof GithubRequestError && err.all('NOT_FOUND')) {
+              _metadata = { ..._metadata, removed: true, removed_at: new Date() };
+            } else {
+              _metadata = { ..._metadata, error: err.message };
+            }
+
+            return MongoRepository.get(Actor).collection.updateOne(
+              { _id: ids[0] },
+              { $set: { _metadata } }
+            );
+          }
         }
 
         throw err;

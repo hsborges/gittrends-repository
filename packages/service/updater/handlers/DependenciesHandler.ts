@@ -8,7 +8,7 @@ import { Dependency, MongoRepository, Repository } from '@gittrends/database';
 import Component from '../../github/Component';
 import DependencyGraphManifestComponent from '../../github/components/DependencyGraphManifestComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { RetryableError } from '../../helpers/errors';
+import { RequestError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TManifestMetadata = {
@@ -109,7 +109,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
   }
 
   async error(err: Error): Promise<void> {
-    if (err instanceof RetryableError) {
+    if (err instanceof RequestError) {
       if (this.batchSize > 1) {
         this.batchSize = 1;
         return;

@@ -6,7 +6,7 @@ import { get } from 'lodash';
 import { Repository, MongoRepository } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { NotFoundError } from '../../helpers/errors';
+import { GithubRequestError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TMetadata = { items: unknown[]; hasNextPage: boolean; endCursor?: string };
@@ -69,7 +69,7 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
   }
 
   async error(err: Error): Promise<void> {
-    if (err instanceof NotFoundError) {
+    if (err instanceof GithubRequestError && err.is('NOT_FOUND')) {
       this.removed = true;
       await MongoRepository.get(Repository).collection.updateOne(
         { _id: this.id },

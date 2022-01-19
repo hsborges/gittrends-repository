@@ -17,7 +17,7 @@ import IssueComponent from '../../github/components/IssueComponent';
 import PullRequestComponent from '../../github/components/PullRequestComponent';
 import ReactionComponent from '../../github/components/ReactionComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { ForbiddenError, ResourceUpdateError, RetryableError } from '../../helpers/errors';
+import { RequestError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TComponent = IssueComponent | PullRequestComponent;
@@ -148,7 +148,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       );
     }
 
-    throw new ResourceUpdateError(new Error('Invalid condition reached!'));
+    throw new Error('Invalid condition reached!');
   }
 
   async update(response: Record<string, unknown>): Promise<void> {
@@ -281,7 +281,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       }
 
       default:
-        throw new ResourceUpdateError(new Error('Unknown condition reached!'));
+        throw new Error('Unknown condition reached!');
     }
 
     const issues = this.issues.items.map((issue) => {
@@ -330,7 +330,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
   }
 
   async error(err: Error): Promise<void> {
-    if (err instanceof RetryableError || err instanceof ForbiddenError) {
+    if (err instanceof RequestError) {
       switch (this.currentStage) {
         case Stages.GET_ISSUES_LIST:
         case Stages.GET_ISSUES_DETAILS:

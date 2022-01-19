@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { truncate } from 'lodash';
+import { compact, isNil, truncate, uniq } from 'lodash';
 
 import Component from '../github/Component';
 import { HttpClientResponse } from '../github/HttpClient';
@@ -26,7 +26,21 @@ class ExtendedError extends BaseError {
   }
 }
 
-type RequestErrorOptions = {
+export class RepositoryUpdateError extends BaseError {
+  readonly errors: Error[];
+
+  constructor(errors: Error | Error[]) {
+    const errorsArray = Array.isArray(errors) ? errors : [errors];
+    const messageFragment = errorsArray
+      .map((error) => `[${error.constructor.name}]: ${truncate(error.message, { length: 100 })}`)
+      .join(' & ');
+
+    super(`Errors occurred when updating (see "errors" field) @ ${messageFragment}`);
+    this.errors = errorsArray;
+  }
+}
+
+export type RequestErrorOptions = {
   components?: Component | Component[];
   status?: number;
   data?: any;
@@ -35,6 +49,17 @@ type RequestErrorOptions = {
 export class RequestError extends ExtendedError {
   readonly response?: { message: string; status?: number; data?: any };
   readonly components?: any[];
+
+  static create(error: Error, opts?: RequestErrorOptions): RequestError;
+  static create(error: Error & HttpClientResponse, opts?: RequestErrorOptions): RequestError {
+    const status = error.status || opts?.status;
+    if (status) {
+      if (/[24]\d{2}/.test(status.toString())) return new GithubRequestError(error, opts);
+      else return new ServerRequestError(error, opts);
+    } else {
+      return new RequestError(error, opts);
+    }
+  }
 
   constructor(error: Error, opts?: RequestErrorOptions);
   constructor(error: Error & HttpClientResponse, opts?: RequestErrorOptions) {
@@ -55,31 +80,67 @@ export class RequestError extends ExtendedError {
   }
 }
 
-export class ResourceUpdateError extends ExtendedError {}
-export class RepositoryUpdateError extends BaseError {
-  readonly errors: Error[];
+export class ServerRequestError extends RequestError {
+  readonly type: 'BAD_GATEWAY' | 'INTERNAL_SERVER' | 'UNKNOWN';
 
-  constructor(errors: Error | Error[]) {
-    const errorsArray = Array.isArray(errors) ? errors : [errors];
-    const messageFragment = errorsArray
-      .map((error) => `[${error.constructor.name}]: ${truncate(error.message, { length: 80 })}`)
-      .join(' & ');
+  constructor(error: Error, opts?: RequestErrorOptions);
+  constructor(error: Error & HttpClientResponse, opts?: RequestErrorOptions) {
+    super(error, opts);
 
-    super(`Errors occurred when updating (see "errors" field) @ ${messageFragment}`);
-    this.errors = errorsArray;
+    if (this.response?.status === 500) this.type = 'INTERNAL_SERVER';
+    else if (this.response?.status === 502) this.type = 'BAD_GATEWAY';
+    else this.type = 'UNKNOWN';
   }
 }
 
-export class RetryableError extends RequestError {}
-export class BadGatewayError extends RetryableError {}
-export class BlockedError extends RequestError {}
-export class ForbiddenError extends RequestError {}
-export class InternalError extends RetryableError {}
-export class InternalServerError extends RetryableError {}
-export class MaxNodeLimitExceededError extends RetryableError {}
-export class NotFoundError extends RequestError {}
-export class NotModifiedError extends RequestError {}
-export class ServiceUnavailableError extends RetryableError {}
-export class TimedoutError extends RetryableError {}
-export class LoadingError extends RetryableError {}
-export class SomethingWentWrongError extends RetryableError {}
+type GithubRequestErrorType =
+  | 'BLOQUED'
+  | 'FORBIDDEN'
+  | 'INTERNAL'
+  | 'MAX_NODE_LIMIT_EXCEEDED'
+  | 'NOT_FOUND'
+  | 'NOT_MODIFIED'
+  | 'SERVICE_UNAVAILABLE'
+  | 'TIMEDOUT'
+  | 'LOADING'
+  | 'SOMETHING_WENT_WRONG'
+  | 'UNKNOWN';
+
+export class GithubRequestError extends RequestError {
+  readonly type: GithubRequestErrorType[] = [];
+
+  constructor(error: Error, opts?: RequestErrorOptions);
+  constructor(error: Error & HttpClientResponse, opts?: RequestErrorOptions) {
+    super(error, opts);
+
+    if (this.response?.data?.errors) {
+      this.type = (
+        this.response.data.errors as (unknown & { type?: string; message?: string })[]
+      ).map((value) => {
+        if (value.type === 'FORBIDDEN') return 'FORBIDDEN';
+        else if (value.type === 'INTERNAL') return 'INTERNAL';
+        else if (value.type === 'NOT_FOUND') return 'NOT_FOUND';
+        else if (value.type === 'MAX_NODE_LIMIT_EXCEEDED') return 'MAX_NODE_LIMIT_EXCEEDED';
+        else if (value.type === 'SERVICE_UNAVAILABLE') return 'SERVICE_UNAVAILABLE';
+        else if (value.message === 'timedout') return 'TIMEDOUT';
+        else if (value.message === 'loading') return 'LOADING';
+        else if (/^something.went.wrong.*/i.test(value.message as string))
+          return 'SOMETHING_WENT_WRONG';
+        return 'UNKNOWN';
+      });
+    }
+  }
+
+  public is(type: GithubRequestErrorType): boolean {
+    return this.type.length === 1 && this.type[0] === type;
+  }
+
+  public all(type: GithubRequestErrorType): boolean {
+    const uniqTypes = compact(uniq(this.type));
+    return uniqTypes.length === 1 && uniqTypes[0] === type;
+  }
+
+  public some(type: GithubRequestErrorType): boolean {
+    return !isNil(this.type?.find((t) => t === type));
+  }
+}

@@ -4,7 +4,7 @@
 import { get } from 'lodash';
 
 import compact from '../helpers/compact';
-import * as Errors from '../helpers/errors';
+import { RequestError } from '../helpers/errors';
 import compress from '../helpers/gql-compress';
 import normalize from '../helpers/normalize';
 import Component from './Component';
@@ -54,55 +54,17 @@ export default class Query {
   async run(interceptor?: (args: string) => string): Promise<any> {
     return this.client
       .request({ query: compress(interceptor ? interceptor(this.toString()) : this.toString()) })
-      .catch((err: Error & HttpClientResponse) => {
-        switch (err.status) {
-          case 408:
-            throw new Errors.TimedoutError(err, { components: this.components });
-          case 500:
-            throw new Errors.InternalServerError(err, { components: this.components });
-          case 502:
-            throw new Errors.BadGatewayError(err, { components: this.components });
-          default:
-            throw new Errors.RequestError(err, { components: this.components });
-        }
-      })
+      .catch((err: Error & HttpClientResponse) =>
+        Promise.reject(RequestError.create(err, { components: this.components }))
+      )
       .then((response) => {
         const data = compact(normalize(response.data));
 
         if (data?.errors?.length) {
-          const error = new Error(
-            `Response errors (${data.errors.length}): ${JSON.stringify(data.errors)}`
+          throw RequestError.create(
+            new Error(`Response errors (${data.errors.length}): ${JSON.stringify(data.errors)}`),
+            { components: this.components, status: response.status, data: get(data, 'data', null) }
           );
-
-          const opts = { components: this.components, status: 200, data: get(data, 'data', null) };
-
-          if (data.errors.find((e: TObject) => e.type === 'FORBIDDEN'))
-            throw new Errors.ForbiddenError(error, opts);
-
-          if (data.errors.find((e: TObject) => e.type === 'INTERNAL'))
-            throw new Errors.InternalError(error, opts);
-
-          if (data.errors.find((e: TObject) => e.type === 'NOT_FOUND'))
-            throw new Errors.NotFoundError(error, opts);
-
-          if (data.errors.find((e: TObject) => e.type === 'MAX_NODE_LIMIT_EXCEEDED'))
-            throw new Errors.MaxNodeLimitExceededError(error, opts);
-
-          if (data.errors.find((e: TObject) => e.type === 'SERVICE_UNAVAILABLE'))
-            throw new Errors.ServiceUnavailableError(error, opts);
-
-          if (data.errors.find((e: TObject) => e.message === 'timedout'))
-            throw new Errors.TimedoutError(error, opts);
-
-          if (data.errors.find((e: TObject) => e.message === 'loading'))
-            throw new Errors.LoadingError(error, opts);
-
-          if (
-            data.errors.find((e: TObject) => /^something.went.wrong.+/i.test(e.message as string))
-          )
-            throw new Errors.SomethingWentWrongError(error, opts);
-
-          throw new Errors.RequestError(error, opts);
         }
 
         return get(data, 'data', null);

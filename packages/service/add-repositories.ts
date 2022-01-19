@@ -9,7 +9,7 @@ import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/data
 
 import SearchComponent from './github/components/SearchComponent';
 import Query from './github/Query';
-import { BadGatewayError } from './helpers/errors';
+import { ServerRequestError } from './helpers/errors';
 import httpClient from './helpers/proxy-http-client';
 import parser from './helpers/response-parser';
 import { version } from './package.json';
@@ -78,7 +78,7 @@ async function search(
         repos = uniqBy(repos, 'id');
       })
       .catch((err) => {
-        if (err instanceof BadGatewayError) return (total = Math.ceil(total / 2));
+        if (err instanceof ServerRequestError && total > 1) return (total = Math.ceil(total / 2));
         throw err;
       });
   } while (!opts?.name && repos.length < limit && hasMoreRepos);

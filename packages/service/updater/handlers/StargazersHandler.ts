@@ -6,7 +6,7 @@ import { get } from 'lodash';
 import { Stargazer, MongoRepository, Repository } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { InternalError, RetryableError } from '../../helpers/errors';
+import { GithubRequestError, RequestError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 export default class StargazersHandler extends AbstractRepositoryHandler {
@@ -62,9 +62,9 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
   }
 
   async error(err: Error): Promise<void> {
-    if (err instanceof InternalError) {
+    if (err instanceof GithubRequestError && err.all('INTERNAL')) {
       return this.update(get(err, 'response.data'));
-    } else if (err instanceof RetryableError) {
+    } else if (err instanceof RequestError) {
       if (this.batchSize > 1) {
         this.batchSize = 1;
         return;

@@ -4,7 +4,6 @@
 import { Actor, Commit, Milestone, MongoRepository } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { ResourceUpdateError } from '../../helpers/errors';
 import responseParser from '../../helpers/response-parser';
 import { Cache } from '../Cache';
 import Handler from '../Handler';
@@ -62,6 +61,6 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   }
 
   async error(err: Error): Promise<void> {
-    throw new ResourceUpdateError(err);
+    throw err;
   }
 }
