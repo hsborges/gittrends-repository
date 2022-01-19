@@ -11,6 +11,10 @@ module.exports = {
       interpreter_args: '-r @gittrends/env',
       script: 'github-proxy-server',
       args: [
+        '--request-interval',
+        100,
+        '--request-timeout',
+        60000,
         '--tokens',
         resolve(
           '..',
@@ -20,7 +24,7 @@ module.exports = {
         )
       ],
       out_file: '/dev/null',
-      max_memory_restart: '250M',
+      max_memory_restart: '150M',
       env: {
         PORT: port
       }
