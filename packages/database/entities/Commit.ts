@@ -42,7 +42,7 @@ export class CommitSignature {
 
   @IsOptional()
   @IsBoolean()
-  isValid?: boolean;
+  is_valid?: boolean;
 
   @IsOptional()
   @IsString()
@@ -54,7 +54,7 @@ export class CommitSignature {
 
   @IsOptional()
   @IsBoolean()
-  wasSignedByGitHub?: boolean;
+  was_signed_by_git_hub?: boolean;
 }
 
 export class CommitStatus {
@@ -64,7 +64,7 @@ export class CommitStatus {
 
   @IsOptional()
   @IsObject({ each: true })
-  contexts?: Array<{ context: string; description?: string; createdAt?: Date }>;
+  contexts?: Array<{ context: string; description?: string; created_at?: Date }>;
 
   @IsOptional()
   @IsString()

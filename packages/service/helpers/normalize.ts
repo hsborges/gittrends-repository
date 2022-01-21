@@ -32,11 +32,18 @@ export default function normalize(object: any): any {
           {}
         );
       }
+
+      if (
+        /((_|^)date|_(at|on))$/gi.test(key) &&
+        typeof value === 'string' &&
+        DATE_REGEX.test(value)
+      ) {
+        return new Date(value);
+      }
+
       return value;
     });
   }
-
-  if (typeof object === 'string' && DATE_REGEX.test(object)) return new Date(object);
 
   return object;
 }
