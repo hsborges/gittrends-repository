@@ -63,7 +63,7 @@ export default class Query {
         if (data?.errors?.length) {
           throw RequestError.create(
             new Error(`Response errors (${data.errors.length}): ${JSON.stringify(data.errors)}`),
-            { components: this.components, status: response.status, data: get(data, 'data', null) }
+            { components: this.components, status: response.status, data }
           );
         }
 

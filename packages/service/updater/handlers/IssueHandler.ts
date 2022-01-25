@@ -17,7 +17,7 @@ import IssueComponent from '../../github/components/IssueComponent';
 import PullRequestComponent from '../../github/components/PullRequestComponent';
 import ReactionComponent from '../../github/components/ReactionComponent';
 import RepositoryComponent from '../../github/components/RepositoryComponent';
-import { RequestError } from '../../helpers/errors';
+import { GithubRequestError, RequestError } from '../../helpers/errors';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
 
 type TComponent = IssueComponent | PullRequestComponent;
@@ -152,7 +152,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
   }
 
   async update(response: Record<string, unknown>): Promise<void> {
-    return this._update(response).finally(() => {
+    return this._update(response).then(() => {
       this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
       this.rBatchSize = Math.min(this.defaultRBatchSize, this.rBatchSize * 2);
     });
@@ -334,21 +334,26 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       switch (this.currentStage) {
         case Stages.GET_ISSUES_LIST:
         case Stages.GET_ISSUES_DETAILS:
-          if (this.batchSize === 1 || this.pendingIssues.length === 1) {
-            const issue = this.pendingIssues[0];
+          if (
+            this.batchSize === 1 ||
+            this.pendingIssues.length === 1 ||
+            (err instanceof GithubRequestError && err.all('FORBIDDEN'))
+          ) {
             if (isSuccess(err.response?.status) && err.response?.data) {
-              issue.error = err.message;
+              this.pendingIssues.forEach((issue) => (issue.error = err.message));
               return this.update(err.response.data);
             }
-            issue.details.hasNextPage =
-              issue.assignees.hasNextPage =
-              issue.labels.hasNextPage =
-              issue.participants.hasNextPage =
-              issue.timeline.hasNextPage =
-                false;
-            issue.error = err;
+            this.pendingIssues.forEach((issue) => {
+              issue.details.hasNextPage =
+                issue.assignees.hasNextPage =
+                issue.labels.hasNextPage =
+                issue.participants.hasNextPage =
+                issue.timeline.hasNextPage =
+                  false;
+              issue.error = err;
+            });
           } else {
-            this.batchSize = 1;
+            this.batchSize = Math.floor(this.batchSize / 2);
           }
           return;
         case Stages.GET_REACTIONS:
