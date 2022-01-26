@@ -73,6 +73,14 @@ export class RepositoryUpdater implements Updater {
   }
 
   async update(handlers = this.filterPending(this.handlers), isRetry?: boolean): Promise<void> {
+    if (!isRetry) {
+      this.job?.log(
+        `[${new Date().toISOString()}]: updater started (resources: ${handlers
+          .map((h) => (h.constructor as typeof AbstractRepositoryHandler).resource)
+          .join(', ')}).`
+      );
+    }
+
     let pendingHandlers = handlers;
     if (pendingHandlers.length === 0) return;
 
@@ -118,14 +126,23 @@ export class RepositoryUpdater implements Updater {
             );
 
             this.job?.updateProgress({ pending, done: difference(done, errors), errors });
+            this.job?.log(
+              `[${new Date().toISOString()}]: resource(s) updated (resources: ${this.filterDone(
+                pendingHandlers
+              )
+                .map((h) => (h.constructor as typeof AbstractRepositoryHandler).resource)
+                .join(', ')}).`
+            );
           }
         });
 
       pendingHandlers = this.filterPending(pendingHandlers);
     } while (!isRetry && pendingHandlers.length > 0);
 
-    if (!isRetry)
+    if (!isRetry) {
+      this.job?.log(`[${new Date().toISOString()}]: updater finished.`);
       if (this.errors.length > 0) throw new RepositoryUpdateError(this.errors.map((e) => e.error));
+    }
   }
 
   private filterPending(handlers: AbstractRepositoryHandler[]): AbstractRepositoryHandler[] {
