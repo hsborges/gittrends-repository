@@ -101,11 +101,14 @@ export class RepositoryUpdater implements Updater {
         .catch(async (err) => {
           if (isRetry || !(err instanceof RequestError)) throw err;
 
-          await Promise.all(
+          const errorHandler = (err: Error, handler: AbstractRepositoryHandler) =>
+            handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }));
+
+          if (pendingHandlers.length === 1) return errorHandler(err, pendingHandlers[0]);
+
+          return Promise.all(
             pendingHandlers.map((handler) =>
-              this.update([handler], true).catch((err) =>
-                handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }))
-              )
+              this.update([handler], true).catch((err) => errorHandler(err, handler))
             )
           );
         })
