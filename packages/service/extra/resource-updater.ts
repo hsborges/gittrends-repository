@@ -10,14 +10,14 @@ import { config } from '../package.json';
 import { ActorsUpdater } from '../updater/ActorUpdater';
 import { RepositoryUpdater } from '../updater/RepositoryUpdater';
 
-async function updateRepositoryResource(resourceId: string, resource: string): Promise<void> {
+async function updateRepositoryResource(resourceId: string, resources: string[]): Promise<void> {
   await MongoRepository.get(Repository)
     .collection.findOne({
       $or: [{ _id: resourceId }, { name_with_owner: new RegExp(resourceId, 'i') }]
     })
     .then((repo) => {
       if (!repo) throw new Error('Repository not found!');
-      return new RepositoryUpdater(repo._id.toString(), [resource as any], httpClient).update();
+      return new RepositoryUpdater(repo._id.toString(), resources as any[], httpClient).update();
     });
 }
 
@@ -34,19 +34,24 @@ async function updateActor(resourceId: string): Promise<void> {
 program
   .description('Update an specific resource')
   .addOption(
-    new Option('-r, --resource [string]').choices(config.resources).default(config.resources[0])
+    new Option('-r, --resource [string]')
+      .choices(config.resources)
+      .default(config.resources[0])
+      .argParser((value, memo: string[]) => {
+        if (value.toLowerCase() === 'all') return config.resources.filter((r) => r !== 'users');
+        if (config.resources.indexOf(value.toLowerCase()) < 0) throw new Error('Invalid resource');
+        return Array.isArray(memo) ? memo.concat(value.toLowerCase()) : [value.toLowerCase()];
+      })
   )
   .addArgument(new Argument('<repository_or_actor>').argRequired())
   .action(async (resourceId: string): Promise<void> => {
-    const opts = program.opts();
-
-    if (config.resources.map((r) => r.toLowerCase()).indexOf(opts.resource) < 0)
-      throw new Error('Invalid resource');
+    const opts: { resource: string[] } = program.opts();
 
     await mongoClient
       .connect()
       .then(() => {
-        if (opts.resource === 'users') return updateActor(resourceId);
+        if (opts.resource.length === 1 && opts.resource[0] === 'users')
+          return updateActor(resourceId);
         return updateRepositoryResource(resourceId, opts.resource);
       })
       .finally(() => mongoClient.close());
