@@ -31,9 +31,11 @@
   "dependencies": {
     "@bull-board/express": "^3.8.1",
     "@gittrends/database": "link:../database",
+    "add": "^2.0.6",
     "async-retry": "^1.3.3",
     "bullmq": "^1.59.4",
     "chalk": "^4.1.2",
+    "cli-progress": "^3.10.0",
     "commander": "^8.3.0",
     "consola": "^2.15.3",
     "cron": "^1.8.2",
@@ -48,7 +50,8 @@
     "numeral": "^2.0.6",
     "parse-redis-url-simple": "^1.0.2",
     "table": "^6.7.3",
-    "user-agents": "^1.0.842"
+    "user-agents": "^1.0.842",
+    "yarn": "^1.22.17"
   },
   "devDependencies": {
     "@gittrends-app/github-proxy-server": "gittrends-app/github-proxy-server",

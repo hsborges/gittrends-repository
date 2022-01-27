@@ -1,6 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { MultiBar, Presets, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import { chain, get, isNil, min, negate, uniqBy } from 'lodash';
@@ -23,6 +24,7 @@ async function search(
     maxStargazers?: number;
     sort?: 'stars' | 'created' | 'updated' | undefined;
     order?: 'asc' | 'desc' | undefined;
+    progressBar?: SingleBar;
   }
 ) {
   if (opts?.minStargazers && opts?.maxStargazers && opts.minStargazers > opts?.maxStargazers)
@@ -81,6 +83,8 @@ async function search(
         if (err instanceof ServerRequestError && total > 1) return (total = Math.ceil(total / 2));
         throw err;
       });
+
+    opts?.progressBar?.update(repos.length, { users: actors.length });
   } while (!opts?.name && repos.length < limit && hasMoreRepos);
 
   return {
@@ -94,9 +98,9 @@ program
   .version(version)
   .option('--limit [number]', 'Maximun number of repositories', Number, 100)
   .option('--language [string]', 'Major programming language')
-  .option('--min-stargazers [number]', 'Minimun number of stars of the repositories', Number, 1)
+  .option('--min-stargazers [number]', 'Minimun number of stars of the repositories', Number, 5)
   .option('--max-stargazers [number]', 'Maximun number of stars of the repositories')
-  .option('--workers [number]', 'Number of parallel workers', Number, 3)
+  .option('--workers [number]', 'Number of parallel workers', Number, 5)
   .addOption(
     new Option('--sort [string]', 'Define the sort fiel')
       .choices(['stars', 'created', 'updated', 'default'])
@@ -109,27 +113,35 @@ program
   )
   .addArgument(new Argument('[name]', 'Find using a repository name (or fragment)'))
   .action(async (repositoryName, options) => {
+    const multibar = new MultiBar(
+      {
+        format: 'Worker {worker} | {bar} | {eta_formatted} ETA | {value} repos & {users} users',
+        clearOnComplete: false
+      },
+      Presets.shades_grey
+    );
+
     const minStr = options.minStargazers || '0';
     const maxStr = options.maxStargazers || '*';
 
-    consola.info(
-      `Searching for repositories with ${minStr}..${maxStr} stars on GitHub ...`,
-      options.limit
-    );
+    consola.info(`Searching for repositories with ${minStr}..${maxStr} stars on GitHub ...`);
 
     return Promise.all(
-      new Array(options.workers).fill(0).map(() =>
-        search(options.limit, {
+      new Array(options.workers).fill(0).map((_, index) => {
+        return search(options.limit, {
           language: options.language,
           name: repositoryName,
           minStargazers: options.minStargazers && parseInt(options.minStargazers, 10),
           maxStargazers: options.maxStargazers && parseInt(options.maxStargazers, 10),
           sort: options.sort === 'default' ? undefined : options.sort,
-          order: options.order === 'default' ? undefined : options.order
-        })
-      )
+          order: options.order === 'default' ? undefined : options.order,
+          progressBar: multibar.create(options.limit, 0, { worker: index + 1, users: 0 })
+        });
+      })
     )
       .then((results) => {
+        consola.info('Merging results from workers ...');
+
         const result = results.reduce(
           (acc, result) => ({
             repositories: acc.repositories.concat(result.repositories),
