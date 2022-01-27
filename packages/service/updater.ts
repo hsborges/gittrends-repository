@@ -140,5 +140,7 @@ program
       maxStalledCount: Number.MAX_SAFE_INTEGER,
       stalledInterval: 60 * 1000
     });
+
+    if (globalThis.gc) setInterval(() => globalThis.gc && globalThis.gc(), 30 * 1000);
   })
   .parse(process.argv);
