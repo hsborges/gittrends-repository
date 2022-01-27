@@ -284,42 +284,52 @@ export default class IssuesHander extends AbstractRepositoryHandler {
         throw new Error('Unknown condition reached!');
     }
 
-    const issues = this.issues.items.map((issue) => {
-      issue.data._metadata = issue.error
-        ? { error: typeof issue.error === 'string' ? issue.error : JSON.stringify(issue.error) }
-        : { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
-      return new (this.resource === 'issues' ? Issue : PullRequest)(omit(issue.data, 'timeline'));
-    });
+    const Entity = this.resource === 'issues' ? Issue : PullRequest;
 
-    const timeline = this.issues.items.reduce((acc: TimelineEvent[], issue) => {
-      if (!issue.data.timeline) return acc;
-      return acc.concat(
-        (issue.data.timeline as Record<string, unknown>[]).map(
-          (tl) => new TimelineEvent({ repository: this.id, issue: issue.data.id, ...tl })
-        )
-      );
-    }, []);
+    this.entityStorage.add(
+      this.issues.items.map((issue) => {
+        issue.data._metadata = issue.error
+          ? { error: typeof issue.error === 'string' ? issue.error : JSON.stringify(issue.error) }
+          : { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
 
-    const reactions = (this.reactions || []).reduce(
-      (reactions: Reaction[], meta) =>
-        reactions.concat(
-          meta.reactions.map((reaction) => new Reaction({ ...meta.reactable, ...reaction }))
-        ),
-      []
+        return new Entity(omit(issue.data, 'timeline'));
+      })
     );
 
-    await super.saveReferences();
-    await this.mongoRepository.upsert(issues);
-    await MongoRepository.get(TimelineEvent).upsert(timeline);
-    await MongoRepository.get(Reaction).upsert(reactions);
+    this.entityStorage.add(
+      this.issues.items.reduce((acc: TimelineEvent[], issue) => {
+        if (!issue.data.timeline) return acc;
+        return acc.concat(
+          (issue.data.timeline as Record<string, unknown>[]).map(
+            (tl) => new TimelineEvent({ repository: this.id, issue: issue.data.id, ...tl })
+          )
+        );
+      }, [])
+    );
 
-    await MongoRepository.get(Repository).collection.updateOne(
-      { _id: this.id },
-      { $set: { [`_metadata.${this.resource}.endCursor`]: this.issues.endCursor } }
+    this.entityStorage.add(
+      (this.reactions || []).reduce(
+        (reactions: Reaction[], meta) =>
+          reactions.concat(
+            meta.reactions.map((reaction) => new Reaction({ ...meta.reactable, ...reaction }))
+          ),
+        []
+      )
     );
 
     this.issues.items = [];
     this.reactions = [];
+
+    if (this.entityStorage.size(Entity) >= 50 || this.isDone()) {
+      await this.entityStorage
+        .persist()
+        .then(() =>
+          MongoRepository.get(Repository).collection.updateOne(
+            { _id: this.id },
+            { $set: { [`_metadata.${this.resource}.endCursor`]: this.issues.endCursor } }
+          )
+        );
+    }
 
     if (this.isDone()) {
       await MongoRepository.get(Repository).collection.updateOne(

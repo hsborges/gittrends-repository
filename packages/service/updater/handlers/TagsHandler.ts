@@ -34,8 +34,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     this.meta.hasNextPage = pageInfo.has_next_page ?? false;
     this.meta.endCursor = pageInfo.end_cursor ?? this.meta.endCursor;
 
-    await super.saveReferences();
-    await MongoRepository.get(Tag).upsert(
+    this.entityStorage.add(
       get<Record<string, unknown>[]>(data, '_tags.nodes', []).map(
         (tag) =>
           new Tag({
@@ -45,10 +44,16 @@ export default class TagsHandler extends AbstractRepositoryHandler {
       )
     );
 
-    await MongoRepository.get(Repository).collection.updateOne(
-      { _id: this.id },
-      { $set: { [`_metadata.${TagsHandler.resource}.endCursor`]: this.meta.endCursor } }
-    );
+    if (this.entityStorage.size(Tag) >= 500 || this.isDone()) {
+      await this.entityStorage
+        .persist()
+        .then(() =>
+          MongoRepository.get(Repository).collection.updateOne(
+            { _id: this.id },
+            { $set: { [`_metadata.${TagsHandler.resource}.endCursor`]: this.meta.endCursor } }
+          )
+        );
+    }
 
     if (this.isDone()) {
       await MongoRepository.get(Repository).collection.updateOne(

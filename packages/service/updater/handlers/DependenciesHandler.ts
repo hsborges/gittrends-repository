@@ -72,32 +72,33 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       this.manifests.hasNextPage = pageInfo.has_next_page ?? false;
       this.manifests.endCursor = pageInfo.end_cursor ?? this.manifests.endCursor;
     } else if (response && !this.manifests.hasNextPage) {
-      const dependencies = this.pendingManifests.reduce((dependencies: Dependency[], manifest) => {
-        const piPath = `${manifest.component.alias}.dependencies.page_info`;
-        const pageInfo = get(response as unknown, piPath, {});
+      this.entityStorage.add(
+        this.pendingManifests.reduce((dependencies: Dependency[], manifest) => {
+          const piPath = `${manifest.component.alias}.dependencies.page_info`;
+          const pageInfo = get(response as unknown, piPath, {});
 
-        manifest.hasNextPage = pageInfo.has_next_page || false;
-        manifest.endCursor = pageInfo.end_cursor || manifest.endCursor;
+          manifest.hasNextPage = pageInfo.has_next_page || false;
+          manifest.endCursor = pageInfo.end_cursor || manifest.endCursor;
 
-        const nodes = get(response, `${manifest.component.alias}.dependencies.nodes`, []) as [];
+          const nodes = get(response, `${manifest.component.alias}.dependencies.nodes`, []) as [];
 
-        return dependencies.concat(
-          nodes.map(
-            (dependency: Record<string, unknown>) =>
-              new Dependency({
-                repository: this.id,
-                manifest: manifest.data.id,
-                filename: manifest.data.filename,
-                ...dependency
-              })
-          )
-        );
-      }, []);
+          return dependencies.concat(
+            nodes.map(
+              (dependency: Record<string, unknown>) =>
+                new Dependency({
+                  repository: this.id,
+                  manifest: manifest.data.id,
+                  filename: manifest.data.filename,
+                  ...dependency
+                })
+            )
+          );
+        }, [])
+      );
+    }
 
-      if (dependencies.length > 0) {
-        await super.saveReferences();
-        await MongoRepository.get(Dependency).upsert(dependencies);
-      }
+    if (this.entityStorage.size(Dependency) >= 500 || this.isDone()) {
+      await this.entityStorage.persist();
     }
 
     if (this.isDone()) {

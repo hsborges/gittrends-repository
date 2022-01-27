@@ -53,6 +53,7 @@
   "devDependencies": {
     "@gittrends-app/github-proxy-server": "gittrends-app/github-proxy-server",
     "@gittrends/env": "link:../env",
+    "@shelf/jest-mongodb": "^2.2.0",
     "@types/async-retry": "^1.4.3",
     "@types/cron": "^1.7.3",
     "@types/express": "^4.17.13",

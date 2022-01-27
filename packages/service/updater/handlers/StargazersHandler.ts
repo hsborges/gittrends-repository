@@ -41,17 +41,22 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     this.meta.hasNextPage = pageInfo.has_next_page ?? false;
     this.meta.endCursor = pageInfo.end_cursor ?? this.meta.endCursor;
 
-    await super.saveReferences();
-    await MongoRepository.get(Stargazer).upsert(
+    this.entityStorage.add(
       get<{ user: string; starred_at: Date }[]>(data, '_stargazers.edges', [])
         .map((stargazer) => new Stargazer({ repository: this.id, ...stargazer }))
         .filter((star) => star && star._id.starred_at)
     );
 
-    await MongoRepository.get(Repository).collection.updateOne(
-      { _id: this.id },
-      { $set: { [`_metadata.${StargazersHandler.resource}.endCursor`]: this.meta.endCursor } }
-    );
+    if (this.entityStorage.size(Stargazer) >= 500 || this.isDone()) {
+      await this.entityStorage
+        .persist()
+        .then(() =>
+          MongoRepository.get(Repository).collection.updateOne(
+            { _id: this.id },
+            { $set: { [`_metadata.${StargazersHandler.resource}.endCursor`]: this.meta.endCursor } }
+          )
+        );
+    }
 
     if (this.isDone()) {
       await MongoRepository.get(Repository).collection.updateOne(
