@@ -97,7 +97,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       );
     }
 
-    if (this.entityStorage.size(Dependency) >= 500 || this.isDone()) {
+    if (this.entityStorage.size(Dependency) >= 1000 || this.isDone()) {
       await this.entityStorage.persist();
     }
 

@@ -44,7 +44,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
       )
     );
 
-    if (this.entityStorage.size(Tag) >= 500 || this.isDone()) {
+    if (this.entityStorage.size(Tag) >= 1000 || this.isDone()) {
       await this.entityStorage
         .persist()
         .then(() =>
