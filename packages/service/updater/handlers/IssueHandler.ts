@@ -317,7 +317,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       )
     );
 
-    if (this.entityStorage.size(Entity) >= 250 || this.isDone()) {
+    if (this.entityStorage.size(Entity) >= 150 || this.isDone()) {
       await this.entityStorage
         .persist()
         .then(() =>
