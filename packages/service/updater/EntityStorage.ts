@@ -1,13 +1,17 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { isEqual, uniqWith } from 'lodash';
+
 import { Entity, MongoRepository } from '@gittrends/database';
 import { Actor, Commit, Milestone } from '@gittrends/database';
 
 import { Cache } from './Cache';
 
-export const EntityStorageMetadata: { [key: symbol]: { priority: number; cache?: boolean } } = {
-  [Symbol.for(Actor.name)]: { priority: 10, cache: true },
+export const EntityStorageMetadata: {
+  [key: symbol]: { priority: number; cache?: boolean; operation?: 'insert' | 'upsert' };
+} = {
+  [Symbol.for(Actor.name)]: { priority: 10, cache: true, operation: 'insert' },
   [Symbol.for(Milestone.name)]: { priority: 9, cache: true },
   [Symbol.for(Commit.name)]: { priority: 9, cache: true }
 };
@@ -52,18 +56,16 @@ export class EntityStorage<T extends Entity> {
       );
 
     await Promise.all(
-      groups.map(({ entity, records }) =>
-        Promise.resolve(
-          EntityStorageMetadata[Symbol.for(entity.name)]?.cache
-            ? records.filter((r) => !this.cache?.has(r))
-            : records
-        ).then((filteredRecords) => {
-          if (filteredRecords.length === 0) return;
-          return MongoRepository.get(entity)
-            .upsert(filteredRecords)
-            .then(() => this.cache?.add(filteredRecords));
-        })
-      )
+      groups.map(async ({ entity, records }) => {
+        const entityMeta = EntityStorageMetadata[Symbol.for(entity.name)];
+        const filteredRecords = uniqWith(
+          entityMeta?.cache ? records.filter((r) => !this.cache?.has(r)) : records,
+          (v1, v2) => isEqual(v1._id, v2._id)
+        );
+        if (filteredRecords.length === 0) return;
+        await MongoRepository.get(entity)[entityMeta?.operation || 'upsert'](filteredRecords);
+        return this.cache?.add(filteredRecords);
+      })
     );
 
     this.entities = this.entities.filter((e) => !entitiesGroup.includes(e));
