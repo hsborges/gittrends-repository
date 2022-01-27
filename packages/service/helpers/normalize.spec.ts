@@ -5,9 +5,10 @@ import normalize from './normalize';
 describe('Normalize response received from GitHub API', () => {
   test('it should transform date strings to objects', () => {
     const date = new Date();
-    expect(isEqual(date, normalize(date.toISOString()))).toBe(true);
-    expect(isEqual({ date: date }, { date: normalize(date.toISOString()) })).toBe(true);
-    expect(isEqual([{ date: date }], [{ date: normalize(date.toISOString()) }])).toBe(true);
+    expect(isEqual({ tested_at: date }, normalize({ tested_at: date.toISOString() }))).toBe(true);
+    expect(isEqual({ tested_on: date }, normalize({ tested_on: date.toISOString() }))).toBe(true);
+    expect(isEqual({ date: date }, normalize({ date: date.toISOString() }))).toBe(true);
+    expect(isEqual([{ date: date }], normalize([{ date: date.toISOString() }]))).toBe(true);
   });
 
   test('it should transform object keys to snake case', () => {
