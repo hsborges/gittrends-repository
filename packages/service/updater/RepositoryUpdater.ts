@@ -133,6 +133,8 @@ export class RepositoryUpdater implements Updater {
                 .map((h) => (h.constructor as typeof AbstractRepositoryHandler).resource)
                 .join(', ')}).`
             );
+
+            if (global.gc) global.gc();
           }
         });
 
