@@ -317,10 +317,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
       )
     );
 
-    this.issues.items = [];
-    this.reactions = [];
-
-    if (this.entityStorage.size(Entity) >= 50 || this.isDone()) {
+    if (this.entityStorage.size(Entity) >= 100 || this.isDone()) {
       await this.entityStorage
         .persist()
         .then(() =>
@@ -337,6 +334,9 @@ export default class IssuesHander extends AbstractRepositoryHandler {
         { $set: { [`_metadata.${this.resource}.updatedAt`]: new Date() } }
       );
     }
+
+    this.issues.items = [];
+    this.reactions = [];
   }
 
   async error(err: Error): Promise<void> {
