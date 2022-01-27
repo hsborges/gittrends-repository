@@ -60,13 +60,22 @@ test('it should return the number of stored entities', () => {
   expect(storage.size(Actor)).toBe(1);
   expect(storage.size(Repository)).toBe(0);
 
-  storage.add(samples.actor);
+  storage.add(samples.repo);
   expect(storage.size()).toBe(2);
-  expect(storage.size(Actor)).toBe(2);
+  expect(storage.size(Actor)).toBe(1);
+  expect(storage.size(Repository)).toBe(1);
+});
+
+test('it should deduplicate entities on the storage (by its _id)', () => {
+  storage.add(samples.actor);
+  storage.add(samples.actor);
+  expect(storage.size()).toBe(1);
+  expect(storage.size(Actor)).toBe(1);
+  expect(storage.size(Repository)).toBe(0);
 
   storage.add(samples.repo);
-  expect(storage.size()).toBe(3);
-  expect(storage.size(Actor)).toBe(2);
+  expect(storage.size()).toBe(2);
+  expect(storage.size(Actor)).toBe(1);
   expect(storage.size(Repository)).toBe(1);
 });
 
@@ -74,14 +83,12 @@ test('it should remove entities from storage', () => {
   expect(storage.size()).toBe(0);
 
   storage.add(samples.actor);
-  storage.add(samples.actor);
   storage.add(samples.repo);
-  expect(storage.size()).toBe(3);
+  expect(storage.size()).toBe(2);
 
   storage.clean(Actor);
   expect(storage.size()).toBe(1);
 
-  storage.add(samples.actor);
   storage.clean();
   expect(storage.size()).toBe(0);
 });

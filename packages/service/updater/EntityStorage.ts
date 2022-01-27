@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { isEqual, uniqWith } from 'lodash';
+import { isEqual } from 'lodash';
 
 import { Entity, MongoRepository } from '@gittrends/database';
 import { Actor, Commit, Milestone } from '@gittrends/database';
@@ -25,7 +25,14 @@ export class EntityStorage<T extends Entity> {
   }
 
   add(records: T | T[]): void {
-    this.entities.push(...(Array.isArray(records) ? records : [records]));
+    const filteredRecords = (Array.isArray(records) ? records : [records])
+      .filter(
+        (r) => !(EntityStorageMetadata[Symbol.for(r.constructor.name)]?.cache && this.cache?.has(r))
+      )
+      .filter(
+        (r) => !this.entities.find((e) => e.constructor === r.constructor && isEqual(e._id, r._id))
+      );
+    this.entities.push(...filteredRecords);
   }
 
   size(entity?: new () => T): number {
@@ -58,13 +65,9 @@ export class EntityStorage<T extends Entity> {
     await Promise.all(
       groups.map(async ({ entity, records }) => {
         const entityMeta = EntityStorageMetadata[Symbol.for(entity.name)];
-        const filteredRecords = uniqWith(
-          entityMeta?.cache ? records.filter((r) => !this.cache?.has(r)) : records,
-          (v1, v2) => isEqual(v1._id, v2._id)
-        );
-        if (filteredRecords.length === 0) return;
-        await MongoRepository.get(entity)[entityMeta?.operation || 'upsert'](filteredRecords);
-        return this.cache?.add(filteredRecords);
+        if (records.length === 0) return;
+        await MongoRepository.get(entity)[entityMeta?.operation || 'upsert'](records);
+        return this.cache?.add(records);
       })
     );
 
