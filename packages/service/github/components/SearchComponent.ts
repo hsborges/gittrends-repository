@@ -34,6 +34,8 @@ export default class SearchComponent extends Component {
     if (searchQuery.sort)
       query += ` sort:${searchQuery.sort}${searchQuery.order ? `-${searchQuery.order}` : ''}`;
 
+    query += ' sort:stars-desc sort:forks-desc';
+
     if (searchQuery.language) query += ` language:${searchQuery.language}`;
     if (searchQuery.name) query += ` repo:${searchQuery.name}`;
 
