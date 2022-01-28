@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { get, omit } from 'lodash';
+import { get, isEqual, omit } from 'lodash';
 
 import {
   Issue,
@@ -182,12 +182,16 @@ export default class IssuesHander extends AbstractRepositoryHandler {
         const data = super.parseResponse(response[super.alias as string]);
         const newIssues = get(data, `${this.resourceAlias}.nodes`, []) as Record<string, unknown>[];
 
-        for await (const issue of newIssues) {
-          const data = await this.mongoRepository.collection.findOne(
-            { _id: issue.id },
+        const dbRecords = await this.mongoRepository.collection
+          .find(
+            { _id: { $in: newIssues.map((ni) => ni.id as any) } },
             { projection: { _metadata: true } }
-          );
-          this.addIssueToItems({ ...issue, _metadata: data?._metadata });
+          )
+          .toArray();
+
+        for (const issue of newIssues) {
+          const record = dbRecords.find((r) => isEqual(r._id, issue.id));
+          this.addIssueToItems({ ...issue, _metadata: record?._metadata });
         }
 
         const pageInfo = get(data, `${this.resourceAlias}.page_info`, {});
