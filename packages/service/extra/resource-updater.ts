@@ -3,7 +3,7 @@
  */
 import { program, Option, Argument } from 'commander';
 
-import mongoClient, { Actor, MongoRepository, Repository } from '@gittrends/database';
+import { connect, Actor, MongoRepository, Repository } from '@gittrends/database';
 
 import httpClient from '../helpers/proxy-http-client';
 import { config } from '../package.json';
@@ -47,13 +47,12 @@ program
   .action(async (resourceId: string): Promise<void> => {
     const opts: { resource: string[] } = program.opts();
 
-    await mongoClient
-      .connect()
-      .then(() => {
+    await connect().then((connection) =>
+      Promise.resolve(() => {
         if (opts.resource.length === 1 && opts.resource[0] === 'users')
           return updateActor(resourceId);
         return updateRepositoryResource(resourceId, opts.resource);
-      })
-      .finally(() => mongoClient.close());
+      }).finally(() => connection.close())
+    );
   })
   .parse(process.argv);

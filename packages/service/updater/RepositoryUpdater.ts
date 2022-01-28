@@ -97,7 +97,9 @@ export class RepositoryUpdater implements Updater {
           hash = queryHash;
           return query;
         })
-        .then((data) => Promise.all(pendingHandlers.map((handler) => handler.update(data))))
+        .then(async (data) => {
+          for (const handler of pendingHandlers) await handler.update(data);
+        })
         .catch(async (err) => {
           if (isRetry || !(err instanceof RequestError)) throw err;
 

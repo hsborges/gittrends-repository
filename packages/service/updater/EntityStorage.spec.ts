@@ -1,4 +1,6 @@
-import mongoClient, { Actor, Entity, MongoRepository, Repository } from '@gittrends/database';
+import { MongoClient, MongoClientOptions } from 'mongodb';
+
+import { connect, Actor, Entity, MongoRepository, Repository } from '@gittrends/database';
 
 import { Cache } from './Cache';
 import { EntityStorage } from './EntityStorage';
@@ -6,21 +8,20 @@ import { EntityStorage } from './EntityStorage';
 jest.mock('mongodb', () => {
   const originalModule = jest.requireActual('mongodb');
 
-  class MongoClient extends originalModule.MongoClient {
-    constructor(...args: any[]) {
-      super(
-        `${(global as any).__MONGO_URI__ + (global as any).__MONGO_DB_NAME__}`,
-        ...args.slice(1)
-      );
-    }
-  }
-
   return {
     ...originalModule,
-    MongoClient
+    MongoClient: {
+      connect: () => {
+        return originalModule.MongoClient.connect(
+          `${(global as any).__MONGO_URI__ + (global as any).__MONGO_DB_NAME__}`,
+          { maxPoolSize: 1, connectTimeoutMS: 5000 } as MongoClientOptions
+        );
+      }
+    }
   };
 });
 
+let connection: MongoClient;
 let storage: EntityStorage<Entity>;
 
 const samples = {
@@ -34,11 +35,11 @@ const samples = {
 };
 
 beforeAll(async () => {
-  await mongoClient.connect();
+  connection = await connect();
 });
 
 afterAll(async () => {
-  await mongoClient.close();
+  await connection?.close();
 });
 
 beforeEach(async () => {
@@ -137,18 +138,18 @@ test('it should use cache when enabled', async () => {
   storage.add(samples.actor);
   await storage.persist();
 
-  expect(cacheHasSpy).toHaveBeenCalledTimes(1);
+  expect(cacheHasSpy).toHaveBeenCalledTimes(2);
   expect(cacheAddSpy).toHaveBeenCalledTimes(1);
 
   storage.add(samples.actor);
   await storage.persist();
 
-  expect(cacheHasSpy).toHaveBeenCalledTimes(2);
+  expect(cacheHasSpy).toHaveBeenCalledTimes(3);
   expect(cacheAddSpy).toHaveBeenCalledTimes(1);
 
   storage.add([samples.actor, samples.repo]);
   await storage.persist();
 
-  expect(cacheHasSpy).toHaveBeenCalledTimes(3);
+  expect(cacheHasSpy).toHaveBeenCalledTimes(4);
   expect(cacheAddSpy).toHaveBeenCalledTimes(2);
 });

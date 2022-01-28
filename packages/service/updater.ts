@@ -8,7 +8,7 @@ import consola from 'consola';
 import { isNil } from 'lodash';
 import fetch from 'node-fetch';
 
-import mongoClient, { MongoRepository, ErrorLog } from '@gittrends/database';
+import { connect, MongoRepository, ErrorLog } from '@gittrends/database';
 
 import compact from './helpers/compact';
 import { RepositoryUpdateError } from './helpers/errors';
@@ -42,7 +42,7 @@ program
       process.exit(1);
     }
 
-    await mongoClient.connect();
+    await connect();
 
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);

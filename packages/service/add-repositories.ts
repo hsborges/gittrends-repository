@@ -6,7 +6,7 @@ import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import { chain, get, isNil, min, negate, uniqBy } from 'lodash';
 
-import mongoClient, { Actor, Repository, MongoRepository } from '@gittrends/database';
+import { connect, Actor, Repository, MongoRepository } from '@gittrends/database';
 
 import SearchComponent from './github/components/SearchComponent';
 import Query from './github/Query';
@@ -126,6 +126,8 @@ program
 
     consola.info(`Searching for repositories with ${minStr}..${maxStr} stars on GitHub ...`);
 
+    const connection = await connect();
+
     return Promise.all(
       new Array(options.workers).fill(0).map((_, index) => {
         return search(options.limit, {
@@ -164,8 +166,6 @@ program
         return [repositories, users];
       })
       .then(async ([repos, users]) => {
-        await mongoClient.connect();
-
         return Promise.all([
           Promise.all(
             repos.map((repo) =>
@@ -190,6 +190,7 @@ program
       })
       .then(() => consola.success('Repositories successfully added!'))
       .catch((err) => consola.error(err))
-      .finally(() => mongoClient.close());
+      .finally(() => multibar.stop())
+      .finally(() => connection.close());
   })
   .parse(process.argv);

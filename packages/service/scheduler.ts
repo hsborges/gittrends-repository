@@ -8,7 +8,7 @@ import { CronJob } from 'cron';
 import dayjs from 'dayjs';
 import { difference, chunk, intersection, get } from 'lodash';
 
-import mongoClient, { Actor, MongoRepository, Repository } from '@gittrends/database';
+import { connect, Actor, MongoRepository, Repository } from '@gittrends/database';
 
 import { version, config } from './package.json';
 import { useRedis } from './redis';
@@ -158,7 +158,7 @@ program
     const resources = resourcesParser([resource, ...other]);
 
     // connect to database
-    await mongoClient.connect();
+    const connection = await connect();
 
     const schedulerFn = () =>
       scheduler({
@@ -176,7 +176,7 @@ program
           : Promise.resolve()
       )
       .catch((err) => consola.error(err))
-      .finally(() => mongoClient.close())
+      .finally(() => connection.close())
       .finally(() => process.exit(0));
   })
   .parse(process.argv);

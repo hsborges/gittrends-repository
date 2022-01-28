@@ -51,6 +51,7 @@
     "parse-redis-url-simple": "^1.0.2",
     "table": "^6.7.3",
     "user-agents": "^1.0.842",
+    "wtfnode": "^0.9.1",
     "yarn": "^1.22.17"
   },
   "devDependencies": {
@@ -66,6 +67,7 @@
     "@types/node-fetch": "^2.x.x",
     "@types/numeral": "^2.0.2",
     "@types/user-agents": "^1.0.2",
+    "@types/wtfnode": "^0.7.0",
     "clinic": "^10.0.0",
     "get-port": "^6.0.0",
     "jest": "^27.3.1",

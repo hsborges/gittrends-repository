@@ -6,12 +6,12 @@ import { startCase, difference, get } from 'lodash';
 import numeral from 'numeral';
 import { table } from 'table';
 
-import mongoClient, { MongoRepository, Repository } from '@gittrends/database';
+import { connect, MongoRepository, Repository } from '@gittrends/database';
 
 import packageJson from '../package.json';
 
 (async () => {
-  await mongoClient.connect();
+  const connection = await connect();
 
   const reposResources = difference(packageJson.config.resources, ['users']);
 
@@ -47,6 +47,8 @@ import packageJson from '../package.json';
     ]);
   }
 
+  await connection.close();
+
   return data.sort((a, b) => a[0].localeCompare(b[0]));
 })()
   .then((data) =>
@@ -61,5 +63,4 @@ import packageJson from '../package.json';
     )
   )
   .then((data) => console.log(data))
-  .catch(console.error)
-  .finally(() => mongoClient.close());
+  .catch(console.error);
