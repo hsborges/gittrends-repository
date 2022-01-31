@@ -85,6 +85,7 @@ export class RepositoryUpdater implements Updater {
     if (pendingHandlers.length === 0) return;
 
     let hash: string;
+    let hashCount: number = 0;
 
     do {
       await Query.create(this.httpClient)
@@ -93,7 +94,7 @@ export class RepositoryUpdater implements Updater {
         )
         .run((query) => {
           const queryHash = crypto.createHash('sha256').update(query).digest('hex');
-          if (hash === queryHash) throw new Error('Potential loop detected!');
+          if (hash === queryHash && ++hashCount >= 3) throw new Error('Potential loop detected!');
           hash = queryHash;
           return query;
         })
