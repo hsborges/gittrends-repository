@@ -1,17 +1,17 @@
 /*
  *  Author: Hudson S. Borges
  */
-import LRU from 'lru-cache';
 import hasher from 'node-object-hash';
+import QuickLRU from 'quick-lru';
 
 import { Entity } from '@gittrends/database';
 
 export class Cache {
-  readonly cache: LRU<string, void>;
+  readonly cache: QuickLRU<string, number>;
   readonly hashSortCoerce = hasher({ sort: true, coerce: true });
 
   constructor(cacheSize: number) {
-    this.cache = new LRU({ max: cacheSize, updateAgeOnGet: true });
+    this.cache = new QuickLRU({ maxSize: cacheSize });
   }
 
   private getKey(object: Entity): string {
@@ -20,11 +20,11 @@ export class Cache {
 
   public add(object: Entity | Entity[]): void {
     (Array.isArray(object) ? object : [object]).map((object) =>
-      this.cache.set(this.getKey(object))
+      this.cache.set(this.getKey(object), 1)
     );
   }
 
   public has(object: Entity): boolean {
-    return this.cache.has(this.getKey(object));
+    return this.cache.get(this.getKey(object)) === 1;
   }
 }
