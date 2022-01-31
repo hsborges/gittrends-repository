@@ -4,16 +4,29 @@
 import { isEqual } from 'lodash';
 
 import { Entity, MongoRepository } from '@gittrends/database';
-import { Actor, Commit, Milestone } from '@gittrends/database';
+import * as Entities from '@gittrends/database';
 
 import { Cache } from './Cache';
 
 export const EntityStorageMetadata: {
-  [key: symbol]: { priority: number; cache?: boolean; operation?: 'insert' | 'upsert' };
+  [key: symbol]: { cache?: boolean; operation: 'insert' | 'upsert' };
 } = {
-  [Symbol.for(Actor.name)]: { priority: 10, cache: true, operation: 'insert' },
-  [Symbol.for(Milestone.name)]: { priority: 9, cache: true },
-  [Symbol.for(Commit.name)]: { priority: 9, cache: true }
+  [Symbol.for(Entities.Actor.name)]: { cache: true, operation: 'insert' },
+  [Symbol.for(Entities.Commit.name)]: { cache: true, operation: 'insert' },
+  [Symbol.for(Entities.Dependency.name)]: { operation: 'insert' },
+  [Symbol.for(Entities.ErrorLog.name)]: { operation: 'insert' },
+  [Symbol.for(Entities.GithubToken.name)]: { operation: 'insert' },
+  [Symbol.for(Entities.Issue.name)]: { operation: 'upsert' },
+  [Symbol.for(Entities.Location.name)]: { cache: true, operation: 'insert' },
+  [Symbol.for(Entities.Milestone.name)]: { cache: true, operation: 'upsert' },
+  [Symbol.for(Entities.PullRequest.name)]: { operation: 'upsert' },
+  [Symbol.for(Entities.Reaction.name)]: { operation: 'insert' },
+  [Symbol.for(Entities.Release.name)]: { cache: true, operation: 'insert' },
+  [Symbol.for(Entities.Repository.name)]: { operation: 'insert' },
+  [Symbol.for(Entities.Stargazer.name)]: { operation: 'insert' },
+  [Symbol.for(Entities.Tag.name)]: { cache: true, operation: 'insert' },
+  [Symbol.for(Entities.TimelineEvent.name)]: { operation: 'insert' },
+  [Symbol.for(Entities.Watcher.name)]: { operation: 'insert' }
 };
 
 export class EntityStorage<T extends Entity> {
@@ -62,18 +75,15 @@ export class EntityStorage<T extends Entity> {
 
         return memo;
       }, [] as { key: symbol; entity: new () => T; records: T[] }[])
-      .filter((group) => group.records.length > 0)
-      .sort(
-        (a, b) =>
-          (EntityStorageMetadata[Symbol.for(b.entity.name)]?.priority || 0) -
-          (EntityStorageMetadata[Symbol.for(a.entity.name)]?.priority || 0)
-      );
+      .filter((group) => group.records.length > 0);
 
-    for (const { entity, records } of groups) {
-      const entityMeta = EntityStorageMetadata[Symbol.for(entity.name)];
-      await MongoRepository.get(entity)[entityMeta?.operation || 'upsert'](records);
-      this.cache?.add(records);
-    }
+    await Promise.all(
+      groups.map(async ({ entity, records }) => {
+        const entityMeta = EntityStorageMetadata[Symbol.for(entity.name)];
+        await MongoRepository.get(entity)[entityMeta.operation](records);
+        this.cache?.add(records);
+      })
+    );
 
     this.entities = this.entities.filter((e) => !entitiesGroup.includes(e));
   }
