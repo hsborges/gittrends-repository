@@ -94,7 +94,8 @@ export class RepositoryUpdater implements Updater {
         )
         .run((query) => {
           const queryHash = crypto.createHash('sha256').update(query).digest('hex');
-          if (hash === queryHash && ++hashCount >= 3) throw new Error('Potential loop detected!');
+          hashCount = hash !== queryHash ? 0 : hashCount + 1;
+          if (hashCount >= 3) throw new Error('Potential loop detected!');
           hash = queryHash;
           return query;
         })
