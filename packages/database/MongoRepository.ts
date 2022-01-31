@@ -47,7 +47,7 @@ export class MongoRepository<T extends Entity> {
 
     await this.collection.bulkWrite(
       this.validateAndTransform(object).map((record) => ({
-        updateOne: { filter: { _id: record._id }, update: record, upsert: true }
+        replaceOne: { filter: { _id: record._id }, replacement: record, upsert: true }
       })),
       { ordered: false }
     );
