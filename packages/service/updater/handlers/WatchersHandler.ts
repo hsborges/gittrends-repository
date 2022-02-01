@@ -40,7 +40,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
       )
     );
 
-    if (this.entityStorage.size(Watcher) >= 500 || this.isDone()) {
+    if (this.entityStorage.size() >= 500 || this.isDone()) {
       await this.entityStorage
         .persist()
         .then(() =>
