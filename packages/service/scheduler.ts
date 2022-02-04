@@ -48,7 +48,7 @@ const repositoriesScheduler = async (
         await queue.add(
           (repo.name_with_owner as string).toLowerCase(),
           { id: repo._id.toString(), resources: _resources, ignored: exclude },
-          { jobId: repo._id.toString() }
+          { jobId: repo._id.toString(), priority: config.resources.length - _resources.length }
         );
         count += 1;
       });
