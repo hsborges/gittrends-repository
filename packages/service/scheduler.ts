@@ -6,7 +6,7 @@ import { program } from 'commander';
 import consola from 'consola';
 import { CronJob } from 'cron';
 import dayjs from 'dayjs';
-import { difference, chunk, intersection, get } from 'lodash';
+import { difference, chunk, intersection, get, isNil } from 'lodash';
 
 import { connect, Actor, MongoRepository, Repository } from '@gittrends/database';
 
@@ -35,6 +35,10 @@ const repositoriesScheduler = async (
   );
 
   for await (const repo of repos) {
+    const notUpdated: string[] = resources.filter((resource) =>
+      isNil(get(repo, ['_metadata', resource, 'updatedAt']))
+    );
+
     const exclude: string[] = resources.filter((resource) => {
       const updatedAt = get(repo, ['_metadata', resource, 'updatedAt']);
       return updatedAt && dayjs().subtract(wait, 'hour').isBefore(updatedAt);
@@ -48,7 +52,13 @@ const repositoriesScheduler = async (
         await queue.add(
           (repo.name_with_owner as string).toLowerCase(),
           { id: repo._id.toString(), resources: _resources, ignored: exclude },
-          { jobId: repo._id.toString(), priority: config.resources.length - _resources.length }
+          {
+            jobId: repo._id.toString(),
+            priority:
+              notUpdated.length > 0
+                ? config.resources.length - notUpdated.length
+                : config.resources.length * 2 - _resources.length
+          }
         );
         count += 1;
       });
