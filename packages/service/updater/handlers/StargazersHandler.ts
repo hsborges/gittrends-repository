@@ -47,7 +47,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
         .filter((star) => star && star._id.starred_at)
     );
 
-    if (this.entityStorage.size() >= 500 || this.isDone()) {
+    if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
       await this.entityStorage
         .persist()
         .then(() =>

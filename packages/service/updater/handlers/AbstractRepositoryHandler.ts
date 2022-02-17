@@ -13,14 +13,19 @@ export default abstract class AbstractRepositoryHandler extends Handler<Reposito
   static readonly resource: string;
 
   readonly id: string;
+  protected writeBatchSize: number;
   protected batchSize: number;
   protected defaultBatchSize: number;
   protected entityStorage: EntityStorage<Entity>;
 
-  public constructor(id: string, opts?: { alias?: string; cache?: Cache }) {
+  public constructor(
+    id: string,
+    opts?: { alias?: string; cache?: Cache; batchSize?: number; writeBatchSize?: number }
+  ) {
     super(new RepositoryComponent(id).setAlias(opts?.alias || 'repository'));
     this.id = id;
-    this.batchSize = this.defaultBatchSize = 100;
+    this.writeBatchSize = opts?.writeBatchSize || 500;
+    this.batchSize = this.defaultBatchSize = Math.min(opts?.batchSize || 100, 100);
     this.entityStorage = new EntityStorage(opts?.cache);
   }
 

@@ -40,7 +40,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
       )
     );
 
-    if (this.entityStorage.size() >= 500 || this.isDone()) {
+    if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
       await this.entityStorage.persist().then(() =>
         MongoRepository.get(Repository).collection.updateOne(
           { _id: this.id },

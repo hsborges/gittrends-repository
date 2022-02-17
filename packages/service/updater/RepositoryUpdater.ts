@@ -47,6 +47,13 @@ type RepositoryUpdaterJob = {
   errors?: string[];
 };
 
+type RepositoryUpdaterOpts = {
+  job?: Job<RepositoryUpdaterJob>;
+  cache?: Cache;
+  batchSize?: number;
+  writeBatchSize?: number;
+};
+
 export class RepositoryUpdater implements Updater {
   private readonly id: string;
   private readonly httpClient: HttpClient;
@@ -59,16 +66,18 @@ export class RepositoryUpdater implements Updater {
     repositoryId: string,
     handlers: RepositoryUpdaterHandler[],
     httpClient: HttpClient,
-    opts: { job?: Job<RepositoryUpdaterJob>; cache?: Cache } = {}
+    opts?: RepositoryUpdaterOpts
   ) {
+    const { job, cache, batchSize, writeBatchSize } = opts || {};
+
     this.id = repositoryId;
     this.httpClient = httpClient;
-    this.job = opts?.job;
+    this.job = job;
 
     handlers.forEach((resource) => {
       const Class = handlersList.find((handler) => handler.resource === resource);
       if (!Class) throw new Error(`Handler for '${resource}' not found!`);
-      this.handlers.push(new Class(this.id, { cache: opts?.cache }));
+      this.handlers.push(new Class(this.id, { cache, batchSize, writeBatchSize }));
     });
   }
 

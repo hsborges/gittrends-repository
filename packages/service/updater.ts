@@ -64,8 +64,11 @@ program
             resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
           }
           if (resources.length) {
-            const updaterOpts = { job, cache };
-            updater = new RepositoryUpdater(job.data.id, resources, httpClient, updaterOpts);
+            updater = new RepositoryUpdater(job.data.id, resources, httpClient, {
+              job,
+              cache,
+              writeBatchSize: parseInt(process.env.GT_WRITE_BATCH_SIZE ?? '500', 10)
+            });
           }
         } else {
           consola.error(new Error('Invalid "type" option!'));

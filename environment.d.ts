@@ -14,6 +14,7 @@ declare global {
       GT_PROXY_RETRIES?: string;
       GT_WEBSITE_API_FILE?: string;
       GT_CACHE_SIZE?: string;
+      GT_WRITE_BATCH_SIZE?: string;
       GT_QUEUE_BOARD_PORT?: string;
       PORT?: string;
     }
