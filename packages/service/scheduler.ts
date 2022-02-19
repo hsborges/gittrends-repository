@@ -14,9 +14,10 @@ import { version, config } from './package.json';
 import { useRedis } from './redis';
 
 /* COMMANDS */
-function resourcesParser(resources: string[]): string[] {
-  const nr = resources.map((r) => r.toLowerCase());
-  if (resources.indexOf('all') >= 0) return config.resources;
+function resourcesParser(resources: string[], exclude?: string[]): string[] {
+  let nr = resources.map((r) => r.trim().toLowerCase());
+  if (nr.indexOf('all') >= 0) nr = config.resources;
+  nr = difference(nr, exclude?.map((r) => r.trim().toLowerCase()) || []);
   if (nr.length === intersection(nr, config.resources).length) return nr;
   throw new Error("Invalid 'resources' argument values!");
 }
@@ -29,41 +30,45 @@ const repositoriesScheduler = async (
   // find and save jobs on queue
   let count = 0;
 
-  const repos = MongoRepository.get(Repository).collection.find(
-    { '_metadata.removed': { $exists: false } },
-    { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
-  );
+  const repos = await MongoRepository.get(Repository)
+    .collection.find(
+      { '_metadata.removed': { $exists: false } },
+      { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
+    )
+    .toArray();
 
-  for await (const repo of repos) {
-    const notUpdated: string[] = resources.filter((resource) =>
-      isNil(get(repo, ['_metadata', resource, 'updatedAt']))
-    );
+  await Promise.all(
+    repos.map(async (repo) => {
+      const notUpdated: string[] = resources.filter((resource) =>
+        isNil(get(repo, ['_metadata', resource, 'updatedAt']))
+      );
 
-    const exclude: string[] = resources.filter((resource) => {
-      const updatedAt = get(repo, ['_metadata', resource, 'updatedAt']);
-      return updatedAt && dayjs().subtract(wait, 'hour').isBefore(updatedAt);
-    });
-
-    const _resources = difference(resources, exclude);
-
-    if (_resources.length > 0) {
-      await queue.getJob(repo._id.toString()).then(async (job) => {
-        if (job && !(await job.isActive())) await job.remove();
-        await queue.add(
-          (repo.name_with_owner as string).toLowerCase(),
-          { id: repo._id.toString(), resources: _resources, ignored: exclude },
-          {
-            jobId: repo._id.toString(),
-            priority:
-              notUpdated.length > 0
-                ? config.resources.length - notUpdated.length
-                : config.resources.length * 2 - _resources.length
-          }
-        );
-        count += 1;
+      const exclude: string[] = resources.filter((resource) => {
+        const updatedAt = get(repo, ['_metadata', resource, 'updatedAt']);
+        return updatedAt && dayjs().subtract(wait, 'hour').isBefore(updatedAt);
       });
-    }
-  }
+
+      const _resources = difference(resources, exclude);
+
+      if (_resources.length > 0) {
+        await queue.getJob(repo._id.toString()).then(async (job) => {
+          if (job && !(await job.isActive())) await job.remove();
+          await queue.add(
+            (repo.name_with_owner as string).toLowerCase(),
+            { id: repo._id.toString(), resources: _resources, ignored: exclude },
+            {
+              jobId: repo._id.toString(),
+              priority:
+                notUpdated.length > 0
+                  ? config.resources.length - notUpdated.length
+                  : config.resources.length * 2 - _resources.length
+            }
+          );
+          count += 1;
+        });
+      }
+    })
+  );
 
   consola.success(`Number of repositories scheduled: ${count}`);
 };
@@ -157,15 +162,16 @@ const scheduler = async (options: SchedulerOptions) => {
 /* Script entry point */
 program
   .version(version)
-  .arguments('<resource> [other_resources...]')
+  .arguments('[resource] [other_resources...]')
   .description('Schedule jobs on queue to further processing')
   .option('-w, --wait [number]', 'Waiting interval since last execution in hours', Number, 24)
   .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
   .option('--cron [pattern]', 'Execute scheduler according to the pattern')
   .option('--destroy-queue', 'Destroy queue before scheduling resources')
-  .action(async (resource: string, other: string[]): Promise<void> => {
+  .option('--exclude [resource]', 'Exclude a given resource from scheduler')
+  .action(async (resource: string = 'all', other: string[]): Promise<void> => {
     const options = program.opts();
-    const resources = resourcesParser([resource, ...other]);
+    const resources = resourcesParser([resource, ...other], options.exclude?.split(',') || []);
 
     // connect to database
     const connection = await connect();
