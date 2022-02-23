@@ -52,19 +52,20 @@ const repositoriesScheduler = async (
 
       if (_resources.length > 0) {
         await queue.getJob(repo._id.toString()).then(async (job) => {
-          if (job && !(await job.isActive())) await job.remove();
-          await queue.add(
-            (repo.name_with_owner as string).toLowerCase(),
-            { id: repo._id.toString(), resources: _resources, ignored: exclude },
-            {
-              jobId: repo._id.toString(),
-              priority:
-                notUpdated.length > 0
-                  ? config.resources.length - notUpdated.length
-                  : config.resources.length * 2 - _resources.length
-            }
-          );
-          count += 1;
+          const jobData = { id: repo._id.toString(), resources: _resources, ignored: exclude };
+
+          if (job) {
+            if (await job.isActive()) return;
+            else return job.update(jobData);
+          }
+
+          return queue.add((repo.name_with_owner as string).toLowerCase(), jobData, {
+            jobId: repo._id.toString(),
+            priority:
+              notUpdated.length > 0
+                ? config.resources.length - notUpdated.length
+                : config.resources.length * 2 - _resources.length
+          });
         });
       }
     })
