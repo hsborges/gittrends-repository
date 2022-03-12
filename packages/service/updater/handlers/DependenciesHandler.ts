@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Dependency, MongoRepository, Repository } from '@gittrends/database';
+import { Dependency, Metadata, MongoRepository } from '@gittrends/database';
 
 import Component from '../../github/Component';
 import DependencyGraphManifestComponent from '../../github/components/DependencyGraphManifestComponent';
@@ -102,9 +102,10 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
     }
 
     if (this.isDone()) {
-      await MongoRepository.get(Repository).collection.updateOne(
+      await MongoRepository.get(Metadata).collection.updateOne(
         { _id: this.id },
-        { $set: { [`_metadata.${DependenciesHandler.resource}.updatedAt`]: new Date() } }
+        { $set: { [`${DependenciesHandler.resource}.updatedAt`]: new Date() } },
+        { upsert: true }
       );
     }
   }
@@ -119,9 +120,10 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       const [pending] = this.pendingManifests;
       if (pending) pending.hasNextPage = false;
 
-      await MongoRepository.get(Repository).collection.updateOne(
+      await MongoRepository.get(Metadata).collection.updateOne(
         { _id: this.id },
-        { $set: { [`_metadata.${DependenciesHandler.resource}.error`]: err.message } }
+        { $set: { [`${DependenciesHandler.resource}.error`]: err.message } },
+        { upsert: true }
       );
     }
 

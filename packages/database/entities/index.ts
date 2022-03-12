@@ -9,6 +9,7 @@ export * from './ErrorLog';
 export * from './GithubToken';
 export * from './Issue';
 export * from './Location';
+export * from './Metadata';
 export * from './Milestone';
 export * from './PullRequest';
 export * from './Reaction';

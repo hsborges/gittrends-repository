@@ -5,10 +5,10 @@ import { get, isEqual, omit } from 'lodash';
 
 import {
   Issue,
+  Metadata,
   MongoRepository,
   PullRequest,
   Reaction,
-  Repository,
   TimelineEvent
 } from '@gittrends/database';
 
@@ -93,9 +93,9 @@ export default class IssuesHander extends AbstractRepositoryHandler {
         this.currentStage = Stages.GET_ISSUES_LIST;
 
         if (!this.issues.endCursor) {
-          this.issues.endCursor = await MongoRepository.get(Repository)
-            .collection.findOne({ _id: this.id }, { projection: { _metadata: 1 } })
-            .then((result) => get(result, ['_metadata', this.resource, 'endCursor']));
+          this.issues.endCursor = await MongoRepository.get(Metadata)
+            .collection.findOne({ _id: this.id })
+            .then((result) => get(result, [this.resource, 'endCursor']));
         }
 
         const includeMethod = (
@@ -322,20 +322,21 @@ export default class IssuesHander extends AbstractRepositoryHandler {
     );
 
     if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
-      await this.entityStorage
-        .persist()
-        .then(() =>
-          MongoRepository.get(Repository).collection.updateOne(
-            { _id: this.id },
-            { $set: { [`_metadata.${this.resource}.endCursor`]: this.issues.endCursor } }
-          )
-        );
+      await Promise.all([
+        this.entityStorage.persist(),
+        MongoRepository.get(Metadata).collection.updateOne(
+          { _id: this.id },
+          { $set: { [`${this.resource}.endCursor`]: this.issues.endCursor } },
+          { upsert: true }
+        )
+      ]);
     }
 
     if (this.isDone()) {
-      await MongoRepository.get(Repository).collection.updateOne(
+      await MongoRepository.get(Metadata).collection.updateOne(
         { _id: this.id },
-        { $set: { [`_metadata.${this.resource}.updatedAt`]: new Date() } }
+        { $set: { [`${this.resource}.updatedAt`]: new Date() } },
+        { upsert: true }
       );
     }
 

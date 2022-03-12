@@ -51,6 +51,8 @@ const repositoriesScheduler = async (
       const _resources = difference(resources, exclude);
 
       if (_resources.length > 0) {
+        count += 1;
+
         await queue.getJob(repo._id.toString()).then(async (job) => {
           const jobData = { id: repo._id.toString(), resources: _resources, ignored: exclude };
 

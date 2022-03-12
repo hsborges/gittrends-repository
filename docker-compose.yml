@@ -27,6 +27,22 @@ services:
         max-file: 5
         max-size: 10m
 
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    restart: unless-stopped
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - mq:/var/lib/rabbitmq
+    logging:
+      driver: local
+      options:
+        max-file: 5
+        max-size: 10m
+
 volumes:
   db:
-    name: gittrends.app
+    name: mongo.gittrends.app
+  mq:
+    name: mq.gittrends.app

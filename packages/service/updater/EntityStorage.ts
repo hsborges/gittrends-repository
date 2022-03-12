@@ -3,13 +3,16 @@
  */
 import { isEqual } from 'lodash';
 
-import { Entity, MongoRepository } from '@gittrends/database';
+import { Entity } from '@gittrends/database';
 import * as Entities from '@gittrends/database';
 
+import { useSharedConnection } from '../rabbitmq';
 import { Cache } from './Cache';
 
+type OperationTypes = 'insert' | 'upsert';
+
 export const EntityStorageMetadata: {
-  [key: symbol]: { cache?: boolean; operation: 'insert' | 'upsert' };
+  [key: symbol]: { cache?: boolean; operation: OperationTypes };
 } = {
   [Symbol.for(Entities.Actor.name)]: { cache: true, operation: 'insert' },
   [Symbol.for(Entities.Commit.name)]: { cache: true, operation: 'insert' },
@@ -22,7 +25,7 @@ export const EntityStorageMetadata: {
   [Symbol.for(Entities.PullRequest.name)]: { operation: 'upsert' },
   [Symbol.for(Entities.Reaction.name)]: { operation: 'insert' },
   [Symbol.for(Entities.Release.name)]: { cache: true, operation: 'insert' },
-  [Symbol.for(Entities.Repository.name)]: { operation: 'insert' },
+  [Symbol.for(Entities.Repository.name)]: { operation: 'upsert' },
   [Symbol.for(Entities.Stargazer.name)]: { operation: 'insert' },
   [Symbol.for(Entities.Tag.name)]: { cache: true, operation: 'insert' },
   [Symbol.for(Entities.TimelineEvent.name)]: { operation: 'insert' },
@@ -63,27 +66,32 @@ export class EntityStorage<T extends Entity> {
 
     const groups = entitiesGroup
       .reduce((memo, curr) => {
-        if (
-          !EntityStorageMetadata[Symbol.for(curr.constructor.name)]?.cache ||
-          !this.cache?.has(curr)
-        ) {
-          const key = Symbol.for(curr.constructor.name);
-          const data = memo.find((m) => m.key === key);
-          if (!data) memo.push({ key, entity: curr.constructor as new () => T, records: [curr] });
+        const entityMeta = EntityStorageMetadata[Symbol.for(curr.constructor.name)];
+        if (!entityMeta?.cache || !this.cache?.has(curr)) {
+          const entity = curr.constructor.name;
+          const data = memo.find((m) => m.entity === entity);
+          if (!data) memo.push({ entity, records: [curr], operation: entityMeta.operation });
           else data.records.push(curr);
         }
 
         return memo;
-      }, [] as { key: symbol; entity: new () => T; records: T[] }[])
+      }, [] as { entity: string; records: T[]; operation?: OperationTypes }[])
       .filter((group) => group.records.length > 0);
 
-    await Promise.all(
-      groups.map(async ({ entity, records }) => {
-        const entityMeta = EntityStorageMetadata[Symbol.for(entity.name)];
-        await MongoRepository.get(entity)[entityMeta.operation](records);
-        this.cache?.add(records);
-      })
-    );
+    const channel = await useSharedConnection();
+
+    await new Promise((resolve, reject) => {
+      channel.sendToQueue(
+        'entities',
+        Buffer.from(JSON.stringify(groups)),
+        { appId: 'EntityStorage', persistent: true },
+        (err) => (err ? reject(err) : resolve())
+      );
+    });
+
+    for (const { entity, records } of groups) {
+      if (EntityStorageMetadata[Symbol.for(entity)]?.cache) this.cache?.add(records);
+    }
 
     this.entities = this.entities.filter((e) => !entitiesGroup.includes(e));
   }

@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Release, MongoRepository, Repository } from '@gittrends/database';
+import { Release, MongoRepository, Metadata } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
@@ -15,9 +15,9 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.releases.endCursor) {
-      this.releases.endCursor = await MongoRepository.get(Repository)
-        .collection.findOne({ _id: this.id }, { projection: { _metadata: 1 } })
-        .then((res) => res && get(res, `_metadata.${ReleasesHandler.resource}.endCursor`));
+      this.releases.endCursor = await MongoRepository.get(Metadata)
+        .collection.findOne({ _id: this.id })
+        .then((res) => res && get(res, `${ReleasesHandler.resource}.endCursor`));
     }
 
     return this._component.includeReleases(this.releases.hasNextPage, {
@@ -41,20 +41,21 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     );
 
     if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
-      await this.entityStorage.persist().then(() =>
-        MongoRepository.get(Repository).collection.updateOne(
+      await Promise.all([
+        this.entityStorage.persist(),
+        MongoRepository.get(Metadata).collection.updateOne(
           { _id: this.id },
-          {
-            $set: { [`_metadata.${ReleasesHandler.resource}.endCursor`]: this.releases.endCursor }
-          }
+          { $set: { [`${ReleasesHandler.resource}.endCursor`]: this.releases.endCursor } },
+          { upsert: true }
         )
-      );
+      ]);
     }
 
     if (this.isDone()) {
-      await MongoRepository.get(Repository).collection.updateOne(
+      await MongoRepository.get(Metadata).collection.updateOne(
         { _id: this.id },
-        { $set: { [`_metadata.${ReleasesHandler.resource}.updatedAt`]: new Date() } }
+        { $set: { [`${ReleasesHandler.resource}.updatedAt`]: new Date() } },
+        { upsert: true }
       );
     }
   }

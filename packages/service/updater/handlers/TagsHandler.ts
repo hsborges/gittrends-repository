@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Tag, MongoRepository, Repository } from '@gittrends/database';
+import { Tag, MongoRepository, Metadata } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import AbstractRepositoryHandler from './AbstractRepositoryHandler';
@@ -15,9 +15,9 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.meta.endCursor) {
-      this.meta.endCursor = await MongoRepository.get(Repository)
-        .collection.findOne({ _id: this.id }, { projection: { _metadata: 1 } })
-        .then((res) => res && get(res, `_metadata.${TagsHandler.resource}.endCursor`));
+      this.meta.endCursor = await MongoRepository.get(Metadata)
+        .collection.findOne({ _id: this.id })
+        .then((res) => res && get(res, `${TagsHandler.resource}.endCursor`));
     }
 
     return this._component.includeTags(this.meta.hasNextPage, {
@@ -45,20 +45,21 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     );
 
     if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
-      await this.entityStorage
-        .persist()
-        .then(() =>
-          MongoRepository.get(Repository).collection.updateOne(
-            { _id: this.id },
-            { $set: { [`_metadata.${TagsHandler.resource}.endCursor`]: this.meta.endCursor } }
-          )
-        );
+      await Promise.all([
+        this.entityStorage.persist(),
+        MongoRepository.get(Metadata).collection.updateOne(
+          { _id: this.id },
+          { $set: { [`${TagsHandler.resource}.endCursor`]: this.meta.endCursor } },
+          { upsert: true }
+        )
+      ]);
     }
 
     if (this.isDone()) {
-      await MongoRepository.get(Repository).collection.updateOne(
+      await MongoRepository.get(Metadata).collection.updateOne(
         { _id: this.id },
-        { $set: { [`_metadata.${TagsHandler.resource}.updatedAt`]: new Date() } }
+        { $set: { [`${TagsHandler.resource}.updatedAt`]: new Date() } },
+        { upsert: true }
       );
     }
   }

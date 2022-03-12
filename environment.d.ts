@@ -8,6 +8,8 @@ declare global {
       GT_MONGO_URL?: string;
       GT_MONGO_POOL_SIZE?: string;
       GT_REDIS_URL?: string;
+      GT_RABBITMQ_URL?: string;
+      GT_RABBITMQ_PREFETCH?: string;
       GT_PROXY_URL?: string;
       GT_PROXY_TIMEOUT?: string;
       GT_PROXY_USER_AGENT?: string;

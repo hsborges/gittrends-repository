@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Stargazer, MongoRepository, Repository } from '@gittrends/database';
+import { Stargazer, MongoRepository, Metadata } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { GithubRequestError, RequestError } from '../../helpers/errors';
@@ -16,9 +16,9 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
   async component(): Promise<RepositoryComponent> {
     if (!this.meta.endCursor) {
-      this.meta.endCursor = await MongoRepository.get(Repository)
-        .collection.findOne({ _id: this.id }, { projection: { _metadata: 1 } })
-        .then((res) => res && get(res, `_metadata.${StargazersHandler.resource}.endCursor`));
+      this.meta.endCursor = await MongoRepository.get(Metadata)
+        .collection.findOne({ _id: this.id })
+        .then((res) => res && get(res, `${StargazersHandler.resource}.endCursor`));
     }
 
     return this._component.includeStargazers(this.meta.hasNextPage, {
@@ -48,20 +48,21 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     );
 
     if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
-      await this.entityStorage
-        .persist()
-        .then(() =>
-          MongoRepository.get(Repository).collection.updateOne(
-            { _id: this.id },
-            { $set: { [`_metadata.${StargazersHandler.resource}.endCursor`]: this.meta.endCursor } }
-          )
-        );
+      await Promise.all([
+        this.entityStorage.persist(),
+        MongoRepository.get(Metadata).collection.updateOne(
+          { _id: this.id },
+          { $set: { [`${StargazersHandler.resource}.endCursor`]: this.meta.endCursor } },
+          { upsert: true }
+        )
+      ]);
     }
 
     if (this.isDone()) {
-      await MongoRepository.get(Repository).collection.updateOne(
+      await MongoRepository.get(Metadata).collection.updateOne(
         { _id: this.id },
-        { $set: { [`_metadata.${StargazersHandler.resource}.updatedAt`]: new Date() } }
+        { $set: { [`${StargazersHandler.resource}.updatedAt`]: new Date() } },
+        { upsert: true }
       );
     }
   }

@@ -8,12 +8,14 @@ import consola from 'consola';
 import { isNil } from 'lodash';
 import fetch from 'node-fetch';
 
-import { connect, MongoRepository, ErrorLog } from '@gittrends/database';
+import { connect, MongoRepository, ErrorLog, Entity } from '@gittrends/database';
+import * as Entities from '@gittrends/database/dist/entities';
 
 import compact from './helpers/compact';
 import { RepositoryUpdateError } from './helpers/errors';
 import httpClient from './helpers/proxy-http-client';
 import { version } from './package.json';
+import { useSharedConnection } from './rabbitmq';
 import { useRedis } from './redis';
 import { ActorsUpdater } from './updater/ActorUpdater';
 import { Cache } from './updater/Cache';
@@ -31,6 +33,7 @@ program
   .version(version)
   .description('Update repositories metadata')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
+  .option('--write-workers [number]', 'Number of writing workers on message queue', Number, 1)
   .addOption(
     new Option('-t, --type [type]', 'Update "repositories" or "users"')
       .choices(['repositories', 'users'])
@@ -42,10 +45,42 @@ program
       process.exit(1);
     }
 
-    await connect();
+    const [, channel] = await Promise.all([connect(), useSharedConnection()]);
 
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
+
+    await Promise.all(
+      Array(options.writeWorkers ?? 1)
+        .fill(0)
+        .map(() =>
+          channel.consume(
+            'entities',
+            async (message) => {
+              if (message) {
+                const groups: {
+                  entity: string;
+                  records: Record<string, unknown>[];
+                  operation?: 'insert' | 'upsert';
+                }[] = JSON.parse(message?.content.toString() || '[]');
+
+                await Promise.all(
+                  groups.map(async ({ entity, records, operation }) => {
+                    const entityClass = (Entities as any)[entity] as new (...args: any[]) => Entity;
+                    const entitiesInstances = records.map((r) => new entityClass(r));
+                    await MongoRepository.get(entityClass)[operation || 'upsert'](
+                      entitiesInstances
+                    );
+                  })
+                );
+
+                channel.ack(message);
+              }
+            },
+            { noAck: false }
+          )
+        )
+    );
 
     const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
 

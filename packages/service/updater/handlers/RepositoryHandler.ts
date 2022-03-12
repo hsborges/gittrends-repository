@@ -3,7 +3,7 @@
  */
 import { get } from 'lodash';
 
-import { Repository, MongoRepository } from '@gittrends/database';
+import { Repository, Metadata, MongoRepository } from '@gittrends/database';
 
 import RepositoryComponent from '../../github/components/RepositoryComponent';
 import { GithubRequestError } from '../../helpers/errors';
@@ -51,30 +51,32 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
     this.topicsMeta.endCursor = topicsPageInfo.end_cursor ?? this.topicsMeta.endCursor;
 
     if (this.isDone()) {
-      const current = await MongoRepository.get(Repository).collection.findOne(
-        { _id: this.id },
-        { projection: { _metadata: 1 } }
+      this.entityStorage.add(
+        new Repository({
+          ...this.details,
+          languages: this.languagesMeta.items,
+          repository_topics: this.topicsMeta.items
+        })
       );
 
-      await this.entityStorage.persist().then(() =>
-        MongoRepository.get(Repository).upsert(
-          new Repository({
-            ...this.details,
-            languages: this.languagesMeta.items,
-            repository_topics: this.topicsMeta.items,
-            _metadata: { ...current?._metadata, repository: { updatedAt: new Date() } }
-          })
+      await Promise.all([
+        this.entityStorage.persist(),
+        MongoRepository.get(Metadata).collection.updateOne(
+          { _id: this.id },
+          { $set: { 'repository.updatedAt': new Date() } },
+          { upsert: true }
         )
-      );
+      ]);
     }
   }
 
   async error(err: Error): Promise<void> {
     if (err instanceof GithubRequestError && err.is('NOT_FOUND')) {
       this.removed = true;
-      await MongoRepository.get(Repository).collection.updateOne(
+      await MongoRepository.get(Metadata).collection.updateOne(
         { _id: this.id },
-        { $set: { '_metadata.removed': true, '_metadata.removed_at': new Date() } }
+        { $set: { removed: true, removedAt: new Date() } },
+        { upsert: true }
       );
       return;
     }
