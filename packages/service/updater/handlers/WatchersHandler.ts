@@ -41,14 +41,12 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
     );
 
     if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([
-        this.entityStorage.persist(),
-        MongoRepository.get(Metadata).collection.updateOne(
-          { _id: this.id },
-          { $set: { [`${WatchersHandler.resource}.endCursor`]: this.meta.endCursor } },
-          { upsert: true }
-        )
-      ]);
+      await this.entityStorage.persist();
+      await MongoRepository.get(Metadata).collection.updateOne(
+        { _id: this.id },
+        { $set: { [`${WatchersHandler.resource}.endCursor`]: this.meta.endCursor } },
+        { upsert: true }
+      );
     }
 
     if (this.isDone()) {

@@ -47,7 +47,8 @@ program
     const options = program.opts();
     consola.info(`Updating ${options.type} using ${options.workers} workers`);
 
-    const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
+    const cacheSize = parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10);
+    const cache = cacheSize > 0 ? new Cache(cacheSize) : undefined;
 
     const redis = useRedis();
 

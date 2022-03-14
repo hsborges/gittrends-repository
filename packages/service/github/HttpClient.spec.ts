@@ -1,3 +1,6 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import nock from 'nock';
 import * as fetch from 'node-fetch';
 

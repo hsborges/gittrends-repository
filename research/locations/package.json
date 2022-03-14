@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@gittrends/database": "file:../../packages/database",
-    "commander": "^8.1.0",
+    "commander": "^9.0.0",
     "consola": "^2.15.3",
     "fast-csv": "^4.3.6",
     "lodash": "^4.17.21",

@@ -141,8 +141,8 @@ export class RepositoryUpdater implements Updater {
               (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
             );
 
-            this.job?.updateProgress({ pending, done: difference(done, errors), errors });
-            this.job?.log(
+            await this.job?.updateProgress({ pending, done: difference(done, errors), errors });
+            await this.job?.log(
               `[${new Date().toISOString()}]: resource(s) updated (resources: ${this.filterDone(
                 pendingHandlers
               )

@@ -41,14 +41,12 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
     );
 
     if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([
-        this.entityStorage.persist(),
-        MongoRepository.get(Metadata).collection.updateOne(
-          { _id: this.id },
-          { $set: { [`${ReleasesHandler.resource}.endCursor`]: this.releases.endCursor } },
-          { upsert: true }
-        )
-      ]);
+      await this.entityStorage.persist();
+      await MongoRepository.get(Metadata).collection.updateOne(
+        { _id: this.id },
+        { $set: { [`${ReleasesHandler.resource}.endCursor`]: this.releases.endCursor } },
+        { upsert: true }
+      );
     }
 
     if (this.isDone()) {

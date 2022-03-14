@@ -193,7 +193,7 @@ program
     // await promises and finish script
     await schedulerFn().then(() =>
       options.cron
-        ? new Promise(() => new CronJob(options.cron, schedulerFn, null, true))
+        ? new Promise<void>((resolve) => new CronJob(options.cron, schedulerFn, resolve, true))
         : Promise.resolve()
     );
   })

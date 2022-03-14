@@ -39,19 +39,19 @@ module.exports = {
         PORT: process.env.GT_QUEUE_BOARD_PORT || 8082
       }
     },
-    {
-      name: 'scheduler',
-      interpreter: 'node',
-      interpreter_args: '-r @gittrends/env',
-      script: 'dist/scheduler.js',
-      args: ['all', '--wait', 48],
-      max_memory_restart: '100M',
-      env: {
-        PORT: process.env.GT_QUEUE_BOARD_PORT || 8082
-      },
-      autorestart: false,
-      cron_restart: process.env.GT_SCHEDULER_CRON || '0 */6 * * *'
-    },
+    // {
+    //   name: 'scheduler',
+    //   interpreter: 'node',
+    //   interpreter_args: '-r @gittrends/env',
+    //   script: 'dist/scheduler.js',
+    //   args: ['all', '--wait', 48],
+    //   max_memory_restart: '100M',
+    //   env: {
+    //     PORT: process.env.GT_QUEUE_BOARD_PORT || 8082
+    //   },
+    //   autorestart: false,
+    //   cron_restart: process.env.GT_SCHEDULER_CRON || '0 */6 * * *'
+    // },
     {
       name: 'persister',
       interpreter: 'node',

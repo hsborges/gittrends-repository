@@ -322,14 +322,12 @@ export default class IssuesHander extends AbstractRepositoryHandler {
     );
 
     if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
-      await Promise.all([
-        this.entityStorage.persist(),
-        MongoRepository.get(Metadata).collection.updateOne(
-          { _id: this.id },
-          { $set: { [`${this.resource}.endCursor`]: this.issues.endCursor } },
-          { upsert: true }
-        )
-      ]);
+      await this.entityStorage.persist();
+      await MongoRepository.get(Metadata).collection.updateOne(
+        { _id: this.id },
+        { $set: { [`${this.resource}.endCursor`]: this.issues.endCursor } },
+        { upsert: true }
+      );
     }
 
     if (this.isDone()) {

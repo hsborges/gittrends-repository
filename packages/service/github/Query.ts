@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { get } from 'lodash';
+import { get, uniq } from 'lodash';
 
 import compact from '../helpers/compact';
 import { RequestError } from '../helpers/errors';
@@ -28,16 +28,20 @@ export default class Query {
   compose(...components: Component[]): Query {
     this.components.push(...components);
 
-    const pushFragment = (fragments: Fragment[]) => {
-      fragments.forEach((fragment) => {
-        if (this.fragments.indexOf(fragment) < 0) {
-          this.fragments.push(fragment);
-          pushFragment(fragment.dependencies);
-        }
-      });
-    };
+    let candidates = uniq(components.reduce((memo: Fragment[], c) => memo.concat(c.fragments), []));
 
-    components.forEach((component) => pushFragment(component.fragments));
+    do {
+      candidates = candidates.filter((fragment) => this.fragments.indexOf(fragment) < 0);
+      this.fragments.push(...candidates);
+
+      candidates = uniq(
+        candidates.reduce(
+          (memo: Fragment[], c) =>
+            memo.concat(c.dependencies).filter((fragment) => this.fragments.indexOf(fragment) < 0),
+          []
+        )
+      );
+    } while (candidates.length > 0);
 
     return this;
   }

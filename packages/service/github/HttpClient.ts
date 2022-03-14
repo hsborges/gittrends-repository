@@ -3,7 +3,6 @@
  */
 import retry from 'async-retry';
 import fetch from 'node-fetch';
-import UserAgent from 'user-agents';
 
 export type HttpClientOpts = {
   protocol: string;
@@ -31,7 +30,7 @@ export default class HttpClient {
     this.baseUrl = new URL(`${opts.protocol}://${opts.host}:${opts.port || ''}`).toString();
     this.timeout = opts.timeout || 15000;
     this.retries = opts.retries || 0;
-    this.userAgent = opts.userAgent || new UserAgent().random().toString();
+    this.userAgent = opts.userAgent || '[GitTrends.app] My awesome app';
   }
 
   async request(data: string | Record<string, unknown>): Promise<HttpClientResponse> {
