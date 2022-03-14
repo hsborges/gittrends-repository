@@ -1,6 +1,6 @@
-import { MongoClient, MongoClientOptions } from 'mongodb';
+import { MongoClientOptions } from 'mongodb';
 
-import { connect, Actor, Entity, MongoRepository, Repository } from '@gittrends/database';
+import { Actor, Entity, MongoRepository, Repository } from '@gittrends/database';
 
 import { Cache } from './Cache';
 import { EntityStorage } from './EntityStorage';
@@ -21,7 +21,6 @@ jest.mock('mongodb', () => {
   };
 });
 
-let connection: MongoClient;
 let storage: EntityStorage<Entity>;
 
 const samples = {
@@ -34,13 +33,8 @@ const samples = {
   })
 };
 
-beforeAll(async () => {
-  connection = await connect();
-});
-
-afterAll(async () => {
-  await connection?.close();
-});
+beforeAll(async () => MongoRepository.connect());
+afterAll(async () => MongoRepository.close());
 
 beforeEach(async () => {
   storage = new EntityStorage();

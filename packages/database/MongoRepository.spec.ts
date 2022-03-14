@@ -1,5 +1,7 @@
+/*
+ *  Author: Hudson S. Borges
+ */
 import { IsOptional, IsString } from 'class-validator';
-import { MongoClient } from 'mongodb';
 
 import { MongoRepository } from './MongoRepository';
 import { Entity, EntityValidationError } from './entities';
@@ -20,19 +22,17 @@ class FakeNonWhitelistEntity extends FakeEntity {
 }
 
 describe('Test MongoRepository function', () => {
-  let connection: MongoClient;
   let entityRepository: MongoRepository<FakeEntity>;
 
   beforeAll(async () => {
     const connectionUrl = process.env['MONGO_URL'];
     if (!connectionUrl) throw new Error('Invalid mongodb connection url!');
-    connection = await MongoClient.connect(connectionUrl);
-    MongoRepository.db = connection.db();
+    await MongoRepository.connect(connectionUrl);
     entityRepository = MongoRepository.get(FakeEntity);
   });
 
   afterAll(async () => {
-    await connection.close();
+    await MongoRepository.close();
   });
 
   it('should validate entities before inserting', async () => {

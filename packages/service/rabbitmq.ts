@@ -1,29 +1,37 @@
-import amqp, { ConfirmChannel, Connection } from 'amqplib';
+/*
+ *  Author: Hudson S. Borges
+ */
+import { connect, Connection } from 'amqplib';
 
-export async function createConnection() {
-  return amqp.connect(process.env.GT_RABBITMQ_URL || 'amqp://localhost:5672');
+import * as Entities from '@gittrends/database/dist/entities';
+
+class RabbitMQClient {
+  private conn?: Connection;
+
+  private async connect() {
+    this.conn = await connect(process.env.GT_RABBITMQ_URL || 'amqp://localhost:5672');
+    this.conn.on('close', () => (this.conn = undefined));
+
+    const channel = await this.conn.createConfirmChannel();
+
+    await Promise.all(
+      Object.values(Entities)
+        .filter((E) => E !== Entities.Entity)
+        .map((E) =>
+          channel?.assertQueue(E.name, { durable: true, arguments: { 'x-queue-mode': 'lazy' } })
+        )
+    );
+
+    await channel.close();
+  }
+
+  async createChannel() {
+    if (!this.conn) await this.connect();
+    const channel = await this.conn?.createConfirmChannel();
+    if (!channel) throw Error('Erro connecting to message broker.');
+    return channel;
+  }
 }
 
-let connection: Connection | undefined;
-let channel: ConfirmChannel | undefined;
-
-export async function useSharedConnection() {
-  if (connection && channel) return channel;
-
-  connection = await createConnection();
-  channel = await connection.createConfirmChannel();
-
-  await Promise.all([
-    channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 10)),
-    channel.assertQueue('entities', { durable: true })
-  ]);
-
-  const originalClose = channel.close.bind(channel);
-  channel.close = () => {
-    connection = undefined;
-    channel = undefined;
-    return originalClose();
-  };
-
-  return channel;
-}
+const client = new RabbitMQClient();
+export const createChannel = client.createChannel.bind(client);

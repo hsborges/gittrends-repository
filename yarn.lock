@@ -1687,7 +1687,6 @@
   dependencies:
     class-transformer "0.4.0"
     class-validator "^0.13.2"
-    es6-shim "^0.35.6"
     lodash "^4.17.21"
     migrate-mongo "^8.2.3"
     mongo-url-parser "^1.0.1"
@@ -1701,7 +1700,6 @@
   dependencies:
     class-transformer "0.4.0"
     class-validator "^0.13.2"
-    es6-shim "^0.35.6"
     lodash "^4.17.21"
     migrate-mongo "^8.2.3"
     mongo-url-parser "^1.0.1"
@@ -2522,11 +2520,6 @@
   dependencies:
     "@types/node" "*"
     moment ">=2.14.0"
-
-"@types/es6-shim@^0.31.42":
-  version "0.31.42"
-  resolved "https://registry.yarnpkg.com/@types/es6-shim/-/es6-shim-0.31.42.tgz#710e4c48d2ebbf2517498c3307b41beed63fe1ef"
-  integrity sha512-GS3EuEgiGv/TP7bwPLOlkSiTfdSL4XHOj0jJuvz4/UbR89QrC4Py3lYlMlH/7w0dKfJ8fIori0rVIl2gQ7lb5A==
 
 "@types/eslint-scope@^3.7.0":
   version "3.7.1"
@@ -6675,11 +6668,6 @@ es6-set@^0.1.5, es6-set@~0.1.5:
     es6-iterator "~2.0.1"
     es6-symbol "3.1.1"
     event-emitter "~0.3.5"
-
-es6-shim@^0.35.6:
-  version "0.35.6"
-  resolved "https://registry.yarnpkg.com/es6-shim/-/es6-shim-0.35.6.tgz#d10578301a83af2de58b9eadb7c2c9945f7388a0"
-  integrity sha512-EmTr31wppcaIAgblChZiuN/l9Y7DPyw8Xtbg7fIVngn6zMW+IEBJDJngeKC3x6wr0V/vcA2wqeFnaw1bFJbDdA==
 
 es6-symbol@3.1.1:
   version "3.1.1"

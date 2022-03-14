@@ -8,7 +8,6 @@ import {
   classToPlain
 } from 'class-transformer';
 import { IsDefined, validateSync, ValidationError } from 'class-validator';
-import 'es6-shim';
 import { pick } from 'lodash';
 import 'reflect-metadata';
 

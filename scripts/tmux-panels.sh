@@ -15,5 +15,5 @@ tmux new-session -s 'gittrends-panels' -n 'pm2-runtime' \; \
   send-keys './node_modules/.bin/dotenv -c ${NODE_ENV-development} -- bash -c '"'"'mongostat -i --uri ${GT_MONGO_URL}'"'"'' C-m \; \
   resize-pane -y 3 \; \
   new-window -n 'pm2-monit' \; \
-  send-keys 'bash -c "sleep 15 && yarn workspace @gittrends/service pm2 monit"' C-m \; \
+  send-keys 'yarn workspace @gittrends/service pm2 monit' \; \
   select-window -t 1 \;

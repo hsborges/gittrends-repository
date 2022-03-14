@@ -9,7 +9,7 @@ import consola from 'consola';
 import express from 'express';
 import ip from 'ip';
 
-import { useRedis } from '../redis';
+import { useRedis } from '../helpers/redis';
 
 const port = process.env.PORT || 8082;
 const ipAddress = ip.address();

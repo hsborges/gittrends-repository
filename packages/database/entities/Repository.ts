@@ -9,7 +9,6 @@ import {
   IsDefined,
   IsInstance,
   IsInt,
-  IsObject,
   IsOptional,
   IsString,
   IsUrl,
@@ -275,9 +274,4 @@ export class Repository extends Entity {
   @IsOptional()
   @IsInt()
   watchers_count?: number;
-
-  // entity metadata
-  @IsOptional()
-  @IsObject()
-  _metadata?: Record<string, any>;
 }

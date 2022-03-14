@@ -40,18 +40,6 @@ module.exports = {
       }
     },
     {
-      name: 'pm2-webui',
-      interpreter: 'node',
-      script: 'pm2-webui',
-      max_memory_restart: '100M',
-      env: {
-        HOST: '0.0.0.0',
-        PORT: process.env.GT_PM2_WEBUI_PORT || 8083,
-        SESSION_SECRET: process.env.GT_PM2_WEBUI_SECRET || 12345,
-        APP_PASSWORD: process.env.GT_PM2_WEBUI_PASSWORD || 12345
-      }
-    },
-    {
       name: 'scheduler',
       interpreter: 'node',
       interpreter_args: '-r @gittrends/env',
@@ -65,21 +53,31 @@ module.exports = {
       cron_restart: process.env.GT_SCHEDULER_CRON || '0 */6 * * *'
     },
     {
+      name: 'persister',
+      interpreter: 'node',
+      interpreter_args: '--expose-gc -r @gittrends/env',
+      script: 'dist/updater-persist.js',
+      args: ['--workers', 2],
+      watch: ['dist/'],
+      max_memory_restart: '256M',
+      restart_delay: 2 * 1000
+    },
+    {
       name: 'repos',
       interpreter: 'node',
       interpreter_args: '--expose-gc -r @gittrends/env',
-      script: 'dist/updater.js',
+      script: 'dist/updater-collect.js',
       args: ['--workers', process.env.GT_UPDATER_REPOS_WORKERS || 1],
       instances: process.env.GT_UPDATER_REPOS_INSTANCES || 1,
       watch: ['dist/'],
       max_memory_restart: '512M',
-      restart_delay: 5 * 1000
+      restart_delay: 2 * 1000
     },
     {
       name: 'users',
       interpreter: 'node',
       interpreter_args: '--expose-gc -r @gittrends/env',
-      script: 'dist/updater.js',
+      script: 'dist/updater-collect.js',
       args: ['--type', 'users', '--workers', process.env.GT_UPDATER_USERS_WORKERS || 1],
       instances: process.env.GT_UPDATER_USERS_INSTANCES || 1,
       watch: ['dist/'],

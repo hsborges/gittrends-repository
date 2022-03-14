@@ -1,28 +1,45 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { ClassConstructor } from 'class-transformer';
-import 'es6-shim';
+import urlParser from 'mongo-url-parser';
 import { Collection, Db, Document } from 'mongodb';
-import 'reflect-metadata';
+import { MongoClient } from 'mongodb';
 
-import { Entity } from './entities';
+import { Entity } from './entities/Entity';
+import { CONNECTION_URL, POOL_SIZE } from './util/mongo-config';
 
 export class MongoRepository<T extends Entity> {
-  private static repositories: Record<string, MongoRepository<any>> = {};
-  public static db: Db;
+  private static conn?: MongoClient;
+  private static db?: Db;
 
-  private entityRef!: ClassConstructor<T>;
+  private constructor(private EntityRef: new (...args: any[]) => T) {}
+
+  public static async connect(url?: string, opts?: { poolSize: number }): Promise<MongoClient> {
+    if (this.conn) return this.conn;
+
+    this.conn = await MongoClient.connect(url || CONNECTION_URL, {
+      maxPoolSize: opts?.poolSize || POOL_SIZE
+    });
+
+    const { dbName } = urlParser(url || CONNECTION_URL);
+    this.db = this.conn.db(dbName);
+    const originalDb = this.conn.db.bind(this.conn);
+    this.conn.db = (providedName, options) => originalDb(providedName || dbName, options);
+
+    return this.conn;
+  }
+
+  public static async close(): Promise<void> {
+    this.db = undefined;
+    return this.conn?.close();
+  }
 
   public get collection(): Collection<Document> {
-    return MongoRepository.db?.collection((this.entityRef as any).__collection);
+    if (!MongoRepository.db) throw new Error('Not connected to a MongoDB instance!');
+    return MongoRepository.db?.collection((this.EntityRef as any).__collection);
   }
 
-  private constructor(entityRef: ClassConstructor<T>) {
-    this.entityRef = entityRef;
-  }
-
-  private validateAndTransform(object: T | T[]): Record<string, unknown>[] {
+  private validateAndTransform(object: T | T[]): T[] {
     return (Array.isArray(object) ? object : [object]).map((record) =>
       new (record.constructor as any)(record).toJSON()
     );
@@ -53,10 +70,7 @@ export class MongoRepository<T extends Entity> {
     );
   }
 
-  public static get<T extends Entity>(entityRef: ClassConstructor<T>): MongoRepository<T> {
-    if (!(entityRef.name in MongoRepository.repositories))
-      MongoRepository.repositories[entityRef.name] = new MongoRepository(entityRef);
-
-    return MongoRepository.repositories[entityRef.name];
+  public static get<T extends Entity>(entityRef: new (...args: any[]) => T): MongoRepository<T> {
+    return new MongoRepository(entityRef);
   }
 }

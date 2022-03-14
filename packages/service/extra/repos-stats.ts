@@ -6,18 +6,23 @@ import { startCase, difference, get } from 'lodash';
 import numeral from 'numeral';
 import { table } from 'table';
 
-import { connect, MongoRepository, Repository } from '@gittrends/database';
+import { Metadata, MongoRepository, Repository } from '@gittrends/database';
 
 import packageJson from '../package.json';
 
 (async () => {
-  const connection = await connect();
+  await MongoRepository.connect();
 
   const reposResources = difference(packageJson.config.resources, ['users']);
 
   const repositories = await MongoRepository.get(Repository)
-    .collection.find({}, { projection: { _id: 1, _metadata: 1 } })
-    .toArray();
+    .collection.find({}, { projection: { _id: 1 } })
+    .toArray()
+    .then((records) =>
+      Promise.all(
+        records.map((r) => MongoRepository.get(Metadata).collection.findOne({ _id: r._id }))
+      )
+    );
 
   if (repositories.length === 0) throw new Error('Database is empty!');
 
@@ -26,11 +31,11 @@ import packageJson from '../package.json';
   // eslint-disable-next-line no-restricted-syntax, guard-for-in
   for (const resource of reposResources) {
     const updatedRepos = repositories
-      .filter((repo) => get(repo, ['_metadata', resource, 'updatedAt']))
-      .map((repo) => repo._id);
+      .filter((repo) => repo && get(repo, [resource, 'updatedAt']))
+      .map((repo) => repo?._id);
 
     const updating = difference(
-      repositories.filter((repo) => get(repo, ['_metadata', resource])).map((repo) => repo._id),
+      repositories.filter((repo) => get(repo, resource)).map((repo) => repo?._id),
       updatedRepos
     ).length;
 
@@ -47,7 +52,7 @@ import packageJson from '../package.json';
     ]);
   }
 
-  await connection.close();
+  await MongoRepository.close();
 
   return data.sort((a, b) => a[0].localeCompare(b[0]));
 })()

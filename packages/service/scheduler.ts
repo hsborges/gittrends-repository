@@ -8,10 +8,10 @@ import { CronJob } from 'cron';
 import dayjs from 'dayjs';
 import { difference, chunk, intersection, get, isNil } from 'lodash';
 
-import { connect, Actor, MongoRepository, Repository } from '@gittrends/database';
+import { Actor, MongoRepository, Repository } from '@gittrends/database';
 
+import { useRedis } from './helpers/redis';
 import { version, config } from './package.json';
-import { useRedis } from './redis';
 
 /* COMMANDS */
 function resourcesParser(resources: string[], exclude?: string[]): string[] {
@@ -121,9 +121,11 @@ type UsersJob = {
 const scheduler = async (options: SchedulerOptions) => {
   consola.info(`Scheduling ${options.resources.join(', ')} ...`);
 
+  const redis = useRedis();
+
   async function prepareQueue<T>(name: string, removeOnComplete = false, removeOnFail = false) {
     const queue = new Queue<T>(name, {
-      connection: useRedis(),
+      connection: redis,
       sharedConnection: true,
       defaultJobOptions: { attempts: 3, removeOnComplete, removeOnFail }
     });
@@ -159,7 +161,9 @@ const scheduler = async (options: SchedulerOptions) => {
   }
 
   // await promises and finish script
-  return Promise.all(promises).finally(() => queue.close());
+  return Promise.all(promises)
+    .finally(() => queue.close())
+    .finally(() => redis.disconnect());
 };
 
 /* Script entry point */
@@ -172,12 +176,11 @@ program
   .option('--cron [pattern]', 'Execute scheduler according to the pattern')
   .option('--destroy-queue', 'Destroy queue before scheduling resources')
   .option('--exclude [resource]', 'Exclude a given resource from scheduler')
+  .hook('preAction', () => MongoRepository.connect().then())
+  .hook('postAction', () => MongoRepository.close())
   .action(async (resource: string = 'all', other: string[]): Promise<void> => {
     const options = program.opts();
     const resources = resourcesParser([resource, ...other], options.exclude?.split(',') || []);
-
-    // connect to database
-    const connection = await connect();
 
     const schedulerFn = () =>
       scheduler({
@@ -188,14 +191,10 @@ program
       });
 
     // await promises and finish script
-    await schedulerFn()
-      .then(() =>
-        options.cron
-          ? new Promise(() => new CronJob(options.cron, schedulerFn, null, true))
-          : Promise.resolve()
-      )
-      .catch((err) => consola.error(err))
-      .finally(() => connection.close())
-      .finally(() => process.exit(0));
+    await schedulerFn().then(() =>
+      options.cron
+        ? new Promise(() => new CronJob(options.cron, schedulerFn, null, true))
+        : Promise.resolve()
+    );
   })
-  .parse(process.argv);
+  .parseAsync(process.argv);

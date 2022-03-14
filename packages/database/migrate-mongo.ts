@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { CONNECTION_URL } from './mongo-config';
+import { CONNECTION_URL } from './util/mongo-config';
 
 export = {
   mongodb: {

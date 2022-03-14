@@ -6,7 +6,7 @@ import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import { chain, get, isNil, min, negate, uniqBy } from 'lodash';
 
-import { connect, Actor, Repository, MongoRepository } from '@gittrends/database';
+import { Actor, Repository, MongoRepository } from '@gittrends/database';
 
 import SearchComponent from './github/components/SearchComponent';
 import Query from './github/Query';
@@ -112,6 +112,8 @@ program
       .default('desc')
   )
   .addArgument(new Argument('[name]', 'Find using a repository name (or fragment)'))
+  .hook('preAction', () => MongoRepository.connect().then())
+  .hook('postAction', () => MongoRepository.close())
   .action(async (repositoryName, options) => {
     const multibar = new MultiBar(
       {
@@ -125,8 +127,6 @@ program
     const maxStr = options.maxStargazers || '*';
 
     consola.info(`Searching for repositories with ${minStr}..${maxStr} stars on GitHub ...`);
-
-    const connection = await connect();
 
     return Promise.all(
       new Array(options.workers).fill(0).map((_, index) => {
@@ -190,7 +190,6 @@ program
       })
       .then(() => consola.success('Repositories successfully added!'))
       .catch((err) => consola.error(err))
-      .finally(() => multibar.stop())
-      .finally(() => connection.close());
+      .finally(() => multibar.stop());
   })
-  .parse(process.argv);
+  .parseAsync(process.argv);

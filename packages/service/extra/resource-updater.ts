@@ -3,7 +3,7 @@
  */
 import { program, Option, Argument } from 'commander';
 
-import { connect, Actor, MongoRepository, Repository } from '@gittrends/database';
+import { Actor, MongoRepository, Repository } from '@gittrends/database';
 
 import httpClient from '../helpers/proxy-http-client';
 import { config } from '../package.json';
@@ -33,6 +33,8 @@ async function updateActor(resourceId: string): Promise<void> {
 /* execute */
 program
   .description('Update an specific resource')
+  .hook('preAction', () => MongoRepository.connect().then())
+  .hook('postAction', () => MongoRepository.close())
   .addOption(
     new Option('-r, --resource [string]')
       .choices(config.resources)
@@ -47,12 +49,10 @@ program
   .action(async (resourceId: string): Promise<void> => {
     const opts: { resource: string[] } = program.opts();
 
-    await connect().then((connection) =>
-      Promise.resolve(() => {
-        if (opts.resource.length === 1 && opts.resource[0] === 'users')
-          return updateActor(resourceId);
-        return updateRepositoryResource(resourceId, opts.resource);
-      }).finally(() => connection.close())
-    );
+    await Promise.resolve(() => {
+      if (opts.resource.length === 1 && opts.resource[0] === 'users')
+        return updateActor(resourceId);
+      return updateRepositoryResource(resourceId, opts.resource);
+    });
   })
-  .parse(process.argv);
+  .parseAsync(process.argv);

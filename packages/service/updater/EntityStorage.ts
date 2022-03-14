@@ -1,36 +1,21 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { isEqual } from 'lodash';
-
 import { Entity } from '@gittrends/database';
 import * as Entities from '@gittrends/database';
 
-import { useSharedConnection } from '../rabbitmq';
+import { createChannel } from '../rabbitmq';
 import { Cache } from './Cache';
 
 type OperationTypes = 'insert' | 'upsert';
 
-export const EntityStorageMetadata: {
-  [key: symbol]: { cache?: boolean; operation: OperationTypes };
-} = {
-  [Symbol.for(Entities.Actor.name)]: { cache: true, operation: 'insert' },
-  [Symbol.for(Entities.Commit.name)]: { cache: true, operation: 'insert' },
-  [Symbol.for(Entities.Dependency.name)]: { operation: 'insert' },
-  [Symbol.for(Entities.ErrorLog.name)]: { operation: 'insert' },
-  [Symbol.for(Entities.GithubToken.name)]: { operation: 'insert' },
-  [Symbol.for(Entities.Issue.name)]: { operation: 'upsert' },
-  [Symbol.for(Entities.Location.name)]: { cache: true, operation: 'insert' },
-  [Symbol.for(Entities.Milestone.name)]: { cache: true, operation: 'upsert' },
-  [Symbol.for(Entities.PullRequest.name)]: { operation: 'upsert' },
-  [Symbol.for(Entities.Reaction.name)]: { operation: 'insert' },
-  [Symbol.for(Entities.Release.name)]: { cache: true, operation: 'insert' },
-  [Symbol.for(Entities.Repository.name)]: { operation: 'upsert' },
-  [Symbol.for(Entities.Stargazer.name)]: { operation: 'insert' },
-  [Symbol.for(Entities.Tag.name)]: { cache: true, operation: 'insert' },
-  [Symbol.for(Entities.TimelineEvent.name)]: { operation: 'insert' },
-  [Symbol.for(Entities.Watcher.name)]: { operation: 'insert' }
-};
+export const CACHABLE_ENTITIES = [
+  Entities.Actor,
+  Entities.Commit,
+  Entities.Location,
+  Entities.Release,
+  Entities.Tag
+].map((e) => e.name);
 
 export class EntityStorage<T extends Entity> {
   private readonly cache?: Cache;
@@ -42,11 +27,9 @@ export class EntityStorage<T extends Entity> {
 
   add(records: T | T[]): void {
     const filteredRecords = (Array.isArray(records) ? records : [records])
+      .filter((r) => !(CACHABLE_ENTITIES.indexOf(r.constructor.name) >= 0 && this.cache?.has(r)))
       .filter(
-        (r) => !(EntityStorageMetadata[Symbol.for(r.constructor.name)]?.cache && this.cache?.has(r))
-      )
-      .filter(
-        (r) => !this.entities.find((e) => e.constructor === r.constructor && isEqual(e._id, r._id))
+        (r) => !this.entities.find((e) => e.constructor === r.constructor && e._id === r._id)
       );
     this.entities.push(...filteredRecords);
   }
@@ -66,11 +49,9 @@ export class EntityStorage<T extends Entity> {
 
     const groups = entitiesGroup
       .reduce((memo, curr) => {
-        const entityMeta = EntityStorageMetadata[Symbol.for(curr.constructor.name)];
-        if (!entityMeta?.cache || !this.cache?.has(curr)) {
-          const entity = curr.constructor.name;
-          const data = memo.find((m) => m.entity === entity);
-          if (!data) memo.push({ entity, records: [curr], operation: entityMeta.operation });
+        if (!CACHABLE_ENTITIES.indexOf(curr.constructor.name) || !this.cache?.has(curr)) {
+          const data = memo.find((m) => m.entity === curr.constructor.name);
+          if (!data) memo.push({ entity: curr.constructor.name, records: [curr] });
           else data.records.push(curr);
         }
 
@@ -78,19 +59,21 @@ export class EntityStorage<T extends Entity> {
       }, [] as { entity: string; records: T[]; operation?: OperationTypes }[])
       .filter((group) => group.records.length > 0);
 
-    const channel = await useSharedConnection();
-
-    await new Promise((resolve, reject) => {
-      channel.sendToQueue(
-        'entities',
-        Buffer.from(JSON.stringify(groups)),
-        { appId: 'EntityStorage', persistent: true },
-        (err) => (err ? reject(err) : resolve())
-      );
-    });
+    const channel = await createChannel();
 
     for (const { entity, records } of groups) {
-      if (EntityStorageMetadata[Symbol.for(entity)]?.cache) this.cache?.add(records);
+      channel.sendToQueue(entity, Buffer.from(JSON.stringify(records)), {
+        appId: 'EntityStorage',
+        persistent: true
+      });
+
+      await channel.waitForConfirms();
+    }
+
+    await channel.close();
+
+    for (const { entity, records } of groups) {
+      if (CACHABLE_ENTITIES.indexOf(entity)) this.cache?.add(records);
     }
 
     this.entities = this.entities.filter((e) => !entitiesGroup.includes(e));
