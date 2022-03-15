@@ -5,10 +5,10 @@ import urlParser from 'mongo-url-parser';
 import { Collection, Db, Document } from 'mongodb';
 import { MongoClient } from 'mongodb';
 
-import { Entity } from './entities/Entity';
+import Entity from './entities/Entity';
 import { CONNECTION_URL, POOL_SIZE } from './util/mongo-config';
 
-export class MongoRepository<T extends Entity> {
+export default class MongoRepository<T extends Entity> {
   private static conn?: MongoClient;
   private static db?: Db;
 
@@ -40,8 +40,8 @@ export class MongoRepository<T extends Entity> {
   }
 
   private validateAndTransform(object: T | T[]): T[] {
-    return (Array.isArray(object) ? object : [object]).map((record) =>
-      new (record.constructor as any)(record).toJSON()
+    return (Array.isArray(object) ? object : [object]).map(
+      (record) => new (record.constructor as any)(record.toJSON())
     );
   }
 
@@ -50,7 +50,9 @@ export class MongoRepository<T extends Entity> {
 
     await this.collection
       .bulkWrite(
-        this.validateAndTransform(object).map((record) => ({ insertOne: { document: record } })),
+        this.validateAndTransform(object).map((record: any) => ({
+          insertOne: { document: record }
+        })),
         { ordered: false }
       )
       .catch((err) => {

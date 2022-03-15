@@ -1,21 +1,21 @@
 /*
  *  Author: Hudson S. Borges
  */
-export * from './Actor';
-export * from './Commit';
-export * from './Dependency';
-export * from './Entity';
-export * from './ErrorLog';
-export * from './GithubToken';
-export * from './Issue';
-export * from './Location';
-export * from './Metadata';
-export * from './Milestone';
-export * from './PullRequest';
-export * from './Reaction';
-export * from './Release';
-export * from './Repository';
-export * from './Stargazer';
-export * from './Tag';
-export * from './TimelineEvent';
-export * from './Watcher';
+export { default as Actor } from './Actor';
+export { default as Commit } from './Commit';
+export { default as Dependency } from './Dependency';
+export { default as Entity } from './Entity';
+export { default as ErrorLog } from './ErrorLog';
+export { default as GithubToken } from './GithubToken';
+export { default as Issue } from './Issue';
+export { default as Location } from './Location';
+export { default as Metadata } from './Metadata';
+export { default as Milestone } from './Milestone';
+export { default as PullRequest } from './PullRequest';
+export { default as Reaction } from './Reaction';
+export { default as Release } from './Release';
+export { default as Repository } from './Repository';
+export { default as Stargazer } from './Stargazer';
+export { default as Tag } from './Tag';
+export { default as TimelineEvent } from './TimelineEvent';
+export { default as Watcher } from './Watcher';

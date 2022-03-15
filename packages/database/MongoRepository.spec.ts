@@ -1,24 +1,31 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { IsOptional, IsString } from 'class-validator';
+import Joi, { ObjectSchema } from 'joi';
 
-import { MongoRepository } from './MongoRepository';
-import { Entity, EntityValidationError } from './entities';
+import Entity, { EntityValidationError } from './entities/Entity';
+import MongoRepository from './MongoRepository';
 
 class FakeEntity extends Entity {
   public static __collection = 'FakeEntity';
 
-  @IsOptional()
-  @IsString()
   field?: string;
 
-  extraField?: number;
+  public get __schema(): ObjectSchema<FakeEntity> {
+    return Joi.object({
+      _id: Joi.string().required(),
+      field: Joi.string()
+    });
+  }
 }
 
 class FakeNonWhitelistEntity extends FakeEntity {
   public static __collection = 'FakeNonWhitelistEntity';
-  public static __whitelist = false;
+  public static __strip_unknown: boolean = false;
+
+  public get __schema(): ObjectSchema<FakeNonWhitelistEntity> {
+    return super.__schema.append({});
+  }
 }
 
 describe('Test MongoRepository function', () => {
@@ -56,7 +63,7 @@ describe('Test MongoRepository function', () => {
     const entity = new FakeEntity(plainData);
     await expect(entityRepository.insert(entity)).resolves.not.toThrow();
     const insertedEntity = entityRepository.collection.findOne({ _id: 'extra_field' });
-    await expect(insertedEntity).resolves.not.toHaveProperty('extraField', plainData.extraField);
+    await expect(insertedEntity).resolves.not.toHaveProperty('extraField');
   });
 
   it('should persist extra fields', async () => {

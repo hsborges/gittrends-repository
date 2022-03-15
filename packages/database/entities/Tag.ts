@@ -1,45 +1,43 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Type } from 'class-transformer';
-import { IsDefined, IsInstance, IsOptional, IsString, ValidateNested } from 'class-validator';
+import Joi from 'joi';
 
-import { CommitActor } from './Commit';
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class Tag extends Entity {
+export default class Tag extends Entity {
   // Protected fields
   static readonly __id_fields = 'id';
   static readonly __collection = 'tags';
 
   // Entity fields
-  @IsDefined()
-  @IsString()
   _id!: string;
-
-  @IsDefined()
-  @IsString()
   repository!: string;
-
-  @IsDefined()
-  @IsString()
   name!: string;
-
-  @IsOptional()
-  @IsString()
   oid?: string;
-
-  @IsOptional()
-  @IsString()
   message?: string;
-
-  @IsOptional()
-  @IsInstance(CommitActor)
-  @ValidateNested()
-  @Type(() => CommitActor)
-  tagger?: CommitActor;
-
-  @IsOptional()
-  @IsString()
+  tagger?: {
+    date: Date;
+    email?: string;
+    name?: string;
+    user?: string;
+  };
   target?: string;
+
+  public get __schema(): Joi.ObjectSchema<Tag> {
+    return Joi.object<Tag>({
+      _id: Joi.string().required(),
+      repository: Joi.string().required(),
+      name: Joi.string().required(),
+      oid: Joi.string(),
+      message: Joi.string(),
+      tagger: Joi.object({
+        date: Joi.date().required(),
+        email: Joi.string(),
+        name: Joi.string(),
+        user: Joi.string()
+      }),
+      target: Joi.string()
+    });
+  }
 }

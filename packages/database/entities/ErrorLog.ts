@@ -1,68 +1,30 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Type } from 'class-transformer';
-import { IsBoolean, IsDate, IsDefined, IsNumber, IsOptional, IsString } from 'class-validator';
+import Joi from 'joi';
 import { pick } from 'lodash';
 import stackTrace from 'stack-trace';
 import { v4 } from 'uuid';
 
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class ErrorLog extends Entity {
+export default class ErrorLog extends Entity {
   // Protected fields
   static readonly __id_fields = '_id';
   static readonly __collection = '_errors';
-  static readonly __whitelist = false;
 
   // Entity fields
-  @IsDefined()
-  @IsString()
   _id!: string;
-
-  @IsOptional()
-  @IsString()
   name?: string;
-
-  @IsOptional()
-  @IsString()
   type_name?: string;
-
-  @IsOptional()
-  @IsString()
   funtion_name?: string;
-
-  @IsOptional()
-  @IsString()
   method_name?: string;
-
-  @IsOptional()
-  @IsString()
   file_name?: string;
-
-  @IsOptional()
-  @IsNumber()
   line_number?: number;
-
-  @IsOptional()
-  @IsNumber()
   column_number?: number;
-
-  @IsOptional()
-  @IsBoolean()
   is_native?: boolean;
-
-  @IsDefined()
-  @IsString()
   message!: string;
-
-  @IsDefined()
-  @IsString()
   stack!: string;
-
-  @IsDefined()
-  @IsDate()
-  @Type(() => Date)
   created_at: Date = new Date();
 
   public static from(error: Error): ErrorLog {
@@ -84,5 +46,22 @@ export class ErrorLog extends Entity {
     data.type_name = stack.getTypeName();
 
     return new ErrorLog(data);
+  }
+
+  public get __schema(): Joi.ObjectSchema<ErrorLog> {
+    return Joi.object({
+      _id: Joi.string().required(),
+      name: Joi.string(),
+      type_name: Joi.string(),
+      funtion_name: Joi.string(),
+      method_name: Joi.string(),
+      file_name: Joi.string(),
+      line_number: Joi.number(),
+      column_number: Joi.number(),
+      is_native: Joi.boolean(),
+      message: Joi.string(),
+      stack: Joi.string(),
+      created_at: Joi.date()
+    });
   }
 }

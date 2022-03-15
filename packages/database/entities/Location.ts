@@ -1,45 +1,35 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { IsDefined, IsOptional, IsString } from 'class-validator';
+import Joi from 'joi';
 
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class Location extends Entity {
+export default class Location extends Entity {
   // Protected fields
   static readonly __id_fields = 'location';
   static readonly __collection = 'locations';
 
   // Entity fields
-  @IsDefined()
-  @IsString()
   _id!: string;
-
-  @IsOptional()
-  @IsString()
   label?: string;
-
-  @IsOptional()
-  @IsString()
   country_code?: string;
-
-  @IsOptional()
-  @IsString()
   country_name?: string;
-
-  @IsOptional()
-  @IsString()
   state_code?: string;
-
-  @IsOptional()
-  @IsString()
   state?: string;
-
-  @IsOptional()
-  @IsString()
   county?: string;
-
-  @IsOptional()
-  @IsString()
   city?: string;
+
+  public get __schema(): Joi.ObjectSchema<Location> {
+    return Joi.object<Location>({
+      _id: Joi.string().required(),
+      label: Joi.string(),
+      country_code: Joi.string(),
+      country_name: Joi.string(),
+      state_code: Joi.string(),
+      state: Joi.string(),
+      county: Joi.string(),
+      city: Joi.string()
+    });
+  }
 }

@@ -1,68 +1,51 @@
 /*
  *  Author: Hudson S. Borges
  */
-import {
-  ClassConstructor,
-  Exclude,
-  plainToClass,
-  classToPlain
-} from 'class-transformer';
-import { IsDefined, validateSync, ValidationError } from 'class-validator';
-import { pick } from 'lodash';
-import 'reflect-metadata';
+import Joi from 'joi';
+import { cloneDeep, omit, pick } from 'lodash';
 
 export class EntityValidationError extends Error {
-  public readonly errors!: ValidationError[];
+  public readonly errors!: string[];
 
-  constructor(errors: ValidationError[]) {
+  constructor(errors: string[]) {
     super(`Entity validation error.\n${JSON.stringify(errors)}`);
     this.errors = errors;
   }
 }
 
-function validate<T extends Entity>(entity: T): ValidationError[] {
-  return validateSync(entity, {
-    whitelist: (entity.constructor as typeof Entity)?.__whitelist ?? true
-  });
-}
-
-function plainToEntity<T extends Entity>(
-  entity: ClassConstructor<T>,
-  object: Record<string, unknown>
-): T {
-  if (!object._id) {
-    const idFields = entity.prototype.constructor?.__id_fields;
-    object._id = Array.isArray(idFields) ? pick(object, idFields) : object[idFields];
-  }
-
-  const classEntity = plainToClass(entity, object);
-
-  const errors = validate(classEntity);
-  if (errors?.length) throw new EntityValidationError(errors);
-
-  return classEntity;
-}
-
-
-export abstract class Entity {
-  @Exclude()
+export default abstract class Entity {
   static readonly __id_fields: string | string[];
-
-  @Exclude()
   static readonly __collection: string;
-
-  @Exclude()
-  static readonly __whitelist: boolean = true;
+  static readonly __strip_unknown: boolean = true;
 
   constructor(object?: Record<any, unknown>) {
-    if (object) Object.assign(this, plainToEntity(this.constructor as any, object));
+    if (object) Object.assign(this, this.validate(object));
   }
 
-  @IsDefined()
-  _id!: any;
+  _id!: string | Record<string, unknown>;
 
-  @Exclude()
   public toJSON(): Record<any, unknown> {
-    return classToPlain(this);
+    return omit(cloneDeep(this));
+  }
+
+  public abstract get __schema(): Joi.ObjectSchema;
+
+  protected validate(object: Record<string, unknown>): Record<string, unknown> {
+    if (!object._id) {
+      const idFields = (this.constructor as any)?.__id_fields;
+      object._id = Array.isArray(idFields) ? pick(object, idFields) : object[idFields];
+    }
+
+    const stripUnknown = (this.constructor as any).__strip_unknown;
+    const { error, value } = this.__schema.validate(object, {
+      convert: true,
+      abortEarly: false,
+      stripUnknown: stripUnknown,
+      allowUnknown: !stripUnknown
+    });
+
+    if (error) throw new EntityValidationError(error.details.map((e) => e.message));
+
+    return value;
   }
 }

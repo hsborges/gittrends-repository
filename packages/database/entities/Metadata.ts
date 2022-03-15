@@ -1,20 +1,26 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { IsDefined, IsString } from 'class-validator';
+import Joi from 'joi';
 
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class Metadata extends Entity {
+export default class Metadata extends Entity {
   // Protected fields
   static readonly __id_fields = 'id';
   static readonly __collection = 'metadata';
-  static readonly __whitelist = false;
+  static readonly __strip_unknown: boolean = false;
 
   // Entity fields
-  @IsDefined()
-  @IsString()
   _id!: string;
+  _type!: string;
 
   [key: string]: any;
+
+  public get __schema(): Joi.ObjectSchema<Metadata> {
+    return Joi.object<Metadata>({
+      _id: Joi.string().required(),
+      _type: Joi.string().required()
+    });
+  }
 }

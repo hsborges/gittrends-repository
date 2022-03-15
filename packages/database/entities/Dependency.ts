@@ -1,62 +1,25 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsDefined,
-  IsInstance,
-  IsObject,
-  IsOptional,
-  IsString,
-  ValidateIf,
-  ValidateNested
-} from 'class-validator';
-import { isString } from 'lodash';
+import Joi from 'joi';
 
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class DependencyId {
-  @IsDefined()
-  @IsString()
-  repository!: string;
-
-  @IsDefined()
-  @IsString()
-  manifest!: string;
-
-  @IsDefined()
-  @IsString()
-  package_name!: string;
-}
-
-export class Dependency extends Entity {
+export default class Dependency extends Entity {
   // Protected fields
   static readonly __id_fields = ['repository', 'manifest', 'package_name'];
   static readonly __collection = 'dependencies';
 
   // Entity fields
-  @IsDefined()
-  @IsInstance(DependencyId)
-  @ValidateNested()
-  @Type(() => DependencyId)
-  _id!: DependencyId;
+  _id!: {
+    repository: string;
+    manifest: string;
+    package_name: string;
+  };
 
-  @IsOptional()
-  @IsString()
   filename?: string;
-
-  @IsOptional()
-  @IsBoolean()
   has_dependencies?: boolean;
-
-  @IsOptional()
-  @IsString()
   package_manager?: string;
-
-  @IsOptional()
-  @IsObject()
-  @ValidateIf((_, v) => !isString(v))
   target_repository?:
     | {
         id: string;
@@ -64,8 +27,27 @@ export class Dependency extends Entity {
         name_with_owner: string;
       }
     | string;
-
-  @IsOptional()
-  @IsString()
   requirements?: string;
+
+  public get __schema(): Joi.ObjectSchema<Dependency> {
+    return Joi.object<Dependency>({
+      _id: Joi.object({
+        repository: Joi.string().required(),
+        manifest: Joi.string().required(),
+        package_name: Joi.string().required()
+      }).required(),
+      filename: Joi.string(),
+      has_dependencies: Joi.boolean(),
+      package_manager: Joi.string(),
+      target_repository: Joi.alternatives(
+        Joi.object({
+          id: Joi.string().required(),
+          database_id: Joi.number().required(),
+          name_with_owner: Joi.string().required()
+        }),
+        Joi.string()
+      ),
+      requirements: Joi.string()
+    });
+  }
 }

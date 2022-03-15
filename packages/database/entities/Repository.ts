@@ -1,277 +1,139 @@
-/*
- *  Author: Hudson S. Borges
- */
-import { Type } from 'class-transformer';
-import {
-  IsArray,
-  IsBoolean,
-  IsDate,
-  IsDefined,
-  IsInstance,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUrl,
-  ValidateNested
-} from 'class-validator';
+/* *  Author: Hudson S. Borges */
+import Joi from 'joi';
 
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class RepositoryFoundingLink {
-  @IsDefined()
-  @IsString()
-  url!: string;
-
-  @IsOptional()
-  @IsString()
-  platform?: string;
-}
-
-export class RepositoryLanguage {
-  @IsDefined()
-  @IsString()
-  language!: string;
-
-  @IsDefined()
-  @IsInt()
-  size!: number;
-}
-
-export class Repository extends Entity {
+export default class Repository extends Entity {
   // Protected fields
   static readonly __id_fields = 'id';
   static readonly __collection = 'repositories';
 
   // Entity fields
-  @IsDefined()
-  @IsString()
   _id!: string;
-
-  @IsOptional()
-  @IsInt()
   assignable_users_count?: number;
-
-  @IsOptional()
-  @IsString()
   code_of_conduct?: string;
-
-  @IsOptional()
-  @IsString()
   contact_links?: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   created_at?: Date;
-
-  @IsOptional()
-  @IsInt()
   database_id?: number;
-
-  @IsOptional()
-  @IsString()
   default_branch?: string;
-
-  @IsOptional()
-  @IsBoolean()
   delete_branch_on_merge?: boolean;
-
-  @IsOptional()
-  @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsInt()
   disk_usage?: number;
-
-  @IsOptional()
-  @IsInt()
   forks_count?: number;
-
-  @IsOptional()
-  @IsInstance(RepositoryFoundingLink, { each: true })
-  @ValidateNested({ each: true })
-  @Type(() => RepositoryFoundingLink)
-  funding_links?: RepositoryFoundingLink[];
-
-  @IsOptional()
-  @IsBoolean()
+  funding_links?: Array<{ url: string; platform?: string }>;
   has_issues_enabled?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   has_projects_enabled?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   has_wiki_enabled?: boolean;
-
-  @IsOptional()
-  @IsString()
   homepage_url?: string;
-
-  @IsOptional()
-  @IsBoolean()
   is_archived?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_blank_issues_enabled?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_disabled?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_empty?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_fork?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_in_organization?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_locked?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_mirror?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_private?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_security_policy_enabled?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_template?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_user_configuration_repository?: boolean;
-
-  @IsOptional()
-  @IsInt()
   issues_count?: number;
-
-  @IsOptional()
-  @IsInt()
   labels_count?: number;
-
-  @IsOptional()
-  @IsInstance(RepositoryLanguage, { each: true })
-  @ValidateNested({ each: true })
-  @Type(() => RepositoryLanguage)
-  languages?: RepositoryLanguage[];
-
-  @IsOptional()
-  @IsString()
+  languages?: Array<{ language: string; size: number }>;
   license_info?: string;
-
-  @IsOptional()
-  @IsString()
   lock_reason?: string;
-
-  @IsOptional()
-  @IsInt()
   mentionable_users_count?: number;
-
-  @IsOptional()
-  @IsBoolean()
   merge_commit_allowed?: boolean;
-
-  @IsOptional()
-  @IsInt()
   milestones_count?: number;
-
-  @IsOptional()
-  @IsString()
   mirror_url?: string;
-
-  @IsOptional()
-  @IsString()
   name?: string;
-
-  @IsDefined()
-  @IsString()
   name_with_owner!: string;
-
-  @IsOptional()
-  @IsString()
   open_graph_image_url?: string;
-
-  @IsDefined()
-  @IsString()
   owner!: string;
-
-  @IsOptional()
-  @IsString()
   parent?: string;
-
-  @IsOptional()
-  @IsString()
   primary_language?: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   pushed_at?: Date;
-
-  @IsOptional()
-  @IsInt()
   pull_requests_count?: number;
-
-  @IsOptional()
-  @IsBoolean()
   rebase_merge_allowed?: boolean;
-
-  @IsOptional()
-  @IsInt()
   releases_count?: number;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
   repository_topics?: string[];
-
-  @IsOptional()
-  @IsBoolean()
   squash_merge_allowed?: boolean;
-
-  @IsOptional()
-  @IsInt()
   stargazers_count?: number;
-
-  @IsOptional()
-  @IsString()
   template_repository?: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   updated_at?: Date;
-
-  @IsOptional()
-  @IsUrl()
   url?: string;
-
-  @IsOptional()
-  @IsBoolean()
   uses_custom_open_graph_image?: boolean;
-
-  @IsOptional()
-  @IsInt()
   vulnerability_alerts_count?: number;
-
-  @IsOptional()
-  @IsInt()
   watchers_count?: number;
+
+  public get __schema(): Joi.ObjectSchema<Repository> {
+    return Joi.object<Repository>({
+      _id: Joi.string().required(),
+      assignable_users_count: Joi.number(),
+      code_of_conduct: Joi.string(),
+      contact_links: Joi.string(),
+      created_at: Joi.date(),
+      database_id: Joi.number(),
+      default_branch: Joi.string(),
+      delete_branch_on_merge: Joi.boolean(),
+      description: Joi.string(),
+      disk_usage: Joi.number(),
+      forks_count: Joi.number(),
+      funding_links: Joi.array().items(
+        Joi.object({
+          url: Joi.string().required(),
+          platform: Joi.string()
+        })
+      ),
+      has_issues_enabled: Joi.boolean(),
+      has_projects_enabled: Joi.boolean(),
+      has_wiki_enabled: Joi.boolean(),
+      homepage_url: Joi.string(),
+      is_archived: Joi.boolean(),
+      is_blank_issues_enabled: Joi.boolean(),
+      is_disabled: Joi.boolean(),
+      is_empty: Joi.boolean(),
+      is_fork: Joi.boolean(),
+      is_in_organization: Joi.boolean(),
+      is_locked: Joi.boolean(),
+      is_mirror: Joi.boolean(),
+      is_private: Joi.boolean(),
+      is_security_policy_enabled: Joi.boolean(),
+      is_template: Joi.boolean(),
+      is_user_configuration_repository: Joi.boolean(),
+      issues_count: Joi.number(),
+      labels_count: Joi.number(),
+      languages: Joi.array().items(
+        Joi.object({
+          language: Joi.string().required(),
+          size: Joi.number().required()
+        })
+      ),
+      license_info: Joi.string(),
+      lock_reason: Joi.string(),
+      mentionable_users_count: Joi.number(),
+      merge_commit_allowed: Joi.boolean(),
+      milestones_count: Joi.number(),
+      mirror_url: Joi.string(),
+      name: Joi.string(),
+      name_with_owner: Joi.string().required(),
+      open_graph_image_url: Joi.string(),
+      owner: Joi.string().required(),
+      parent: Joi.string(),
+      primary_language: Joi.string(),
+      pushed_at: Joi.date(),
+      pull_requests_count: Joi.number(),
+      rebase_merge_allowed: Joi.boolean(),
+      releases_count: Joi.number(),
+      repository_topics: Joi.array().items(Joi.string()),
+      squash_merge_allowed: Joi.boolean(),
+      stargazers_count: Joi.number(),
+      template_repository: Joi.string(),
+      updated_at: Joi.date(),
+      url: Joi.string(),
+      uses_custom_open_graph_image: Joi.boolean(),
+      vulnerability_alerts_count: Joi.number(),
+      watchers_count: Joi.number()
+    });
+  }
 }

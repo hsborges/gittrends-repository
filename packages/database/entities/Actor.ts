@@ -1,213 +1,115 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsDate,
-  IsDefined,
-  IsIn,
-  IsInstance,
-  IsInt,
-  IsNumber,
-  IsObject,
-  IsOptional,
-  IsString,
-  IsUrl,
-  ValidateNested
-} from 'class-validator';
+import Joi from 'joi';
 
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class ActorStatus {
-  @IsDefined()
-  @IsDate()
-  @Type(() => Date)
-  created_at!: Date;
-
-  @IsOptional()
-  @IsString()
-  emoji?: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  expires_at?: Date;
-
-  @IsOptional()
-  @IsBoolean()
-  indicates_limited_availability?: boolean;
-
-  @IsOptional()
-  @IsString()
-  message?: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  updated_at?: Date;
-}
-
-export class Actor extends Entity {
+export default class Actor extends Entity {
   // Protected fields
   static readonly __id_fields = 'id';
   static readonly __collection = 'actors';
 
-  // Entity fields
-  @IsDefined()
-  @IsString()
   _id!: string;
-
-  @IsDefined()
-  @IsIn(['User', 'Organization', 'Mannequin', 'Bot', 'EnterpriseUserAccount'])
   type!: 'User' | 'Organization' | 'Mannequin' | 'Bot' | 'EnterpriseUserAccount';
-
-  @IsDefined()
-  @IsString()
   login!: string;
-
-  // Shared properties
-  @IsOptional()
-  @IsUrl()
   avatar_url?: string;
 
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  created_at?: Date;
-
-  @IsOptional()
-  @IsNumber()
-  database_id?: number;
-
-  @IsOptional()
-  @IsString()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  location?: string;
-
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsNumber()
-  repositories_count?: number;
-
-  @IsOptional()
-  @IsString()
-  twitter_username?: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  updated_at?: Date;
-
-  @IsOptional()
-  @IsString()
-  website_url?: string;
-
-  // User
-  @IsOptional()
-  @IsString()
+  // User type + shared properties
   bio?: string;
-
-  @IsOptional()
-  @IsString()
   company?: string;
-
-  @IsOptional()
-  @IsInt()
+  /* shared */ created_at?: Date;
+  /* shared */ database_id?: number;
+  /* shared */ email?: string;
   followers_count?: number;
-
-  @IsOptional()
-  @IsInt()
   following_count?: number;
-
-  @IsOptional()
-  @IsInt()
   gists_count?: number;
-
-  @IsOptional()
-  @IsBoolean()
   is_bounty_hunter?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_campus_expert?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_developer_program_member?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_employee?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_hireable?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_site_admin?: boolean;
-
-  @IsOptional()
-  @IsInt()
+  /* shared */ location?: string;
+  /* shared */ name?: string;
   projects_count?: number;
-
-  @IsOptional()
-  @IsUrl()
   projects_url?: string;
-
-  @IsOptional()
-  @IsInt()
+  /* shared */ repositories_count?: number;
   repositories_contributed_to_count?: number;
-
-  @IsOptional()
-  @IsInt()
   starred_repositories_count?: number;
-
-  @IsOptional()
-  @IsInstance(ActorStatus)
-  @ValidateNested()
-  @Type(() => ActorStatus)
-  status?: ActorStatus;
-
-  @IsOptional()
-  @IsInt()
+  status?: {
+    created_at: Date;
+    emoji?: string;
+    expires_at?: Date;
+    indicates_limited_availability?: boolean;
+    message?: string;
+    updated_at?: Date;
+  };
+  /* shared */ twitter_username?: string;
+  /* shared */ updated_at?: Date;
   watching_count?: number;
+  /* shared */ website_url?: string;
 
   // Organization
-  @IsOptional()
-  @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsBoolean()
   is_verified?: boolean;
-
-  @IsOptional()
-  @IsInt()
   members_with_role_count?: number;
-
-  @IsOptional()
-  @IsInt()
   teams_count?: number;
 
   // EnterpriseUserAccount
-  @IsOptional()
-  @IsString()
   enterprise?: string;
-
-  @IsOptional()
-  @IsString()
   user?: string;
 
-  // entity metadata
-  @IsOptional()
-  @IsObject()
-  _metadata?: Record<string, any>;
+  get __schema(): Joi.ObjectSchema<Actor> {
+    return Joi.object<Actor>({
+      _id: Joi.string().required(),
+      type: Joi.string()
+        .valid('User', 'Organization', 'Mannequin', 'Bot', 'EnterpriseUserAccount')
+        .required(),
+      login: Joi.string().required(),
+      avatar_url: Joi.string(),
+
+      bio: Joi.string(),
+      company: Joi.string(),
+      created_at: Joi.date(),
+      database_id: Joi.number(),
+      email: Joi.string(),
+      followers_count: Joi.number(),
+      following_count: Joi.number(),
+      gists_count: Joi.number(),
+      is_bounty_hunter: Joi.boolean(),
+      is_campus_expert: Joi.boolean(),
+      is_developer_program_member: Joi.boolean(),
+      is_employee: Joi.boolean(),
+      is_hireable: Joi.boolean(),
+      is_site_admin: Joi.boolean(),
+      location: Joi.string(),
+      name: Joi.string(),
+      projects_count: Joi.number(),
+      projects_url: Joi.string(),
+      repositories_count: Joi.number(),
+      repositories_contributed_to_count: Joi.number(),
+      starred_repositories_count: Joi.number(),
+      status: Joi.object({
+        created_at: Joi.date().required(),
+        emoji: Joi.string(),
+        expires_at: Joi.date(),
+        indicates_limited_availability: Joi.boolean(),
+        message: Joi.string(),
+        updated_at: Joi.date()
+      }),
+      twitter_username: Joi.string(),
+      updated_at: Joi.date(),
+      watching_count: Joi.number(),
+      website_url: Joi.string(),
+
+      description: Joi.string(),
+      is_verified: Joi.boolean(),
+      members_with_role_count: Joi.number(),
+      teams_count: Joi.number(),
+
+      enterprise: Joi.string(),
+      user: Joi.string()
+    });
+  }
 }

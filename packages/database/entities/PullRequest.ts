@@ -1,122 +1,72 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsDate,
-  IsInt,
-  IsObject,
-  IsOptional,
-  IsString,
-  ValidateIf
-} from 'class-validator';
-import { isString } from 'lodash';
+import Joi from 'joi';
 
-import { Issue } from './Issue';
+import Issue from './Issue';
 
-export class PullRequest extends Issue {
+export default class PullRequest extends Issue {
   static readonly __collection = 'pull_requests';
 
-  @IsOptional()
-  @IsString({ each: true })
-  suggested_reviewers?: string[];
-
-  @IsOptional()
-  @IsInt()
+  suggested_reviewers?: Array<string>;
   additions?: number;
-
-  @IsOptional()
-  @IsObject()
   base_ref?: { name?: string; target?: string };
-
-  @IsOptional()
-  @IsString()
   base_ref_name?: string;
-
-  @IsOptional()
-  @IsString()
   base_ref_oid?: string;
-
-  @IsOptional()
-  @IsString()
   base_repository?: string;
-
-  @IsOptional()
-  @IsBoolean()
   can_be_rebased?: boolean;
-
-  @IsOptional()
-  @IsInt()
   changed_files?: number;
-
-  @IsOptional()
-  @IsInt()
   deletions?: number;
-
-  @IsOptional()
-  @IsObject()
-  @ValidateIf((_, v) => !isString(v))
   head_ref?: { name?: string; target?: string } | string;
-
-  @IsOptional()
-  @IsString()
   head_ref_name?: string;
-
-  @IsOptional()
-  @IsString()
   head_ref_oid?: string;
-
-  @IsOptional()
-  @IsString()
   head_repository?: string;
-
-  @IsOptional()
-  @IsString()
   head_repository_owner?: string;
-
-  @IsOptional()
-  @IsBoolean()
   is_cross_repository?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   is_draft?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   maintainer_can_modify?: boolean;
-
-  @IsOptional()
-  @IsString()
   merge_commit?: string;
-
-  @IsOptional()
-  @IsString()
   merge_state_status?: string;
-
-  @IsOptional()
-  @IsString()
-  mergeable?: string;
-
-  @IsOptional()
-  @IsBoolean()
+  mergeable?: boolean;
   merged?: boolean;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   merged_at?: Date;
-
-  @IsOptional()
-  @IsString()
   merged_by?: string;
-
-  @IsOptional()
-  @IsString()
   permalink?: string;
-
-  @IsOptional()
-  @IsString()
   potential_merge_commit?: string;
+
+  public get __schema(): Joi.ObjectSchema<PullRequest> {
+    return super.__schema.append<PullRequest>({
+      suggested_reviewers: Joi.array().items(Joi.string()),
+      additions: Joi.number(),
+      base_ref: Joi.object({
+        name: Joi.string(),
+        target: Joi.string()
+      }),
+      base_ref_name: Joi.string(),
+      base_ref_oid: Joi.string(),
+      base_repository: Joi.string(),
+      can_be_rebased: Joi.boolean(),
+      changed_files: Joi.number(),
+      deletions: Joi.number(),
+      head_ref: Joi.alternatives(
+        Joi.string(),
+        Joi.object({ name: Joi.string(), target: Joi.string() })
+      ),
+      head_ref_name: Joi.string(),
+      head_ref_oid: Joi.string(),
+      head_repository: Joi.string(),
+      head_repository_owner: Joi.string(),
+      is_cross_repository: Joi.boolean(),
+      is_draft: Joi.boolean(),
+      maintainer_can_modify: Joi.boolean(),
+      merge_commit: Joi.string(),
+      merge_state_status: Joi.string(),
+      mergeable: Joi.boolean(),
+      merged: Joi.boolean(),
+      merged_at: Joi.date(),
+      merged_by: Joi.string(),
+      permalink: Joi.string(),
+      potential_merge_commit: Joi.string()
+    });
+  }
 }

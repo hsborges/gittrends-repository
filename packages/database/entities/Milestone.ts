@@ -1,51 +1,38 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Type } from 'class-transformer';
-import { IsDate, IsDefined, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
+import Joi from 'joi';
 
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class Milestone extends Entity {
+export default class Milestone extends Entity {
   // Protected fields
   static readonly __id_fields = 'id';
   static readonly __collection = 'milestones';
 
   // Entity fields
-  @IsDefined()
-  @IsString()
+
   _id!: string;
-
-  @IsDefined()
-  @IsString()
   repository!: string;
-
-  @IsOptional()
-  @IsString()
   creator?: string;
-
-  @IsOptional()
-  @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsNumber()
   progress_percentage?: number;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   due_on?: Date;
-
-  @IsOptional()
-  @IsInt()
   number?: number;
-
-  @IsOptional()
-  @IsString()
   state?: string;
-
-  @IsOptional()
-  @IsString()
   title?: string;
+
+  public get __schema(): Joi.ObjectSchema<Milestone> {
+    return Joi.object({
+      _id: Joi.string().required(),
+      repository: Joi.string().required(),
+      creator: Joi.string(),
+      description: Joi.string(),
+      progress_percentage: Joi.number(),
+      due_on: Joi.date(),
+      number: Joi.number(),
+      state: Joi.string(),
+      title: Joi.string()
+    });
+  }
 }

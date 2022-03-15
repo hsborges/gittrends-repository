@@ -1,158 +1,97 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsDate,
-  IsDefined,
-  IsInstance,
-  IsInt,
-  IsObject,
-  IsOptional,
-  IsString,
-  ValidateNested
-} from 'class-validator';
+import Joi from 'joi';
 
-import { Entity } from './Entity';
+import Entity from './Entity';
 
-export class CommitActor {
-  @IsDefined()
-  @IsDate()
-  @Type(() => Date)
-  date!: Date;
-
-  @IsOptional()
-  @IsString()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  user?: string;
-}
-
-export class CommitSignature {
-  @IsOptional()
-  @IsString()
-  email?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  is_valid?: boolean;
-
-  @IsOptional()
-  @IsString()
-  signer?: string;
-
-  @IsOptional()
-  @IsString()
-  state?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  was_signed_by_git_hub?: boolean;
-}
-
-export class CommitStatus {
-  @IsDefined()
-  @IsString()
-  id!: string;
-
-  @IsOptional()
-  @IsObject({ each: true })
-  contexts?: Array<{ context: string; description?: string; created_at?: Date }>;
-
-  @IsOptional()
-  @IsString()
-  state?: string;
-}
-
-export class Commit extends Entity {
+export default class Commit extends Entity {
   // Protected fields
   static readonly __id_fields = 'id';
   static readonly __collection = 'commits';
 
   // Entity fields
-  @IsDefined()
-  @IsString()
   _id!: string;
 
-  @IsOptional()
-  @IsString()
   repository!: string;
-
-  @IsOptional()
-  @IsInt()
   additions?: number;
-
-  @IsOptional()
-  @IsInstance(CommitActor)
-  @ValidateNested()
-  @Type(() => CommitActor)
-  author?: CommitActor;
-
-  @IsOptional()
-  @IsBoolean()
+  author?: {
+    date: Date;
+    email?: string;
+    name?: string;
+    user?: string;
+  };
   authored_by_committer?: boolean;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   authored_date?: Date;
-
-  @IsOptional()
-  @IsInt()
   changed_files?: number;
-
-  @IsOptional()
-  @IsInt()
   comments_count?: number;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   committed_date?: Date;
-
-  @IsOptional()
-  @IsBoolean()
   committed_via_web?: boolean;
-
-  @IsOptional()
-  @IsInstance(CommitActor)
-  @ValidateNested()
-  @Type(() => CommitActor)
-  committer?: CommitActor;
-
-  @IsOptional()
-  @IsInt()
+  committer?: {
+    date: Date;
+    email?: string;
+    name?: string;
+    user?: string;
+  };
   deletions?: number;
-
-  @IsOptional()
-  @IsString()
   message?: string;
-
-  @IsDefined()
-  @IsString()
   oid!: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   pushed_date?: Date;
+  signature?: {
+    email?: string;
+    is_valid?: boolean;
+    signer?: string;
+    state?: string;
+    was_signed_by_git_hub?: boolean;
+  };
+  status?: {
+    id: string;
+    contexts?: { context: string; description?: string; created_at?: Date }[];
+    state?: string;
+  };
 
-  @IsOptional()
-  @IsInstance(CommitSignature)
-  @ValidateNested()
-  @Type(() => CommitSignature)
-  signature?: CommitSignature;
+  public get __schema(): Joi.ObjectSchema<Commit> {
+    const CommitAuthor = Joi.object({
+      date: Joi.date().required(),
+      email: Joi.string(),
+      name: Joi.string(),
+      user: Joi.string()
+    });
 
-  @IsOptional()
-  @IsInstance(CommitStatus)
-  @ValidateNested()
-  @Type(() => CommitStatus)
-  status?: CommitStatus;
+    return Joi.object<Commit>({
+      _id: Joi.string().required(),
+      repository: Joi.string().required(),
+      additions: Joi.number(),
+      author: CommitAuthor,
+      authored_by_committer: Joi.boolean(),
+      authored_date: Joi.date(),
+      changed_files: Joi.number(),
+      comments_count: Joi.number(),
+      committed_date: Joi.date(),
+      committed_via_web: Joi.boolean(),
+      committer: CommitAuthor,
+      deletions: Joi.number(),
+      message: Joi.string(),
+      oid: Joi.string().required(),
+      pushed_date: Joi.date(),
+      signature: Joi.object({
+        email: Joi.string(),
+        is_valid: Joi.boolean(),
+        signer: Joi.string(),
+        state: Joi.string(),
+        was_signed_by_git_hub: Joi.boolean()
+      }),
+      status: Joi.object({
+        id: Joi.string().required(),
+        contexts: Joi.array().items(
+          Joi.object({
+            context: Joi.string().required(),
+            description: Joi.string(),
+            created_at: Joi.date()
+          })
+        ),
+        state: Joi.string()
+      })
+    });
+  }
 }

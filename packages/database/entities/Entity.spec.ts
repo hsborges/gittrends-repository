@@ -1,81 +1,44 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Type } from 'class-transformer';
-import {
-  IsDate,
-  IsDefined,
-  IsInstance,
-  IsNumber,
-  IsObject,
-  IsOptional,
-  IsString,
-  isString,
-  ValidateIf,
-  ValidateNested
-} from 'class-validator';
+import Joi from 'joi';
 
-import { Entity } from '.';
-
-class FakeNestedEntity {
-  @IsDefined()
-  @IsString()
-  _id!: string;
-
-  @IsOptional()
-  @IsString()
-  key?: string;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  date?: Date;
-}
+import Entity from './Entity';
 
 class FakeEntity extends Entity {
   static readonly __id_fields = 'id';
   static readonly __collection = 'fake_entity';
 
-  @IsDefined()
-  @IsString()
   _id!: string;
-
-  @IsOptional()
-  @IsNumber()
   number?: number;
-
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
   date?: Date;
+  nested?: { _id: string; value?: string };
 
-  @IsOptional()
-  @IsInstance(FakeNestedEntity)
-  @ValidateNested()
-  @Type(() => FakeNestedEntity)
-  nested?: FakeNestedEntity;
-
-  @IsOptional()
-  @IsObject()
-  @ValidateIf((_, v) => !isString(v))
-  object?: Record<string, any> | string;
+  get __schema() {
+    return Joi.object<FakeEntity>({
+      _id: Joi.string().required(),
+      number: Joi.number(),
+      date: Joi.date(),
+      nested: Joi.object({
+        _id: Joi.string().required(),
+        value: Joi.string()
+      })
+    });
+  }
 }
 
 describe('Test entity transformations.', () => {
   it('should transform a plain object into a Entity instance', () => {
     expect(new FakeEntity({ _id: '1' })).toBeInstanceOf(FakeEntity);
   });
-
   it('should create an "_id" field if not exists', () => {
     expect(new FakeEntity({ id: '1' })).toHaveProperty('_id', '1');
   });
-
   it('should exclude extraneus values when transforming', () => {
     const fakeEntity = new FakeEntity({ _id: '1', other: 'value' });
     expect(fakeEntity).not.toHaveProperty('id', 1);
     expect(fakeEntity).not.toHaveProperty('other', 'value');
   });
-
   it('should transform an Entity instance into a plain object', () => {
     const fake = new FakeEntity();
     fake._id = '1';
@@ -84,30 +47,21 @@ describe('Test entity transformations.', () => {
     fake.date = new Date();
     expect(fake.toJSON()).toStrictEqual({ _id: fake._id, number: fake.number, date: fake.date });
   });
-
   it('should transform string timestamps into Date objects', () => {
     const entity = new FakeEntity({ _id: '1', date: new Date().toISOString() });
     expect(entity.date).toBeDefined();
     expect(entity.date).toBeInstanceOf(Date);
   });
-
-  it('should transform nested entities', () => {
-    const entity = new FakeEntity({
-      _id: '1',
-      nested: { _id: '1', key: 'value', date: new Date().toISOString() }
-    });
-    expect(entity.nested).toBeDefined();
-    expect(entity.nested).toBeInstanceOf(FakeNestedEntity);
-    expect(entity.nested?.date).toBeInstanceOf(Date);
-  });
-
   it('should throw an error if required fields are not defined', () => {
     expect(() => new FakeEntity({ number: 1 })).toThrowError();
-    expect(() => new FakeEntity({ _id: '1', nested: { key: 'value' } })).toThrowError();
   });
-
-  it('should accept and multiple types on properties', () => {
-    expect(() => new FakeEntity({ _id: '1', object: { k: 'v' } })).not.toThrowError();
-    expect(() => new FakeEntity({ _id: '1', object: 'value' })).not.toThrowError();
+  it('should validate nested entities', () => {
+    const simpleObject = { _id: '1', nested: { _id: '1' } };
+    expect(new FakeEntity(simpleObject).toJSON()).toStrictEqual(simpleObject);
+    const nestedObject = { _id: '1', nested: { _id: '1', value: 'value' } };
+    expect(new FakeEntity(nestedObject).toJSON()).toStrictEqual(nestedObject);
+    const extraNestedObject = { ...nestedObject, nested: { ...nestedObject.nested, extra: 0 } };
+    expect(new FakeEntity(extraNestedObject).toJSON()).toStrictEqual(nestedObject);
+    expect(() => new FakeEntity({ _id: '1', nested: { value: 1 } })).toThrowError();
   });
 });
