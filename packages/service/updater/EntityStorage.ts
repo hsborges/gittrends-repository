@@ -4,7 +4,7 @@
 import { Entity } from '@gittrends/database';
 import * as Entities from '@gittrends/database';
 
-import { createChannel } from '../rabbitmq';
+import { createChannel } from '../helpers/rabbitmq';
 import { Cache } from './Cache';
 
 type OperationTypes = 'insert' | 'upsert';
@@ -61,16 +61,25 @@ export class EntityStorage<T extends Entity> {
 
     const channel = await createChannel();
 
-    for (const { entity, records } of groups) {
-      channel.sendToQueue(entity, Buffer.from(JSON.stringify(records)), {
-        appId: 'EntityStorage',
-        persistent: true
-      });
-
-      await channel.waitForConfirms();
-    }
-
-    await channel.close();
+    await Promise.all(
+      groups.map(
+        ({ entity, records }) =>
+          new Promise<void>(async (resolve, reject) =>
+            channel.sendToQueue(
+              entity,
+              Buffer.from(
+                JSON.stringify(records, function (key) {
+                  return this?.[key] instanceof Date
+                    ? { $date: this?.[key].toISOString() }
+                    : this?.[key];
+                })
+              ),
+              { appId: 'EntityStorage', persistent: true },
+              (err) => (err ? reject(err) : resolve())
+            )
+          )
+      )
+    ).finally(() => channel.close());
 
     for (const { entity, records } of groups) {
       if (CACHABLE_ENTITIES.indexOf(entity)) this.cache?.add(records);

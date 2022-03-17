@@ -21,9 +21,9 @@ export default class Actor extends Entity {
   /* shared */ created_at?: Date;
   /* shared */ database_id?: number;
   /* shared */ email?: string;
-  followers_count?: number;
-  following_count?: number;
-  gists_count?: number;
+  followers?: number;
+  following?: number;
+  gists?: number;
   is_bounty_hunter?: boolean;
   is_campus_expert?: boolean;
   is_developer_program_member?: boolean;
@@ -32,11 +32,11 @@ export default class Actor extends Entity {
   is_site_admin?: boolean;
   /* shared */ location?: string;
   /* shared */ name?: string;
-  projects_count?: number;
+  projects?: number;
   projects_url?: string;
-  /* shared */ repositories_count?: number;
-  repositories_contributed_to_count?: number;
-  starred_repositories_count?: number;
+  /* shared */ repositories?: number;
+  repositories_contributed_to?: number;
+  starred_repositories?: number;
   status?: {
     created_at: Date;
     emoji?: string;
@@ -47,20 +47,19 @@ export default class Actor extends Entity {
   };
   /* shared */ twitter_username?: string;
   /* shared */ updated_at?: Date;
-  watching_count?: number;
+  watching?: number;
   /* shared */ website_url?: string;
 
   // Organization
   description?: string;
   is_verified?: boolean;
-  members_with_role_count?: number;
-  teams_count?: number;
+  members_with_role?: number;
+  teams?: number;
 
   // EnterpriseUserAccount
-  enterprise?: string;
   user?: string;
 
-  get __schema(): Joi.ObjectSchema<Actor> {
+  public static get __schema(): Joi.ObjectSchema<Actor> {
     return Joi.object<Actor>({
       _id: Joi.string().required(),
       type: Joi.string()
@@ -74,9 +73,9 @@ export default class Actor extends Entity {
       created_at: Joi.date(),
       database_id: Joi.number(),
       email: Joi.string(),
-      followers_count: Joi.number(),
-      following_count: Joi.number(),
-      gists_count: Joi.number(),
+      followers: Joi.number(),
+      following: Joi.number(),
+      gists: Joi.number(),
       is_bounty_hunter: Joi.boolean(),
       is_campus_expert: Joi.boolean(),
       is_developer_program_member: Joi.boolean(),
@@ -85,11 +84,11 @@ export default class Actor extends Entity {
       is_site_admin: Joi.boolean(),
       location: Joi.string(),
       name: Joi.string(),
-      projects_count: Joi.number(),
+      projects: Joi.number(),
       projects_url: Joi.string(),
-      repositories_count: Joi.number(),
-      repositories_contributed_to_count: Joi.number(),
-      starred_repositories_count: Joi.number(),
+      repositories: Joi.number(),
+      repositories_contributed_to: Joi.number(),
+      starred_repositories: Joi.number(),
       status: Joi.object({
         created_at: Joi.date().required(),
         emoji: Joi.string(),
@@ -100,15 +99,14 @@ export default class Actor extends Entity {
       }),
       twitter_username: Joi.string(),
       updated_at: Joi.date(),
-      watching_count: Joi.number(),
+      watching: Joi.number(),
       website_url: Joi.string(),
 
       description: Joi.string(),
       is_verified: Joi.boolean(),
-      members_with_role_count: Joi.number(),
-      teams_count: Joi.number(),
+      members_with_role: Joi.number(),
+      teams: Joi.number(),
 
-      enterprise: Joi.string(),
       user: Joi.string()
     });
   }

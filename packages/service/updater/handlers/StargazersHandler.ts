@@ -23,8 +23,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
     return this._component.includeStargazers(this.meta.hasNextPage, {
       first: this.batchSize,
-      after: this.meta.endCursor,
-      alias: '_stargazers'
+      after: this.meta.endCursor
     });
   }
 

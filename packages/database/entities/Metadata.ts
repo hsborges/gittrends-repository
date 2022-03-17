@@ -10,17 +10,14 @@ export default class Metadata extends Entity {
   static readonly __id_fields = 'id';
   static readonly __collection = 'metadata';
   static readonly __strip_unknown: boolean = false;
+  static readonly __convert: boolean = false;
 
   // Entity fields
   _id!: string;
-  _type!: string;
 
   [key: string]: any;
 
-  public get __schema(): Joi.ObjectSchema<Metadata> {
-    return Joi.object<Metadata>({
-      _id: Joi.string().required(),
-      _type: Joi.string().required()
-    });
+  public static get __schema(): Joi.ObjectSchema<Metadata> {
+    return Joi.object<Metadata>({ _id: Joi.string().required() });
   }
 }

@@ -17,7 +17,7 @@ export default class Stargazer extends Entity {
     starred_at: Date;
   };
 
-  public get __schema(): Joi.ObjectSchema<Stargazer> {
+  public static get __schema(): Joi.ObjectSchema<Stargazer> {
     return Joi.object<Stargazer>({
       _id: Joi.object({
         repository: Joi.string().required(),

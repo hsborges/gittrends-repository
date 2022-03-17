@@ -22,8 +22,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
 
     return this._component.includeTags(this.meta.hasNextPage, {
       first: this.batchSize,
-      after: this.meta.endCursor,
-      alias: '_tags'
+      after: this.meta.endCursor
     });
   }
 

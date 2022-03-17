@@ -10,6 +10,7 @@ export default class TimelineEvent extends Entity {
   static readonly __id_fields = 'id';
   static readonly __collection = 'timeline';
   static readonly __strip_unknown: boolean = false;
+  static readonly __convert: boolean = false;
 
   // Entity fields
   _id!: string;
@@ -17,7 +18,7 @@ export default class TimelineEvent extends Entity {
   issue!: string;
   type!: string;
 
-  public get __schema(): Joi.ObjectSchema<TimelineEvent> {
+  public static get __schema(): Joi.ObjectSchema<TimelineEvent> {
     return Joi.object<TimelineEvent>({
       _id: Joi.string().required(),
       repository: Joi.string().required(),

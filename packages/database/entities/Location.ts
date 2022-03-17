@@ -20,7 +20,7 @@ export default class Location extends Entity {
   county?: string;
   city?: string;
 
-  public get __schema(): Joi.ObjectSchema<Location> {
+  public static get __schema(): Joi.ObjectSchema<Location> {
     return Joi.object<Location>({
       _id: Joi.string().required(),
       label: Joi.string(),

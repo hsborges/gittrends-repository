@@ -28,7 +28,7 @@ export class Repository extends Fragment {
       ${Fragment.include(this.full, 'deleteBranchOnMerge')}
       description
       ${Fragment.include(this.full, 'diskUsage')}
-      forksCount:forkCount
+      forks:forkCount
       ${Fragment.include(this.full, 'fundingLinks { platform url }')}
       ${Fragment.include(this.full, 'hasIssuesEnabled')}
       ${Fragment.include(this.full, 'hasProjectsEnabled')}
@@ -66,7 +66,7 @@ export class Repository extends Fragment {
       ${Fragment.include(this.full, 'rebaseMergeAllowed')}
       ${Fragment.include(this.full, 'releases { totalCount }')}
       ${Fragment.include(this.full, 'squashMergeAllowed')}
-      stargazersCount:stargazerCount
+      stargazers:stargazerCount
       ${Fragment.include(this.full, 'templateRepository { id }')}
       updatedAt
       ${Fragment.include(this.full, 'url')}

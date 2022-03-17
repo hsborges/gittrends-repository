@@ -22,8 +22,7 @@ export default class ReleasesHandler extends AbstractRepositoryHandler {
 
     return this._component.includeReleases(this.releases.hasNextPage, {
       first: this.batchSize,
-      after: this.releases.endCursor,
-      alias: '_releases'
+      after: this.releases.endCursor
     });
   }
 

@@ -3,12 +3,13 @@
  */
 import { program } from 'commander';
 import consola from 'consola';
+import { get, has, isPlainObject, size } from 'lodash';
 
 import { MongoRepository, Entity } from '@gittrends/database';
 import * as Entities from '@gittrends/database/dist/entities';
 
+import { createChannel } from './helpers/rabbitmq';
 import { version } from './package.json';
-import { createChannel } from './rabbitmq';
 
 program
   .version(version)
@@ -33,9 +34,11 @@ program
               async (message) => {
                 if (!message) return;
 
-                const instances = JSON.parse(message?.content.toString() || '{}').map(
-                  (d: any) => new (EntityRef as new (...args: any[]) => Entity)(d)
-                );
+                const instances = JSON.parse(message?.content.toString() || '{}', (_, value) =>
+                  isPlainObject(value) && size(value) === 1 && has(value, '$date')
+                    ? new Date(get(value, '$date'))
+                    : value
+                ).map((d: any) => new (EntityRef as new (...args: any[]) => Entity)(d));
 
                 await ([
                   Entities.Issue,

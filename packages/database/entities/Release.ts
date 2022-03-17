@@ -26,7 +26,7 @@ export default class Release extends Entity {
   tag_name?: string;
   updated_at?: Date;
 
-  public get __schema(): Joi.ObjectSchema<Release> {
+  public static get __schema(): Joi.ObjectSchema<Release> {
     return Joi.object<Release>({
       _id: Joi.string().required(),
       repository: Joi.string().required(),

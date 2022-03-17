@@ -31,10 +31,12 @@ const repositoriesScheduler = async (
   let count = 0;
 
   const repos = await MongoRepository.get(Repository)
-    .collection.find(
-      { '_metadata.removed': { $exists: false } },
-      { projection: { _id: 1, name_with_owner: 1, _metadata: 1 } }
-    )
+    .collection.aggregate([
+      { $project: { _id: 1, name_with_owner: 1 } },
+      { $lookup: { from: 'metadata', localField: '_id', foreignField: '_id', as: '_metadata' } },
+      { $unwind: { path: '$_metadata', preserveNullAndEmptyArrays: true } },
+      { $match: { '_metadata.removed': { $exists: false } } }
+    ])
     .toArray();
 
   await Promise.all(
@@ -81,16 +83,20 @@ const usersScheduler = async (queue: Queue<UsersJob>, wait = 24, limit = 100000)
   const before = dayjs().subtract(wait, 'hour').toISOString();
   // get metadata
   const usersIds = await MongoRepository.get(Actor)
-    .collection.find(
+    .collection.aggregate([
+      { $project: { _id: 1 } },
+      { $lookup: { from: 'metadata', localField: '_id', foreignField: '_id', as: '_metadata' } },
+      { $unwind: { path: '$_metadata', preserveNullAndEmptyArrays: true } },
       {
-        $or: [
-          { '_metadata.updatedAt': { $exists: false } },
-          { '_metadata.updatedAt': { $lt: before } }
-        ]
+        $match: {
+          $or: [
+            { '_metadata.updatedAt': { $exists: false } },
+            { '_metadata.updatedAt': { $lt: before } }
+          ]
+        }
       },
-      { projection: { _id: 1 } }
-    )
-    .limit(limit)
+      { $limit: limit }
+    ])
     .toArray()
     .then((users) => users.map((r) => r._id.toString()));
   // add to queue
@@ -103,7 +109,7 @@ type SchedulerOptions = {
   resources: string[];
   limit?: number;
   wait?: number;
-  destroyQueue?: boolean;
+  destroyQueue?: 'normal' | 'force';
 };
 
 type RepositoryJob = {
@@ -130,7 +136,8 @@ const scheduler = async (options: SchedulerOptions) => {
       defaultJobOptions: { attempts: 3, removeOnComplete, removeOnFail }
     });
 
-    if (options.destroyQueue) {
+    if (options.destroyQueue === 'force') await queue.obliterate({ force: true });
+    else if (options.destroyQueue) {
       await Promise.all([
         queue.drain(true),
         queue.clean(0, Number.MAX_SAFE_INTEGER, 'completed'),
@@ -175,11 +182,20 @@ program
   .option('-l, --limit [number]', 'Maximum number of resources to update', Number, 100000)
   .option('--cron [pattern]', 'Execute scheduler according to the pattern')
   .option('--destroy-queue', 'Destroy queue before scheduling resources')
+  .option('--force', 'Force destroy (including active ones)')
   .option('--exclude [resource]', 'Exclude a given resource from scheduler')
   .hook('preAction', () => MongoRepository.connect().then())
   .hook('postAction', () => MongoRepository.close())
   .action(async (resource: string = 'all', other: string[]): Promise<void> => {
-    const options = program.opts();
+    const options = program.opts<{
+      limit: number;
+      wait: number;
+      destroyQueue: boolean;
+      force: boolean;
+      exclude: string;
+      cron: string;
+    }>();
+
     const resources = resourcesParser([resource, ...other], options.exclude?.split(',') || []);
 
     const schedulerFn = () =>
@@ -187,7 +203,12 @@ program
         resources,
         limit: options.limit,
         wait: options.wait,
-        destroyQueue: options.destroyQueue
+        destroyQueue:
+          options.destroyQueue && options.force
+            ? 'force'
+            : options.destroyQueue
+            ? 'normal'
+            : undefined
       });
 
     // await promises and finish script

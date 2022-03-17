@@ -17,7 +17,7 @@ export default class Watcher extends Entity {
     user: string;
   };
 
-  public get __schema(): Joi.ObjectSchema<Watcher> {
+  public static get __schema(): Joi.ObjectSchema<Watcher> {
     return Joi.object<Watcher>({
       _id: Joi.object({
         repository: Joi.string().required(),

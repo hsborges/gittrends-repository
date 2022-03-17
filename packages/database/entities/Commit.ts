@@ -50,7 +50,7 @@ export default class Commit extends Entity {
     state?: string;
   };
 
-  public get __schema(): Joi.ObjectSchema<Commit> {
+  public static get __schema(): Joi.ObjectSchema<Commit> {
     const CommitAuthor = Joi.object({
       date: Joi.date().required(),
       email: Joi.string(),

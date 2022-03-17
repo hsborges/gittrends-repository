@@ -1,10 +1,10 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bullmq';
+import EventEmitter from 'events';
 import { chunk } from 'lodash';
 
-import { Actor, MongoRepository } from '@gittrends/database';
+import { Actor, Metadata, MongoRepository } from '@gittrends/database';
 
 import ActorComponent from '../github/components/ActorComponent';
 import HttpClient from '../github/HttpClient';
@@ -13,19 +13,14 @@ import { GithubRequestError, RequestError } from '../helpers/errors';
 import responseParser from '../helpers/response-parser';
 import Updater from './Updater';
 
-export class ActorsUpdater implements Updater {
+export class ActorsUpdater extends EventEmitter implements Updater {
   private readonly id: string[] | string;
   private readonly httpClient: HttpClient;
-  private readonly job?: Job<{ id: string | string[] }>;
 
-  constructor(
-    id: string[] | string,
-    httpClient: HttpClient,
-    opts?: { job: Job<{ id: string | string[] }> }
-  ) {
+  constructor(id: string[] | string, httpClient: HttpClient) {
+    super();
     this.id = id;
     this.httpClient = httpClient;
-    this.job = opts?.job;
   }
 
   private async _update(ids: string[]): Promise<void> {
@@ -36,9 +31,12 @@ export class ActorsUpdater implements Updater {
       .run()
       .then((response) => responseParser(response))
       .then(async ({ actors }) =>
-        MongoRepository.get(Actor).upsert(
-          actors.map((actor) => new Actor({ ...actor, _metadata: { updatedAt: new Date() } }))
-        )
+        Promise.all([
+          MongoRepository.get(Actor).upsert(actors),
+          MongoRepository.get(Metadata).upsert(
+            actors.map((actor) => ({ _id: actor._id, updatedAt: new Date() }))
+          )
+        ])
       )
       .catch(async (err) => {
         if (err instanceof RequestError) {
@@ -46,18 +44,17 @@ export class ActorsUpdater implements Updater {
             for (const idsChunk of chunk(ids, Math.ceil(ids.length / 2)))
               await this._update(idsChunk);
           } else {
-            let _metadata: any = { updatedAt: new Date() };
+            let metadata: any = { updatedAt: new Date() };
 
             if (err instanceof GithubRequestError && err.all('NOT_FOUND')) {
-              _metadata = { ..._metadata, removed: true, removed_at: new Date() };
+              metadata = { ...metadata, removed: true, removed_at: new Date() };
             } else {
-              _metadata = { ..._metadata, error: err.message };
+              metadata = { ...metadata, error: err.message };
             }
 
-            return MongoRepository.get(Actor).collection.updateOne(
-              { _id: ids[0] },
-              { $set: { _metadata } }
-            );
+            return MongoRepository.get(Actor).collection.replaceOne({ _id: ids[0] }, metadata, {
+              upsert: true
+            });
           }
         }
 
@@ -66,8 +63,7 @@ export class ActorsUpdater implements Updater {
   }
 
   async update(): Promise<void> {
-    return this._update(Array.isArray(this.id) ? this.id : [this.id]).then(() => {
-      if (this.job) this.job.updateProgress(100);
-    });
+    await this._update(Array.isArray(this.id) ? this.id : [this.id]);
+    this.emit('progress', 100);
   }
 }

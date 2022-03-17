@@ -22,8 +22,7 @@ export default class WatchersHandler extends AbstractRepositoryHandler {
 
     return this._component.includeWatchers(this.meta.hasNextPage, {
       first: this.batchSize,
-      after: this.meta.endCursor,
-      alias: '_watchers'
+      after: this.meta.endCursor
     });
   }
 

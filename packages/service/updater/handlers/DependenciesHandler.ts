@@ -28,8 +28,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
     if (this.manifests.hasNextPage) {
       return this._component.includeDependencyManifests(this.manifests.hasNextPage, {
         first: this.batchSize,
-        after: this.manifests.endCursor,
-        alias: 'manifests'
+        after: this.manifests.endCursor
       });
     }
 
@@ -54,7 +53,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       const data = super.parseResponse(response[this.alias[0]]);
 
       this.manifestsComponents.push(
-        ...get(data, 'manifests.nodes', []).map(
+        ...get(data, '_manifests.nodes', []).map(
           (manifest: Record<string, unknown>, index: number) => ({
             data: manifest,
             component: new DependencyGraphManifestComponent(
@@ -68,7 +67,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
         )
       );
 
-      const pageInfo = get(data, 'manifests.page_info', {});
+      const pageInfo = get(data, '_manifests.page_info', {});
       this.manifests.hasNextPage = pageInfo.has_next_page ?? false;
       this.manifests.endCursor = pageInfo.end_cursor ?? this.manifests.endCursor;
     } else if (response && !this.manifests.hasNextPage) {

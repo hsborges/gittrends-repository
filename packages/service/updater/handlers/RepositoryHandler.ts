@@ -37,16 +37,16 @@ export default class RepositoryHander extends AbstractRepositoryHandler {
 
     if (!this.details) this.details = data;
 
-    this.languagesMeta.items.push(...get<[]>(data, 'languages.edges', []));
+    this.languagesMeta.items.push(...get<[]>(data, '_languages.edges', []));
     this.topicsMeta.items.push(
-      ...get<[]>(data, 'repository_topics.nodes', []).map((t: Record<string, unknown>) => t.topic)
+      ...get<[]>(data, '_topics.nodes', []).map((t: Record<string, unknown>) => t.topic)
     );
 
-    const langPageInfo = get(data, 'languages.page_info', {});
+    const langPageInfo = get(data, '_languages.page_info', {});
     this.languagesMeta.hasNextPage = langPageInfo.has_next_page ?? false;
     this.languagesMeta.endCursor = langPageInfo.end_cursor ?? this.languagesMeta.endCursor;
 
-    const topicsPageInfo = get(data, 'repository_topics.page_info', {});
+    const topicsPageInfo = get(data, '_topics.page_info', {});
     this.topicsMeta.hasNextPage = topicsPageInfo.has_next_page ?? false;
     this.topicsMeta.endCursor = topicsPageInfo.end_cursor ?? this.topicsMeta.endCursor;
 

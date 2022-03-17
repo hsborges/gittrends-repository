@@ -1,7 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { get, isEqual, omit } from 'lodash';
+import { get, omit } from 'lodash';
 
 import {
   Issue,
@@ -78,11 +78,15 @@ export default class IssuesHander extends AbstractRepositoryHandler {
   async component(): Promise<RepositoryComponent | Component[]> {
     if (this.issues.hasNextPage && !this.pendingIssues.length && !this.pendingReactables.length) {
       if (this.hasPendingIssues) {
-        const cursor = this.mongoRepository.collection.find({
-          repository: this.id,
-          '_metadata.error': { $ne: undefined },
-          '_metadata.retry': true
-        });
+        const cursor = this.mongoRepository.collection.aggregate([
+          { $match: { repository: this.id } },
+          { $project: { _id: 1 } },
+          {
+            $lookup: { from: 'metadata', localField: '_id', foreignField: '_id', as: '_metadata' }
+          },
+          { $unwind: { path: '$_metadata' } },
+          { $match: { '_metadata.error': { $ne: undefined }, '_metadata.retry': true } }
+        ]);
 
         for await (const doc of cursor) this.addIssueToItems({ id: doc._id, ...doc });
 
@@ -182,16 +186,10 @@ export default class IssuesHander extends AbstractRepositoryHandler {
         const data = super.parseResponse(response[super.alias as string]);
         const newIssues = get(data, `${this.resourceAlias}.nodes`, []) as Record<string, unknown>[];
 
-        const dbRecords = await this.mongoRepository.collection
-          .find(
-            { _id: { $in: newIssues.map((ni) => ni.id as any) } },
-            { projection: { _metadata: true } }
-          )
-          .toArray();
-
+        const metadataCollection = MongoRepository.get(Metadata).collection;
         for (const issue of newIssues) {
-          const record = dbRecords.find((r) => isEqual(r._id, issue.id));
-          this.addIssueToItems({ ...issue, _metadata: record?._metadata });
+          const metadata = await metadataCollection.findOne({ _id: issue.id });
+          this.addIssueToItems({ ...issue, _metadata: metadata || {} });
         }
 
         const pageInfo = get(data, `${this.resourceAlias}.page_info`, {});
@@ -291,12 +289,16 @@ export default class IssuesHander extends AbstractRepositoryHandler {
     const Entity = this.resource === 'issues' ? Issue : PullRequest;
 
     this.entityStorage.add(
+      this.issues.items.map((issue) => new Entity(omit(issue.data, 'timeline')))
+    );
+
+    this.entityStorage.add(
       this.issues.items.map((issue) => {
-        issue.data._metadata = issue.error
+        const metadata = issue.error
           ? { error: typeof issue.error === 'string' ? issue.error : JSON.stringify(issue.error) }
           : { updatedAt: new Date(), endCursor: issue.timeline.endCursor };
 
-        return new Entity(omit(issue.data, 'timeline'));
+        return new Metadata({ _id: issue.data.id, ...metadata });
       })
     );
 

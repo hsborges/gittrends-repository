@@ -14,7 +14,7 @@ class FakeEntity extends Entity {
   date?: Date;
   nested?: { _id: string; value?: string };
 
-  get __schema() {
+  static get __schema() {
     return Joi.object<FakeEntity>({
       _id: Joi.string().required(),
       number: Joi.number(),

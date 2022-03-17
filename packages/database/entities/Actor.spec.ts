@@ -14,9 +14,9 @@ describe('Test Actor entity.', () => {
       created_at: new Date('2009-11-08T06:56:21.000Z'),
       database_id: 150330,
       email: 'getify@gmail.com',
-      followers_count: 34601,
-      following_count: 2,
-      gists_count: 388,
+      followers: 34601,
+      following: 2,
+      gists: 388,
       is_bounty_hunter: false,
       is_campus_expert: false,
       is_developer_program_member: false,
@@ -25,11 +25,11 @@ describe('Test Actor entity.', () => {
       is_site_admin: false,
       location: 'Austin, TX',
       name: 'Kyle Simpson',
-      projects_count: 0,
+      projects: 0,
       projects_url: 'https://github.com/users/getify/projects',
-      repositories_count: 59,
-      repositories_contributed_to_count: 0,
-      starred_repositories_count: 0,
+      repositories: 59,
+      repositories_contributed_to: 0,
+      starred_repositories: 0,
       status: {
         created_at: new Date('2019-01-11T16:11:39.000Z'),
         emoji: ':thumbs_up:',
@@ -40,7 +40,7 @@ describe('Test Actor entity.', () => {
       },
       twitter_username: 'getify',
       updated_at: new Date('2022-02-17T00:10:11.000Z'),
-      watching_count: 0,
+      watching: 0,
       website_url: 'http://getify.me'
     };
 
@@ -63,8 +63,8 @@ describe('Test Actor entity.', () => {
       is_verified: true,
       location: 'Redmond, WA',
       name: 'Microsoft',
-      repositories_count: 4759,
-      teams_count: 0,
+      repositories: 4759,
+      teams: 0,
       twitter_username: 'OpenAtMicrosoft',
       updated_at: new Date('2021-03-18T18:50:55.000Z'),
       website_url: 'https://opensource.microsoft.com'

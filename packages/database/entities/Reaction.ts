@@ -20,7 +20,7 @@ export default class Reaction extends Entity {
   created_at!: Date;
   user?: string;
 
-  public get __schema(): Joi.ObjectSchema<Reaction> {
+  public static get __schema(): Joi.ObjectSchema<Reaction> {
     return Joi.object({
       _id: Joi.string().required(),
       repository: Joi.string().required(),

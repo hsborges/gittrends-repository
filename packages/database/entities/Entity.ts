@@ -17,9 +17,11 @@ export default abstract class Entity {
   static readonly __id_fields: string | string[];
   static readonly __collection: string;
   static readonly __strip_unknown: boolean = true;
+  static readonly __convert: boolean = true;
 
   constructor(object?: Record<any, unknown>) {
-    if (object) Object.assign(this, this.validate(object));
+    if (object)
+      Object.assign(this, (this.constructor as unknown as typeof Entity).transform(object));
   }
 
   _id!: string | Record<string, unknown>;
@@ -28,23 +30,27 @@ export default abstract class Entity {
     return omit(cloneDeep(this));
   }
 
-  public abstract get __schema(): Joi.ObjectSchema;
+  public static get __schema(): Joi.ObjectSchema<Entity> {
+    throw new Error('Subclasses of Entity must implement __schema()!');
+  }
 
-  protected validate(object: Record<string, unknown>): Record<string, unknown> {
+  public static transform(object: Record<string, unknown>): Entity {
     if (!object._id) {
-      const idFields = (this.constructor as any)?.__id_fields;
+      const idFields = this.__id_fields;
       object._id = Array.isArray(idFields) ? pick(object, idFields) : object[idFields];
     }
 
-    const stripUnknown = (this.constructor as any).__strip_unknown;
+    const stripUnknown = this.__strip_unknown;
     const { error, value } = this.__schema.validate(object, {
-      convert: true,
+      convert: this.__convert,
       abortEarly: false,
       stripUnknown: stripUnknown,
       allowUnknown: !stripUnknown
     });
 
     if (error) throw new EntityValidationError(error.details.map((e) => e.message));
+    if (!value)
+      throw new EntityValidationError([`Unknown error when parsing ${JSON.stringify(object)}`]);
 
     return value;
   }

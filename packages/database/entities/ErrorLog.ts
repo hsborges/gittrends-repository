@@ -48,7 +48,7 @@ export default class ErrorLog extends Entity {
     return new ErrorLog(data);
   }
 
-  public get __schema(): Joi.ObjectSchema<ErrorLog> {
+  public static get __schema(): Joi.ObjectSchema<ErrorLog> {
     return Joi.object({
       _id: Joi.string().required(),
       name: Joi.string(),

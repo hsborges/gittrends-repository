@@ -3,7 +3,7 @@
  */
 import { Worker, Job, QueueScheduler } from 'bullmq';
 import { bold, dim } from 'chalk';
-import { program, Option } from 'commander';
+import { program, Argument } from 'commander';
 import consola from 'consola';
 import { isNil } from 'lodash';
 import fetch from 'node-fetch';
@@ -13,6 +13,7 @@ import { MongoRepository, ErrorLog } from '@gittrends/database';
 import compact from './helpers/compact';
 import { RepositoryUpdateError } from './helpers/errors';
 import httpClient from './helpers/proxy-http-client';
+import * as rabbitmq from './helpers/rabbitmq';
 import { useRedis } from './helpers/redis';
 import { version } from './package.json';
 import { ActorsUpdater } from './updater/ActorUpdater';
@@ -31,44 +32,42 @@ program
   .version(version)
   .description('Update repositories metadata')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
-  .addOption(
-    new Option('-t, --type [type]', 'Update "repositories" or "users"')
+  .addArgument(
+    new Argument('[type]', 'Type of resource to update')
       .choices(['repositories', 'users'])
       .default('repositories')
   )
   .hook('preAction', () => MongoRepository.connect().then())
   .hook('postAction', () => MongoRepository.close())
-  .action(async () => {
+  .action(async (type: 'repositories' | 'users' = 'repositories') => {
     if (!(await proxyServerHealthCheck())) {
       consola.error('Proxy server not responding, exiting ...');
       process.exit(1);
     }
 
     const options = program.opts();
-    consola.info(`Updating ${options.type} using ${options.workers} workers`);
+    consola.info(`Updating ${type} using ${options.workers} workers`);
 
     const cacheSize = parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10);
     const cache = cacheSize > 0 ? new Cache(cacheSize) : undefined;
-
-    const redis = useRedis();
+    const rabbitmqConn = await rabbitmq.connect();
 
     const worker = new Worker(
-      options.type,
+      type,
       async (job: Job) => {
         if (isNil(job.data.id)) throw new Error(`Invalid job data! (${job.name}: ${job.data.id})`);
 
         let updater: Updater | null = null;
 
-        if (options.type === 'users') {
-          updater = new ActorsUpdater(job.data.id, httpClient, { job });
-        } else if (options.type === 'repositories') {
+        if (type === 'users') {
+          updater = new ActorsUpdater(job.data.id, httpClient);
+        } else if (type === 'repositories') {
           const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
           if (job.data?.errors?.length) {
             resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
           }
           if (resources.length) {
             updater = new RepositoryUpdater(job.data.id, resources, httpClient, {
-              job,
               cache,
               writeBatchSize: parseInt(process.env.GT_WRITE_BATCH_SIZE ?? '500', 10)
             });
@@ -79,8 +78,7 @@ program
         }
 
         if (updater) {
-          const originalUpdateProgress = job.updateProgress.bind(job);
-          job.updateProgress = async (data: any) => {
+          updater.on('progress', async (data: any) => {
             let progress: number;
 
             if (typeof data === 'number') {
@@ -111,8 +109,8 @@ program
               );
             }
 
-            return originalUpdateProgress(Math.trunc(progress * 100) / 100);
-          };
+            return job.updateProgress(Math.trunc(progress * 100) / 100);
+          });
 
           await updater.update().catch(async (error) => {
             consola.error(`Error thrown by ${job.name}.`, error);
@@ -130,7 +128,7 @@ program
         }
       },
       {
-        connection: redis,
+        connection: useRedis(),
         concurrency: options.workers,
         autorun: true,
         sharedConnection: true,
@@ -139,18 +137,17 @@ program
       }
     );
 
-    const scheduler = new QueueScheduler(options.type, {
-      connection: redis,
+    const scheduler = new QueueScheduler(type, {
+      connection: useRedis(),
       sharedConnection: true,
       autorun: true,
       maxStalledCount: Number.MAX_SAFE_INTEGER,
       stalledInterval: 60 * 1000
     });
 
-    if (globalThis.gc) setInterval(() => globalThis.gc && globalThis.gc(), 30 * 1000);
+    if (globalThis.gc) setInterval(() => globalThis.gc && globalThis.gc(), 1000);
 
-    return new Promise<void>((resolve) => worker.on('closed', resolve))
-      .finally(() => scheduler.close())
-      .finally(() => redis.disconnect());
+    await new Promise<void>((resolve) => worker.on('closed', resolve));
+    await Promise.all([scheduler.close(), rabbitmqConn.close()]);
   })
   .parseAsync(process.argv);

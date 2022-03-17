@@ -29,7 +29,7 @@ export default class Dependency extends Entity {
     | string;
   requirements?: string;
 
-  public get __schema(): Joi.ObjectSchema<Dependency> {
+  public static get __schema(): Joi.ObjectSchema<Dependency> {
     return Joi.object<Dependency>({
       _id: Joi.object({
         repository: Joi.string().required(),

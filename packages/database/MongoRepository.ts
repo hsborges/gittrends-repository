@@ -8,6 +8,12 @@ import { MongoClient } from 'mongodb';
 import Entity from './entities/Entity';
 import { CONNECTION_URL, POOL_SIZE } from './util/mongo-config';
 
+type PlainObjectOrEntity<T extends Entity> =
+  | T
+  | T[]
+  | Record<string, unknown>
+  | Record<string, unknown>[];
+
 export default class MongoRepository<T extends Entity> {
   private static conn?: MongoClient;
   private static db?: Db;
@@ -39,20 +45,16 @@ export default class MongoRepository<T extends Entity> {
     return MongoRepository.db?.collection((this.EntityRef as any).__collection);
   }
 
-  private validateAndTransform(object: T | T[]): T[] {
-    return (Array.isArray(object) ? object : [object]).map(
-      (record) => new (record.constructor as any)(record.toJSON())
-    );
+  private transform(object: PlainObjectOrEntity<T>): T[] {
+    return (Array.isArray(object) ? object : [object]).map((record) => new this.EntityRef(record));
   }
 
-  public async insert(object: T | T[]): Promise<void> {
+  public async insert(object: PlainObjectOrEntity<T>): Promise<void> {
     if (Array.isArray(object) && object.length === 0) return;
 
     await this.collection
       .bulkWrite(
-        this.validateAndTransform(object).map((record: any) => ({
-          insertOne: { document: record }
-        })),
+        this.transform(object).map((record) => ({ insertOne: { document: record.toJSON() } })),
         { ordered: false }
       )
       .catch((err) => {
@@ -61,12 +63,12 @@ export default class MongoRepository<T extends Entity> {
       });
   }
 
-  public async upsert(object: T | T[]): Promise<void> {
+  public async upsert(object: PlainObjectOrEntity<T>): Promise<void> {
     if (Array.isArray(object) && object.length === 0) return;
 
     await this.collection.bulkWrite(
-      this.validateAndTransform(object).map((record) => ({
-        replaceOne: { filter: { _id: record._id }, replacement: record, upsert: true }
+      this.transform(object).map((record) => ({
+        replaceOne: { filter: { _id: record._id }, replacement: record.toJSON(), upsert: true }
       })),
       { ordered: false }
     );

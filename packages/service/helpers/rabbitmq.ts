@@ -1,15 +1,19 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { connect, Connection } from 'amqplib';
+import amqp, { Connection } from 'amqplib';
 
 import * as Entities from '@gittrends/database/dist/entities';
 
 class RabbitMQClient {
   private conn?: Connection;
 
-  private async connect() {
-    this.conn = await connect(process.env.GT_RABBITMQ_URL || 'amqp://localhost:5672');
+  public async connect() {
+    this.conn = await amqp
+      .connect(process.env.GT_RABBITMQ_URL || 'amqp://localhost:5672')
+      .then((conn) => (this.conn ? conn.close().then(() => this.conn) : conn));
+
+    if (!this.conn) throw new Error('RabbitMQ connection error!');
     this.conn.on('close', () => (this.conn = undefined));
 
     const channel = await this.conn.createConfirmChannel();
@@ -23,6 +27,8 @@ class RabbitMQClient {
     );
 
     await channel.close();
+
+    return this.conn;
   }
 
   async createChannel() {
@@ -34,4 +40,5 @@ class RabbitMQClient {
 }
 
 const client = new RabbitMQClient();
+export const connect = client.connect.bind(client);
 export const createChannel = client.createChannel.bind(client);

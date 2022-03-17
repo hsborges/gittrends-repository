@@ -1,8 +1,8 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { Job } from 'bullmq';
 import crypto from 'crypto';
+import EventEmitter from 'events';
 import { difference, flatten } from 'lodash';
 
 import HttpClient from '../github/HttpClient';
@@ -40,25 +40,16 @@ export type RepositoryUpdaterHandler =
   | 'tags'
   | 'watchers';
 
-type RepositoryUpdaterJob = {
-  id: string | string[];
-  resources: string[];
-  done?: string[];
-  errors?: string[];
-};
-
 type RepositoryUpdaterOpts = {
-  job?: Job<RepositoryUpdaterJob>;
   cache?: Cache;
   batchSize?: number;
   writeBatchSize?: number;
 };
 
-export class RepositoryUpdater implements Updater {
+export class RepositoryUpdater extends EventEmitter implements Updater {
   private readonly id: string;
   private readonly httpClient: HttpClient;
 
-  private readonly job?: Job<RepositoryUpdaterJob>;
   private readonly handlers: AbstractRepositoryHandler[] = [];
   private readonly errors: { handler: AbstractRepositoryHandler; error: Error }[] = [];
 
@@ -68,11 +59,12 @@ export class RepositoryUpdater implements Updater {
     httpClient: HttpClient,
     opts?: RepositoryUpdaterOpts
   ) {
-    const { job, cache, batchSize, writeBatchSize } = opts || {};
+    super();
+
+    const { cache, batchSize, writeBatchSize } = opts || {};
 
     this.id = repositoryId;
     this.httpClient = httpClient;
-    this.job = job;
 
     handlers.forEach((resource) => {
       const Class = handlersList.find((handler) => handler.resource === resource);
@@ -82,14 +74,6 @@ export class RepositoryUpdater implements Updater {
   }
 
   async update(handlers = this.filterPending(this.handlers), isRetry?: boolean): Promise<void> {
-    if (!isRetry) {
-      this.job?.log(
-        `[${new Date().toISOString()}]: updater started (resources: ${handlers
-          .map((h) => (h.constructor as typeof AbstractRepositoryHandler).resource)
-          .join(', ')}).`
-      );
-    }
-
     let pendingHandlers = handlers;
     if (pendingHandlers.length === 0) return;
 
@@ -125,10 +109,10 @@ export class RepositoryUpdater implements Updater {
             )
           );
         })
-        .finally(async () => {
+        .finally(() => {
           if (isRetry) return;
 
-          if (this.job && this.filterDone(pendingHandlers).length > 0) {
+          if (this.filterDone(pendingHandlers).length > 0) {
             const errors = this.errors.map(
               (e) => (e.handler.constructor as typeof AbstractRepositoryHandler).resource
             );
@@ -141,14 +125,7 @@ export class RepositoryUpdater implements Updater {
               (h) => (h.constructor as typeof AbstractRepositoryHandler).resource
             );
 
-            await this.job?.updateProgress({ pending, done: difference(done, errors), errors });
-            await this.job?.log(
-              `[${new Date().toISOString()}]: resource(s) updated (resources: ${this.filterDone(
-                pendingHandlers
-              )
-                .map((h) => (h.constructor as typeof AbstractRepositoryHandler).resource)
-                .join(', ')}).`
-            );
+            this.emit('progress', { pending, done: difference(done, errors), errors });
           }
         });
 
@@ -156,7 +133,6 @@ export class RepositoryUpdater implements Updater {
     } while (!isRetry && pendingHandlers.length > 0);
 
     if (!isRetry) {
-      this.job?.log(`[${new Date().toISOString()}]: updater finished.`);
       if (this.errors.length > 0) throw new RepositoryUpdateError(this.errors.map((e) => e.error));
     }
   }

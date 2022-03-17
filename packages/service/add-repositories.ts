@@ -184,9 +184,10 @@ program
         ]);
       })
       .then(async ([repos, users]) => {
-        consola.info('Adding repositories to database ...');
-        await MongoRepository.get(Actor).insert(users.map((user) => new Actor(user)));
-        await MongoRepository.get(Repository).insert(repos.map((repo) => new Repository(repo)));
+        consola.info(`Adding ${users.length} new actors to database ...`);
+        await MongoRepository.get(Actor).insert(users);
+        consola.info(`Adding ${repos.length} new repositories to database ...`);
+        await MongoRepository.get(Repository).insert(repos);
       })
       .then(() => consola.success('Repositories successfully added!'))
       .catch((err) => consola.error(err))

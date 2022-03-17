@@ -37,7 +37,7 @@ export default class RepositoryComponent extends Component {
     return this;
   }
 
-  includeLanguages(include = true, { first, after, alias = 'languages' }: TIncludeOpts): this {
+  includeLanguages(include = true, { first, after, alias = '_languages' }: TIncludeOpts): this {
     this.includes.languages = include && {
       textFragment: `
         ${alias}:languages(${super.argsToString({ first, after })}) {
@@ -51,7 +51,7 @@ export default class RepositoryComponent extends Component {
     return this;
   }
 
-  includeTopics(include = true, { first, after, alias = 'repositoryTopics' }: TIncludeOpts): this {
+  includeTopics(include = true, { first, after, alias = '_topics' }: TIncludeOpts): this {
     this.includes.topics = include && {
       textFragment: `
         ${alias}:repositoryTopics(${super.argsToString({ first, after })}) {
@@ -65,7 +65,7 @@ export default class RepositoryComponent extends Component {
     return this;
   }
 
-  includeReleases(include = true, { first, after, alias = 'releases' }: TIncludeOpts): this {
+  includeReleases(include = true, { first, after, alias = '_releases' }: TIncludeOpts): this {
     const args = super.argsToString({ first, after });
     this.includes.releases = include && {
       textFragment: `
@@ -80,7 +80,7 @@ export default class RepositoryComponent extends Component {
     return this;
   }
 
-  includeTags(include = true, { first, after, alias = 'tags' }: TIncludeOpts): this {
+  includeTags(include = true, { first, after, alias = '_tags' }: TIncludeOpts): this {
     const args = super.argsToString({ first, after });
     this.includes.tags = include && {
       textFragment: `
@@ -99,7 +99,7 @@ export default class RepositoryComponent extends Component {
     return this;
   }
 
-  includeStargazers(include = true, { first, after, alias = 'stargazers' }: TIncludeOpts): this {
+  includeStargazers(include = true, { first, after, alias = '_stargazers' }: TIncludeOpts): this {
     const args = super.argsToString({ first, after });
     this.includes.stargazers = include && {
       textFragment: `
@@ -115,7 +115,7 @@ export default class RepositoryComponent extends Component {
     return this;
   }
 
-  includeWatchers(include = true, { first, after, alias = 'watchers' }: TIncludeOpts): this {
+  includeWatchers(include = true, { first, after, alias = '_watchers' }: TIncludeOpts): this {
     this.includes.watchers = include && {
       textFragment: `
         ${alias}:watchers(${super.argsToString({ first, after })}) {
@@ -132,7 +132,7 @@ export default class RepositoryComponent extends Component {
 
   includeDependencyManifests(
     include = true,
-    { first, after, alias = 'dependency_graph_manifests' }: TIncludeOpts
+    { first, after, alias = '_manifests' }: TIncludeOpts
   ): this {
     this.includes.dependencies = include && {
       textFragment: `

@@ -18,7 +18,7 @@ export default class GithubToken extends Entity {
   email?: string;
   created_at!: Date;
 
-  public get __schema(): Joi.ObjectSchema<GithubToken> {
+  public static get __schema(): Joi.ObjectSchema<GithubToken> {
     return Joi.object<GithubToken>({
       token: Joi.string().required(),
       type: Joi.string().required(),

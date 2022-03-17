@@ -3,10 +3,7 @@
  */
 import Joi from 'joi';
 
-
-
 import Entity from './Entity';
-
 
 export default class Issue extends Entity {
   // Protected fields
@@ -43,7 +40,7 @@ export default class Issue extends Entity {
   reaction_groups?: Record<string, any>;
   // entity metadata
 
-  public get __schema(): Joi.ObjectSchema<Issue> {
+  public static get __schema(): Joi.ObjectSchema<Issue> {
     return Joi.object<Issue>({
       _id: Joi.string().required(),
       repository: Joi.string().required(),

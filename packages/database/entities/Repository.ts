@@ -10,16 +10,15 @@ export default class Repository extends Entity {
 
   // Entity fields
   _id!: string;
-  assignable_users_count?: number;
+  assignable_users?: number;
   code_of_conduct?: string;
-  contact_links?: string;
   created_at?: Date;
   database_id?: number;
   default_branch?: string;
   delete_branch_on_merge?: boolean;
   description?: string;
   disk_usage?: number;
-  forks_count?: number;
+  forks?: number;
   funding_links?: Array<{ url: string; platform?: string }>;
   has_issues_enabled?: boolean;
   has_projects_enabled?: boolean;
@@ -37,14 +36,14 @@ export default class Repository extends Entity {
   is_security_policy_enabled?: boolean;
   is_template?: boolean;
   is_user_configuration_repository?: boolean;
-  issues_count?: number;
-  labels_count?: number;
+  issues?: number;
+  labels?: number;
   languages?: Array<{ language: string; size: number }>;
   license_info?: string;
   lock_reason?: string;
-  mentionable_users_count?: number;
+  mentionable_users?: number;
   merge_commit_allowed?: boolean;
-  milestones_count?: number;
+  milestones?: number;
   mirror_url?: string;
   name?: string;
   name_with_owner!: string;
@@ -53,32 +52,31 @@ export default class Repository extends Entity {
   parent?: string;
   primary_language?: string;
   pushed_at?: Date;
-  pull_requests_count?: number;
+  pull_requests?: number;
   rebase_merge_allowed?: boolean;
-  releases_count?: number;
-  repository_topics?: string[];
+  releases?: number;
+  repository_topics?: Array<string>;
   squash_merge_allowed?: boolean;
-  stargazers_count?: number;
+  stargazers?: number;
   template_repository?: string;
   updated_at?: Date;
   url?: string;
   uses_custom_open_graph_image?: boolean;
-  vulnerability_alerts_count?: number;
-  watchers_count?: number;
+  vulnerability_alerts?: number;
+  watchers?: number;
 
-  public get __schema(): Joi.ObjectSchema<Repository> {
+  public static get __schema(): Joi.ObjectSchema<Repository> {
     return Joi.object<Repository>({
       _id: Joi.string().required(),
-      assignable_users_count: Joi.number(),
+      assignable_users: Joi.number(),
       code_of_conduct: Joi.string(),
-      contact_links: Joi.string(),
       created_at: Joi.date(),
       database_id: Joi.number(),
       default_branch: Joi.string(),
       delete_branch_on_merge: Joi.boolean(),
       description: Joi.string(),
       disk_usage: Joi.number(),
-      forks_count: Joi.number(),
+      forks: Joi.number(),
       funding_links: Joi.array().items(
         Joi.object({
           url: Joi.string().required(),
@@ -101,8 +99,8 @@ export default class Repository extends Entity {
       is_security_policy_enabled: Joi.boolean(),
       is_template: Joi.boolean(),
       is_user_configuration_repository: Joi.boolean(),
-      issues_count: Joi.number(),
-      labels_count: Joi.number(),
+      issues: Joi.number(),
+      labels: Joi.number(),
       languages: Joi.array().items(
         Joi.object({
           language: Joi.string().required(),
@@ -111,9 +109,9 @@ export default class Repository extends Entity {
       ),
       license_info: Joi.string(),
       lock_reason: Joi.string(),
-      mentionable_users_count: Joi.number(),
+      mentionable_users: Joi.number(),
       merge_commit_allowed: Joi.boolean(),
-      milestones_count: Joi.number(),
+      milestones: Joi.number(),
       mirror_url: Joi.string(),
       name: Joi.string(),
       name_with_owner: Joi.string().required(),
@@ -122,18 +120,18 @@ export default class Repository extends Entity {
       parent: Joi.string(),
       primary_language: Joi.string(),
       pushed_at: Joi.date(),
-      pull_requests_count: Joi.number(),
+      pull_requests: Joi.number(),
       rebase_merge_allowed: Joi.boolean(),
-      releases_count: Joi.number(),
+      releases: Joi.number(),
       repository_topics: Joi.array().items(Joi.string()),
       squash_merge_allowed: Joi.boolean(),
-      stargazers_count: Joi.number(),
+      stargazers: Joi.number(),
       template_repository: Joi.string(),
       updated_at: Joi.date(),
       url: Joi.string(),
       uses_custom_open_graph_image: Joi.boolean(),
-      vulnerability_alerts_count: Joi.number(),
-      watchers_count: Joi.number()
+      vulnerability_alerts: Joi.number(),
+      watchers: Joi.number()
     });
   }
 }

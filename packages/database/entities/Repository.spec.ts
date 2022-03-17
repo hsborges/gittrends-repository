@@ -12,7 +12,7 @@ describe('Test Repository entity.', () => {
       description:
         "freeCodeCamp.org's open-source codebase and curriculum. Learn to code for free.",
       disk_usage: 302230,
-      forks_count: 28185,
+      forks: 28185,
       funding_links: [
         { platform: 'GITHUB', url: 'https://github.com/freeCodeCamp' },
         { platform: 'PATREON', url: 'https://patreon.com/freecodecamp' },
@@ -44,7 +44,7 @@ describe('Test Repository entity.', () => {
       pushed_at: new Date('2022-03-14T00:56:01.000Z'),
       rebase_merge_allowed: true,
       squash_merge_allowed: true,
-      stargazers_count: 342082,
+      stargazers: 342082,
       updated_at: new Date('2022-03-14T01:33:15.000Z'),
       url: 'https://github.com/freeCodeCamp/freeCodeCamp',
       uses_custom_open_graph_image: false,

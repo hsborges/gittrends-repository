@@ -24,7 +24,7 @@ export default class Tag extends Entity {
   };
   target?: string;
 
-  public get __schema(): Joi.ObjectSchema<Tag> {
+  public static get __schema(): Joi.ObjectSchema<Tag> {
     return Joi.object<Tag>({
       _id: Joi.string().required(),
       repository: Joi.string().required(),

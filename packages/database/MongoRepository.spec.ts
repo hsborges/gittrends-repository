@@ -11,7 +11,7 @@ class FakeEntity extends Entity {
 
   field?: string;
 
-  public get __schema(): ObjectSchema<FakeEntity> {
+  public static get __schema(): ObjectSchema<FakeEntity> {
     return Joi.object({
       _id: Joi.string().required(),
       field: Joi.string()
@@ -23,7 +23,7 @@ class FakeNonWhitelistEntity extends FakeEntity {
   public static __collection = 'FakeNonWhitelistEntity';
   public static __strip_unknown: boolean = false;
 
-  public get __schema(): ObjectSchema<FakeNonWhitelistEntity> {
+  public static get __schema(): ObjectSchema<FakeNonWhitelistEntity> {
     return super.__schema.append({});
   }
 }
@@ -40,6 +40,17 @@ describe('Test MongoRepository function', () => {
 
   afterAll(async () => {
     await MongoRepository.close();
+  });
+
+  it('should accept insert plain objects', async () => {
+    let promise = entityRepository.insert({});
+    await expect(promise).rejects.toBeInstanceOf(EntityValidationError);
+    await expect(promise).rejects.toHaveProperty('errors');
+
+    const plainData = { _id: 'extra_field', field: '1' };
+    await expect(entityRepository.insert(plainData)).resolves.not.toThrow();
+    const insertedEntity = entityRepository.collection.findOne({ _id: plainData._id });
+    await expect(insertedEntity).resolves.toStrictEqual(plainData);
   });
 
   it('should validate entities before inserting', async () => {

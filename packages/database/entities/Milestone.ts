@@ -22,7 +22,7 @@ export default class Milestone extends Entity {
   state?: string;
   title?: string;
 
-  public get __schema(): Joi.ObjectSchema<Milestone> {
+  public static get __schema(): Joi.ObjectSchema<Milestone> {
     return Joi.object({
       _id: Joi.string().required(),
       repository: Joi.string().required(),

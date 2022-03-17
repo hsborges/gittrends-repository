@@ -33,11 +33,16 @@ module.exports = {
       name: 'queue-board',
       interpreter: 'node',
       interpreter_args: '-r @gittrends/env',
-      script: 'dist/extra/queue-board.js',
-      max_memory_restart: '100M',
-      env: {
-        PORT: process.env.GT_QUEUE_BOARD_PORT || 8082
-      }
+      script: './node_modules/.bin/agendash',
+      args: [
+        '--db',
+        process.env.GT_MONGO_URL,
+        '--collection',
+        '_agenda',
+        '--port',
+        process.env.GT_QUEUE_BOARD_PORT || 8082
+      ],
+      max_memory_restart: '100M'
     },
     // {
     //   name: 'scheduler',

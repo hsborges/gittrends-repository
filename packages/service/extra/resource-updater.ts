@@ -48,11 +48,7 @@ program
   .addArgument(new Argument('<repository_or_actor>').argRequired())
   .action(async (resourceId: string): Promise<void> => {
     const opts: { resource: string[] } = program.opts();
-
-    await Promise.resolve(() => {
-      if (opts.resource.length === 1 && opts.resource[0] === 'users')
-        return updateActor(resourceId);
-      return updateRepositoryResource(resourceId, opts.resource);
-    });
+    if (opts.resource.length === 1 && opts.resource[0] === 'users') return updateActor(resourceId);
+    return updateRepositoryResource(resourceId, opts.resource);
   })
   .parseAsync(process.argv);

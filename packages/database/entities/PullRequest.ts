@@ -27,14 +27,14 @@ export default class PullRequest extends Issue {
   maintainer_can_modify?: boolean;
   merge_commit?: string;
   merge_state_status?: string;
-  mergeable?: boolean;
+  mergeable?: string;
   merged?: boolean;
   merged_at?: Date;
   merged_by?: string;
   permalink?: string;
   potential_merge_commit?: string;
 
-  public get __schema(): Joi.ObjectSchema<PullRequest> {
+  public static get __schema(): Joi.ObjectSchema<PullRequest> {
     return super.__schema.append<PullRequest>({
       suggested_reviewers: Joi.array().items(Joi.string()),
       additions: Joi.number(),
@@ -61,7 +61,7 @@ export default class PullRequest extends Issue {
       maintainer_can_modify: Joi.boolean(),
       merge_commit: Joi.string(),
       merge_state_status: Joi.string(),
-      mergeable: Joi.boolean(),
+      mergeable: Joi.string(),
       merged: Joi.boolean(),
       merged_at: Joi.date(),
       merged_by: Joi.string(),
