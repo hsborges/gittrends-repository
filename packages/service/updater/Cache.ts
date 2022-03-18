@@ -1,6 +1,7 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { isNil } from 'lodash';
 import hasher from 'node-object-hash';
 import QuickLRU from 'quick-lru';
 
@@ -15,7 +16,9 @@ export class Cache {
   }
 
   private getKey(object: Entity): string {
-    return object._id ? object._id : this.hashSortCoerce.hash(object.toJSON());
+    if (!isNil(object._id))
+      return typeof object._id === 'string' ? object._id : this.hashSortCoerce.hash(object._id);
+    return this.hashSortCoerce.hash(object.toJSON());
   }
 
   public add(object: Entity | Entity[]): void {

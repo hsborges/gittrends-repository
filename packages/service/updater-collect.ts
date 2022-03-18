@@ -1,12 +1,12 @@
 /*
  *  Author: Hudson S. Borges
  */
+import axios from 'axios';
 import { Worker, Job, QueueScheduler } from 'bullmq';
 import { bold, dim } from 'chalk';
 import { program, Argument } from 'commander';
 import consola from 'consola';
 import { isNil } from 'lodash';
-import fetch from 'node-fetch';
 
 import { MongoRepository, ErrorLog } from '@gittrends/database';
 
@@ -22,8 +22,9 @@ import { RepositoryUpdater, RepositoryUpdaterHandler } from './updater/Repositor
 import Updater from './updater/Updater';
 
 async function proxyServerHealthCheck(): Promise<boolean> {
-  return fetch(`${process.env.GT_PROXY_URL || 'http://localhost:3000'}/status`, { timeout: 5000 })
-    .then((request) => request.ok)
+  return axios
+    .get(`${process.env.GT_PROXY_URL || 'http://localhost:3000'}/status`, { timeout: 5000 })
+    .then((request) => request.status === 200)
     .catch(() => false);
 }
 
@@ -48,8 +49,7 @@ program
     const options = program.opts();
     consola.info(`Updating ${type} using ${options.workers} workers`);
 
-    const cacheSize = parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10);
-    const cache = cacheSize > 0 ? new Cache(cacheSize) : undefined;
+    const cache = new Cache(parseInt(process.env.GT_CACHE_SIZE ?? '1000', 10));
     const rabbitmqConn = await rabbitmq.connect();
 
     const worker = new Worker(
@@ -112,6 +112,10 @@ program
             return job.updateProgress(Math.trunc(progress * 100) / 100);
           });
 
+          updater.on('error', (error) => {
+            consola.error(`Error thrown by ${job.name} during update: `, error);
+          });
+
           await updater.update().catch(async (error) => {
             consola.error(`Error thrown by ${job.name}.`, error);
 
@@ -145,7 +149,7 @@ program
       stalledInterval: 60 * 1000
     });
 
-    if (globalThis.gc) setInterval(() => globalThis.gc && globalThis.gc(), 1000);
+    if (globalThis.gc) setInterval(() => globalThis.gc && globalThis.gc(), 5 * 1000);
 
     await new Promise<void>((resolve) => worker.on('closed', resolve));
     await Promise.all([scheduler.close(), rabbitmqConn.close()]);

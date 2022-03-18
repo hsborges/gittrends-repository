@@ -98,14 +98,14 @@ export class RepositoryUpdater extends EventEmitter implements Updater {
         .catch(async (err) => {
           if (isRetry || !(err instanceof RequestError)) throw err;
 
-          const errorHandler = (err: Error, handler: AbstractRepositoryHandler) =>
-            handler.error(err).catch((err2) => this.errors.push({ handler, error: err2 }));
-
-          if (pendingHandlers.length === 1) return errorHandler(err, pendingHandlers[0]);
-
           return Promise.all(
             pendingHandlers.map((handler) =>
-              this.update([handler], true).catch((err) => errorHandler(err, handler))
+              this.update([handler], true).catch(async (singleErr) =>
+                handler.error(singleErr).catch((err2) => {
+                  this.emit('error', singleErr);
+                  this.errors.push({ handler, error: err2 });
+                })
+              )
             )
           );
         })
@@ -132,9 +132,8 @@ export class RepositoryUpdater extends EventEmitter implements Updater {
       pendingHandlers = this.filterPending(pendingHandlers);
     } while (!isRetry && pendingHandlers.length > 0);
 
-    if (!isRetry) {
-      if (this.errors.length > 0) throw new RepositoryUpdateError(this.errors.map((e) => e.error));
-    }
+    if (!isRetry && this.errors.length > 0)
+      throw new RepositoryUpdateError(this.errors.map((e) => e.error));
   }
 
   private filterPending(handlers: AbstractRepositoryHandler[]): AbstractRepositoryHandler[] {

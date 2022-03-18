@@ -81,10 +81,10 @@ test('it should remove entities from storage', () => {
   storage.add(samples.repo);
   expect(storage.size()).toBe(2);
 
-  storage.clean(Actor);
+  storage.clear(Actor);
   expect(storage.size()).toBe(1);
 
-  storage.clean();
+  storage.clear();
   expect(storage.size()).toBe(0);
 });
 

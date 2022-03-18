@@ -16,6 +16,7 @@ type TManifestMetadata = {
   component: DependencyGraphManifestComponent;
   hasNextPage: boolean;
   endCursor?: string;
+  error?: Error[];
 };
 
 export default class DependenciesHandler extends AbstractRepositoryHandler {
@@ -25,21 +26,19 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
   readonly manifestsComponents: Array<TManifestMetadata> = [];
 
   async component(): Promise<RepositoryComponent | Component[]> {
-    if (this.manifests.hasNextPage) {
-      return this._component.includeDependencyManifests(this.manifests.hasNextPage, {
-        first: this.batchSize,
-        after: this.manifests.endCursor
-      });
+    if (this.pendingManifests.length > 0) {
+      return this.pendingManifests.map((manifest) =>
+        manifest.component.includeDependencies(manifest.hasNextPage, {
+          first: this.batchSize,
+          after: manifest.endCursor
+        })
+      );
     }
 
-    this.pendingManifests.forEach((manifest) => {
-      manifest.component.includeDependencies(manifest.hasNextPage, {
-        first: this.batchSize,
-        after: manifest.endCursor
-      });
+    return this._component.includeDependencyManifests(this.manifests.hasNextPage, {
+      first: this.batchSize,
+      after: this.manifests.endCursor
     });
-
-    return this.pendingManifests.map((c) => c.component);
   }
 
   async update(response: Record<string, unknown>): Promise<void> {
@@ -49,28 +48,7 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
   }
 
   private async _update(response: Record<string, unknown>): Promise<void> {
-    if (response && this.manifests.hasNextPage) {
-      const data = super.parseResponse(response[this.alias[0]]);
-
-      this.manifestsComponents.push(
-        ...get(data, '_manifests.nodes', []).map(
-          (manifest: Record<string, unknown>, index: number) => ({
-            data: manifest,
-            component: new DependencyGraphManifestComponent(
-              manifest.id as string,
-              `${this.alias}_manifest_${index}`
-            )
-              .includeDetails(false)
-              .includeDependencies(true, { first: this.batchSize }),
-            hasNextPage: manifest.parseable
-          })
-        )
-      );
-
-      const pageInfo = get(data, '_manifests.page_info', {});
-      this.manifests.hasNextPage = pageInfo.has_next_page ?? false;
-      this.manifests.endCursor = pageInfo.end_cursor ?? this.manifests.endCursor;
-    } else if (response && !this.manifests.hasNextPage) {
+    if (this.pendingManifests.length > 0) {
       this.entityStorage.add(
         this.pendingManifests.reduce((dependencies: Dependency[], manifest) => {
           const piPath = `${manifest.component.alias}.dependencies.page_info`;
@@ -96,11 +74,39 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
       );
     }
 
+    if (this.pendingManifests.length === 0 && this.manifests.hasNextPage) {
+      const data = super.parseResponse(response[this.alias[0]]);
+
+      this.manifestsComponents.push(
+        ...get(data, '_manifests.nodes', []).map(
+          (manifest: Record<string, unknown>, index: number) => ({
+            data: manifest,
+            component: new DependencyGraphManifestComponent(
+              manifest.id as string,
+              `${this.alias}_manifest_${index}`
+            )
+              .includeDetails(false)
+              .includeDependencies(true, { first: this.batchSize }),
+            hasNextPage: manifest.parseable
+          })
+        )
+      );
+
+      const pageInfo = get(data, '_manifests.page_info', {});
+      this.manifests.hasNextPage = pageInfo.has_next_page ?? false;
+      this.manifests.endCursor = pageInfo.end_cursor ?? this.manifests.endCursor;
+
+      return;
+    }
+
     if (this.entityStorage.size() >= this.writeBatchSize || this.isDone()) {
       await this.entityStorage.persist();
     }
 
     if (this.isDone()) {
+      const errorSample = this.manifestsComponents.find((mfc) => mfc.error?.length);
+      if (errorSample) throw errorSample.error?.[0];
+
       await MongoRepository.get(Metadata).collection.updateOne(
         { _id: this.id },
         { $set: { [`${DependenciesHandler.resource}.updatedAt`]: new Date() } },
@@ -111,19 +117,23 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof RequestError) {
-      if (this.batchSize > 1) {
+      const [pending] = this.pendingManifests;
+
+      if (pending) {
+        pending.hasNextPage = false;
+        pending.error = (pending.error || []).concat([err]);
+
+        await MongoRepository.get(Metadata).collection.updateOne(
+          { _id: this.id },
+          { $set: { [`${DependenciesHandler.resource}.error`]: err.message } },
+          { upsert: true }
+        );
+
+        return this.isDone() ? Promise.reject(err) : Promise.resolve();
+      } else if (this.batchSize > 1) {
         this.batchSize = 1;
         return;
       }
-
-      const [pending] = this.pendingManifests;
-      if (pending) pending.hasNextPage = false;
-
-      await MongoRepository.get(Metadata).collection.updateOne(
-        { _id: this.id },
-        { $set: { [`${DependenciesHandler.resource}.error`]: err.message } },
-        { upsert: true }
-      );
     }
 
     return super.error(err);
@@ -131,8 +141,8 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
 
   get pendingManifests(): Array<TManifestMetadata> {
     return this.manifestsComponents
-      .filter((m) => m.data.parseable && !m.data.exceeds_max_size && m.hasNextPage)
-      .slice(0, this.batchSize);
+      .filter((m) => !m.data.exceeds_max_size && m.hasNextPage)
+      .slice(0, 1);
   }
 
   get alias(): string[] {

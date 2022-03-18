@@ -1,5 +1,5 @@
+import axios from 'axios';
 import nock from 'nock';
-import fetch from 'node-fetch';
 
 import { GithubRequestError, ServerRequestError, RequestError } from './errors';
 
@@ -14,9 +14,8 @@ describe('Test request errors', () => {
     nock(url).get('/').reply(500, 'failed');
 
     await expect(
-      fetch(url).then(async (response) => {
-        const data = await response.text();
-        const error = new RequestError(new Error(), { data, status: response.status });
+      axios.get<string>(url).catch(async ({ response: { data, status } }) => {
+        const error = new RequestError(new Error(), { data, status: status });
         expect(error.response?.status).toBe(500);
         expect(error.response?.data).toBe('failed');
       })
@@ -26,15 +25,17 @@ describe('Test request errors', () => {
   test('it should create the appropriated error (network issues)', async () => {
     nock(url).get('/').reply(500);
 
-    let response = await fetch(url);
-    let error = RequestError.create(new Error(), { status: response.status });
+    let error = await axios
+      .get(url)
+      .catch(({ response }) => RequestError.create(new Error(), { status: response.status }));
     expect(error).toBeInstanceOf(ServerRequestError);
     expect((error as ServerRequestError).type).toBe('INTERNAL_SERVER');
 
     nock(url).get('/').reply(502);
 
-    response = await fetch(url);
-    error = RequestError.create(new Error(), { status: response.status });
+    error = await axios
+      .get(url)
+      .catch(({ response }) => RequestError.create(new Error(), { status: response.status }));
     expect(error).toBeInstanceOf(ServerRequestError);
     expect((error as ServerRequestError).type).toBe('BAD_GATEWAY');
   });
@@ -55,9 +56,9 @@ describe('Test request errors', () => {
         ]
       });
 
-    let response = await fetch(`${url}/errors`);
+    let response = await axios.get(`${url}/errors`);
     let error = RequestError.create(new Error(), {
-      data: await response.json(),
+      data: response.data,
       status: response.status
     });
 
@@ -84,9 +85,9 @@ describe('Test request errors', () => {
         ]
       });
 
-    response = await fetch(`${url}/errors`);
+    response = await axios.get(`${url}/errors`);
     error = RequestError.create(new Error(), {
-      data: await response.json(),
+      data: response.data,
       status: response.status
     });
 

@@ -7,8 +7,8 @@ import { cloneDeep, omit, pick } from 'lodash';
 export class EntityValidationError extends Error {
   public readonly errors!: string[];
 
-  constructor(errors: string[]) {
-    super(`Entity validation error.\n${JSON.stringify(errors)}`);
+  constructor(errors: string[], source?: any) {
+    super(`Entity validation error.\n${JSON.stringify(errors)}\n${JSON.stringify(source)}`);
     this.errors = errors;
   }
 }
@@ -48,7 +48,11 @@ export default abstract class Entity {
       allowUnknown: !stripUnknown
     });
 
-    if (error) throw new EntityValidationError(error.details.map((e) => e.message));
+    if (error)
+      throw new EntityValidationError(
+        error.details.map((e) => e.message),
+        object
+      );
     if (!value)
       throw new EntityValidationError([`Unknown error when parsing ${JSON.stringify(object)}`]);
 

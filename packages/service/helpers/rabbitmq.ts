@@ -8,10 +8,16 @@ import * as Entities from '@gittrends/database/dist/entities';
 class RabbitMQClient {
   private conn?: Connection;
 
+  protected async createConnection() {
+    const conn = await amqp.connect(process.env.GT_RABBITMQ_URL || 'amqp://localhost:5672');
+    if (!conn) throw new Error('RabbitMQ connection error!');
+    return conn;
+  }
+
   public async connect() {
-    this.conn = await amqp
-      .connect(process.env.GT_RABBITMQ_URL || 'amqp://localhost:5672')
-      .then((conn) => (this.conn ? conn.close().then(() => this.conn) : conn));
+    this.conn = await this.createConnection().then((conn) =>
+      this.conn ? conn.close().then(() => this.conn) : conn
+    );
 
     if (!this.conn) throw new Error('RabbitMQ connection error!');
     this.conn.on('close', () => (this.conn = undefined));
@@ -24,9 +30,7 @@ class RabbitMQClient {
         .map((E) =>
           channel?.assertQueue(E.name, { durable: true, arguments: { 'x-queue-mode': 'lazy' } })
         )
-    );
-
-    await channel.close();
+    ).finally(() => channel.close());
 
     return this.conn;
   }

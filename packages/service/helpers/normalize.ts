@@ -1,7 +1,9 @@
 /*
  *  Author: Hudson S. Borges
  */
-import { isArray, isPlainObject, size, mapValues, mapKeys, negate, isNil } from 'lodash';
+import { isArray, isPlainObject, size, mapValues, negate, isNil, reduce } from 'lodash';
+
+import { cannotBeRemoved } from './compact';
 
 const notNil = negate(isNil);
 
@@ -10,13 +12,24 @@ const camelToSnakeCase = (str: string) =>
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/i;
 
-export default function normalize(object: any): any {
-  if (isArray(object)) return object.map(normalize);
+export default function normalize(object: any, compact: boolean = false): any {
+  if (isArray(object)) {
+    return object
+      .map((value) => normalize(value, compact))
+      .filter((value) => (compact ? cannotBeRemoved(value) : true));
+  }
 
   if (isPlainObject(object)) {
-    const _object = mapValues(
-      mapKeys(object, (_, key) => camelToSnakeCase(key)),
-      normalize
+    const _object = reduce(
+      object,
+      (memo: Record<string, any>, value, key) => {
+        const normalizedValue = normalize(value, compact);
+        return Object.assign(
+          memo,
+          cannotBeRemoved(normalizedValue) ? { [camelToSnakeCase(key)]: normalizedValue } : {}
+        );
+      },
+      {}
     );
 
     if (size(_object) === 1) {

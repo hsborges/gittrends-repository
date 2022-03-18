@@ -3,7 +3,6 @@
  */
 import { get, uniq } from 'lodash';
 
-import compact from '../helpers/compact';
 import { RequestError } from '../helpers/errors';
 import compress from '../helpers/gql-compress';
 import normalize from '../helpers/normalize';
@@ -62,7 +61,7 @@ export default class Query {
         Promise.reject(RequestError.create(err, { components: this.components }))
       )
       .then((response) => {
-        const data = compact(normalize(response.data));
+        const data = normalize(response.data, true);
 
         if (data?.errors?.length) {
           throw RequestError.create(
@@ -71,7 +70,7 @@ export default class Query {
           );
         }
 
-        return get(data, 'data', null);
+        return get(data, 'data', {});
       });
   }
 }

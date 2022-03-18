@@ -1,6 +1,8 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { isEqual } from 'lodash';
+
 import { Entity } from '@gittrends/database';
 import * as Entities from '@gittrends/database';
 
@@ -26,65 +28,56 @@ export class EntityStorage<T extends Entity> {
   }
 
   add(records: T | T[]): void {
-    const filteredRecords = (Array.isArray(records) ? records : [records])
-      .filter((r) => !(CACHABLE_ENTITIES.indexOf(r.constructor.name) >= 0 && this.cache?.has(r)))
-      .filter(
-        (r) => !this.entities.find((e) => e.constructor === r.constructor && e._id === r._id)
-      );
-    this.entities.push(...filteredRecords);
+    this.entities.push(
+      ...(Array.isArray(records) ? records : [records])
+        .filter((r) => !(CACHABLE_ENTITIES.indexOf(r.constructor.name) >= 0 && this.cache?.has(r)))
+        .filter(
+          (r) =>
+            !this.entities.find((e) => e.constructor === r.constructor && isEqual(e._id, r._id))
+        )
+    );
   }
 
-  size(entity?: new () => T): number {
+  size(entity?: new (...args: any[]) => T): number {
     if (entity) return this.entities.filter((e) => e.constructor === entity).length;
     return this.entities.length;
   }
 
-  clean(entity?: new () => T): void {
+  clear(entity?: new (...args: any[]) => T): void {
     if (entity) this.entities = this.entities.filter((e) => e.constructor !== entity);
     else this.entities = [];
   }
 
-  async persist(entity?: new () => T): Promise<void> {
+  async persist(entity?: new (...args: any[]) => T): Promise<void> {
     const entitiesGroup = this.entities.filter((e) => (entity ? e.constructor === entity : true));
 
-    const groups = entitiesGroup
-      .reduce((memo, curr) => {
-        if (!CACHABLE_ENTITIES.indexOf(curr.constructor.name) || !this.cache?.has(curr)) {
-          const data = memo.find((m) => m.entity === curr.constructor.name);
-          if (!data) memo.push({ entity: curr.constructor.name, records: [curr] });
-          else data.records.push(curr);
-        }
+    const groups = entitiesGroup.reduce((memo, curr) => {
+      if (!(CACHABLE_ENTITIES.indexOf(curr.constructor.name) >= 0 && this.cache?.has(curr))) {
+        const data = memo.find((m) => m.entity === curr.constructor.name);
+        if (!data) memo.push({ entity: curr.constructor.name, records: [curr] });
+        else data.records.push(curr);
+      }
 
-        return memo;
-      }, [] as { entity: string; records: T[]; operation?: OperationTypes }[])
-      .filter((group) => group.records.length > 0);
+      return memo;
+    }, [] as { entity: string; records: T[]; operation?: OperationTypes }[]);
 
     const channel = await createChannel();
 
-    await Promise.all(
-      groups.map(
-        ({ entity, records }) =>
-          new Promise<void>(async (resolve, reject) =>
-            channel.sendToQueue(
-              entity,
-              Buffer.from(
-                JSON.stringify(records, function (key) {
-                  return this?.[key] instanceof Date
-                    ? { $date: this?.[key].toISOString() }
-                    : this?.[key];
-                })
-              ),
-              { appId: 'EntityStorage', persistent: true },
-              (err) => (err ? reject(err) : resolve())
-            )
-          )
-      )
-    ).finally(() => channel.close());
-
     for (const { entity, records } of groups) {
-      if (CACHABLE_ENTITIES.indexOf(entity)) this.cache?.add(records);
+      channel.sendToQueue(
+        entity,
+        Buffer.from(
+          JSON.stringify(records, function (key) {
+            return this?.[key] instanceof Date ? { $date: this?.[key].toISOString() } : this?.[key];
+          })
+        ),
+        { appId: 'EntityStorage', persistent: true }
+      );
     }
 
-    this.entities = this.entities.filter((e) => !entitiesGroup.includes(e));
+    return channel
+      .waitForConfirms()
+      .then(() => this.clear(entity))
+      .finally(() => channel.close());
   }
 }
