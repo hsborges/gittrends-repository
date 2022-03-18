@@ -23,15 +23,15 @@ program
     const options = program.opts();
     consola.info('Starting consumers for each queue ...');
 
-    const channel = await createChannel();
-    await channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 10));
-
     let inserts = 0;
 
     Object.values(Entities)
       .filter((E) => E !== Entity)
       .reduce((memo: Array<any>, E) => memo.concat(times(options.workers, () => E)), [])
-      .map(async (EntityRef: new (...args: any[]) => Entity) =>
+      .map(async (EntityRef: new (...args: any[]) => Entity) => {
+        const channel = await createChannel();
+        await channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 10), false);
+
         channel.consume(
           EntityRef.name,
           async (message) => {
@@ -57,8 +57,10 @@ program
               .catch(() => channel.nack(message));
           },
           { noAck: false }
-        )
-      );
+        );
+
+        return channel;
+      });
 
     consola.info('Message queues and consumers running (press ctrl+c to stop)');
 
@@ -68,6 +70,9 @@ program
     );
     setInterval(() => (inserts = 0), 1000);
 
-    await new Promise((resolve) => process.on('SIGINT', resolve)).finally(() => process.exit(0));
+    await new Promise((resolve) => {
+      process.on('SIGINT', resolve);
+      process.on('SIGTERM', resolve);
+    }).finally(() => process.exit(0));
   })
   .parseAsync(process.argv);
