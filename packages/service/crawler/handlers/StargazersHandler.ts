@@ -27,13 +27,13 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: Record<string, unknown>): Promise<void> {
-    return this._update(response).finally(
+  async collect(response: Record<string, unknown>): Promise<void> {
+    return this._collect(response).finally(
       () => (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2))
     );
   }
 
-  private async _update(response: Record<string, unknown>): Promise<void> {
+  private async _collect(response: Record<string, unknown>): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
     const pageInfo = get(data, '_stargazers.page_info', {});
@@ -66,7 +66,7 @@ export default class StargazersHandler extends AbstractRepositoryHandler {
 
   async error(err: Error): Promise<void> {
     if (err instanceof GithubRequestError && err.all('INTERNAL')) {
-      return this.update(get(err, 'response.data'));
+      return this.collect(get(err, 'response.data'));
     } else if (err instanceof RequestError) {
       if (this.batchSize > 1) {
         this.batchSize = 1;

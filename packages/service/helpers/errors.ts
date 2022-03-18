@@ -26,7 +26,7 @@ class ExtendedError extends BaseError {
   }
 }
 
-export class RepositoryUpdateError extends BaseError {
+export class RepositoryCrawlerError extends BaseError {
   readonly errors: Error[];
 
   constructor(errors: Error | Error[]) {

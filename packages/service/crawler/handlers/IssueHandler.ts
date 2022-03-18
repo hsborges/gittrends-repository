@@ -155,8 +155,8 @@ export default class IssuesHander extends AbstractRepositoryHandler {
     throw new Error('Invalid condition reached!');
   }
 
-  async update(response: Record<string, unknown>): Promise<void> {
-    return this._update(response).then(() => {
+  async collect(response: Record<string, unknown>): Promise<void> {
+    return this._collect(response).then(() => {
       this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2);
       this.rBatchSize = Math.min(this.defaultRBatchSize, this.rBatchSize * 2);
     });
@@ -180,7 +180,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
     });
   }
 
-  private async _update(response: Record<string, unknown>): Promise<void> {
+  private async _collect(response: Record<string, unknown>): Promise<void> {
     switch (this.currentStage) {
       case Stages.GET_ISSUES_LIST: {
         const data = super.parseResponse(response[super.alias as string]);
@@ -356,7 +356,7 @@ export default class IssuesHander extends AbstractRepositoryHandler {
           ) {
             if (isSuccess(err.response?.status) && err.response?.data) {
               this.pendingIssues.forEach((issue) => (issue.error = err.message));
-              return this.update(err.response.data);
+              return this.collect(err.response.data);
             }
             this.pendingIssues.forEach((issue) => {
               issue.details.hasNextPage =

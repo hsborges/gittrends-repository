@@ -41,13 +41,13 @@ export default class DependenciesHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: Record<string, unknown>): Promise<void> {
-    return this._update(response).finally(
+  async collect(response: Record<string, unknown>): Promise<void> {
+    return this._collect(response).finally(
       () => (this.batchSize = Math.min(this.defaultBatchSize, this.batchSize * 2))
     );
   }
 
-  private async _update(response: Record<string, unknown>): Promise<void> {
+  private async _collect(response: Record<string, unknown>): Promise<void> {
     if (this.pendingManifests.length > 0) {
       this.entityStorage.add(
         this.pendingManifests.reduce((dependencies: Dependency[], manifest) => {

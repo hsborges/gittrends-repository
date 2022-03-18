@@ -7,8 +7,9 @@ import { difference, flatten } from 'lodash';
 
 import HttpClient from '../github/HttpClient';
 import Query from '../github/Query';
-import { RepositoryUpdateError, RequestError } from '../helpers/errors';
+import { RepositoryCrawlerError, RequestError } from '../helpers/errors';
 import { Cache } from './Cache';
+import Crawler from './Crawler';
 import AbstractRepositoryHandler from './handlers/AbstractRepositoryHandler';
 import DependenciesHandler from './handlers/DependenciesHandler';
 import IssuesHander, { PullRequestHander } from './handlers/IssueHandler';
@@ -17,7 +18,6 @@ import RepositoryHander from './handlers/RepositoryHandler';
 import StargazersHandler from './handlers/StargazersHandler';
 import TagsHandler from './handlers/TagsHandler';
 import WatchersHandler from './handlers/WatchersHandler';
-import Updater from './Updater';
 
 const handlersList = [
   DependenciesHandler,
@@ -30,23 +30,7 @@ const handlersList = [
   WatchersHandler
 ];
 
-export type RepositoryUpdaterHandler =
-  | 'dependencies'
-  | 'issues'
-  | 'pull_requests'
-  | 'repository'
-  | 'releases'
-  | 'stargazers'
-  | 'tags'
-  | 'watchers';
-
-type RepositoryUpdaterOpts = {
-  cache?: Cache;
-  batchSize?: number;
-  writeBatchSize?: number;
-};
-
-export class RepositoryUpdater extends EventEmitter implements Updater {
+export class RepositoryCrawler extends EventEmitter implements Crawler {
   private readonly id: string;
   private readonly httpClient: HttpClient;
 
@@ -55,9 +39,22 @@ export class RepositoryUpdater extends EventEmitter implements Updater {
 
   constructor(
     repositoryId: string,
-    handlers: RepositoryUpdaterHandler[],
+    handlers: Array<
+      | 'dependencies'
+      | 'issues'
+      | 'pull_requests'
+      | 'repository'
+      | 'releases'
+      | 'stargazers'
+      | 'tags'
+      | 'watchers'
+    >,
     httpClient: HttpClient,
-    opts?: RepositoryUpdaterOpts
+    opts?: {
+      cache?: Cache;
+      batchSize?: number;
+      writeBatchSize?: number;
+    }
   ) {
     super();
 
@@ -73,7 +70,7 @@ export class RepositoryUpdater extends EventEmitter implements Updater {
     });
   }
 
-  async update(handlers = this.filterPending(this.handlers), isRetry?: boolean): Promise<void> {
+  async collect(handlers = this.filterPending(this.handlers), isRetry?: boolean): Promise<void> {
     let pendingHandlers = handlers;
     if (pendingHandlers.length === 0) return;
 
@@ -93,14 +90,14 @@ export class RepositoryUpdater extends EventEmitter implements Updater {
           return query;
         })
         .then(async (data) => {
-          for (const handler of pendingHandlers) await handler.update(data);
+          for (const handler of pendingHandlers) await handler.collect(data);
         })
         .catch(async (err) => {
           if (isRetry || !(err instanceof RequestError)) throw err;
 
           return Promise.all(
             pendingHandlers.map((handler) =>
-              this.update([handler], true).catch(async (singleErr) =>
+              this.collect([handler], true).catch(async (singleErr) =>
                 handler.error(singleErr).catch((err2) => {
                   this.emit('error', singleErr);
                   this.errors.push({ handler, error: err2 });
@@ -133,7 +130,7 @@ export class RepositoryUpdater extends EventEmitter implements Updater {
     } while (!isRetry && pendingHandlers.length > 0);
 
     if (!isRetry && this.errors.length > 0)
-      throw new RepositoryUpdateError(this.errors.map((e) => e.error));
+      throw new RepositoryCrawlerError(this.errors.map((e) => e.error));
   }
 
   private filterPending(handlers: AbstractRepositoryHandler[]): AbstractRepositoryHandler[] {

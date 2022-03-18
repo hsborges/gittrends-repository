@@ -15,7 +15,7 @@ export default abstract class AbstractHandler<T extends Component> {
   }
 
   abstract component(): Promise<T | Component[]>;
-  abstract update(response: Record<string, unknown>): Promise<void>;
+  abstract collect(response: Record<string, unknown>): Promise<void>;
   abstract hasNextPage(): boolean;
 
   isDone(): boolean {

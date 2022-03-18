@@ -10,16 +10,16 @@ import { isNil } from 'lodash';
 
 import { MongoRepository, ErrorLog } from '@gittrends/database';
 
+import { ActorsCrawler } from './crawler/ActorsCrawler';
+import { Cache } from './crawler/Cache';
+import Crawler from './crawler/Crawler';
+import { RepositoryCrawler } from './crawler/RepositoryCrawler';
 import compact from './helpers/compact';
-import { RepositoryUpdateError } from './helpers/errors';
+import { RepositoryCrawlerError } from './helpers/errors';
 import httpClient from './helpers/proxy-http-client';
 import * as rabbitmq from './helpers/rabbitmq';
 import { useRedis } from './helpers/redis';
 import { version } from './package.json';
-import { ActorsUpdater } from './updater/ActorUpdater';
-import { Cache } from './updater/Cache';
-import { RepositoryUpdater, RepositoryUpdaterHandler } from './updater/RepositoryUpdater';
-import Updater from './updater/Updater';
 
 async function proxyServerHealthCheck(): Promise<boolean> {
   return axios
@@ -31,10 +31,10 @@ async function proxyServerHealthCheck(): Promise<boolean> {
 /* execute */
 program
   .version(version)
-  .description('Update repositories metadata')
+  .description('Collect repositories metadata')
   .option('-w, --workers [number]', 'Number of workers', Number, 1)
   .addArgument(
-    new Argument('[type]', 'Type of resource to update')
+    new Argument('[type]', 'Type of resource to collect')
       .choices(['repositories', 'users'])
       .default('repositories')
   )
@@ -57,17 +57,15 @@ program
       async (job: Job) => {
         if (isNil(job.data.id)) throw new Error(`Invalid job data! (${job.name}: ${job.data.id})`);
 
-        let updater: Updater | null = null;
+        let updater: Crawler | null = null;
 
         if (type === 'users') {
-          updater = new ActorsUpdater(job.data.id, httpClient);
+          updater = new ActorsCrawler(job.data.id, httpClient);
         } else if (type === 'repositories') {
-          const resources = (job.data.resources || []) as RepositoryUpdaterHandler[];
-          if (job.data?.errors?.length) {
-            resources.push(...(job.data.errors as RepositoryUpdaterHandler[]));
-          }
+          const resources = job.data.resources || [];
+          if (job.data?.errors?.length) resources.push(...job.data.errors);
           if (resources.length) {
-            updater = new RepositoryUpdater(job.data.id, resources, httpClient, {
+            updater = new RepositoryCrawler(job.data.id, resources, httpClient, {
               cache,
               writeBatchSize: parseInt(process.env.GT_WRITE_BATCH_SIZE ?? '500', 10)
             });
@@ -113,15 +111,15 @@ program
           });
 
           updater.on('error', (error) => {
-            consola.error(`Error thrown by ${job.name} during update: `, error);
+            consola.error(`Error thrown by ${job.name} when collecting data. `, error);
           });
 
-          await updater.update().catch(async (error) => {
+          await updater.collect().catch(async (error) => {
             consola.error(`Error thrown by ${job.name}.`, error);
 
             if (error instanceof Error) {
               await MongoRepository.get(ErrorLog).upsert(
-                error instanceof RepositoryUpdateError
+                error instanceof RepositoryCrawlerError
                   ? error.errors.map((e) => ErrorLog.from(e))
                   : ErrorLog.from(error)
               );

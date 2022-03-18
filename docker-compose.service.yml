@@ -56,7 +56,7 @@ services:
       context: .
       dockerfile: packages/service/Dockerfile
     image: gittrends-service:latest
-    command: yarn update --type repositories --workers ${GT_UPDATER_REPOS_WORKERS-1}
+    command: yarn update --type repositories --workers ${GT_CRAWLER_REPOS_WORKERS-1}
     restart: unless-stopped
     environment:
       GT_MONGO_URL: 'mongodb://mongo:27017/gittrends_app-${NODE_ENV-development}'
@@ -78,7 +78,7 @@ services:
       context: .
       dockerfile: packages/service/Dockerfile
     image: gittrends-service:latest
-    command: yarn update --type users --workers ${GT_UPDATER_USERS_WORKERS-1}
+    command: yarn update --type users --workers ${GT_CRAWLER_USERS_WORKERS-1}
     restart: unless-stopped
     environment:
       GT_MONGO_URL: 'mongodb://mongo:27017/gittrends_app-${NODE_ENV-development}'

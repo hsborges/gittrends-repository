@@ -11,9 +11,9 @@ import HttpClient from '../github/HttpClient';
 import Query from '../github/Query';
 import { GithubRequestError, RequestError } from '../helpers/errors';
 import responseParser from '../helpers/response-parser';
-import Updater from './Updater';
+import Crawler from './Crawler';
 
-export class ActorsUpdater extends EventEmitter implements Updater {
+export class ActorsCrawler extends EventEmitter implements Crawler {
   private readonly id: string[] | string;
   private readonly httpClient: HttpClient;
 
@@ -23,7 +23,7 @@ export class ActorsUpdater extends EventEmitter implements Updater {
     this.httpClient = httpClient;
   }
 
-  private async _update(ids: string[]): Promise<void> {
+  private async _collect(ids: string[]): Promise<void> {
     const components = ids.map((id, index) => new ActorComponent(id).setAlias(`actor_${index}`));
 
     await Query.create(this.httpClient)
@@ -41,10 +41,12 @@ export class ActorsUpdater extends EventEmitter implements Updater {
       .catch(async (err) => {
         if (err instanceof RequestError) {
           if (ids.length > 1) {
-            for (const idsChunk of chunk(ids, Math.ceil(ids.length / 2)))
-              await this._update(idsChunk);
+            return Promise.all(
+              chunk(ids, Math.ceil(ids.length / 2)).map((idsChunk) => this._collect(idsChunk))
+            );
           } else {
-            let metadata: any = { updatedAt: new Date() };
+            const [_id] = ids;
+            let metadata: any = { _id, updatedAt: new Date() };
 
             if (err instanceof GithubRequestError && err.all('NOT_FOUND')) {
               metadata = { ...metadata, removed: true, removed_at: new Date() };
@@ -52,7 +54,7 @@ export class ActorsUpdater extends EventEmitter implements Updater {
               metadata = { ...metadata, error: err.message };
             }
 
-            return MongoRepository.get(Actor).collection.replaceOne({ _id: ids[0] }, metadata, {
+            return MongoRepository.get(Metadata).collection.replaceOne({ _id }, metadata, {
               upsert: true
             });
           }
@@ -62,8 +64,8 @@ export class ActorsUpdater extends EventEmitter implements Updater {
       });
   }
 
-  async update(): Promise<void> {
-    await this._update(Array.isArray(this.id) ? this.id : [this.id]);
+  async collect(): Promise<void> {
+    await this._collect(Array.isArray(this.id) ? this.id : [this.id]);
     this.emit('progress', 100);
   }
 }

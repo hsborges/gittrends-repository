@@ -26,7 +26,7 @@ export default class TagsHandler extends AbstractRepositoryHandler {
     });
   }
 
-  async update(response: Record<string, unknown>): Promise<void> {
+  async collect(response: Record<string, unknown>): Promise<void> {
     const data = super.parseResponse(response[this.alias as string]);
 
     const pageInfo = get(data, '_tags.page_info', {});
