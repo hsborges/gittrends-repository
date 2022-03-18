@@ -3,7 +3,7 @@ pushd packages/service
 COLS_COUNT=$(tput cols)
 
 tmux new-session -s 'gittrends-panels' -n 'pm2-runtime' \; \
-  send-keys 'yarn pm2-runtime service.config.js' C-m \; \
+  send-keys 'yarn pm2 --no-daemon start service.config.js' C-m \; \
   new-window -n 'pm2-logs' \; \
   send-keys 'bash -c "sleep 15 && yarn pm2 logs --raw \"/repos|users|scheduler/\""' C-m \; \
   split-window -v \; \
