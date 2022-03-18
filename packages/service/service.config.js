@@ -55,6 +55,7 @@ module.exports = {
       interpreter_args: '--expose-gc -r @gittrends/env',
       script: 'dist/updater.js',
       args: ['--workers', process.env.GT_UPDATER_WORKERS || 1],
+      instances: process.env.GT_UPDATER_INSTANCES || 1,
       watch: ['dist/'],
       max_memory_restart: '256M',
       restart_delay: 2 * 1000
