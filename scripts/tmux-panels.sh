@@ -13,7 +13,7 @@ tmux new-session -s 'gittrends-panels' -n 'pm2-runtime' \; \
   split-window -h \; \
   send-keys 'htop' C-m \; \
   select-pane -D \; \
-  send-keys './node_modules/.bin/dotenv -c ${NODE_ENV-development} -- bash -c '"'"'mongostat -i --uri ${GT_MONGO_URL}'"'"'' C-m \; \
+  send-keys 'pushd ../.. && ./node_modules/.bin/dotenv -c ${NODE_ENV-development} -- bash -c '"'"'mongostat -i --uri ${GT_MONGO_URL}'"'"' && popd' C-m \; \
   resize-pane -y 3 \; \
   new-window -n 'pm2-monit' \; \
   send-keys 'yarn pm2 monit' \; \
