@@ -25,13 +25,13 @@ program
 
     let inserts = 0;
 
+    const channel = await createChannel();
+    await channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 10), false);
+
     Object.values(Entities)
       .filter((E) => E !== Entity)
       .reduce((memo: Array<any>, E) => memo.concat(times(options.workers, () => E)), [])
-      .map(async (EntityRef: new (...args: any[]) => Entity) => {
-        const channel = await createChannel();
-        await channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 10), false);
-
+      .map(async (EntityRef: new (...args: any[]) => Entity) =>
         channel.consume(
           EntityRef.name,
           async (message) => {
@@ -57,10 +57,8 @@ program
               .catch(() => channel.nack(message));
           },
           { noAck: false }
-        );
-
-        return channel;
-      });
+        )
+      );
 
     consola.info('Message queues and consumers running (press ctrl+c to stop)');
 
@@ -70,9 +68,15 @@ program
     );
     setInterval(() => (inserts = 0), 1000);
 
-    await new Promise((resolve) => {
+    await new Promise((resolve, reject) => {
       process.on('SIGINT', resolve);
       process.on('SIGTERM', resolve);
-    }).finally(() => process.exit(0));
+      channel.on('close', () => reject(new Error('Channel closed!')));
+    })
+      .catch((err) => {
+        consola.error(err);
+        process.exit(1);
+      })
+      .finally(() => process.exit(0));
   })
   .parseAsync(process.argv);
