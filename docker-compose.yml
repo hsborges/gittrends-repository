@@ -3,7 +3,7 @@ version: '3.7'
 services:
   mongo:
     image: mongo:latest
-    command: --wiredTigerJournalCompressor zstd --directoryperdb
+    command: --wiredTigerJournalCompressor zstd --directoryperdb --wiredTigerCacheSizeGB 1.5
     restart: unless-stopped
     ports:
       - 27017:27017
@@ -28,6 +28,7 @@ services:
         max-size: 10m
 
   rabbitmq:
+    hostname: 'rabbitmq.gittrends.app'
     image: rabbitmq:management-alpine
     restart: unless-stopped
     ports:
