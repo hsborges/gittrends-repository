@@ -59,7 +59,7 @@ export default class ErrorLog extends Entity {
       line_number: Joi.number(),
       column_number: Joi.number(),
       is_native: Joi.boolean(),
-      message: Joi.string(),
+      message: Joi.string().allow(''),
       stack: Joi.string(),
       created_at: Joi.date()
     });
