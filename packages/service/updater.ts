@@ -72,11 +72,11 @@ program
       process.on('SIGINT', resolve);
       process.on('SIGTERM', resolve);
       channel.on('close', () => reject(new Error('Channel closed!')));
-    })
-      .catch((err) => {
-        consola.error(err);
-        process.exit(1);
-      })
-      .finally(() => process.exit(0));
+    }).catch((err) => {
+      consola.error(err);
+      throw err;
+    });
   })
-  .parseAsync(process.argv);
+  .parseAsync(process.argv)
+  .catch(() => process.exit(1))
+  .finally(() => process.exit(0));
