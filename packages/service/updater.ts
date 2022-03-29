@@ -36,7 +36,7 @@ program
 
       for (let i = 0; i < options.workers; i++) {
         const channel = await createChannel();
-        await channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 5));
+        await channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 10));
 
         Object.values(Entities).map(async (EntityRef) => {
           if (EntityRef === Entity) return;
