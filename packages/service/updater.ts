@@ -4,7 +4,7 @@
 import { bold, dim, cyan } from 'chalk';
 import { program } from 'commander';
 import consola from 'consola';
-import { get, has, isPlainObject, size, times } from 'lodash';
+import { get, has, isPlainObject, size } from 'lodash';
 import log from 'log-update';
 
 import { MongoRepository, Entity } from '@gittrends/database';
@@ -25,53 +25,53 @@ program
 
     let inserts = 0;
 
-    const channel = await createChannel();
-    await channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 10), false);
+    setInterval(() => {
+      log(`${bold(cyan('✎'))} ${bold('Inserts per second')}: ${dim(inserts)}`);
+      inserts = 0;
+    }, 1000);
 
-    Object.values(Entities)
-      .filter((E) => E !== Entity)
-      .reduce((memo: Array<any>, E) => memo.concat(times(options.workers, () => E)), [])
-      .map(async (EntityRef: new (...args: any[]) => Entity) =>
-        channel.consume(
-          EntityRef.name,
-          async (message) => {
-            if (!message) return;
-
-            const instances: Array<Entity> = JSON.parse(
-              message?.content.toString() || '[]',
-              (_, value) =>
-                isPlainObject(value) && size(value) === 1 && has(value, '$date')
-                  ? new Date(get(value, '$date'))
-                  : value
-            ).map((d: any) => new EntityRef(d));
-
-            inserts += instances.length;
-
-            await ([Entities.Issue, Entities.Milestone, Entities.PullRequest, Entities.Repository]
-              .map((e) => e.name)
-              .indexOf(EntityRef.name) >= 0
-              ? MongoRepository.get(EntityRef).upsert(instances)
-              : MongoRepository.get(EntityRef).insert(instances)
-            )
-              .then(() => channel.ack(message))
-              .catch(() => channel.nack(message));
-          },
-          { noAck: false }
-        )
-      );
-
-    consola.info('Message queues and consumers running (press ctrl+c to stop)');
-
-    setInterval(
-      () => log(`${bold(cyan('✎'))} ${bold('Inserts per second')}: ${dim(inserts)}`),
-      250
-    );
-    setInterval(() => (inserts = 0), 1000);
-
-    await new Promise((resolve, reject) => {
+    await new Promise(async (resolve, reject) => {
       process.on('SIGINT', resolve);
       process.on('SIGTERM', resolve);
-      channel.on('close', () => reject(new Error('Channel closed!')));
+
+      for (let i = 0; i < options.workers; i++) {
+        const channel = await createChannel();
+        await channel.prefetch(parseInt(process.env.GT_RABBITMQ_PREFETCH ?? '1', 5));
+
+        Object.values(Entities).map(async (EntityRef) => {
+          if (EntityRef === Entity) return;
+          return channel.consume(
+            EntityRef.name,
+            async (message) => {
+              if (!message) return;
+
+              const instances: Array<Entity> = JSON.parse(
+                message?.content.toString() || '[]',
+                (_, value) =>
+                  isPlainObject(value) && size(value) === 1 && has(value, '$date')
+                    ? new Date(get(value, '$date'))
+                    : value
+              ).map((d: any) => new EntityRef(d));
+
+              inserts += instances.length;
+
+              await ([Entities.Issue, Entities.Milestone, Entities.PullRequest, Entities.Repository]
+                .map((e) => e.name)
+                .indexOf(EntityRef.name) >= 0
+                ? MongoRepository.get(EntityRef as any).upsert(instances)
+                : MongoRepository.get(EntityRef as any).insert(instances)
+              )
+                .then(() => channel.ack(message))
+                .catch(() => channel.nack(message));
+            },
+            { noAck: false }
+          );
+        });
+
+        channel.on('close', () => reject(new Error('Channel closed!')));
+      }
+
+      consola.info('Message queues and consumers running (press ctrl+c to stop)');
     }).catch((err) => {
       consola.error(err);
       throw err;
