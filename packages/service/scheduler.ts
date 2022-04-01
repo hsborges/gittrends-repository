@@ -60,7 +60,7 @@ const repositoriesScheduler = async (
 
           if (job) {
             if (await job.isActive()) return;
-            else return job.update(jobData);
+            else await job.remove();
           }
 
           return queue.add((repo.name_with_owner as string).toLowerCase(), jobData, {
@@ -187,35 +187,26 @@ program
   .hook('preAction', () => MongoRepository.connect().then())
   .hook('postAction', () => MongoRepository.close())
   .action(async (resource: string = 'all', other: string[]): Promise<void> => {
-    const options = program.opts<{
-      limit: number;
-      wait: number;
-      destroyQueue: boolean;
-      force: boolean;
-      exclude: string;
-      cron: string;
-    }>();
-
+    const options = program.opts();
     const resources = resourcesParser([resource, ...other], options.exclude?.split(',') || []);
+    const schedulerOpts: SchedulerOptions = {
+      resources,
+      limit: options.limit,
+      wait: options.wait,
+      destroyQueue:
+        options.destroyQueue && options.force
+          ? 'force'
+          : options.destroyQueue
+          ? 'normal'
+          : undefined
+    };
 
-    const schedulerFn = () =>
-      scheduler({
-        resources,
-        limit: options.limit,
-        wait: options.wait,
-        destroyQueue:
-          options.destroyQueue && options.force
-            ? 'force'
-            : options.destroyQueue
-            ? 'normal'
-            : undefined
-      });
+    await scheduler(schedulerOpts);
 
-    // await promises and finish script
-    await schedulerFn().then(() =>
-      options.cron
-        ? new Promise<void>((resolve) => new CronJob(options.cron, schedulerFn, resolve, true))
-        : Promise.resolve()
-    );
+    if (options.cron) {
+      await new Promise<void>(
+        (resolve) => new CronJob(options.cron, () => scheduler(schedulerOpts), resolve, true)
+      );
+    }
   })
   .parseAsync(process.argv);
