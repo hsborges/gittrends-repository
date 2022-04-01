@@ -1,6 +1,8 @@
 /*
  *  Author: Hudson S. Borges
  */
+import { each } from 'bluebird';
+import { chunk } from 'lodash';
 import urlParser from 'mongo-url-parser';
 import { Collection, Db, Document } from 'mongodb';
 import { MongoClient } from 'mongodb';
@@ -52,25 +54,27 @@ export default class MongoRepository<T extends Entity> {
   public async insert(object: PlainObjectOrEntity<T>): Promise<void> {
     if (Array.isArray(object) && object.length === 0) return;
 
-    await this.collection
-      .bulkWrite(
-        this.transform(object).map((record) => ({ insertOne: { document: record.toJSON() } })),
-        { ordered: false }
-      )
-      .catch((err) => {
+    const commands = this.transform(object).map((record) => ({
+      insertOne: { document: record.toJSON() }
+    }));
+
+    await each(chunk(commands, 100), (_commands) =>
+      this.collection.bulkWrite(_commands, { ordered: false, noResponse: true }).catch((err) => {
         if (err.code && err.code === 11000) return;
         else throw err;
-      });
+      })
+    );
   }
 
   public async upsert(object: PlainObjectOrEntity<T>): Promise<void> {
     if (Array.isArray(object) && object.length === 0) return;
 
-    await this.collection.bulkWrite(
-      this.transform(object).map((record) => ({
-        replaceOne: { filter: { _id: record._id }, replacement: record.toJSON(), upsert: true }
-      })),
-      { ordered: false }
+    const commands = this.transform(object).map((record) => ({
+      replaceOne: { filter: { _id: record._id }, replacement: record.toJSON(), upsert: true }
+    }));
+
+    await each(chunk(commands, 100), (_commands) =>
+      this.collection.bulkWrite(_commands, { ordered: false, noResponse: true })
     );
   }
 
