@@ -59,7 +59,7 @@ export default class MongoRepository<T extends Entity> {
     }));
 
     await each(chunk(commands, 100), (_commands) =>
-      this.collection.bulkWrite(_commands, { ordered: false, noResponse: true }).catch((err) => {
+      this.collection.bulkWrite(_commands, { ordered: false }).catch((err) => {
         if (err.code && err.code === 11000) return;
         else throw err;
       })
@@ -74,7 +74,7 @@ export default class MongoRepository<T extends Entity> {
     }));
 
     await each(chunk(commands, 100), (_commands) =>
-      this.collection.bulkWrite(_commands, { ordered: false, noResponse: true })
+      this.collection.bulkWrite(_commands, { ordered: false })
     );
   }
 
