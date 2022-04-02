@@ -66,7 +66,7 @@ async function search(
           hasMoreRepos = true;
         } else {
           after = null;
-          const newMaxStargazers = min(repos.map((r) => r.stargazers_count as number));
+          const newMaxStargazers = min(repos.map((r) => r.stargazers as number));
           if (newMaxStargazers != maxStargazers) maxStargazers = newMaxStargazers;
           else if (maxStargazers) maxStargazers -= 1;
 
@@ -88,7 +88,7 @@ async function search(
   } while (!opts?.name && repos.length < limit && hasMoreRepos);
 
   return {
-    repositories: chain(repos).compact().sortBy('stargazers_count', 'desc').value(),
+    repositories: chain(repos).compact().sortBy('stargazers', 'desc').value(),
     users: chain(actors).uniqBy('id').compact().value()
   };
 }
@@ -154,7 +154,7 @@ program
 
         const repositories = chain(result.repositories)
           .uniqBy('id')
-          .orderBy('stargazers_count', 'desc')
+          .orderBy('stargazers', 'desc')
           .slice(0, options.limit)
           .value();
 
