@@ -58,7 +58,7 @@ export default class MongoRepository<T extends Entity> {
       insertOne: { document: record.toJSON() }
     }));
 
-    await each(chunk(commands, 100), (_commands) =>
+    await each(chunk(commands, 250), (_commands) =>
       this.collection.bulkWrite(_commands, { ordered: false }).catch((err) => {
         if (err.code && err.code === 11000) return;
         else throw err;
@@ -73,7 +73,7 @@ export default class MongoRepository<T extends Entity> {
       replaceOne: { filter: { _id: record._id }, replacement: record.toJSON(), upsert: true }
     }));
 
-    await each(chunk(commands, 100), (_commands) =>
+    await each(chunk(commands, 250), (_commands) =>
       this.collection.bulkWrite(_commands, { ordered: false })
     );
   }
