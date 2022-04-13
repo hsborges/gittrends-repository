@@ -37,38 +37,39 @@ program
       const channel = await createChannel();
       await channel.prefetch(options.workers);
 
+      channel.on('close', () => reject(new Error('Channel closed!')));
+
       Object.values(Entities).map(async (EntityRef) => {
         if (EntityRef === Entity) return;
-        return channel.consume(
-          EntityRef.name,
-          async (message) => {
-            if (!message) return;
+        return channel
+          .consume(
+            EntityRef.name,
+            async (message) => {
+              if (!message) return;
 
-            const instances: Array<Entity> = JSON.parse(
-              message?.content.toString() || '[]',
-              (_, value) =>
-                isPlainObject(value) && size(value) === 1 && has(value, '$date')
-                  ? new Date(get(value, '$date'))
-                  : value
-            ).map((d: any) => new EntityRef(d));
+              const instances: Array<Entity> = JSON.parse(
+                message?.content.toString() || '[]',
+                (_, value) =>
+                  isPlainObject(value) && size(value) === 1 && has(value, '$date')
+                    ? new Date(get(value, '$date'))
+                    : value
+              ).map((d: any) => new EntityRef(d));
 
-            inserts += instances.length;
+              inserts += instances.length;
 
-            await ([Entities.Issue, Entities.Milestone, Entities.PullRequest, Entities.Repository]
-              .map((e) => e.name)
-              .indexOf(EntityRef.name) >= 0
-              ? MongoRepository.get(EntityRef as any).upsert(instances)
-              : MongoRepository.get(EntityRef as any).insert(instances)
-            )
-              .then(() => channel.ack(message))
-              .catch(() => channel.nack(message));
-          },
-          { noAck: false }
-        );
+              await ([Entities.Issue, Entities.Milestone, Entities.PullRequest, Entities.Repository]
+                .map((e) => e.name)
+                .indexOf(EntityRef.name) >= 0
+                ? MongoRepository.get(EntityRef as any).upsert(instances)
+                : MongoRepository.get(EntityRef as any).insert(instances)
+              )
+                .then(() => channel.ack(message))
+                .catch(() => channel.nack(message));
+            },
+            { noAck: false }
+          )
+          .catch((error) => reject(error));
       });
-
-      channel.on('close', () => reject(new Error('Channel closed!')));
-      channel.on('error', () => reject(new Error('Channel closed!')));
 
       consola.info('Message queues and consumers running (press ctrl+c to stop)');
     }).catch((err) => {
