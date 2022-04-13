@@ -68,6 +68,7 @@ program
       });
 
       channel.on('close', () => reject(new Error('Channel closed!')));
+      channel.on('error', () => reject(new Error('Channel closed!')));
 
       consola.info('Message queues and consumers running (press ctrl+c to stop)');
     }).catch((err) => {
