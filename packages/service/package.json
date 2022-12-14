@@ -36,7 +36,7 @@
     "consola": "^2.15.3",
     "cron": "^1.8.2",
     "dayjs": "^1.10.7",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "lodash": "^4.17.21",
     "lru-cache": "^6.0.0",
     "node-fetch": "^2.6.6",
