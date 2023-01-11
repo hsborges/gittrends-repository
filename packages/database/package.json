@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "class-transformer": "0.4.0",
-    "class-validator": "^0.13.2",
+    "class-validator": "^0.14.0",
     "es6-shim": "^0.35.6",
     "lodash": "^4.17.21",
     "migrate-mongo": "^8.2.3",
